@@ -281,7 +281,7 @@
             </dependency>
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
-                <artifactId>idempotent-integration-transaction</artifactId>
+                <artifactId>idempotent-integration</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

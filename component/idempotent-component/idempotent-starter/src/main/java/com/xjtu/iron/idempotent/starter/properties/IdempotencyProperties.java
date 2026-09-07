@@ -1,9 +1,7 @@
-package com.xjtu.iron.idempotent.starter;
+package com.xjtu.iron.idempotent.starter.properties;
 
-import com.xjtu.iron.idempotent.api.execution.*;
 import com.xjtu.iron.idempotent.api.policy.*;
 import com.xjtu.iron.idempotent.api.recovery.*;
-import com.xjtu.iron.idempotent.api.state.*;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;

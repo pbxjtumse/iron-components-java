@@ -1,4 +1,4 @@
-package com.xjtu.iron.idempotent.starter;
+package com.xjtu.iron.idempotent.starter.autoconfigure;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xjtu.iron.distributed.lock.api.client.DistributedLockClient;
@@ -20,12 +20,17 @@ import com.xjtu.iron.idempotent.core.observation.IdempotencyMetrics;
 import com.xjtu.iron.idempotent.core.state.DefaultIdempotencyStateMachine;
 import com.xjtu.iron.idempotent.core.state.IdempotencyStateMachine;
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionCoordinator;
+
 import com.xjtu.iron.idempotent.integration.transaction.SpringTransactionJdbcExecutionManager;
-import com.xjtu.iron.idempotent.integration.transaction.TransactionTemplateIdempotencyTransactionCoordinator;
 import com.xjtu.iron.idempotent.provider.jdbc.execution.DataSourceJdbcExecutionManager;
 import com.xjtu.iron.idempotent.provider.jdbc.execution.JdbcExecutionManager;
 import com.xjtu.iron.idempotent.provider.jdbc.repository.JdbcIdempotencyRepository;
 import com.xjtu.iron.idempotent.provider.redis.repository.RedisIdempotencyRepository;
+import com.xjtu.iron.idempotent.starter.hash.JacksonSha256IdempotencyRequestHasher;
+import com.xjtu.iron.idempotent.starter.observation.JacksonIdempotencySnapshotPolicyFactory;
+import com.xjtu.iron.idempotent.starter.observation.MicrometerIdempotencyMetrics;
+import com.xjtu.iron.idempotent.starter.properties.IdempotencyProperties;
+import com.xjtu.iron.idempotent.starter.result.SpringIdempotencyEventPublisher;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutor;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;

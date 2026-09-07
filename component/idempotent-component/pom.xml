@@ -14,7 +14,7 @@
         <module>idempotent-api</module>
         <module>idempotent-core</module>
         <module>idempotent-provider</module>
-        <module>idempotent-integration-transaction</module>
+        <module>idempotent-integration</module>
         <module>idempotent-starter</module>
         <module>idempotent-demo</module>
     </modules>
