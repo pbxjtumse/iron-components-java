@@ -1,4 +1,4 @@
-package com.xjtu.iron.idempotent.starter;
+package com.xjtu.iron.idempotent.starter.result;
 
 import com.xjtu.iron.idempotent.core.observation.IdempotencyEvent;
 import com.xjtu.iron.idempotent.core.observation.IdempotencyEventPublisher;
@@ -10,8 +10,7 @@ import org.springframework.context.ApplicationEventPublisher;
  * <p>事件属于观测旁路，因此 listener 抛出的运行时异常必须与正确性主流程隔离。
  * 不能因为某个日志/告警监听器失败，就让已经完成的 PROCESSING/SUCCESS 状态转换失败。</p>
  */
-public final class SpringIdempotencyEventPublisher
-        implements IdempotencyEventPublisher {
+public final class SpringIdempotencyEventPublisher implements IdempotencyEventPublisher {
 
     private final ApplicationEventPublisher publisher;
 

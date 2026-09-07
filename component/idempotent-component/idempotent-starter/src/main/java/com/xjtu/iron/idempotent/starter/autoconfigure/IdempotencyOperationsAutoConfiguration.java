@@ -1,4 +1,4 @@
-package com.xjtu.iron.idempotent.starter;
+package com.xjtu.iron.idempotent.starter.autoconfigure;
 
 import com.xjtu.iron.idempotent.api.operation.IdempotencyOperations;
 import com.xjtu.iron.idempotent.core.operation.DefaultIdempotencyOperations;

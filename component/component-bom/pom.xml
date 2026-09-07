@@ -92,7 +92,7 @@
             </dependency>
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
-                <artifactId>relational-spring-boot-starter</artifactId>
+                <artifactId>relational-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

@@ -6,21 +6,15 @@
 
     <parent>
         <groupId>com.xjtu.iron</groupId>
-        <artifactId>component</artifactId>
+        <artifactId>relational-access-component</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>relational-access-component</artifactId>
+    <artifactId>relational-integration</artifactId>
     <packaging>pom</packaging>
-    <name>relational-access-component</name>
-    <description>Iron Components 关系型数据库访问基础组件。</description>
-
     <modules>
-        <module>relational-api</module>
-        <module>relational-spi</module>
-        <module>relational-core</module>
-        <module>relational-integration</module>
-        <module>relational-starter</module>
+        <module>relational-integration-spring</module>
     </modules>
+
 </project>

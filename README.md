@@ -1,33 +1,29 @@
-# iron-components-java
+# Java 技术组件体系
 
 > 一套面向 Java / Spring Boot 分布式业务系统的可复用技术组件底座。
 
-`iron-components-java` 用于沉淀业务系统中反复出现、但又不应该由每个业务项目重复实现的基础技术能力。
+本项目用于沉淀业务系统中反复出现的基础技术问题，包括：
 
-当前主要覆盖：
-
-* Foundation 基础能力
 * 异步执行与线程池治理
 * 有限重试
-* 本地事务模板
-* 通用幂等
+* 本地事务执行
+* 请求与消息幂等
 * 分布式锁
-* 消息发送与可靠消费
-* Relational Access 关系型数据访问
+* 消息发送与消费
 * 缓存
 * 可观测性
 * 服务治理
 * 最终一致性与任务恢复
 
-项目目标并不是重新实现 Redis、Kafka、Pulsar、RocketMQ、MySQL、SkyWalking、ShardingSphere 等成熟基础设施，而是在这些基础设施之上建立：
+项目目标不是重新实现 Redis、Kafka、SkyWalking、ShardingSphere 等基础设施，而是在这些成熟基础设施之上提供：
 
-> **统一抽象、统一接入、统一治理、统一观测、明确边界并且能够组合使用的 Java 技术能力。**
+> **统一抽象、统一接入、统一治理、统一观测和可组合的技术能力。**
 
 ---
 
 # 1. 为什么有这个项目
 
-真实业务系统里，经常会重复遇到这些问题：
+在实际业务系统中，经常会重复遇到这些问题：
 
 ```text
 接口被重复提交怎么办？
@@ -36,78 +32,59 @@ MQ 消息重复消费怎么办？
 
 调用下游偶发超时，应该怎么安全重试？
 
-多个 Pod 同时处理同一份数据怎么办？
+多个实例同时执行同一个任务怎么办？
 
-线程池越来越多，超时、取消和异常如何统一？
+异步任务超时、失败、取消如何统一处理？
 
-幂等状态与业务数据库修改如何保持一致？
+业务执行和幂等状态如何保证一致？
 
-Kafka、Pulsar、RocketMQ 能否使用统一消息模型？
-
-JDBC 操作是否可以拥有统一执行入口，而不是每个组件自己拼 JDBC？
-
-大数据量幂等表、Outbox 表未来如何为分表做准备？
+Kafka、Pulsar、RocketMQ 是否可以使用统一 API？
 
 长时间失败任务如何恢复？
 
-怎样统一记录 Metrics、Trace、Event 和组件运行状态？
+怎么统一记录 Metrics、Trace 和组件运行状态？
 ```
 
-如果所有业务项目各自解决这些问题，最终往往出现：
+这些问题如果由每个业务项目分别解决，最终通常会出现：
 
 * 重复开发
-* API 风格不一致
-* 相同问题存在多套实现
-* 事务边界模糊
-* 重试与幂等互相混用
-* 分布式锁被错误当作幂等
-* MQ Provider 代码侵入业务
-* JDBC 逻辑散落在组件内部
-* 缺少统一指标与故障定位能力
-* 技术方案难以升级和替换
+* 实现方式不统一
+* 边界不清晰
+* 异常处理不一致
+* 缺少监控
+* 技术方案难以升级
+* 不同项目之间无法复用
 
-因此，本项目希望逐步建立一套真正可以长期复用的技术组件体系。
+因此，本项目尝试将这些能力逐步沉淀为一套独立的技术组件体系。
 
 ---
 
-# 2. 当前组件状态
+# 2. 当前组件
 
-> 更新时间：2026-09
-
-| 组件                    | 当前状态               | 当前主要能力                                                    |
-| --------------------- | ------------------ | --------------------------------------------------------- |
-| **Foundation**        | ✅ 可使用              | ID、时间、错误、序列化、JSON、校验、测试基础                                 |
-| **Concurrency**       | ✅ 可使用              | 异步执行、线程池、超时、取消、Fallback、组合任务                              |
-| **Retry**             | ✅ 核心可使用            | 有限重试、异常分类、结果分类、退避策略                                       |
-| **Transaction**       | ✅ 主体可使用            | 本地事务模板、事务参与模型、组件事务集成                                      |
-| **Idempotency**       | 🟢 v1 可使用 / v2 建设中 | 状态机、Owner、结果策略、事务集成、Shard-Ready Storage                   |
-| **Distributed Lock**  | ✅ Redis 主体可使用      | Redis Lock、Lease、Renew、Watchdog、Owner Token、Fencing Token |
-| **Message**           | 🟢 v1 可使用 / v2 建设中 | Kafka/Pulsar 统一发送消费、消费幂等、事务集成、可靠性演进                       |
-| **Relational Access** | 🟡 V1 建设中          | 统一关系型数据库执行入口、SQL/参数/Row Mapping、事务边界协作                    |
-| **Cache**             | 🟡 已有实现基础          | Caffeine + Redis 多级缓存                                     |
-| **Observability**     | 🔵 骨架已有            | Metrics、Trace、MDC、Event、Health 统一方向                       |
-| **Governance**        | 🔵 已有能力雏形          | Timeout、Bulkhead、Rate Limit 等治理能力                         |
-| **Task**              | 🔵 架构设计            | 扫描、Claim、Lease、长周期执行与恢复                                   |
-| **Consistency**       | ⚪ 下一阶段             | Outbox、本地消息表、补偿、死信、人工重放                                   |
-| **Sharding**          | ⚪ 方案研究             | Shard Key、数据路由、分库分表与扩容策略                                  |
+| 组件               | 当前状态       | 主要用途                              |
+| ---------------- | ---------- | --------------------------------- |
+| Foundation       | ✅ 可使用      | ID、时间、错误、序列化、校验等基础能力              |
+| Concurrency      | ✅ 可使用      | 异步执行、线程池、超时、取消、组合任务               |
+| Retry            | 🟢 核心能力已完成 | 有限重试、异常分类、退避策略                    |
+| Transaction      | 🟢 主体完成    | 统一事务执行模板                          |
+| Idempotency      | 🟢 主体完成    | RPC、消息、任务等场景的统一幂等                 |
+| Distributed Lock | 🟡 收口中     | Redis 分布式锁、续租、Fencing Token       |
+| Message          | 🟡 建设中     | Kafka / Pulsar / RocketMQ 统一发送与消费 |
+| Cache            | 🟡 已有基础    | Caffeine + Redis 多级缓存             |
+| Observability    | 🔵 待统一建设   | Metrics、Trace、日志、事件               |
+| Governance       | 🔵 设计阶段    | 限流、熔断、隔离、超时、降级                    |
+| Task             | 🔵 设计阶段    | 长周期任务、恢复、Claim / Lease            |
+| Consistency      | ⚪ 规划阶段     | Outbox、补偿、死信、人工重放                 |
+| Sharding         | ⚪ 方案研究     | 数据路由与分库分表                         |
 
 状态说明：
 
 ```text
-✅ 可使用
-核心能力和主要边界已经稳定，可以作为当前项目能力使用。
-
-🟢 v1 可使用 / v2 建设中
-第一阶段能力已经形成，正在继续建设可靠性或扩展能力。
-
-🟡 建设中
-已有正式设计和代码，仍在持续收口。
-
-🔵 架构设计 / 骨架已有
-方向已经明确，也可能已有部分代码，但尚未作为稳定组件完成。
-
-⚪ 方案研究 / 下一阶段
-已经进入整体技术蓝图，但当前不是主要实现线。
+✅ 可使用      已形成相对稳定能力
+🟢 主体完成    核心能力已经具备，仍可能继续增强
+🟡 收口/建设中 已有代码或完整设计，正在完善
+🔵 设计阶段    已明确方向，尚未形成正式稳定实现
+⚪ 规划阶段    暂未进入当前建设主线
 ```
 
 ---
@@ -122,18 +99,17 @@ JDBC 操作是否可以拥有统一执行入口，而不是每个组件自己拼
 Idempotency
 ```
 
-典型场景：
+适用于：
 
 * 创建订单
 * 提交申请
 * RPC 请求
 * 表单重复提交
-* 同一业务指令重复到达
-* 补偿任务重复执行
+* 同一个业务动作重复触发
 
 目标：
 
-> 相同业务动作可以重复到达，但真正的业务副作用只能按照定义发生一次。
+> 相同业务请求重复到达时，只让业务真正生效一次。
 
 ---
 
@@ -149,23 +125,19 @@ Idempotency
 Transaction
 ```
 
-当前 Message Component 已经逐步将消费幂等与事务能力连接起来。
-
-用于处理：
+用于解决：
 
 ```text
 Broker 重投
+网络异常
 Consumer 重启
 ACK 丢失
-消费超时
-网络异常
 重复消息
-业务执行失败
 ```
 
-核心目标：
+目标：
 
-> **消息允许至少一次投递，但业务结果必须具备重复执行安全性。**
+> 消息允许重复到达，但业务结果不能重复产生。
 
 ---
 
@@ -180,31 +152,24 @@ Retry
 适用于：
 
 * 网络瞬时抖动
-* HTTP Timeout
 * HTTP 502 / 503 / 504
 * Redis 短暂异常
-* JDBC 死锁
-* Broker 瞬时故障
+* 数据库死锁
+* Broker 瞬时不可用
 
-Retry Component 负责：
+支持的核心思想包括：
 
 ```text
 最大尝试次数
-最大执行时间
+总执行时间
 异常分类
-结果分类
 固定退避
 指数退避
 随机抖动
-中断处理
-重试结果
+不可重试异常
 ```
 
-核心原则：
-
-> **默认不重试，只有明确判断为可以重试的失败才执行 Retry。**
-
-Retry 不保证业务幂等。
+重试组件不会默认对所有异常进行重试。
 
 ---
 
@@ -218,13 +183,15 @@ Distributed Lock
 
 典型场景：
 
-* 分布式任务抢占
+* 定时任务抢占
 * 缓存重建
-* 批次处理
-* 同一资源并发修改
-* 单实例逻辑在集群中的互斥执行
+* 同一订单处理
+* 同一批次执行
+* 分布式资源互斥
 
-当前 Redis Provider 已经覆盖主要分布式锁能力。
+组件目标：
+
+> 在多个 JVM / Pod 之间建立统一互斥控制。
 
 ---
 
@@ -238,31 +205,15 @@ Distributed Lock
 Fencing Token
 ```
 
-需要区分两个概念。
+普通分布式锁解决：
 
-### Owner Token
+> 当前谁拥有锁。
 
-回答：
+Fencing Token 进一步解决：
 
-> 当前请求是不是这把锁真正的 Owner？
+> 已经过期的旧 Owner 即使继续执行，也不能覆盖新 Owner 的结果。
 
-### Fencing Token
-
-回答：
-
-> 当前请求是不是比之前的 Owner 更新？
-
-因此：
-
-```text
-Owner Token
-    → 解决锁归属
-
-Fencing Token
-    → 解决业务资源写入时序
-```
-
-即使旧 Owner 因为 GC、网络抖动等原因继续运行，资源侧仍然可以根据更大的 Fencing Token 拒绝旧请求。
+适合对并发正确性要求较高的资源更新场景。
 
 ---
 
@@ -274,27 +225,24 @@ Fencing Token
 Concurrency
 ```
 
-统一处理：
+统一解决：
 
-* Executor 管理
-* Task Submission
+* 线程池管理
+* 任务提交
 * Queue Timeout
 * Execution Timeout
 * Cancel
 * Interrupt
 * Fallback
+* 多任务组合
 * `allOf`
-* `allOfWithTimeout`
 * `anySuccess`
-* 线程池状态指标
 
-目标不是包装 CompletableFuture，而是：
-
-> **统一异步执行生命周期。**
+避免业务系统自行维护大量线程池和 CompletableFuture 辅助代码。
 
 ---
 
-## 3.7 多个数据库操作需要统一事务
+## 3.7 多个数据库动作需要统一事务
 
 推荐：
 
@@ -302,94 +250,23 @@ Concurrency
 Transaction
 ```
 
+用于提供统一事务执行边界。
+
 例如：
 
 ```text
-创建业务记录
+创建业务数据
 +
-写入幂等状态
+写幂等状态
 +
-修改关联数据
+更新其他关联数据
 ```
 
-这些动作需要保持本地事务一致性时，可以通过 Transaction Component 提供统一事务执行边界。
-
-当前 Transaction Component 的重点是：
-
-```text
-Local Transaction
-```
-
-而不是重新实现 XA / TCC / Seata。
+应在同一本地事务中完成时，可以通过事务模板统一控制。
 
 ---
 
-## 3.8 技术组件需要直接访问关系型数据库
-
-推荐：
-
-```text
-Relational Access
-```
-
-这是当前新增并正在建设的重要基础组件。
-
-它主要解决过去多个技术组件各自直接使用 JDBC 时产生的问题：
-
-```text
-每个组件自己管理 Connection
-每个组件自己拼 PreparedStatement
-每个组件自己处理参数
-每个组件自己处理 ResultSet
-每个组件自己决定事务
-```
-
-Relational Access 希望提供一个统一的底层关系型数据库访问入口。
-
-第一阶段主要围绕：
-
-```text
-RelationalTemplate
-SqlStatement
-SQL Parameters
-RowMapper
-update
-query
-execute
-```
-
-展开。
-
-一个非常重要的原则是：
-
-> **Relational Access 不自行创建业务事务。**
-
-事务边界仍然由：
-
-```text
-Transaction Component
-```
-
-或者宿主业务系统负责。
-
-因此关系更接近：
-
-```text
-Idempotency
-Outbox
-Task Storage
-其他技术组件
-       ↓
-Relational Access
-       ↓
-DataSource / JDBC
-       ↓
-MySQL / PostgreSQL
-```
-
----
-
-## 3.9 业务需要 Redis + 本地缓存
+## 3.8 业务需要 Redis + 本地缓存
 
 推荐：
 
@@ -397,7 +274,7 @@ MySQL / PostgreSQL
 Cache
 ```
 
-当前已有：
+当前主要方向：
 
 ```text
 Caffeine
@@ -405,47 +282,34 @@ Caffeine
 Redis
 ```
 
-多级缓存设计基础。
-
-主要面向：
+用于：
 
 * 热点数据
 * 读多写少数据
-* 数据库减压
 * 低延迟查询
+* 数据库减压
 
 后续继续完善：
 
-* 缓存一致性
 * 本地缓存失效
-* 防穿透
 * 防击穿
+* 防穿透
 * 防雪崩
-* Cache Metrics
+* 缓存指标
 
 ---
 
 # 4. 组件不是孤立使用的
 
-`iron-components-java` 更强调：
+本项目更强调：
 
-> **通过多个边界清晰的小组件组合解决复杂问题，而不是创建一个什么都负责的大组件。**
-
-例如可靠消息消费不会重新实现：
-
-```text
-Retry
-Idempotency
-Transaction
-```
-
-而是组合这些已有组件。
+> **组件组合，而不是构建一个无所不能的大组件。**
 
 ---
 
-# 5. 可靠消息消费
+## 4.1 可靠消息消费
 
-当前推荐组合：
+推荐组合：
 
 ```text
 Message
@@ -457,34 +321,32 @@ Transaction
 Retry
 ```
 
-各组件职责分别是：
+分别解决：
 
 ```text
 Message
-    → 接收消息、消费执行、ACK / Retry / DLQ 映射
+    → 消息接收、ACK、Broker 重投
 
 Idempotency
-    → 解决重复消费
+    → 重复消息安全
 
 Transaction
-    → 解决业务数据与幂等状态本地事务一致性
+    → 幂等状态与业务修改一致
 
 Retry
-    → 判断什么失败值得再次执行
+    → 判断失败是否值得再次执行
 ```
 
-逻辑流程：
+典型流程：
 
 ```text
 Broker
    ↓
 Message Consumer
    ↓
-Consume Context
+Idempotency Check
    ↓
-Transaction Boundary
-   ↓
-Idempotency
+Transaction
    ↓
 Business Handler
    ↓
@@ -497,724 +359,150 @@ ACK
 
 ```text
 Business Failed
-       ↓
-Transaction Rollback
-       ↓
-Failure Classification
-       ↓
-RETRY / DLQ / DISCARD
-```
-
-当前可靠消费已经进入：
-
-> **幂等能力 + Transaction Integration 的组合阶段。**
-
----
-
-# 6. 为什么 ACK 必须在事务之后
-
-错误方式：
-
-```text
-Receive
-   ↓
-ACK
-   ↓
-Business
-```
-
-如果 ACK 成功以后业务失败，Broker 会认为消息已经消费完成。
-
-因此可靠消费更合理的顺序是：
-
-```text
-Receive
-   ↓
-Business Transaction
-   ↓
-Commit
-   ↓
-ACK
-```
-
-如果事务失败：
-
-```text
+      ↓
 Rollback
-   ↓
-不确认最终成功
-   ↓
-重新投递 / Retry Decision
+      ↓
+Retry Decision
+      ↓
+RETRY / DLQ / DROP
 ```
-
-这也是 Message Component 继续演进的重要方向。
 
 ---
 
-# 7. 消息可靠发送
+# 5. 可靠消息发送
 
-可靠发送不仅仅是：
+消息发送不仅是：
 
-```java
-producer.send(message);
+```text
+producer.send(message)
 ```
 
 还需要考虑：
 
 * Broker 暂时不可用
 * 网络超时
-* Provider Client 内部重试
-* Message Component 外层重试
-* 不确定发送结果
+* Provider 内部重试
+* 逻辑发送重试
 * 最终发送失败
 * Outbox
-* 本地事务一致性
+* 事务一致性
 
-当前推荐的能力组合：
+因此推荐：
 
 ```text
 Message
 +
 Retry
 +
-Transaction
-+
-未来 Outbox
+Transaction / Outbox
 ```
 
-尤其需要避免：
+其中需要特别避免：
 
 ```text
-业务层 Retry
+业务重试
 ×
-Message Component Retry
+Message Component 重试
 ×
-Kafka / Pulsar / RocketMQ Client Retry
+MQ Client 重试
 ```
 
-造成重试放大。
+造成请求指数级放大。
 
 ---
 
-# 8. Idempotency
+# 6. 分布式任务
 
-Idempotency Component 当前已经不只是简单的：
+未来推荐组合：
 
 ```text
-SETNX
+Task
++
+Retry
++
+Idempotency
++
+Distributed Lock / Claim
 ```
 
-或者：
+分别负责：
 
 ```text
-INSERT UNIQUE KEY
-```
+Task
+    → 调度和任务生命周期
 
-而是逐渐形成完整执行模型。
+Retry
+    → 失败后是否再次执行
 
-当前主要能力包括：
+Idempotency
+    → 重复执行安全
 
-```text
-IdempotencyKey
-Owner Token
-状态机
-处理中状态
-Success / Failed / Discarded
-Result Policy
-重复请求判断
-执行结果处理
-Transaction Integration
+Claim / Lock
+    → 多节点执行权
 ```
 
 适用于：
 
-```text
-HTTP
-RPC
-Message
-Task
-```
-
-等不同入口。
+* 超时扫描
+* 批处理
+* 对账
+* 补偿任务
+* 长周期 Retry
+* 服务重启恢复
 
 ---
 
-# 9. Idempotency v2：Shard-Ready Storage
+# 7. 基础组件之间的职责区别
 
-当前幂等组件正在继续进入：
+这些概念容易混淆。
 
-```text
-idempotent-component v2
-Shard-Ready Storage
-```
-
-阶段。
-
-这一阶段的目标不是马上实现完整分库分表，而是先把存储模型设计成未来可扩展。
-
-重点包括：
-
-```text
-幂等表结构
-幂等状态机
-ownerToken 抢占语义
-PROCESSING 超时恢复
-markSuccess
-markFailed
-markDiscarded
-shard_key
-scan_bucket
-JDBC Storage
-未来分表扩展点
-```
-
-核心思想是：
-
-> **先让存储模型具备分片能力，再决定什么时候真正引入分库分表。**
-
-而不是现在直接把整个系统绑定到某一个 Sharding 中间件。
-
----
-
-# 10. Retry
-
-Retry Component 当前定位为：
-
-> **统一描述、判断和执行“某个操作是否应该再次执行”的可靠性执行组件。**
-
-它负责：
-
-```text
-是否重试
-最大次数
-最大耗时
-错误分类
-结果分类
-Backoff
-Jitter
-Retry Context
-Retry Result
-```
-
-它不负责：
-
-```text
-业务幂等
-事务原子性
-消息 ACK
-业务补偿
-长周期任务调度
-```
-
-短时间 Retry：
-
-```text
-100ms
-300ms
-1s
-```
-
-可以留在 JVM 内部。
-
-而：
-
-```text
-30 秒
-5 分钟
-1 小时
-服务重启后继续
-```
-
-这种执行不应该依赖 Thread.sleep。
-
-未来应该交给：
-
-```text
-Message Delay
-Task Component
-Durable Retry
-```
-
-等外部载体。
-
----
-
-# 11. Retry 与 Idempotency
-
-两者经常同时出现，但解决的是完全不同的问题。
+## Retry 与 Idempotency
 
 ```text
 Retry
 =
-失败后是否再次执行
+失败以后是否再次执行
 
 Idempotency
 =
-再次执行时是否产生重复业务结果
+再次执行时如何避免重复结果
 ```
 
-对于有副作用操作，推荐：
+例如：
 
 ```text
-Retry
-   ↓
-Idempotency
-   ↓
-Business
+调用支付接口超时
 ```
 
-即每一次 Retry 都重新进入幂等保护。
+Retry 可以决定：
+
+> 是否再调用一次。
+
+Idempotency 则保证：
+
+> 再调用一次不会重复扣款。
 
 ---
 
-# 12. Retry 与 Transaction
-
-数据库事务发生：
+## Idempotency 与 Distributed Lock
 
 ```text
-Deadlock
-Lock Timeout
-Temporary Connection Failure
-```
-
-等可以安全重试的问题时，一般应该重新执行：
-
-> **完整事务单元。**
-
-推荐：
-
-```text
-Retry
-   ↓
-Transaction
-   ↓
-完整业务事务
-```
-
-而不是：
-
-```text
-Transaction
-   ↓
-执行一半
-   ↓
-某一条 SQL Retry
-```
-
-从而避免长期持锁和局部执行语义混乱。
-
----
-
-# 13. Distributed Lock
-
-Distributed Lock Component 第一阶段主要采用 Redis Provider。
-
-当前能力已经覆盖：
-
-```text
-tryLock
-unlock
-renew
-checkHeld
-assertHeld
-wait
-Watchdog
-Owner Token
-Fencing Token
-```
-
-使用者主要面对：
-
-```text
-DistributedLockClient
-LockHandle
-LockOptions
-LockResult
-```
-
-而不直接操作：
-
-```text
-Redis Lua
-Redis Client
-Fencing Sequence
-```
-
-等 Provider 内部实现。
-
-未来可以继续增加：
-
-```text
-Zookeeper
-Etcd
-```
-
-Provider。
-
----
-
-# 14. Transaction
-
-Transaction Component 用于统一技术组件之间的本地事务能力。
-
-其意义并不是替业务重新实现 Spring Transaction，而是：
-
-> **为 Idempotency、Message、Outbox 等技术组件提供一个稳定的事务抽象边界。**
-
-当前已经用于重点解决：
-
-```text
-Idempotency Transaction Integration
-Message Reliable Consume
-未来 Outbox
-```
-
-事务模板仍然坚持：
-
-> 本地事务优先。
-
-跨系统一致性不由 Transaction Component 单独承担。
-
----
-
-# 15. Relational Access
-
-随着 Idempotency Storage、Outbox Storage、Task Storage 等能力逐渐出现，一个新的问题变得明显：
-
-> 每个技术组件是否应该自己维护一套 JDBC 代码？
-
-当前答案是：
-
-> **不应该。**
-
-因此开始建设：
-
-```text
-Relational Access Component
-```
-
-它位于：
-
-```text
-Idempotency / Outbox / Task / Other Components
-                   ↓
-            Relational Access
-                   ↓
-            JDBC / DataSource
-                   ↓
-          MySQL / PostgreSQL
-```
-
-第一阶段保持轻量：
-
-```text
-update
-query
-execute
-SqlStatement
-RowMapper
-统一参数绑定
-统一异常转换
-```
-
-暂时不试图做：
-
-```text
-完整 ORM
-Hibernate 替代品
-MyBatis 替代品
-复杂 DSL
-自动实体映射平台
-```
-
-目标是：
-
-> **建立技术组件使用关系型数据库时统一、稳定、可治理的最低层访问能力。**
-
----
-
-# 16. Relational Access 与 Transaction 的区别
-
-这两个组件必须严格分开。
-
-```text
-Relational Access
+Distributed Lock
 =
-怎么执行 SQL
+同一时刻只允许一个执行者进入
 
-Transaction
+Idempotency
 =
-这一组操作什么时候 Commit / Rollback
+无论来了多少次，相同业务动作最终只生效一次
 ```
 
-因此：
+锁并不能代替幂等。
 
-```text
-Transaction
-      ↓
-Idempotency
-      ↓
-Relational Access
-      ↓
-DataSource
-```
-
-是合理关系。
-
-而不是：
-
-```text
-Relational Access
-自己偷偷开启事务
-```
-
-这条边界对后续 Outbox、幂等 Storage 等能力非常重要。
+幂等也不能完全代替互斥。
 
 ---
 
-# 17. Concurrency
-
-Concurrency Component 解决业务系统中常见的异步执行失控问题。
-
-目标包括：
-
-```text
-统一线程池
-统一任务提交
-统一任务生命周期
-统一超时
-统一取消
-统一 Fallback
-统一 Metrics
-```
-
-而不是让业务系统不断出现：
-
-```java
-Executors.newFixedThreadPool(...);
-
-CompletableFuture
-        .supplyAsync(...)
-        .thenApply(...)
-        .exceptionally(...);
-```
-
-之后再由每个业务团队自己解决：
-
-```text
-线程池满了怎么办？
-任务超时怎么办？
-线程上下文怎么办？
-如何关闭？
-如何监控？
-```
-
----
-
-# 18. Foundation
-
-Foundation 是所有技术组件最低层基础能力。
-
-当前主要包括：
-
-```text
-foundation-core
-foundation-time
-foundation-id
-foundation-error
-foundation-serialization-jackson
-foundation-json
-foundation-validation
-foundation-test
-```
-
-设计原则：
-
-```text
-小
-稳定
-通用
-无业务语义
-低依赖
-```
-
-Foundation 可以被所有技术组件使用。
-
-Foundation 不依赖：
-
-```text
-Message
-Idempotency
-Lock
-Retry
-Transaction
-```
-
-等上层组件。
-
----
-
-# 19. Cache
-
-Cache 已有：
-
-```text
-Caffeine
-+
-Redis
-```
-
-多级缓存实现基础。
-
-长期目标包括：
-
-* Local Cache
-* Distributed Cache
-* 多级缓存
-* TTL
-* 本地失效
-* 防穿透
-* 防击穿
-* 防雪崩
-* Cache Metrics
-
-当前不是主要建设线，后续会按照当前统一组件规范重新整理。
-
----
-
-# 20. Observability
-
-当前多个组件已经分别出现：
-
-```text
-Metrics
-Events
-MDC
-Trace Context
-Health
-```
-
-这些能力未来需要逐步统一到：
-
-```text
-Observability Component
-```
-
-它不会重新实现 SkyWalking。
-
-推荐关系：
-
-```text
-Business / Components
-          ↓
-Iron Observability Abstraction
-          ↓
-Micrometer / OpenTelemetry
-          ↓
-Prometheus / Grafana / SkyWalking / Other Backend
-```
-
-因此业务和基础组件不会直接绑定单一 APM 平台。
-
----
-
-# 21. Governance
-
-服务治理长期覆盖：
-
-```text
-Timeout
-Retry
-Rate Limit
-Circuit Breaker
-Bulkhead
-Fallback
-```
-
-Retry 已经作为独立可靠执行组件建设。
-
-其他能力后续由 Governance Component 继续统一。
-
-需要特别注意：
-
-```text
-Retry ≠ Rate Limit
-Retry ≠ Circuit Breaker
-Retry ≠ Bulkhead
-```
-
-这些能力可以组合，但职责不同。
-
----
-
-# 22. Task / Distributed Execution
-
-未来 Task Component 主要负责：
-
-```text
-长周期任务
-超时扫描
-任务恢复
-Claim
-Lease
-分布式抢占
-持久化 Retry
-批处理
-补偿任务
-```
-
-这里需要区分：
-
-### Scheduler
-
-回答：
-
-> 什么时候开始执行？
-
-### Retry
-
-回答：
-
-> 失败以后是否再次执行？
-
-### Idempotency
-
-回答：
-
-> 重复执行是否安全？
-
-### Claim / Lease
-
-回答：
-
-> 多节点环境下当前是谁负责执行？
-
-这些概念不会合并成一个大组件。
-
----
-
-# 23. Consistency / Outbox
-
-下一阶段 Message Component 还将继续进入：
-
-```text
-Outbox
-```
-
-以及更完整的一致性能力。
-
-未来 Consistency Component 可能包括：
-
-```text
-Outbox
-Local Message Table
-Status Check
-Compensation
-Dead Record
-Manual Replay
-```
-
-但必须区分：
+## Retry 与 Compensation
 
 ```text
 Retry
@@ -1223,232 +511,302 @@ Retry
 
 Compensation
 =
-执行另一个动作修正系统状态
+执行另外一个操作修正状态
 ```
 
 例如：
 
 ```text
-调用支付系统网络失败
+支付调用失败
 → Retry
 
-扣款已经成功，但订单创建最终失败
-→ Compensation / Refund
+支付成功但订单失败
+→ Refund Compensation
+```
+
+两者不是同一个问题。
+
+---
+
+## Transaction 与 Distributed Transaction
+
+当前 Transaction Component 主要解决：
+
+```text
+本地事务
+```
+
+而不是重新实现：
+
+```text
+XA
+TCC
+Seata
+Saga Framework
+```
+
+跨系统最终一致性会通过：
+
+```text
+Message
+Outbox
+Idempotency
+Task
+Compensation
+```
+
+等能力组合解决。
+
+---
+
+# 8. Message Component
+
+Message Component 的目标是让业务代码不直接绑定某一个 MQ SDK。
+
+目前主要支持方向：
+
+```text
+Kafka
+Pulsar
+RocketMQ
+```
+
+业务统一面对消息抽象：
+
+```text
+Message
+MessageProvider
+SendResult
+ConsumeContext
+```
+
+而不是直接面对：
+
+```text
+KafkaTemplate
+ConsumerRecord
+PulsarClient
+RocketMQTemplate
+```
+
+这样业务代码可以尽量保持 MQ Provider 无关。
+
+---
+
+# 9. Distributed Lock
+
+当前分布式锁主要以 Redis Provider 为第一阶段实现。
+
+已经覆盖或正在收口：
+
+* 获取锁
+* 释放锁
+* Renew
+* Check Held
+* Wait
+* Owner Token
+* Watchdog
+* Fencing Token
+* Lock Result
+* Lock Status
+* Lock Stage
+
+未来 Provider 可以继续扩展：
+
+```text
+Redis
+Zookeeper
+Etcd
+```
+
+而使用者面对的 API 保持稳定。
+
+---
+
+# 10. Retry
+
+Retry Component 负责有限、可控、可观测的重试。
+
+当前设计原则：
+
+```text
+默认不重试
+显式声明可重试异常
+最大次数包含第一次执行
+支持退避
+支持最大总耗时
+中断立即停止
+有副作用操作必须自行保证幂等
+```
+
+短时间 Retry 由 Retry Component 完成。
+
+长时间 Retry：
+
+```text
+30 秒
+5 分钟
+1 小时
+跨服务重启
+```
+
+未来交给：
+
+```text
+Task
+Message Delay
+Persistent Retry
+```
+
+承载。
+
+Retry Component 本身不会变成一个任务调度平台。
+
+---
+
+# 11. Idempotency
+
+Idempotency Component 用于统一处理：
+
+```text
+RPC Idempotency
+Message Idempotency
+Task Idempotency
+```
+
+组件负责：
+
+* 幂等状态
+* 并发重复判断
+* 处理中状态
+* 成功状态
+* 失败恢复
+* Result Policy
+* 执行状态机
+* 事务集成
+
+调用方不需要在每个业务系统重新实现：
+
+```text
+SELECT
+INSERT
+UPDATE
+重复判断
+状态判断
+超时占用
+```
+
+等逻辑。
+
+---
+
+# 12. Transaction
+
+Transaction Component 提供统一事务模板。
+
+核心目标：
+
+> 将事务执行语义从具体 Spring Transaction API 中进一步抽象出来，使其他技术组件能够安全组合事务能力。
+
+主要服务：
+
+```text
+Idempotency
+Message Reliable Consume
+Outbox
+Database Retry
+```
+
+当前首先以本地事务作为主要能力范围。
+
+---
+
+# 13. Concurrency
+
+Concurrency Component 解决业务项目中常见的线程池和异步执行失控问题。
+
+主要目标：
+
+```text
+统一创建
+统一命名
+统一管理
+统一超时
+统一失败
+统一取消
+统一 Metrics
+```
+
+而不是让每个业务模块自行：
+
+```java
+Executors.newFixedThreadPool(...)
 ```
 
 ---
 
-# 24. Sharding
+# 14. Foundation
 
-当前没有计划直接自研完整分库分表中间件。
+Foundation 是整个组件体系最底层能力。
 
-更合理的方向是：
-
-```text
-先完成 Shard-Ready 数据模型
-        ↓
-明确 Shard Key / Scan Bucket
-        ↓
-建立数据路由抽象
-        ↓
-再决定是否接入 ShardingSphere
-或业务自定义 Router
-```
-
-未来可能逐渐形成：
+主要包括：
 
 ```text
-ShardKey
-RouteContext
-ShardRouter
-RouteResult
-DatabaseRouter
-TableRouter
+foundation-core
+foundation-time
+foundation-id
+foundation-error
+foundation-serialization
+foundation-json
+foundation-validation
+foundation-test
 ```
 
-底层可以适配：
+Foundation 保持：
 
-```text
-ShardingSphere
-Hash Router
-Range Router
-Custom Router
-```
+* 小
+* 稳定
+* 无业务语义
+* 尽量不依赖大型框架
 
-但当前不会为了“未来可能分表”而过早把所有组件复杂化。
+技术组件可以依赖 Foundation。
+
+Foundation 不反向依赖上层技术组件。
 
 ---
 
-# 25. 当前组件组合关系
+# 15. 可观测性
 
-目前整体组件关系可以简单理解为：
-
-```text
-                 Foundation
-                     │
-        ┌────────────┼─────────────┐
-        │            │             │
-        ↓            ↓             ↓
- Concurrency       Retry     Relational Access
-                     │             │
-                     ↓             │
-                Transaction        │
-                     │             │
-                     ↓             │
-                Idempotency ───────┘
-                     │
-             ┌───────┴───────┐
-             ↓               ↓
-           Message      Distributed Lock
-             │
-       Reliable Consume
-             │
-             ↓
-      Outbox / Task / Consistency
-```
-
-Observability 未来作为横向能力覆盖所有组件：
+可观测性未来统一解决：
 
 ```text
 Metrics
 Trace
-Events
+Log
+MDC
+Event
 Health
-Logs
 ```
 
----
+项目不会重新实现 SkyWalking。
 
-# 26. 推荐使用原则
-
-## 原则一：只引入真正需要的组件
-
-不要因为项目里有所有组件，就一次性全部依赖。
-
-例如普通接口服务可能只需要：
+推荐关系：
 
 ```text
-Foundation
-+
-Idempotency
-```
-
-消息消费者可能需要：
-
-```text
-Message
-+
-Idempotency
-+
-Transaction
-+
-Retry
-```
-
----
-
-## 原则二：优先依赖公开 API / Starter
-
-业务代码尽量面对：
-
-```text
-xxx-api
-```
-
-或者：
-
-```text
-xxx-spring-boot-starter
-```
-
-而不是直接依赖：
-
-```text
-xxx-core
-xxx-provider-redis
-xxx-provider-kafka
-```
-
-内部实现。
-
----
-
-## 原则三：基础设施由 Provider 适配
-
-例如：
-
-```text
-DistributedLock API
+Business / Components
         ↓
-Lock SPI
+Observability Abstraction
         ↓
-Redis Provider
+Micrometer / OpenTelemetry
+        ↓
+SkyWalking / Prometheus / Grafana
 ```
 
-未来可以增加：
-
-```text
-Etcd Provider
-```
-
-但调用者 API 尽量保持不变。
+因此后续替换观测平台时，不需要让所有业务代码直接迁移。
 
 ---
 
-## 原则四：组合优先于重新实现
-
-例如 Message Component 需要 Retry 时：
-
-```text
-Message
-↓
-Retry API
-```
-
-而不是在 Message Core 中重新实现一套 Retry Engine。
-
-同样：
-
-```text
-Message
-↓
-Idempotency
-```
-
-而不是 Message Component 自己维护独立幂等状态机。
-
----
-
-## 原则五：组件负责技术语义，业务负责业务语义
-
-例如：
-
-```text
-Idempotency
-```
-
-可以知道：
-
-```text
-PROCESSING
-SUCCESS
-FAILED
-DISCARDED
-```
-
-但不应该知道：
-
-```text
-ORDER_PAID
-COUPON_SENT
-ACCOUNT_FROZEN
-```
-
-后者仍属于业务领域。
-
----
-
-# 27. 当前技术基线
+# 16. 技术栈
 
 当前长期技术基线：
 
@@ -1458,155 +816,190 @@ Spring Boot 3
 Maven Multi Module
 ```
 
-主要基础设施方向包括：
+主要基础设施方向：
 
 ```text
 Redis
-MySQL
-PostgreSQL
-
+MySQL / PostgreSQL
 Kafka
 Pulsar
 RocketMQ
-
 Prometheus
 Grafana
 OpenTelemetry
 SkyWalking
-
 XXL-Job
 ```
 
-成熟基础设施不会全部重新实现。
+不同基础设施不会全部由本项目重新实现。
 
 ---
 
-# 28. 当前 Roadmap
+# 17. 推荐使用原则
 
-截至目前，整体路线已经从最初的“逐个造组件”转向：
+## 原则一：只引入真正需要的组件
 
-> **把核心组件组合成真正可靠的业务执行链路。**
+不要因为项目提供所有组件，就一次性全部引入。
+
+例如普通 CRUD 服务可能只需要：
+
+```text
+Foundation
++
+Idempotency
++
+Observability
+```
 
 ---
 
-## Phase 1：基础执行底座
+## 原则二：优先使用 Starter
+
+对于 Spring Boot 应用，后续组件会尽量提供：
+
+```text
+xxx-spring-boot-starter
+```
+
+通过自动装配完成默认接入。
+
+---
+
+## 原则三：业务代码面向 API
+
+业务尽量依赖：
+
+```text
+xxx-api
+```
+
+而不是：
+
+```text
+xxx-core
+xxx-provider-redis
+xxx-provider-kafka
+```
+
+---
+
+## 原则四：Provider 由基础设施决定
+
+例如：
+
+```text
+Distributed Lock API
+        ↓
+Redis Provider
+```
+
+未来可以替换为：
+
+```text
+Etcd Provider
+```
+
+业务代码原则上不需要修改。
+
+---
+
+# 18. 当前建设路线
+
+当前重点：
+
+```text
+Distributed Lock 收口
+        ↓
+Message Reliable Consume
+        ↓
+Message Reliability 闭环
+        ↓
+Task / Timeout Scanner
+        ↓
+Consistency & Compensation
+        ↓
+Governance
+        ↓
+Data Access Governance
+```
+
+目前 Message Reliable Consume 是主要建设方向。
+
+---
+
+# 19. Roadmap
+
+## Phase 1：基础执行能力
 
 ```text
 Foundation
 Concurrency
 Retry
 Transaction
+Idempotency
 Distributed Lock
 ```
 
-当前：
+目标：
 
-> **主体能力已经形成。**
+> 建立单服务和多节点环境下最基础的可靠执行能力。
 
 ---
 
-## Phase 2：幂等与消息可靠性
+## Phase 2：跨系统可靠性
 
 ```text
-Idempotency
 Message
+Reliable Send
 Reliable Consume
-Transaction Integration
-```
-
-当前：
-
-> **v1 主体能力已经形成，正在继续加强 Storage 与可靠性能力。**
-
----
-
-## Phase 3：Storage & Consistency
-
-当前新的重点方向：
-
-```text
-Relational Access V1
-        ↓
-Idempotency Shard-Ready Storage
-        ↓
-Message Outbox
-        ↓
-Task / Timeout Recovery
-        ↓
+Task
 Consistency
 ```
 
+目标：
+
+> 建立系统之间的异步通信、失败恢复和最终一致性能力。
+
 ---
 
-## Phase 4：Governance & Observability
-
-后续统一：
+## Phase 3：治理能力
 
 ```text
-Metrics
-Trace
-Health
+Observability
 Rate Limit
 Circuit Breaker
 Bulkhead
-Dynamic Configuration
+Configuration Governance
 ```
+
+目标：
+
+> 建立统一稳定性与运行治理体系。
 
 ---
 
-## Phase 5：Data Governance
-
-在真实数据规模需要时继续：
+## Phase 4：数据治理
 
 ```text
-Shard Routing
-Read / Write Routing
+Sharding
+Read/Write Routing
 SQL Governance
-Database Routing
-Table Routing
+Data Access Routing
 ```
+
+目标：
+
+> 面向更大数据量和复杂系统提供统一数据访问治理。
 
 ---
 
-# 29. 当前主建设路线
+# 20. 文档
 
-当前不再把分布式锁作为主要开发线。
+项目采用两类文档。
 
-Redis Distributed Lock 主体已经形成。
+## 使用文档
 
-现在更合理的路线是：
-
-```text
-Relational Access V1 收口
-        ↓
-Idempotency v2
-Shard-Ready Storage
-        ↓
-Message v2
-Outbox / Reliability
-        ↓
-Task / Timeout Scanner
-        ↓
-Consistency & Compensation
-        ↓
-Governance / Observability
-        ↓
-Sharding Routing
-```
-
-其中 Relational Access 的意义非常重要：
-
-> 它不是 ORM，而是后续 Idempotency Storage、Outbox、Task Storage 等技术组件共同使用的关系型数据访问底座。
-
----
-
-# 30. 文档体系
-
-项目维护两类文档。
-
-## 使用者文档
-
-根目录：
+面向组件使用者：
 
 ```text
 README.md
@@ -1615,52 +1008,49 @@ README.md
 主要回答：
 
 ```text
-项目是什么？
-有哪些组件？
-解决什么问题？
-什么时候应该使用？
-组件如何组合？
-当前哪些能力可以使用？
+有什么？
+解决什么？
+什么时候用？
+怎么组合？
+怎么接入？
 ```
 
 ---
 
-## 组件设计与研发文档
+## 设计与建设文档
 
-位于：
+面向组件开发者和维护者：
 
 ```text
-docs/
+docs/技术组件建设进展.md
 ```
 
 主要记录：
 
 * 架构设计
+* 模块拆分
 * API / Core / SPI / Provider
-* 类职责
 * 状态机
-* 时序图
-* 组件图
-* 关键决策
-* 当前开发进度
-* 后续扩展点
+* 内部时序
+* 关键技术决策
+* 当前研发进度
 
 ---
 
-# 31. 项目设计理念
+# 21. 项目设计理念
 
-`iron-components-java` 不追求：
+本项目并不追求：
 
-> 所有技术能力全部自己实现。
+> “所有东西全部自己实现。”
 
-更关注：
+而更关注：
 
-> **如何把成熟基础设施转换成业务系统真正容易使用、拥有明确边界、能够治理、能够观察、能够替换并且能够组合的技术能力。**
+> **如何把成熟基础设施封装成业务真正容易使用、可以组合、可以治理、可以演进的技术能力。**
 
-典型结构：
+因此很多组件最终都会采用：
 
 ```text
-Stable API
+稳定 API
     ↓
 Core
     ↓
@@ -1668,7 +1058,7 @@ SPI
     ↓
 Provider
     ↓
-Infrastructure
+成熟基础设施
 ```
 
 例如：
@@ -1683,7 +1073,7 @@ LockProvider
 Redis
 ```
 
-消息：
+或者：
 
 ```text
 Message API
@@ -1695,23 +1085,11 @@ MessageProvider
 Kafka / Pulsar / RocketMQ
 ```
 
-数据访问：
-
-```text
-Technical Component
-        ↓
-Relational Access
-        ↓
-JDBC / DataSource
-        ↓
-MySQL / PostgreSQL
-```
-
 ---
 
-# 32. 最终目标
+# 22. 最终目标
 
-最终希望形成这样一套可组合的 Java 基础能力：
+最终希望形成一套能够在真实业务项目中组合使用的基础能力：
 
 ```text
 Foundation
@@ -1722,54 +1100,43 @@ Retry
     +
 Transaction
     +
-Relational Access
-    +
 Idempotency
     +
 Distributed Lock
     +
 Message
     +
-Cache
-    +
 Task
-    +
-Consistency
     +
 Observability
     +
 Governance
 ```
 
-让业务系统更多关注：
+让业务开发更多关注：
 
 ```text
 订单
 支付
 营销
-账户
-客户
 清结算
-风控
+客户
+账户
 ```
 
-而不是让每个业务团队重新实现：
+而不是每一个系统都重新实现：
 
 ```text
+重试
+幂等
+分布式锁
 线程池
-Retry
-Transaction Template
-JDBC Storage
-Idempotency
-Distributed Lock
-MQ Adapter
+MQ 适配
 ACK
-Outbox
-Task Recovery
+超时
+补偿
 Trace
 Metrics
 ```
 
-最终希望得到的不是一堆互不相关的工具类，而是：
-
-> **一套边界清晰、能够组合、能够实际服务业务系统，并且可以长期持续演进的 Java 技术组件底座。**
+这就是整个技术组件体系长期建设的目标。
