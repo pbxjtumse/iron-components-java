@@ -27,10 +27,6 @@
         </dependency>
         <dependency>
             <groupId>com.xjtu.iron</groupId>
-            <artifactId>idempotent-integration</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.xjtu.iron</groupId>
             <artifactId>distributed-lock-api</artifactId>
         </dependency>
         <dependency>
