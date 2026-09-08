@@ -12,6 +12,7 @@ import com.xjtu.iron.relational.spi.execution.SqlExecutionContext;
 import com.xjtu.iron.relational.spi.execution.SqlExecutionListener;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
@@ -25,8 +26,12 @@ import java.util.function.Consumer;
 /**
  * Relational Access v1 的 Spring Boot 自动配置。
  *
- * <p>V1 只处理单 DataSource（或存在唯一 Primary DataSource）的自动装配。多数据源场景应由调用方
- * 提供自定义 {@link DataSourceResolver} / {@link ConnectionProvider}，而不是在本 Starter 内计算分片。</p>
+ * <p>单 DataSource 或唯一 Primary DataSource 场景下，Starter 会自动创建
+ * SingleDataSourceResolver -> SpringTransactionAwareConnectionProvider -> RelationalTemplate。</p>
+ *
+ * <p>多数据源场景下，Starter 不负责创建真实 DataSource，也不负责计算分片。调用方只需要提供
+ * 自定义 {@link DataSourceResolver} 或 {@link ConnectionProvider} Bean，本配置仍会继续补齐后续
+ * ConnectionProvider / SqlExceptionTranslator / RelationalTemplate。</p>
  *
  * <p>本配置不会创建事务。{@link SpringTransactionAwareConnectionProvider} 只会复用 Spring 已经绑定
  * 到当前线程的事务 Connection；事务的 begin/commit/rollback 和传播语义仍由 transaction-component
@@ -34,17 +39,18 @@ import java.util.function.Consumer;
  */
 @AutoConfiguration
 @ConditionalOnClass({DataSource.class, RelationalTemplate.class})
-@ConditionalOnSingleCandidate(DataSource.class)
 public class RelationalAccessAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    @ConditionalOnSingleCandidate(DataSource.class)
     public DataSourceResolver relationalDataSourceResolver(DataSource dataSource) {
         return new SingleDataSourceResolver(dataSource);
     }
 
     @Bean
     @ConditionalOnMissingBean
+    @ConditionalOnBean(DataSourceResolver.class)
     public ConnectionProvider relationalConnectionProvider(DataSourceResolver dataSourceResolver) {
         return new SpringTransactionAwareConnectionProvider(dataSourceResolver);
     }
@@ -57,6 +63,7 @@ public class RelationalAccessAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(RelationalTemplate.class)
+    @ConditionalOnBean(ConnectionProvider.class)
     public RelationalTemplate relationalTemplate(
             ConnectionProvider connectionProvider,
             SqlExceptionTranslator exceptionTranslator,
