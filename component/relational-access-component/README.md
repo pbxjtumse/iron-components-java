@@ -1,7 +1,7 @@
 # Relational Access Component
 
 > 当前阶段：**v1 JDBC Foundation / Usable Baseline**  
-> 当前已经包含 `relational-api`、`relational-spi`、`relational-core`、`relational-integration` 与 `relational-starter`，并补齐 H2 主链测试与 Spring 同事务回滚测试。
+> 当前已经包含 `relational-api`、`relational-spi`、`relational-core`、`relational-integration` 与 `relational-starter`，并补齐 H2 主链测试、Spring 同事务回滚测试和多数据源路由测试。
 
 ## 1. 组件定位
 
@@ -22,8 +22,11 @@ Business Template
 
 RelationalTemplate
     -> ConnectionProvider
-        -> DefaultConnectionProvider          -> DataSource.getConnection()
-        -> SpringTransactionAwareProvider     -> DataSourceUtils / transaction-bound Connection
+        -> DefaultConnectionProvider
+            -> SingleDataSourceResolver
+            -> RoutingDataSourceResolver
+        -> SpringTransactionAwareProvider
+            -> DataSourceUtils / transaction-bound Connection
     -> JDBC
 ```
 
@@ -33,6 +36,7 @@ RelationalTemplate
 Storage 决定：执行什么 SQL、参数是什么、结果如何解释。
 Relational Access 决定：如何安全、统一地执行这条 SQL。
 Transaction 决定：事务何时 begin / commit / rollback，以及 REQUIRED / REQUIRES_NEW 等传播语义。
+Sharding / Routing 决定：dataSourceKey 和物理表名。
 ```
 
 ## 2. Maven modules
@@ -58,19 +62,19 @@ relational-access-component
 - `SqlExecutionOptions`
 - `SqlRoute`
 - `RowMapper<T>`
-- `UpdateResult` / `BatchResult` / `GeneratedKey<T>`
+- `UpdateResult` / `BatchResult`
 - `RelationalAccessException` / `RelationalFailureType`
 
 ### relational-spi
 
 只面向 Core / Integration：
 
-- `ConnectionProvider`
-- `ConnectionHandle` / `ConnectionOwnership`
-- `DataSourceResolver`
-- `SqlExceptionTranslator`
-- `SqlExecutionListener`
-- `SqlExecutionContext` / `SqlExecutionKind`
+- `connection.ConnectionProvider`
+- `connection.ConnectionHandle` / `ConnectionOwnership`
+- `connection.DataSourceResolver`
+- `exception.SqlExceptionTranslator`
+- `execution.SqlExecutionListener`
+- `execution.SqlExecutionContext` / `SqlExecutionKind`
 
 普通 Storage 不应直接拿这些 SPI。
 
@@ -85,6 +89,7 @@ relational-access-component
 - `DefaultConnectionProvider`
 - `DefaultConnectionHandle`
 - `SingleDataSourceResolver`
+- `RoutingDataSourceResolver`
 - `StandardSqlExceptionTranslator`
 
 ### relational-integration
@@ -112,7 +117,7 @@ DataSource
     -> DefaultRelationalTemplate
 ```
 
-业务若提供自定义 `DataSourceResolver`、`ConnectionProvider`、`SqlExceptionTranslator` 或 `RelationalTemplate` Bean，Starter 会让位。
+多 DataSource 场景下，Starter 不猜测应该用哪个库；调用方提供自定义 `DataSourceResolver` 或 `ConnectionProvider` Bean 后，Starter 会继续补齐后续 Bean。
 
 ## 3. Spring Boot 使用
 
@@ -181,10 +186,55 @@ INSERT ... ON DUPLICATE KEY UPDATE ... -> MySQL upsert
 - `updateByUniqueKey`
 - `deleteById`
 - `selectByCondition`
+- `insertAndReturnKey`
 
 这些需要表结构、列映射、主键/唯一键元数据，属于 MyBatis / MyBatis-Plus / JPA / 业务 Repository / Storage Adapter 的责任。
 
-## 5. API 分级
+## 5. 单库与多库路由
+
+`SqlRoute.dataSourceKey` 表示逻辑数据源标识，不是表名。
+
+```text
+SqlRoute.dataSourceKey  -> 选择 DataSource / 数据库连接池
+SqlStatement.sql        -> 决定访问哪张表
+```
+
+单库场景使用 `SingleDataSourceResolver`：
+
+```text
+defaultRoute -> defaultDataSource
+namedRoute   -> DATA_SOURCE_ROUTING_ERROR
+```
+
+多库场景使用 `RoutingDataSourceResolver`：
+
+```java
+DataSourceResolver resolver = new RoutingDataSourceResolver(
+        infraDataSource,
+        Map.of(
+                "infra-db", infraDataSource,
+                "order-db", orderDataSource,
+                "archive-db", archiveDataSource
+        )
+);
+```
+
+然后 Storage 选择目标库：
+
+```java
+SqlStatement statement = SqlStatement.of(
+        "idempotency.try-acquire",
+        "UPDATE iron_idempotency SET status = ? WHERE idempotency_key = ?",
+        PROCESSING,
+        key
+).withRoute(SqlRoute.of("infra-db"));
+```
+
+注意：Relational Access 仍然不计算 hash、不计算分片、不改写表名。未来分库分表组件应先算出 `dataSourceKey` 和物理表名，再把结果交给 Relational Access 执行。
+
+真实数据库 URL、用户名、密码不要进入组件源码仓库。组件测试使用 H2 多内存库验证路由语义；生产环境由业务工程通过 Spring Bean、配置中心或 K8S Secret 注入 DataSource。
+
+## 6. API 分级
 
 ### Level A：业务模板依赖高层技术能力
 
@@ -223,7 +273,7 @@ JdbcTaskStorage
 
 `relational-core`、Spring transaction integration、未来 observability/sharding integration 才依赖 `ConnectionProvider` 等 SPI。
 
-## 6. SQL 的归属
+## 7. SQL 的归属
 
 SQL 仍然存在，但不散到 Relational Core。
 
@@ -241,7 +291,7 @@ PreparedStatement.executeUpdate()    JDBC 机制
 
 Relational Access 不知道 `ownerToken / PROCESSING / Outbox / Order` 是什么。
 
-## 7. 事务边界
+## 8. 事务边界
 
 Relational Core **不创建事务**。
 
@@ -257,7 +307,7 @@ RelationalTemplate -> Spring Provider ┘
 
 当前 `relational-integration-spring` 已用真实 H2 测试验证：同一个 Spring 本地事务内，`JdbcTemplate` 与 `RelationalTemplate` 的写入会一起提交或一起回滚。
 
-## 8. v1 明确不做
+## 9. v1 明确不做
 
 - ORM / Entity / Repository 自动实现
 - `@Table` / `@Column`
@@ -269,14 +319,15 @@ RelationalTemplate -> Spring Provider ┘
 - 数据库连接池
 - Schema Migration
 - MySQL/PostgreSQL vendor-specific Translator（下一阶段按需求增加）
+- 真实数据库连接信息管理
 
-## 9. 验证命令
+## 10. 验证命令
 
 ```bash
 mvn -pl :relational-core,:relational-integration-spring,:relational-starter -am test
 ```
 
-## 10. 代码和 UML 阅读入口
+## 11. 代码和 UML 阅读入口
 
 从 `docs/README.md` 开始。
 
@@ -285,8 +336,11 @@ mvn -pl :relational-core,:relational-integration-spring,:relational-starter -am 
 ```text
 class responsibility
   -> core class diagram
+  -> DefaultRelationalTemplate walkthrough
   -> update flow
   -> queryOne flow
+  -> batch flow
+  -> multi datasource routing
   -> SQL lifecycle
   -> Connection ownership
   -> Spring shared transaction
