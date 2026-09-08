@@ -14,7 +14,7 @@ participant "PreparedStatement" as PS
 database Database as DB
 
 Storage -> RT : batchUpdate(BatchSqlStatement)
-RT -> RT : validate + contextOf(BATCH_UPDATE)\nattributes.batchSize=N
+RT -> RT : validate()\ncreateExecutionContext(BATCH_UPDATE)
 RT -> CP : acquire(context)
 CP --> RT : ConnectionHandle
 RT -> Handle : connection()
@@ -34,10 +34,12 @@ RT -> PS : close()
 RT -> Handle : close()
 RT --> Storage : BatchResult(defensive copy)
 
-note bottom of Storage
-Relational Access only executes JDBC batch.
-Chunk size / business grouping / retry strategy
-belongs to the caller or task/message component.
+note right of RT
+ExecutionContext contains:
+- operationName
+- sql operation type
+- route
+- options
 end note
 
 @enduml

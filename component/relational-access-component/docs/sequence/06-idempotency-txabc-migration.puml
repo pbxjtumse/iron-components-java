@@ -50,14 +50,19 @@ alt business / markSuccess fails
   TX -> DB : COMMIT Tx-C
 end
 
-note bottom of RT
+note right of RT
+
 RelationalTemplate never decides REQUIRED / REQUIRES_NEW.
+
 It only executes SQL on the Connection supplied by its Provider.
+
 end note
 
-note bottom of IDEM
-Current JdbcExecutionManager transaction semantics are not deleted blindly.
-They migrate upward into idempotency + transaction integration orchestration.
+note right of IDEM
+
+Current JdbcExecutionManager transaction semantics
+migrate upward into transaction orchestration.
+
 end note
 
 @enduml
