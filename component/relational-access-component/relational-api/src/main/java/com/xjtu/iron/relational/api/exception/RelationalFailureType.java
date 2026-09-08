@@ -44,9 +44,6 @@ public enum RelationalFailureType {
     /** ResultSet 到 Java 对象映射失败，或 RowMapper 返回非法结果。 */
     RESULT_MAPPING_ERROR,
 
-    /** 调用 insertAndReturnKey 时数据库没有返回生成键。 */
-    GENERATED_KEY_UNAVAILABLE,
-
     /** 当前翻译器无法稳定识别的关系型访问错误。 */
     UNKNOWN
 }

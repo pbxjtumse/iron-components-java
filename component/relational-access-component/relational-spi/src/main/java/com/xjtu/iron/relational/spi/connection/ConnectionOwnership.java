@@ -1,4 +1,4 @@
-package com.xjtu.iron.relational.spi;
+package com.xjtu.iron.relational.spi.connection;
 
 /**
  * 当前 Relational Access 调用对物理 Connection 的所有权。

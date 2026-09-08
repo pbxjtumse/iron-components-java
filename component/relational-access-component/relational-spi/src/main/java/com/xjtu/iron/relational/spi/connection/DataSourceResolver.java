@@ -1,4 +1,6 @@
-package com.xjtu.iron.relational.spi;
+package com.xjtu.iron.relational.spi.connection;
+
+import com.xjtu.iron.relational.spi.execution.SqlExecutionContext;
 
 import javax.sql.DataSource;
 
@@ -10,5 +12,8 @@ import javax.sql.DataSource;
  */
 public interface DataSourceResolver {
 
+    /**
+     * 根据执行上下文中的 SqlRoute 选择目标 DataSource。
+     */
     DataSource resolve(SqlExecutionContext context);
 }

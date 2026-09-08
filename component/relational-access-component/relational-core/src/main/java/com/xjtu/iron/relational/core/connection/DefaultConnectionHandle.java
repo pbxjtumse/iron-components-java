@@ -1,7 +1,7 @@
 package com.xjtu.iron.relational.core.connection;
 
-import com.xjtu.iron.relational.spi.ConnectionHandle;
-import com.xjtu.iron.relational.spi.ConnectionOwnership;
+import com.xjtu.iron.relational.spi.connection.ConnectionHandle;
+import com.xjtu.iron.relational.spi.connection.ConnectionOwnership;
 
 import java.sql.Connection;
 import java.sql.SQLException;

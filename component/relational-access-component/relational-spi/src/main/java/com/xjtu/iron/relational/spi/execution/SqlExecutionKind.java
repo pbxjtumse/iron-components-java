@@ -1,4 +1,4 @@
-package com.xjtu.iron.relational.spi;
+package com.xjtu.iron.relational.spi.execution;
 
 /**
  * 一次实际关系型访问的执行种类。
@@ -19,9 +19,6 @@ public enum SqlExecutionKind {
 
     /** JDBC executeUpdate 路径，可执行 INSERT / UPDATE / DELETE / MERGE / UPSERT 等 DML。 */
     UPDATE,
-
-    /** 通过 Statement.RETURN_GENERATED_KEYS 执行插入并读取数据库生成键。 */
-    INSERT_WITH_GENERATED_KEY,
 
     /** JDBC batch 路径，一条固定 SQL 多组参数，不区分 batch insert / update / delete。 */
     BATCH

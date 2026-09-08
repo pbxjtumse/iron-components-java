@@ -1,9 +1,9 @@
 package com.xjtu.iron.relational.core.connection;
 
-import com.xjtu.iron.relational.spi.ConnectionHandle;
-import com.xjtu.iron.relational.spi.ConnectionProvider;
-import com.xjtu.iron.relational.spi.DataSourceResolver;
-import com.xjtu.iron.relational.spi.SqlExecutionContext;
+import com.xjtu.iron.relational.spi.connection.ConnectionHandle;
+import com.xjtu.iron.relational.spi.connection.ConnectionProvider;
+import com.xjtu.iron.relational.spi.connection.DataSourceResolver;
+import com.xjtu.iron.relational.spi.execution.SqlExecutionContext;
 
 import javax.sql.DataSource;
 import java.sql.Connection;

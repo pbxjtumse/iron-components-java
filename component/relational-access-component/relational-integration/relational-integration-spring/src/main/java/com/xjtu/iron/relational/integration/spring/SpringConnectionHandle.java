@@ -1,7 +1,7 @@
 package com.xjtu.iron.relational.integration.spring;
 
-import com.xjtu.iron.relational.spi.ConnectionHandle;
-import com.xjtu.iron.relational.spi.ConnectionOwnership;
+import com.xjtu.iron.relational.spi.connection.ConnectionHandle;
+import com.xjtu.iron.relational.spi.connection.ConnectionOwnership;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
 import javax.sql.DataSource;

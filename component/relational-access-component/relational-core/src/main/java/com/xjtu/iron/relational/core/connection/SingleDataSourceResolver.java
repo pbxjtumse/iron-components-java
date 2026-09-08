@@ -2,8 +2,8 @@ package com.xjtu.iron.relational.core.connection;
 
 import com.xjtu.iron.relational.api.exception.RelationalAccessException;
 import com.xjtu.iron.relational.api.exception.RelationalFailureType;
-import com.xjtu.iron.relational.spi.DataSourceResolver;
-import com.xjtu.iron.relational.spi.SqlExecutionContext;
+import com.xjtu.iron.relational.spi.connection.DataSourceResolver;
+import com.xjtu.iron.relational.spi.execution.SqlExecutionContext;
 
 import javax.sql.DataSource;
 import java.util.Objects;

@@ -1,4 +1,4 @@
-package com.xjtu.iron.relational.spi;
+package com.xjtu.iron.relational.spi.connection;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -11,13 +11,20 @@ import java.sql.SQLException;
  */
 public interface ConnectionHandle extends AutoCloseable {
 
+    /**
+     * 返回本次 Relational 执行实际使用的 JDBC Connection。
+     */
     Connection connection();
 
+    /**
+     * 返回这条 Connection 对当前 Relational 调用的所有权语义。
+     */
     ConnectionOwnership ownership();
 
     /**
      * 释放本次访问对 Connection 的使用权。
-     * OWNED 应物理关闭；BORROWED 仅逻辑释放。
+     *
+     * <p>OWNED 应物理关闭；BORROWED 只能逻辑释放。</p>
      */
     @Override
     void close() throws SQLException;

@@ -2,7 +2,6 @@ package com.xjtu.iron.relational.api;
 
 import com.xjtu.iron.relational.api.mapping.RowMapper;
 import com.xjtu.iron.relational.api.result.BatchResult;
-import com.xjtu.iron.relational.api.result.GeneratedKey;
 import com.xjtu.iron.relational.api.result.UpdateResult;
 import com.xjtu.iron.relational.api.statement.BatchSqlStatement;
 import com.xjtu.iron.relational.api.statement.SqlStatement;
@@ -22,6 +21,9 @@ import java.util.Optional;
  * <p>本接口不承担 ORM、业务 Repository、事务边界、分库分表算法和自动重试。
  * 因此这里不会提供 updateById、insertSelective、updateByUniqueKey 等 DataMapper/ORM
  * 风格方法；这些能力应由上层 Storage、业务 MyBatis Mapper 或未来专门的业务 Repository 实现。</p>
+ *
+ * <p>V1 不提供 insertAndReturnKey。基础组件更推荐上层提前生成业务主键，例如 messageId、
+ * idempotencyKey、taskId，而不是把组件语义绑定到数据库自增主键。</p>
  */
 public interface RelationalTemplate {
 
@@ -52,14 +54,6 @@ public interface RelationalTemplate {
      * 表名、主键、唯一键和 selective 更新语义，只返回 JDBC 的受影响行数。</p>
      */
     UpdateResult update(SqlStatement statement);
-
-    /**
-     * 执行插入并读取数据库生成键。
-     *
-     * <p>这是独立方法的原因不是“面向业务新增 insert 接口”，而是 JDBC 需要通过
-     * Statement.RETURN_GENERATED_KEYS 使用特殊的 prepareStatement 路径。</p>
-     */
-    <K> GeneratedKey<K> insertAndReturnKey(SqlStatement statement, Class<K> keyType);
 
     /**
      * 对同一 SQL 的多组参数执行 JDBC batch。

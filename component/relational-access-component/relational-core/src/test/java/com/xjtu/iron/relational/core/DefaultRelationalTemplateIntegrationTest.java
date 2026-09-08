@@ -3,7 +3,6 @@ package com.xjtu.iron.relational.core;
 import com.xjtu.iron.relational.api.RelationalTemplate;
 import com.xjtu.iron.relational.api.exception.RelationalAccessException;
 import com.xjtu.iron.relational.api.exception.RelationalFailureType;
-import com.xjtu.iron.relational.api.result.GeneratedKey;
 import com.xjtu.iron.relational.api.statement.BatchSqlStatement;
 import com.xjtu.iron.relational.api.statement.SqlParameter;
 import com.xjtu.iron.relational.api.statement.SqlRoute;
@@ -16,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.UUID;
@@ -89,7 +89,7 @@ class DefaultRelationalTemplateIntegrationTest {
     }
 
     @Test
-    void batchAndGeneratedKeyShouldWork() {
+    void batchShouldWorkForAnyDmlSql() {
         BatchSqlStatement batch = BatchSqlStatement.of(
                 "test.batch-insert",
                 "INSERT INTO relational_test(name, score) VALUES (?, ?)",
@@ -100,18 +100,21 @@ class DefaultRelationalTemplateIntegrationTest {
         );
 
         assertThat(template.batchUpdate(batch).size()).isEqualTo(2);
-
-        GeneratedKey<Long> generatedKey = template.insertAndReturnKey(
-                SqlStatement.of(
-                        "test.insert-key",
-                        "INSERT INTO relational_test(name, score) VALUES (?, ?)",
-                        "c",
-                        3
-                ),
+        assertThat(template.queryScalar(
+                SqlStatement.of("test.count-after-batch", "SELECT COUNT(*) FROM relational_test"),
                 Long.class
+        )).contains(2L);
+    }
+
+    @Test
+    void batchAliasShouldDelegateToBatchUpdate() {
+        BatchSqlStatement batch = BatchSqlStatement.of(
+                "test.batch-alias-insert",
+                "INSERT INTO relational_test(name, score) VALUES (?, ?)",
+                List.of(List.of(SqlParameter.of("alias"), SqlParameter.of(3)))
         );
 
-        assertThat(generatedKey.value()).isPositive();
+        assertThat(template.batch(batch).size()).isEqualTo(1);
     }
 
     @Test
@@ -153,5 +156,27 @@ class DefaultRelationalTemplateIntegrationTest {
                 .isInstanceOfSatisfying(RelationalAccessException.class, exception ->
                         assertThat(exception.failureType())
                                 .isEqualTo(RelationalFailureType.DATA_SOURCE_ROUTING_ERROR));
+    }
+
+    @Test
+    void translatorFailureShouldNotHideOriginalSqlException() {
+        RelationalTemplate brokenTranslatorTemplate = new DefaultRelationalTemplate(
+                new DefaultConnectionProvider(new SingleDataSourceResolver(dataSource)),
+                (context, exception) -> {
+                    throw new IllegalStateException("translator-broken");
+                }
+        );
+
+        assertThatThrownBy(() -> brokenTranslatorTemplate.update(SqlStatement.of(
+                "test.invalid-sql",
+                "INSERT INTO missing_table(name) VALUES (?)",
+                "x"
+        ))).isInstanceOfSatisfying(RelationalAccessException.class, exception -> {
+            assertThat(exception.failureType()).isEqualTo(RelationalFailureType.UNKNOWN);
+            assertThat(exception.getCause()).isInstanceOf(SQLException.class);
+            assertThat(exception.getSuppressed())
+                    .anyMatch(suppressed -> suppressed instanceof IllegalStateException
+                            && "translator-broken".equals(suppressed.getMessage()));
+        });
     }
 }

@@ -2,8 +2,8 @@ package com.xjtu.iron.relational.core.exception;
 
 import com.xjtu.iron.relational.api.exception.RelationalAccessException;
 import com.xjtu.iron.relational.api.exception.RelationalFailureType;
-import com.xjtu.iron.relational.spi.SqlExceptionTranslator;
-import com.xjtu.iron.relational.spi.SqlExecutionContext;
+import com.xjtu.iron.relational.spi.exception.SqlExceptionTranslator;
+import com.xjtu.iron.relational.spi.execution.SqlExecutionContext;
 
 import java.sql.SQLDataException;
 import java.sql.SQLIntegrityConstraintViolationException;

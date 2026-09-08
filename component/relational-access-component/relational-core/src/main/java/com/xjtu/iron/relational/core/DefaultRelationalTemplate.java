@@ -5,25 +5,23 @@ import com.xjtu.iron.relational.api.exception.RelationalAccessException;
 import com.xjtu.iron.relational.api.exception.RelationalFailureType;
 import com.xjtu.iron.relational.api.mapping.RowMapper;
 import com.xjtu.iron.relational.api.result.BatchResult;
-import com.xjtu.iron.relational.api.result.GeneratedKey;
 import com.xjtu.iron.relational.api.result.UpdateResult;
 import com.xjtu.iron.relational.api.statement.BatchSqlStatement;
 import com.xjtu.iron.relational.api.statement.SqlStatement;
 import com.xjtu.iron.relational.core.execution.JdbcParameterBinder;
 import com.xjtu.iron.relational.core.execution.JdbcStatementConfigurer;
 import com.xjtu.iron.relational.core.execution.SqlStatementValidator;
-import com.xjtu.iron.relational.spi.ConnectionHandle;
-import com.xjtu.iron.relational.spi.ConnectionProvider;
-import com.xjtu.iron.relational.spi.SqlExceptionTranslator;
-import com.xjtu.iron.relational.spi.SqlExecutionContext;
-import com.xjtu.iron.relational.spi.SqlExecutionKind;
-import com.xjtu.iron.relational.spi.SqlExecutionListener;
+import com.xjtu.iron.relational.spi.connection.ConnectionHandle;
+import com.xjtu.iron.relational.spi.connection.ConnectionProvider;
+import com.xjtu.iron.relational.spi.exception.SqlExceptionTranslator;
+import com.xjtu.iron.relational.spi.execution.SqlExecutionContext;
+import com.xjtu.iron.relational.spi.execution.SqlExecutionKind;
+import com.xjtu.iron.relational.spi.execution.SqlExecutionListener;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -175,35 +173,6 @@ public final class DefaultRelationalTemplate implements RelationalTemplate {
     }
 
     @Override
-    public <K> GeneratedKey<K> insertAndReturnKey(SqlStatement statement, Class<K> keyType) {
-        validator.validate(statement);
-        Objects.requireNonNull(keyType, "keyType");
-        SqlExecutionContext context = contextOf(statement, SqlExecutionKind.INSERT_WITH_GENERATED_KEY);
-
-        return execute(context, connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(
-                    statement.sql(),
-                    Statement.RETURN_GENERATED_KEYS
-            )) {
-                statementConfigurer.configure(preparedStatement, statement.options());
-                parameterBinder.bind(preparedStatement, statement.parameters());
-                preparedStatement.executeUpdate();
-
-                try (ResultSet keys = preparedStatement.getGeneratedKeys()) {
-                    if (!keys.next()) {
-                        throw generatedKeyUnavailable(context);
-                    }
-                    K value = keys.getObject(1, keyType);
-                    if (value == null) {
-                        throw generatedKeyUnavailable(context);
-                    }
-                    return new GeneratedKey<>(value);
-                }
-            }
-        });
-    }
-
-    @Override
     public BatchResult batchUpdate(BatchSqlStatement statement) {
         validator.validate(statement);
         SqlExecutionContext context = contextOf(statement, SqlExecutionKind.BATCH);
@@ -240,7 +209,7 @@ public final class DefaultRelationalTemplate implements RelationalTemplate {
             safeAfterFailure(context, elapsedSince(startedNanos), exception);
             throw exception;
         } catch (SQLException exception) {
-            RelationalAccessException translated = translate(context, exception);
+            RelationalAccessException translated = translateSafely(context, exception);
             safeAfterFailure(context, elapsedSince(startedNanos), translated);
             throw translated;
         } catch (RuntimeException exception) {
@@ -289,14 +258,27 @@ public final class DefaultRelationalTemplate implements RelationalTemplate {
         }
     }
 
-    private RelationalAccessException translate(
+    private RelationalAccessException translateSafely(
             SqlExecutionContext context,
             SQLException exception
     ) {
-        RelationalAccessException translated = exceptionTranslator.translate(context, exception);
-        if (translated != null) {
-            return translated;
+        try {
+            RelationalAccessException translated = exceptionTranslator.translate(context, exception);
+            if (translated != null) {
+                return translated;
+            }
+            return unknownSqlFailure(context, exception);
+        } catch (RuntimeException translatorFailure) {
+            RelationalAccessException fallback = unknownSqlFailure(context, exception);
+            fallback.addSuppressed(translatorFailure);
+            return fallback;
         }
+    }
+
+    private RelationalAccessException unknownSqlFailure(
+            SqlExecutionContext context,
+            SQLException exception
+    ) {
         return new RelationalAccessException(
                 RelationalFailureType.UNKNOWN,
                 context.operationName(),
@@ -315,17 +297,6 @@ public final class DefaultRelationalTemplate implements RelationalTemplate {
                 null,
                 "Expected at most one row but query returned multiple rows, operation="
                         + context.operationName(),
-                null
-        );
-    }
-
-    private RelationalAccessException generatedKeyUnavailable(SqlExecutionContext context) {
-        return new RelationalAccessException(
-                RelationalFailureType.GENERATED_KEY_UNAVAILABLE,
-                context.operationName(),
-                null,
-                null,
-                "Database did not return a generated key, operation=" + context.operationName(),
                 null
         );
     }
