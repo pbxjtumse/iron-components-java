@@ -12,8 +12,8 @@ package "relational-api\n[Storage Adapter depends here]" {
     + queryList(statement, mapper)
     + queryScalar(statement, type)
     + update(statement)
-    + insertAndReturnKey(statement, type)
     + batchUpdate(statement)
+    + batch(statement)
   }
   class SqlStatement
   class BatchSqlStatement
@@ -23,7 +23,6 @@ package "relational-api\n[Storage Adapter depends here]" {
   interface RowMapper
   class UpdateResult
   class BatchResult
-  class GeneratedKey
   class RelationalAccessException
   enum RelationalFailureType
 }
@@ -39,12 +38,18 @@ package "relational-core" {
   class StandardSqlExceptionTranslator
 }
 
-package "relational-spi\n[Framework integration depends here]" {
+package "relational-spi.connection" {
   interface ConnectionProvider
   interface ConnectionHandle
   enum ConnectionOwnership
   interface DataSourceResolver
+}
+
+package "relational-spi.exception" {
   interface SqlExceptionTranslator
+}
+
+package "relational-spi.execution" {
   interface SqlExecutionListener
   class SqlExecutionContext
   enum SqlExecutionKind

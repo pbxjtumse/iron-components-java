@@ -26,7 +26,7 @@ JDBC / Spring DataSourceUtils / DataSource
 
 | 类 | 核心职责 | 典型调用方 | 是否可删 | 说明 |
 |---|---|---|---|---|
-| `RelationalTemplate` | query/update/batch/generated-key 统一门面 | `JdbcIdempotencyStorage`、`JdbcOutboxStorage` | 否 | 组件最核心 API；调用方不接触 Connection/PreparedStatement 生命周期 |
+| `RelationalTemplate` | query/update/batch 统一门面 | `JdbcIdempotencyStorage`、`JdbcOutboxStorage` | 否 | 组件最核心 API；调用方不接触 Connection/PreparedStatement 生命周期 |
 | `SqlStatement` | 一次确定的 SQL 请求 | JDBC Storage | 否 | 持有 operationName、SQL、参数、options、route；SQL 仍属于 Storage |
 | `BatchSqlStatement` | 同一 SQL + 多组参数 | Outbox/Task 批处理 | 可以合并但不建议 | 独立类型避免普通 SQL 与 batch 参数结构混淆 |
 | `SqlParameter` | JDBC 位置参数 | Storage | 否 | 解决显式 JDBCType、NULL、敏感标记 |
@@ -35,7 +35,6 @@ JDBC / Spring DataSourceUtils / DataSource
 | `RowMapper<T>` | 当前 ResultSet 行 -> T | Storage | 否 | 有意暴露 ResultSet；不再造 IronRow；mapper 不允许返回 null |
 | `UpdateResult` | affectedRows | Storage | 否 | 幂等 CAS 最常用：affectedRows == 1 |
 | `BatchResult` | JDBC batch updateCounts | Storage | 否 | 对数组做 defensive copy |
-| `GeneratedKey<T>` | 数据库生成键 | 少量 Storage | 可选能力 | 支持但不推荐基础组件依赖自增主键 |
 | `RelationalAccessException` | 对外统一异常 | Storage/Retry/Transaction | 否 | 不制造 DeadlockException 等大量异常子类 |
 | `RelationalFailureType` | 稳定失败分类 | Storage/Retry | 否 | 上层不要依赖 MySQL vendorCode/SQLState |
 
@@ -45,10 +44,13 @@ JDBC / Spring DataSourceUtils / DataSource
 2. API 不暴露 `ConnectionProvider`、`PreparedStatement`。
 3. `SqlStatement.of(...)` 是普通场景入口；复杂 NULL/JDBCType 使用 `SqlParameter`。
 4. `operationName` 必须稳定、低基数，例如 `idempotency.try-acquire`，不能放 orderId。
+5. V1 不提供 generated-key API；基础组件优先使用上层生成的业务 ID。
 
 ---
 
 ## 3. relational-spi：框架集成层才依赖的扩展契约
+
+### `com.xjtu.iron.relational.spi.connection`
 
 | 类 | 核心职责 | 谁实现/调用 | 是否可删 | 说明 |
 |---|---|---|---|---|
@@ -56,14 +58,24 @@ JDBC / Spring DataSourceUtils / DataSource
 | `ConnectionHandle` | 暴露 Connection + 资源释放边界 | Provider 返回 | 否 | 关键不是包装 JDBC，而是明确物理 Connection 谁能关闭 |
 | `ConnectionOwnership` | OWNED/BORROWED | Handle | 可改 boolean 但不建议 | enum 比 boolean 更明确；BORROWED 表示外部事务持有 |
 | `DataSourceResolver` | dataSourceKey -> DataSource | ConnectionProvider 调用 | 否 | 不是分库分表算法；Sharding 已经提前算好路由 |
-| `SqlExceptionTranslator` | SQLException -> RelationalAccessException | Core 调用 | 否 | 上层稳定异常语义的关键扩展点 |
+
+### `com.xjtu.iron.relational.spi.exception`
+
+| 类 | 核心职责 | 谁实现/调用 | 是否可删 | 说明 |
+|---|---|---|---|---|
+| `SqlExceptionTranslator` | SQLException -> RelationalAccessException | Core 调用 | 否 | 上层稳定异常语义的关键扩展点；实现异常会被模板保护 |
+
+### `com.xjtu.iron.relational.spi.execution`
+
+| 类 | 核心职责 | 谁实现/调用 | 是否可删 | 说明 |
+|---|---|---|---|---|
 | `SqlExecutionContext` | 向 SPI 传递 operation/kind/sql/route/options | Core 创建 | 否 | 不携带高基数业务 ID，不携带参数值 |
 | `SqlExecutionKind` | QUERY_ONE/UPDATE/BATCH 等执行类型 | Metrics/Listener | 否 | 不解析 SQL，只描述当前 API 动作 |
 | `SqlExecutionListener` | before/success/failure 旁路观测 | Metrics/Trace/SlowSQL | 可以 NOOP | 回调异常不得改变 SQL 主链结果 |
 
-### 已删除：`RelationalDialect`
+### 已删除：`RelationalDialect` / `GeneratedKey<T>`
 
-v1 没有分页 SQL 改写、Upsert DSL、SQL AST，也不需要方言来执行标准 JDBC generated keys，因此删除死 SPI。真正出现 MySQL/PostgreSQL 差异时再按真实需求恢复最小契约。
+v1 没有分页 SQL 改写、Upsert DSL、SQL AST，也不需要方言。基础组件也不推荐依赖数据库自增主键，因此 generated-key API 暂不纳入稳定门面。
 
 ---
 
@@ -71,7 +83,7 @@ v1 没有分页 SQL 改写、Upsert DSL、SQL AST，也不需要方言来执行�
 
 | 类 | 核心职责 | 是否可删 | 为什么不继续拆 |
 |---|---|---|---|
-| `DefaultRelationalTemplate` | 固定完整 JDBC 生命周期；实现全部 RelationalTemplate API | 否 | 唯一主模板，避免 QueryExecutor/UpdateExecutor 等重复模板代码 |
+| `DefaultRelationalTemplate` | 固定完整 JDBC 生命周期；实现 RelationalTemplate API | 否 | 唯一主模板，避免 QueryExecutor/UpdateExecutor 等重复模板代码 |
 | `SqlStatementValidator` | 结构校验 | 可以内联但保留 | 从主模板移走无聊校验，让主流程更可读；不解析 SQL |
 | `JdbcParameterBinder` | SqlParameter -> PreparedStatement | 否 | NULL/JDBCType 绑定集中一次解决 |
 | `JdbcStatementConfigurer` | timeout/fetchSize/maxRows -> PreparedStatement | 否 | Statement 级执行选项集中一次解决 |
@@ -79,21 +91,6 @@ v1 没有分页 SQL 改写、Upsert DSL、SQL AST，也不需要方言来执行�
 | `DefaultConnectionHandle` | OWNED/BORROWED 基础句柄 | 否 | 默认 provider 使用 OWNED；未来其他 integration 也可参考 |
 | `SingleDataSourceResolver` | 单 DataSource 默认解析 | 否 | V1 最简单启动方式；命名路由会 fail-fast |
 | `StandardSqlExceptionTranslator` | 标准 JDBC/SQLState 保守分类 | 否 | 提供不绑定数据库厂商的 baseline；厂商细分以后扩展 |
-
-### 为什么没有这些类
-
-```text
-SqlManager
-SqlEngine
-SqlCoordinator
-QueryExecutor
-UpdateExecutor
-BatchExecutor
-ResultResolver
-ConnectionManager
-```
-
-这些类目前没有独立变化轴，只会把一条 100% 线性的 JDBC 主流程切碎。
 
 ---
 
@@ -113,12 +110,6 @@ MyBatis -----------------------------┐
                                      ├→ same transaction-bound Connection
 RelationalTemplate -> SpringProvider ┘
 ```
-
-因此：
-
-- Tx-B：Business SQL + markSuccess 可使用同一 Connection；
-- Tx-A / Tx-C：外层 `TransactionExecutor(REQUIRES_NEW)` 建独立短事务，RelationalTemplate 只参与；
-- Relational Core 永远不自己 `setAutoCommit(false)` 来模拟 transaction-component。
 
 ---
 
@@ -160,14 +151,15 @@ TransactionExecutor(REQUIRED / REQUIRES_NEW)
 1. RelationalTemplate
 2. SqlStatement / SqlParameter / SqlExecutionOptions / SqlRoute
 3. DefaultRelationalTemplate
-4. SqlStatementValidator
-5. JdbcStatementConfigurer
-6. JdbcParameterBinder
-7. ConnectionProvider / ConnectionHandle
-8. DefaultConnectionProvider / SingleDataSourceResolver
-9. SpringTransactionAwareConnectionProvider
-10. SqlExceptionTranslator / StandardSqlExceptionTranslator
-11. SqlExecutionListener / SqlExecutionContext
+4. docs/code-walkthrough/DefaultRelationalTemplate-walkthrough.md
+5. SqlStatementValidator
+6. JdbcStatementConfigurer
+7. JdbcParameterBinder
+8. ConnectionProvider / ConnectionHandle
+9. DefaultConnectionProvider / SingleDataSourceResolver
+10. SpringTransactionAwareConnectionProvider
+11. SqlExceptionTranslator / StandardSqlExceptionTranslator
+12. SqlExecutionListener / SqlExecutionContext
 ```
 
 先理解一条 `update()`，再看 `queryOne()` 和 batch，最快。

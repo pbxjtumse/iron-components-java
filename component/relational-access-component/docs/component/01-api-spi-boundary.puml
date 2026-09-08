@@ -14,23 +14,22 @@ package "relational-api\n[Level B: Storage Adapter Public API]" {
     queryList(statement, rowMapper)
     queryScalar(statement, requiredType)
     update(statement)
-    insertAndReturnKey(statement, keyType)
     batchUpdate(statement)
+    batch(statement)
   }
   interface "RowMapper<T>" as RowMapper
-  class SqlStatement <<record>>
-  class BatchSqlStatement <<record>>
-  class SqlParameter <<record>>
-  class SqlExecutionOptions <<record>>
-  class SqlRoute <<record>>
-  class UpdateResult <<record>>
-  class BatchResult <<record>>
-  class "GeneratedKey<T>" as GeneratedKey <<record>>
+  class SqlStatement
+  class BatchSqlStatement
+  class SqlParameter
+  class SqlExecutionOptions
+  class SqlRoute
+  class UpdateResult
+  class BatchResult
   class RelationalAccessException
   enum RelationalFailureType
 }
 
-package "relational-spi\n[Level C: Core / Integration Extension Contracts]" {
+package "relational-spi.connection" {
   interface ConnectionProvider {
     acquire(context)
   }
@@ -46,15 +45,21 @@ package "relational-spi\n[Level C: Core / Integration Extension Contracts]" {
   interface DataSourceResolver {
     resolve(context)
   }
+}
+
+package "relational-spi.exception" {
   interface SqlExceptionTranslator {
     translate(context, SQLException)
   }
+}
+
+package "relational-spi.execution" {
   interface SqlExecutionListener {
     beforeExecute(context)
     afterSuccess(context, elapsed)
     afterFailure(context, elapsed, failure)
   }
-  class SqlExecutionContext <<record>>
+  class SqlExecutionContext
   enum SqlExecutionKind
 }
 
@@ -87,7 +92,6 @@ RelationalTemplate ..> BatchSqlStatement
 RelationalTemplate ..> RowMapper
 RelationalTemplate ..> UpdateResult
 RelationalTemplate ..> BatchResult
-RelationalTemplate ..> GeneratedKey
 SqlStatement --> SqlParameter
 SqlStatement --> SqlExecutionOptions
 SqlStatement --> SqlRoute
@@ -128,8 +132,8 @@ only relational-core and integration modules normally implement/use this contrac
 end note
 
 note bottom
-RelationalDialect was intentionally removed from v1.
-There is no real dialect-dependent main-flow behavior yet.
+RelationalDialect and generated-key API are intentionally not part of v1.
+The component focuses on stable SQL execution, not ORM-style persistence.
 end note
 
 @enduml
