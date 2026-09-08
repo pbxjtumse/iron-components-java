@@ -1,5 +1,5 @@
 @startuml
-title Relational Access v1 - batchUpdate() Flow
+title Relational Access v1 - batchUpdate() / batch() Flow
 
 autonumber
 skinparam shadowing false
@@ -13,8 +13,8 @@ participant "JdbcParameterBinder" as Binder
 participant "PreparedStatement" as PS
 database Database as DB
 
-Storage -> RT : batchUpdate(BatchSqlStatement)
-RT -> RT : validate()\ncreateExecutionContext(BATCH_UPDATE)
+Storage -> RT : batchUpdate(BatchSqlStatement)\nor batch(BatchSqlStatement)
+RT -> RT : validate()\ncreateExecutionContext(BATCH)
 RT -> CP : acquire(context)
 CP --> RT : ConnectionHandle
 RT -> Handle : connection()
@@ -27,7 +27,7 @@ loop every parameter group
 end
 
 RT -> PS : executeBatch()
-PS -> DB : batch SQL
+PS -> DB : batch SQL decided by BatchSqlStatement.sql
 DB --> PS : int[] updateCounts
 PS --> RT : int[]
 RT -> PS : close()
@@ -35,11 +35,10 @@ RT -> Handle : close()
 RT --> Storage : BatchResult(defensive copy)
 
 note right of RT
-ExecutionContext contains:
-- operationName
-- sql operation type
-- route
-- options
+BATCH is a JDBC execution kind.
+It does not mean only batch update.
+The SQL may be INSERT, UPDATE,
+DELETE, MERGE or UPSERT.
 end note
 
 @enduml

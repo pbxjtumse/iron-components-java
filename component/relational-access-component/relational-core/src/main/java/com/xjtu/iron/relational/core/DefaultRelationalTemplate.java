@@ -206,7 +206,7 @@ public final class DefaultRelationalTemplate implements RelationalTemplate {
     @Override
     public BatchResult batchUpdate(BatchSqlStatement statement) {
         validator.validate(statement);
-        SqlExecutionContext context = contextOf(statement, SqlExecutionKind.BATCH_UPDATE);
+        SqlExecutionContext context = contextOf(statement, SqlExecutionKind.BATCH);
 
         return execute(context, connection -> {
             try (PreparedStatement preparedStatement = connection.prepareStatement(statement.sql())) {

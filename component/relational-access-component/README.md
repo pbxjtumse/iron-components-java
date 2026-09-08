@@ -1,7 +1,7 @@
 # Relational Access Component
 
 > 当前阶段：**v1 JDBC Foundation / Usable Baseline**  
-> 当前已经包含 `relational-api`、`relational-spi`、`relational-core`、`relational-integration-spring` 与 `relational-spring-boot-starter`，并补齐 H2 主链测试与 Spring 同事务回滚测试。
+> 当前已经包含 `relational-api`、`relational-spi`、`relational-core`、`relational-integration` 与 `relational-starter`，并补齐 H2 主链测试与 Spring 同事务回滚测试。
 
 ## 1. 组件定位
 
@@ -42,8 +42,9 @@ relational-access-component
 ├── relational-api
 ├── relational-spi
 ├── relational-core
-├── relational-integration-spring
-├── relational-spring-boot-starter
+├── relational-integration
+│   └── relational-integration-spring
+├── relational-starter
 └── docs
 ```
 
@@ -86,16 +87,20 @@ relational-access-component
 - `SingleDataSourceResolver`
 - `StandardSqlExceptionTranslator`
 
-### relational-integration-spring
+### relational-integration
 
-Spring 本地事务参与桥：
+框架集成聚合层，目前包含：
+
+- `relational-integration-spring`
+
+`relational-integration-spring` 负责 Spring 本地事务参与桥：
 
 - `SpringTransactionAwareConnectionProvider`
 - `SpringConnectionHandle`
 
 它不 begin/commit/rollback；只通过 `DataSourceUtils` 获取和释放 transaction-bound Connection。
 
-### relational-spring-boot-starter
+### relational-starter
 
 单 DataSource / Primary DataSource 场景的默认自动装配：
 
@@ -116,7 +121,7 @@ DataSource
 ```xml
 <dependency>
     <groupId>com.xjtu.iron</groupId>
-    <artifactId>relational-spring-boot-starter</artifactId>
+    <artifactId>relational-starter</artifactId>
 </dependency>
 ```
 
@@ -151,7 +156,35 @@ return result.affectedRows() == 1;
 
 Relational Access 不知道 `ACQUIRED / PROCESSING / ownerToken` 的含义；`affectedRows` 到幂等结果的解释仍属于 `JdbcIdempotencyStorage`。
 
-## 4. API 分级
+## 4. update / batch 的真实含义
+
+`RelationalTemplate.update(SqlStatement)` 对应 JDBC 的 `PreparedStatement.executeUpdate()` 执行路径。
+
+它不只执行 SQL UPDATE。最终执行什么，由 `SqlStatement.sql()` 决定：
+
+```text
+INSERT INTO ...        -> 插入
+UPDATE ...             -> 更新
+DELETE FROM ...        -> 删除
+MERGE INTO ...         -> 合并
+INSERT ... ON DUPLICATE KEY UPDATE ... -> MySQL upsert
+```
+
+`RelationalTemplate.batchUpdate(BatchSqlStatement)` 和 `batch(BatchSqlStatement)` 对应 JDBC 的 `addBatch + executeBatch` 路径。
+
+它也不区分 batch insert / batch update / batch delete。最终批量做什么，同样由 `BatchSqlStatement.sql()` 决定。
+
+因此 Relational Access 不提供：
+
+- `insertSelective`
+- `updateByPrimaryKey`
+- `updateByUniqueKey`
+- `deleteById`
+- `selectByCondition`
+
+这些需要表结构、列映射、主键/唯一键元数据，属于 MyBatis / MyBatis-Plus / JPA / 业务 Repository / Storage Adapter 的责任。
+
+## 5. API 分级
 
 ### Level A：业务模板依赖高层技术能力
 
@@ -190,7 +223,7 @@ JdbcTaskStorage
 
 `relational-core`、Spring transaction integration、未来 observability/sharding integration 才依赖 `ConnectionProvider` 等 SPI。
 
-## 5. SQL 的归属
+## 6. SQL 的归属
 
 SQL 仍然存在，但不散到 Relational Core。
 
@@ -208,7 +241,7 @@ PreparedStatement.executeUpdate()    JDBC 机制
 
 Relational Access 不知道 `ownerToken / PROCESSING / Outbox / Order` 是什么。
 
-## 6. 事务边界
+## 7. 事务边界
 
 Relational Core **不创建事务**。
 
@@ -224,7 +257,7 @@ RelationalTemplate -> Spring Provider ┘
 
 当前 `relational-integration-spring` 已用真实 H2 测试验证：同一个 Spring 本地事务内，`JdbcTemplate` 与 `RelationalTemplate` 的写入会一起提交或一起回滚。
 
-## 7. v1 明确不做
+## 8. v1 明确不做
 
 - ORM / Entity / Repository 自动实现
 - `@Table` / `@Column`
@@ -237,13 +270,13 @@ RelationalTemplate -> Spring Provider ┘
 - Schema Migration
 - MySQL/PostgreSQL vendor-specific Translator（下一阶段按需求增加）
 
-## 8. 验证命令
+## 9. 验证命令
 
 ```bash
-mvn -pl :relational-core,:relational-integration-spring,:relational-spring-boot-starter -am test
+mvn -pl :relational-core,:relational-integration-spring,:relational-starter -am test
 ```
 
-## 9. 代码和 UML 阅读入口
+## 10. 代码和 UML 阅读入口
 
 从 `docs/README.md` 开始。
 
