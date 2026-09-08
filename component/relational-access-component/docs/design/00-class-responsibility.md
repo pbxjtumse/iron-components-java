@@ -31,7 +31,7 @@ JDBC / Spring DataSourceUtils / DataSource
 | `BatchSqlStatement` | 同一 SQL + 多组参数 | Outbox/Task 批处理 | 可以合并但不建议 | 独立类型避免普通 SQL 与 batch 参数结构混淆 |
 | `SqlParameter` | JDBC 位置参数 | Storage | 否 | 解决显式 JDBCType、NULL、敏感标记 |
 | `SqlExecutionOptions` | Statement 级 timeout/fetchSize/maxRows | Storage | 否 | 不代表事务超时或业务超时 |
-| `SqlRoute` | 已计算好的 dataSourceKey | Storage/Sharding Adapter | 否 | Relational 不算 shard；物理表名已经进入最终 SQL |
+| `SqlRoute` | 已计算好的 dataSourceKey | Storage/Sharding Adapter | 否 | Relational 不算 shard；dataSourceKey 选库，物理表名进入最终 SQL |
 | `RowMapper<T>` | 当前 ResultSet 行 -> T | Storage | 否 | 有意暴露 ResultSet；不再造 IronRow；mapper 不允许返回 null |
 | `UpdateResult` | affectedRows | Storage | 否 | 幂等 CAS 最常用：affectedRows == 1 |
 | `BatchResult` | JDBC batch updateCounts | Storage | 否 | 对数组做 defensive copy |
@@ -45,6 +45,7 @@ JDBC / Spring DataSourceUtils / DataSource
 3. `SqlStatement.of(...)` 是普通场景入口；复杂 NULL/JDBCType 使用 `SqlParameter`。
 4. `operationName` 必须稳定、低基数，例如 `idempotency.try-acquire`，不能放 orderId。
 5. V1 不提供 generated-key API；基础组件优先使用上层生成的业务 ID。
+6. `SqlRoute.dataSourceKey` 不是表名，它只用于选择 DataSource。
 
 ---
 
@@ -89,8 +90,22 @@ v1 没有分页 SQL 改写、Upsert DSL、SQL AST，也不需要方言。基础�
 | `JdbcStatementConfigurer` | timeout/fetchSize/maxRows -> PreparedStatement | 否 | Statement 级执行选项集中一次解决 |
 | `DefaultConnectionProvider` | DataSourceResolver -> DataSource.getConnection() -> OWNED Handle | 否 | 非 Spring/纯 JDBC 模式的默认入口 |
 | `DefaultConnectionHandle` | OWNED/BORROWED 基础句柄 | 否 | 默认 provider 使用 OWNED；未来其他 integration 也可参考 |
-| `SingleDataSourceResolver` | 单 DataSource 默认解析 | 否 | V1 最简单启动方式；命名路由会 fail-fast |
+| `SingleDataSourceResolver` | 单 DataSource 默认解析 | 否 | 最简单启动方式；命名路由会 fail-fast |
+| `RoutingDataSourceResolver` | 多 DataSource 映射解析 | 否 | dataSourceKey -> DataSource；不算 shard、不改写表名 |
 | `StandardSqlExceptionTranslator` | 标准 JDBC/SQLState 保守分类 | 否 | 提供不绑定数据库厂商的 baseline；厂商细分以后扩展 |
+
+### Single 与 Routing 的区别
+
+```text
+SingleDataSourceResolver
+    defaultRoute -> defaultDataSource
+    namedRoute   -> DATA_SOURCE_ROUTING_ERROR
+
+RoutingDataSourceResolver
+    defaultRoute             -> defaultDataSource
+    SqlRoute.of("infra-db") -> routedDataSources.get("infra-db")
+    unknown key              -> DATA_SOURCE_ROUTING_ERROR
+```
 
 ---
 
@@ -156,10 +171,10 @@ TransactionExecutor(REQUIRED / REQUIRES_NEW)
 6. JdbcStatementConfigurer
 7. JdbcParameterBinder
 8. ConnectionProvider / ConnectionHandle
-9. DefaultConnectionProvider / SingleDataSourceResolver
+9. DefaultConnectionProvider / SingleDataSourceResolver / RoutingDataSourceResolver
 10. SpringTransactionAwareConnectionProvider
 11. SqlExceptionTranslator / StandardSqlExceptionTranslator
 12. SqlExecutionListener / SqlExecutionContext
 ```
 
-先理解一条 `update()`，再看 `queryOne()` 和 batch，最快。
+先理解一条 `update()`，再看 `queryOne()`、batch、多数据源路由，最快。
