@@ -1,5 +1,5 @@
 @startuml
-title Future Migration - Idempotency Tx-A / Tx-B / Tx-C with Relational Access
+title Idempotency Transaction Migration - JdbcExecutionManager to Relational Access
 
 autonumber
 skinparam shadowing false
@@ -12,13 +12,13 @@ participant "SpringTransactionAwareConnectionProvider" as SCP
 participant "Business / MyBatis" as Biz
 database Database as DB
 
-== Tx-A: acquire state must commit before business callback ==
+== Tx-A: acquire state commits before business callback ==
 IDEM -> TX : execute(REQUIRES_NEW, state-tx)
 TX -> TX : begin Tx-A / bind Connection-A
 TX -> Storage : tryAcquire()
 Storage -> RT : update(INSERT/CAS SQL)
-RT -> SCP : acquire -> transaction-bound A
-SCP --> RT : BORROWED A
+RT -> SCP : acquire transaction-bound A
+SCP --> RT : BORROWED Connection-A
 RT -> DB : persist PROCESSING
 TX -> DB : COMMIT Tx-A
 TX --> IDEM : ACQUIRED
@@ -30,39 +30,40 @@ TX -> Biz : execute real business
 Biz -> DB : business SQL via MyBatis / Connection-B
 TX -> Storage : markSuccess(owner, version)
 Storage -> RT : update(mark-success CAS)
-RT -> SCP : acquire -> transaction-bound B
-SCP --> RT : BORROWED B
+RT -> SCP : acquire transaction-bound B
+SCP --> RT : BORROWED Connection-B
 RT -> DB : idempotency SUCCESS SQL / same Connection-B
 TX -> DB : COMMIT Tx-B atomically
 TX --> IDEM : success
 
-alt business / markSuccess fails
-  TX -> DB : ROLLBACK Tx-B
+alt business or markSuccess fails
+    TX -> DB : ROLLBACK Tx-B
 
-  == Tx-C: persist failure in independent transaction ==
-  IDEM -> TX : execute(REQUIRES_NEW, failure-state-tx)
-  TX -> TX : begin Tx-C / bind Connection-C
-  TX -> Storage : markFailed(...)
-  Storage -> RT : update(mark-failed CAS)
-  RT -> SCP : acquire -> transaction-bound C
-  SCP --> RT : BORROWED C
-  RT -> DB : persist FAILED
-  TX -> DB : COMMIT Tx-C
+    == Tx-C: persist failure in independent transaction ==
+    IDEM -> TX : execute(REQUIRES_NEW, failure-state-tx)
+    TX -> TX : begin Tx-C / bind Connection-C
+    TX -> Storage : markFailed(...)
+    Storage -> RT : update(mark-failed CAS)
+    RT -> SCP : acquire transaction-bound C
+    SCP --> RT : BORROWED Connection-C
+    RT -> DB : persist FAILED
+    TX -> DB : COMMIT Tx-C
 end
 
 note right of RT
+RelationalTemplate does not decide:
+- REQUIRED
+- REQUIRES_NEW
+- rollback policy
 
-RelationalTemplate never decides REQUIRED / REQUIRES_NEW.
-
-It only executes SQL on the Connection supplied by its Provider.
-
+It only executes SQL using the Connection
+provided by ConnectionProvider.
 end note
 
 note right of IDEM
-
-Current JdbcExecutionManager transaction semantics
-migrate upward into transaction orchestration.
-
+JdbcExecutionManager responsibilities migrate upward:
+transaction propagation belongs to TransactionExecutor,
+SQL execution belongs to RelationalTemplate.
 end note
 
 @enduml
