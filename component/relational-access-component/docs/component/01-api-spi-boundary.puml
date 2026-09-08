@@ -71,6 +71,7 @@ package "relational-core\n[Implemented]" {
   class DefaultConnectionProvider
   class DefaultConnectionHandle
   class SingleDataSourceResolver
+  class RoutingDataSourceResolver
   class StandardSqlExceptionTranslator
 }
 
@@ -113,6 +114,7 @@ DefaultConnectionProvider --> DataSourceResolver
 DefaultConnectionProvider --> DefaultConnectionHandle
 DefaultConnectionHandle ..|> ConnectionHandle
 SingleDataSourceResolver ..|> DataSourceResolver
+RoutingDataSourceResolver ..|> DataSourceResolver
 StandardSqlExceptionTranslator ..|> SqlExceptionTranslator
 
 SpringTransactionAwareConnectionProvider ..|> ConnectionProvider
@@ -126,9 +128,11 @@ JdbcIdempotencyStorage / JdbcOutboxStorage / JdbcTaskStorage use this API.
 They do NOT reach ConnectionProvider directly.
 end note
 
-note top of ConnectionProvider
+note top of DataSourceResolver
 Level C:
-only relational-core and integration modules normally implement/use this contract.
+SingleDataSourceResolver handles default DataSource.
+RoutingDataSourceResolver handles dataSourceKey -> DataSource map.
+Neither one calculates shard or table name.
 end note
 
 note bottom
