@@ -57,25 +57,25 @@ export IRON_TEST_MYSQL_PASSWORD='your-password'
 
 如果这些变量没有配置，测试会自动 skip，不影响普通构建。
 
-## 4. 测试会创建的表
+## 4. 测试表
 
-为了避免污染业务表，测试使用专用表名：
+当前真实 MySQL 集成测试使用和演示库一致的表名，方便在 IDEA Database 面板中直接观察：
 
 ```text
-iron_it_business_order
-iron_it_idempotency_record
+business_order
+iron_idempotency_record
 ```
 
-建表语句由测试自动执行：
+建表语句由测试自动执行。如果表已经存在，测试不会重建表，只会插入和清理 `mysql-it-` 前缀的测试数据。
 
 ```sql
-CREATE TABLE IF NOT EXISTS iron_it_business_order (
+CREATE TABLE IF NOT EXISTS business_order (
     order_id VARCHAR(64) PRIMARY KEY,
     amount DECIMAL(18, 2) NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS iron_it_idempotency_record (
+CREATE TABLE IF NOT EXISTS iron_idempotency_record (
     idempotency_key VARCHAR(128) PRIMARY KEY,
     biz_id VARCHAR(64) NOT NULL,
     status VARCHAR(32) NOT NULL,
@@ -92,8 +92,8 @@ CREATE TABLE IF NOT EXISTS iron_it_idempotency_record (
 
 ```text
 TransactionManager(order-db-1)
-  -> JdbcTemplate insert iron_it_business_order
-  -> RelationalTemplate route order-db-1 insert iron_it_idempotency_record
+  -> JdbcTemplate insert business_order
+  -> RelationalTemplate route order-db-1 insert iron_idempotency_record
   -> commit
 ```
 
@@ -101,7 +101,7 @@ TransactionManager(order-db-1)
 
 ```text
 order-db-1.business_order = 1
-order-db-1.idempotency_record = 1
+order-db-1.iron_idempotency_record = 1
 order-db-0 无数据
 ```
 
@@ -109,8 +109,8 @@ order-db-0 无数据
 
 ```text
 TransactionManager(order-db-1)
-  -> JdbcTemplate insert business
-  -> RelationalTemplate route order-db-1 insert idempotency
+  -> JdbcTemplate insert business_order
+  -> RelationalTemplate route order-db-1 insert iron_idempotency_record
   -> throw exception
   -> rollback
 ```
@@ -126,7 +126,7 @@ order-db-0 无数据
 
 ```text
 TransactionManager(order-db-1)
-  -> JdbcTemplate insert business 到 order-db-1
+  -> JdbcTemplate insert business_order 到 order-db-1
   -> RelationalTemplate 错 route 到 order-db-0
   -> throw exception
   -> rollback order-db-1
@@ -135,9 +135,9 @@ TransactionManager(order-db-1)
 结果：
 
 ```text
-order-db-1 business 回滚
-order-db-1 idempotency 无数据
-order-db-0 idempotency 仍存在
+order-db-1 business_order 回滚
+order-db-1 iron_idempotency_record 无数据
+order-db-0 iron_idempotency_record 仍存在
 ```
 
 这个测试证明：
@@ -148,6 +148,14 @@ order-db-0 idempotency 仍存在
 ```
 
 ## 6. 执行命令
+
+只跑真实 MySQL 测试：
+
+```bash
+mvn -pl :relational-integration-spring -am -Dtest=SameShardMysqlSharedTransactionIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false test
+```
+
+跑 relational-integration-spring 全部测试：
 
 ```bash
 mvn -pl :relational-integration-spring -am test
