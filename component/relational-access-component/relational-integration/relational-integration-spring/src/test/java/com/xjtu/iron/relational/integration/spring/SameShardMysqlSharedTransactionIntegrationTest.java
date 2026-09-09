@@ -42,6 +42,14 @@ class SameShardMysqlSharedTransactionIntegrationTest {
 
     private static final String ORDER0_ROUTE = "order-db-0";
     private static final String ORDER1_ROUTE = "order-db-1";
+
+    /**
+     * 真实 MySQL 集成测试使用和演示库一致的表名，方便在 IDEA Database 面板中直接观察。
+     */
+    private static final String BUSINESS_TABLE = "business_order";
+    private static final String IDEMPOTENCY_TABLE = "iron_idempotency_record";
+
+    /** 测试数据统一前缀，清理时只删除测试数据，不影响其他手工数据。 */
     private static final String TEST_PREFIX = "mysql-it-";
 
     private MysqlDataSource orderDb0;
@@ -99,14 +107,14 @@ class SameShardMysqlSharedTransactionIntegrationTest {
 
         transactionTemplate.executeWithoutResult(status -> {
             businessJdbcTemplate.update(
-                    "INSERT INTO iron_it_business_order(order_id, amount) VALUES (?, ?)",
+                    "INSERT INTO " + BUSINESS_TABLE + "(order_id, amount) VALUES (?, ?)",
                     orderId,
                     100
             );
 
             relationalTemplate.update(SqlStatement.of(
                     "mysql.idempotency.insert-success",
-                    "INSERT INTO iron_it_idempotency_record(idempotency_key, biz_id, status) VALUES (?, ?, ?)",
+                    "INSERT INTO " + IDEMPOTENCY_TABLE + "(idempotency_key, biz_id, status) VALUES (?, ?, ?)",
                     idempotencyKey,
                     orderId,
                     "SUCCESS"
@@ -128,14 +136,14 @@ class SameShardMysqlSharedTransactionIntegrationTest {
 
         assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(status -> {
             businessJdbcTemplate.update(
-                    "INSERT INTO iron_it_business_order(order_id, amount) VALUES (?, ?)",
+                    "INSERT INTO " + BUSINESS_TABLE + "(order_id, amount) VALUES (?, ?)",
                     orderId,
                     200
             );
 
             relationalTemplate.update(SqlStatement.of(
                     "mysql.idempotency.insert-processing",
-                    "INSERT INTO iron_it_idempotency_record(idempotency_key, biz_id, status) VALUES (?, ?, ?)",
+                    "INSERT INTO " + IDEMPOTENCY_TABLE + "(idempotency_key, biz_id, status) VALUES (?, ?, ?)",
                     idempotencyKey,
                     orderId,
                     "PROCESSING"
@@ -160,14 +168,14 @@ class SameShardMysqlSharedTransactionIntegrationTest {
 
         assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(status -> {
             businessJdbcTemplate.update(
-                    "INSERT INTO iron_it_business_order(order_id, amount) VALUES (?, ?)",
+                    "INSERT INTO " + BUSINESS_TABLE + "(order_id, amount) VALUES (?, ?)",
                     orderId,
                     300
             );
 
             relationalTemplate.update(SqlStatement.of(
                     "mysql.idempotency.insert-wrong-shard",
-                    "INSERT INTO iron_it_idempotency_record(idempotency_key, biz_id, status) VALUES (?, ?, ?)",
+                    "INSERT INTO " + IDEMPOTENCY_TABLE + "(idempotency_key, biz_id, status) VALUES (?, ?, ?)",
                     idempotencyKey,
                     orderId,
                     "PROCESSING"
@@ -199,14 +207,14 @@ class SameShardMysqlSharedTransactionIntegrationTest {
     private static void createTables(DataSource dataSource) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         jdbcTemplate.execute("""
-                CREATE TABLE IF NOT EXISTS iron_it_business_order (
+                CREATE TABLE IF NOT EXISTS business_order (
                     order_id VARCHAR(64) PRIMARY KEY,
                     amount DECIMAL(18, 2) NOT NULL,
                     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
                 """);
         jdbcTemplate.execute("""
-                CREATE TABLE IF NOT EXISTS iron_it_idempotency_record (
+                CREATE TABLE IF NOT EXISTS iron_idempotency_record (
                     idempotency_key VARCHAR(128) PRIMARY KEY,
                     biz_id VARCHAR(64) NOT NULL,
                     status VARCHAR(32) NOT NULL,
@@ -218,8 +226,8 @@ class SameShardMysqlSharedTransactionIntegrationTest {
 
     private static void cleanTables(DataSource dataSource) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        jdbcTemplate.update("DELETE FROM iron_it_idempotency_record WHERE idempotency_key LIKE ?", TEST_PREFIX + "%");
-        jdbcTemplate.update("DELETE FROM iron_it_business_order WHERE order_id LIKE ?", TEST_PREFIX + "%");
+        jdbcTemplate.update("DELETE FROM " + IDEMPOTENCY_TABLE + " WHERE idempotency_key LIKE ?", TEST_PREFIX + "%");
+        jdbcTemplate.update("DELETE FROM " + BUSINESS_TABLE + " WHERE order_id LIKE ?", TEST_PREFIX + "%");
     }
 
     private static void cleanTablesQuietly(DataSource dataSource) {
@@ -235,7 +243,7 @@ class SameShardMysqlSharedTransactionIntegrationTest {
 
     private static long countBusiness(DataSource dataSource, String orderId) {
         Long count = new JdbcTemplate(dataSource).queryForObject(
-                "SELECT COUNT(*) FROM iron_it_business_order WHERE order_id = ?",
+                "SELECT COUNT(*) FROM " + BUSINESS_TABLE + " WHERE order_id = ?",
                 Long.class,
                 orderId
         );
@@ -244,7 +252,7 @@ class SameShardMysqlSharedTransactionIntegrationTest {
 
     private static long countIdempotency(DataSource dataSource, String idempotencyKey) {
         Long count = new JdbcTemplate(dataSource).queryForObject(
-                "SELECT COUNT(*) FROM iron_it_idempotency_record WHERE idempotency_key = ?",
+                "SELECT COUNT(*) FROM " + IDEMPOTENCY_TABLE + " WHERE idempotency_key = ?",
                 Long.class,
                 idempotencyKey
         );
