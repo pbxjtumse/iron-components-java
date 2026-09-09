@@ -1,0 +1,42 @@
+@startuml
+title StorageRouteContext - One Route in One Call Chain
+
+autonumber
+skinparam shadowing false
+hide footbox
+
+actor "Business Service" as Service
+participant "StorageRouteResolver" as Resolver
+participant "StorageRouteContext" as Context
+participant "Business Repository" as Repository
+participant "IdempotencyStorage" as Idem
+participant "OutboxStorage" as Outbox
+
+Service -> Resolver : resolve(shardKey = orderId)
+Resolver --> Service : StorageRoute(order-db-1, order_017)
+
+Service -> Context : open(route)
+activate Context
+
+Service -> Repository : save order
+Repository -> Context : current()
+Context --> Repository : same StorageRoute
+
+Service -> Idem : markSuccess
+Idem -> Context : current()
+Context --> Idem : same StorageRoute
+
+Service -> Outbox : save event
+Outbox -> Context : current()
+Context --> Outbox : same StorageRoute
+
+Service -> Context : close scope
+deactivate Context
+
+note right of Context
+ThreadLocalStorageRouteContext must clear the route
+when the outermost scope closes, otherwise thread pool
+reuse may leak the previous route into the next request.
+end note
+
+@enduml
