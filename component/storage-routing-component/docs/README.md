@@ -1,6 +1,6 @@
 # Storage Routing Component Docs
 
-> 文档定位：记录 Storage Routing Component 的边界、分包、演进路线和关键流程。
+> 文档定位：记录 Storage Routing Component 的边界、分包、演进路线、关键流程和最小使用样例。
 
 ## 1. 当前阶段
 
@@ -28,6 +28,9 @@ ShardingSphere-JDBC / MyCAT / Direct Routing 如何作为底层实现替换？
 01-module-layout.md
     再理解 api / core / spi / config / integration / starter 是否需要
 
+02-basic-usage-examples.md
+    再看 scene / logicalTable / shardKey / route context 的代码样例
+
 01-storage-route-context.puml
     看 StorageRouteContext 如何保证一次调用链内路由一致
 
@@ -42,7 +45,26 @@ storage-routing-api
 storage-routing-core
 ```
 
-## 4. 后续模块规划
+## 4. 当前最建议先看的代码
+
+```text
+storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/StorageRouteRequest.java
+    看调用方如何表达 logicalTable / scene / shardKey
+
+storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/StorageRoute.java
+    看 Resolver 最终输出什么路由结果
+
+storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/resolver/HashStorageRouteResolver.java
+    看第一版如何根据 shardKeyValue 计算 dataSourceKey 和 tableName
+
+storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/context/ThreadLocalStorageRouteContext.java
+    看路由如何绑定到当前调用链
+
+storage-routing-core/src/test/java/com/xjtu/iron/storage/routing/core/StorageRoutingUsageExampleTest.java
+    看完整使用样例
+```
+
+## 5. 后续模块规划
 
 ```text
 storage-routing-spi
