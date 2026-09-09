@@ -24,6 +24,7 @@
         <module>idempotent-component</module>
         <module>transaction-component</module>
         <module>relational-access-component</module>
+        <module>storage-routing-component</module>
     </modules>
     <dependencyManagement>
         <dependencies>
@@ -402,6 +403,17 @@
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
                 <artifactId>relational-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- storage-routing-component -->
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>storage-routing-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>storage-routing-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
