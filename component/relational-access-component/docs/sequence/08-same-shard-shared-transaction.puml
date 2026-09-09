@@ -1,0 +1,54 @@
+@startuml
+title Same Shard Shared Transaction - MyBatis/JdbcTemplate + RelationalTemplate
+
+autonumber
+skinparam shadowing false
+hide footbox
+
+actor "Business Service" as Service
+participant "Shard Router\n(route once)" as Router
+participant "TransactionManager\nfor target DataSource" as TX
+participant "Business Mapper\n(MyBatis/JdbcTemplate)" as Biz
+database "order-db-1\nbusiness_order" as BizDB
+participant "JdbcIdempotencyStorage" as IdemStorage
+participant "RelationalTemplate" as RT
+participant "SpringTransactionAware\nConnectionProvider" as Provider
+participant "RoutingDataSourceResolver" as Resolver
+database "order-db-1\niron_idempotency_record" as IdemDB
+
+Service -> Router : route(shardKey)
+Router --> Service : dataSourceKey=order-db-1\nbusinessTable=business_order\nidempotentTable=iron_idempotency_record
+
+Service -> TX : begin transaction(order-db-1)
+TX -> TX : bind Connection(order-db-1) to current thread
+
+Service -> Biz : insert/update business row
+Biz -> BizDB : use transaction-bound Connection(order-db-1)
+
+Service -> IdemStorage : markSuccess(route)
+IdemStorage -> RT : update(SqlStatement.withRoute(order-db-1))
+RT -> Provider : acquire(context)
+Provider -> Resolver : resolve(dataSourceKey=order-db-1)
+Resolver --> Provider : same DataSource(order-db-1)
+Provider --> RT : BORROWED transaction-bound Connection
+RT -> IdemDB : update idempotency record
+
+alt all success
+  TX -> BizDB : COMMIT
+  TX -> IdemDB : COMMIT
+else business or idempotency failure
+  TX -> BizDB : ROLLBACK
+  TX -> IdemDB : ROLLBACK
+end
+
+note right of Router
+The route must be calculated before transaction begins.
+Business SQL and idempotency SQL must use the same dataSourceKey.
+end note
+
+note right of RT
+RelationalTemplate does not create transactions.
+It only participates in the Spring transaction-bound Connection.
+end note
+
+@enduml
