@@ -52,6 +52,7 @@ storage-routing-core
 - 不做分布式事务
 - 不替代 Apache ShardingSphere / MyCAT
 - 不直接操作 JDBC Connection
+- 不提前创建空的 SPI / Config / Integration / Starter 模块
 
 ## 4. 与 Relational Access 的关系
 
@@ -63,7 +64,26 @@ Relational Access
     -> 决定怎么执行：Connection / PreparedStatement / SQLException / transaction-bound Connection
 ```
 
-## 5. 推进路线
+## 5. 文档阅读顺序
+
+```text
+docs/README.md
+    -> 文档入口
+
+docs/design/00-component-boundary.md
+    -> 组件边界：Storage Routing 负责去哪，Relational Access 负责怎么执行
+
+docs/design/01-module-layout.md
+    -> 模块规划：什么时候需要 spi / config / integration / starter
+
+docs/sequence/01-storage-route-context.puml
+    -> StorageRouteContext 在线程内传播路由
+
+docs/sequence/02-storage-route-to-relational-access.puml
+    -> StorageRoute 后续如何桥接到 Relational Access
+```
+
+## 6. 推进路线
 
 ```text
 Phase 2.1：先建立 StorageRoute API 与 ThreadLocal 上下文
