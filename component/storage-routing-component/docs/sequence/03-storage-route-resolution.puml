@@ -1,0 +1,26 @@
+@startuml
+title Storage Route Resolution - Implemented Direct Mode
+autonumber
+skinparam shadowing false
+hide footbox
+
+actor Caller
+participant DefaultStorageRouteResolver as Resolver
+participant HashShardRouteResolver as Shard
+participant RouteMappingStrategy as Mapping
+
+Caller -> Resolver : resolve(request)
+Resolver -> Shard : resolve(request)
+Shard -> Shard : hash key, floorMod, derive indexes
+Shard --> Resolver : ShardRouteInfo
+Resolver -> Mapping : map(shardInfo)
+Mapping --> Resolver : PhysicalStorageLocation
+Resolver -> Resolver : build StorageRoute with request metadata\nand typed shard / physical location
+Resolver --> Caller : StorageRoute
+
+note over Resolver, Mapping
+Missing shard or mapping results fail immediately.
+The configured mapping determines the table prefix.
+No JDBC execution or transaction begins here.
+end note
+@enduml

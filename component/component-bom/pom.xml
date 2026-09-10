@@ -95,6 +95,12 @@
                 <artifactId>relational-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- storage-routing-component -->
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>storage-routing-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

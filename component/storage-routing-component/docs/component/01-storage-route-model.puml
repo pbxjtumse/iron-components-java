@@ -1,0 +1,51 @@
+@startuml
+title StorageRoute - Request, Shard and Physical Location
+top to bottom direction
+skinparam shadowing false
+hide empty members
+
+class StorageRouteRequest {
+  scene
+  logicalTable
+  shardKeyName / shardKeyValue
+  attributes
+}
+
+class StorageRoute {
+  mode / routeName
+  logicalTable
+  shardKeyName / shardKeyValue
+  attributes
+  dataSourceKey() / tableName()
+}
+
+class ShardRouteInfo {
+  shardId
+  databaseIndex
+  localTableIndex
+  totalShardCount
+}
+
+class PhysicalStorageLocation {
+  dataSourceKey
+  tableName
+}
+
+interface "api.resolver.StorageRouteResolver" as Resolver {
+  resolve(request): StorageRoute
+}
+interface "api.StorageRouteResolver\n(deprecated alias)" as LegacyResolver
+class DefaultStorageRouteResolver
+
+Resolver <|-- LegacyResolver
+LegacyResolver <|.. DefaultStorageRouteResolver
+DefaultStorageRouteResolver ..> StorageRouteRequest : reads
+DefaultStorageRouteResolver ..> StorageRoute : produces
+StorageRoute o-- "0..1" ShardRouteInfo : shardInfo
+StorageRoute o-- "0..1" PhysicalStorageLocation : physicalLocation
+
+note bottom of PhysicalStorageLocation
+DIRECT_DATASOURCE requires a complete location.
+Logical tables are not physical table fallbacks.
+end note
+@enduml
