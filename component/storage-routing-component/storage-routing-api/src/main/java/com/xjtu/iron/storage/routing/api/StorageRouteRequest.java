@@ -67,8 +67,8 @@ public final class StorageRouteRequest {
     /**
      * 分片字段值。
      *
-     * <p>例如 order-10001。它回答“用哪个具体值计算路由”。HashStorageRouteResolver 会对这个值做稳定 hash，
-     * 再计算 dataSourceIndex 和 tableIndex。</p>
+     * <p>例如 order-10001。它回答“用哪个具体值计算路由”。HashShardRouteResolver 会对该值的字符串表示做 hash，
+     * 再计算 shardId、databaseIndex 和 localTableIndex；调用方需要保证该字符串表示稳定。</p>
      */
     private final Object shardKeyValue;
 

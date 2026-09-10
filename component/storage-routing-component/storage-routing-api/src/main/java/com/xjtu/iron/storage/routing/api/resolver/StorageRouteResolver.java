@@ -8,6 +8,7 @@ import com.xjtu.iron.storage.routing.api.StorageRouteRequest;
  *
  * <p>业务侧只依赖该接口，不感知 shard 计算、物理库表映射以及底层实现。</p>
  */
+@FunctionalInterface
 public interface StorageRouteResolver {
 
     /**

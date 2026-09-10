@@ -31,9 +31,13 @@ Storage Routing Component 用来统一表达：
 ```text
 storage-routing-api
     StorageRoute
+    ShardRouteInfo
+    PhysicalStorageLocation
     StorageRouteMode
     StorageRouteRequest
-    StorageRouteResolver
+    resolver.StorageRouteResolver
+    resolver.ShardRouteResolver
+    mapping.RouteMappingStrategy
     StorageRouteContext
     StorageRouteScope
     StorageRoutingException
@@ -41,8 +45,18 @@ storage-routing-api
 storage-routing-core
     ThreadLocalStorageRouteContext
     FixedStorageRouteResolver
-    HashStorageRouteResolver
+    HashShardRouteResolver
+    DefaultStorageRouteResolver
+    ShardIdHashStorageRouteResolver
+    GlobalTableIndexRouteMappingStrategy / LocalTableIndexRouteMappingStrategy
+    RouteMappingStrategyFactory
 ```
+
+`StorageRoute` 保留 `logicalTable`，用 `shardInfo` 表达分片结果，用 `physicalLocation` 表达物理库表。
+哈希路由器和默认编排器输出同一套结构，扩展属性只承载业务附加信息。旧的 `api.StorageRouteResolver`
+保留为兼容别名，新代码统一使用 `api.resolver.StorageRouteResolver`。
+
+模型字段、兼容变化与使用限制见 [StorageRoute 模型](docs/design/03-storage-route-model.md)。
 
 ## 3. 当前第一版不做什么
 
@@ -81,6 +95,12 @@ docs/sequence/01-storage-route-context.puml
 
 docs/sequence/02-storage-route-to-relational-access.puml
     -> StorageRoute 后续如何桥接到 Relational Access
+
+docs/design/03-storage-route-model.md
+    -> 逻辑表、分片结果、物理位置和兼容迁移说明
+
+docs/sequence/03-storage-route-resolution.puml
+    -> 当前已实现的分片计算、物理映射和结果组装流程
 ```
 
 ## 6. 推进路线
@@ -90,4 +110,12 @@ Phase 2.1：先建立 StorageRoute API 与 ThreadLocal 上下文
 Phase 2.2：接 Relational Access，提供 StorageRoute -> SqlRoute 的桥接
 Phase 2.3：Idempotency JDBC Storage 接 StorageRoute
 Phase 2.4：第一优先级接入 ShardingSphere-JDBC
+```
+
+当前完成的是 Phase 2.1 的模型与解析链路；Phase 2.2–2.4 尚未实现。上下文传播本身不会切换数据源、改写 SQL 或创建事务。
+
+验证命令（仓库根目录）：
+
+```bash
+mvn -pl :storage-routing-core -am test
 ```

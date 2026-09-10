@@ -1,11 +1,11 @@
 package com.xjtu.iron.storage.routing.core.resolver;
 
 import com.xjtu.iron.storage.routing.api.StorageRoute;
-import com.xjtu.iron.storage.routing.api.StorageRouteMode;
 import com.xjtu.iron.storage.routing.api.StorageRouteRequest;
 import com.xjtu.iron.storage.routing.api.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.api.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.TableIndexMode;
+import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
 
 import java.util.Objects;
 
@@ -25,22 +25,20 @@ import java.util.Objects;
  *    +---- tableIndex
  * </pre>
  *
- * <p>这样后续接 ShardingSphere-JDBC、MyCAT 或自研路由时，都可以围绕统一 shardId 演进。</p>
+ * <p>保留原有 builder 作为便捷入口，内部委托 HashShardRouteResolver + RouteMappingStrategy +
+ * DefaultStorageRouteResolver。分片信息统一从 StorageRoute.shardInfo() 读取，不再重复存进 attributes。</p>
  */
 public final class ShardIdHashStorageRouteResolver implements StorageRouteResolver {
 
-    private final String dataSourcePrefix;
-    private final String tablePrefix;
-    private final int databaseCount;
-    private final int tablesPerDatabase;
-    private final TableIndexMode tableIndexMode;
+    private final DefaultStorageRouteResolver delegate;
 
     private ShardIdHashStorageRouteResolver(Builder builder) {
-        this.dataSourcePrefix = requireText(builder.dataSourcePrefix, "dataSourcePrefix must not be blank");
-        this.tablePrefix = requireText(builder.tablePrefix, "tablePrefix must not be blank");
-        this.databaseCount = requirePositive(builder.databaseCount, "databaseCount must be positive");
-        this.tablesPerDatabase = requirePositive(builder.tablesPerDatabase, "tablesPerDatabase must be positive");
-        this.tableIndexMode = Objects.requireNonNull(builder.tableIndexMode, "tableIndexMode must not be null");
+        String dataSourcePrefix = requireText(builder.dataSourcePrefix, "dataSourcePrefix must not be blank");
+        String tablePrefix = requireText(builder.tablePrefix, "tablePrefix must not be blank");
+        TableIndexMode tableIndexMode = Objects.requireNonNull(builder.tableIndexMode, "tableIndexMode must not be null");
+        this.delegate = new DefaultStorageRouteResolver(
+                new HashShardRouteResolver(builder.databaseCount, builder.tablesPerDatabase),
+                new RouteMappingStrategyFactory(dataSourcePrefix, tablePrefix, 2).create(tableIndexMode));
     }
 
     public static Builder builder() {
@@ -49,32 +47,7 @@ public final class ShardIdHashStorageRouteResolver implements StorageRouteResolv
 
     @Override
     public StorageRoute resolve(StorageRouteRequest request) {
-        Objects.requireNonNull(request, "request must not be null");
-
-        int totalShardCount = databaseCount * tablesPerDatabase;
-        int shardId = Math.floorMod(String.valueOf(request.shardKeyValue()).hashCode(), totalShardCount);
-
-        int databaseIndex = shardId / tablesPerDatabase;
-        int localTableIndex = shardId % tablesPerDatabase;
-
-        int physicalTableIndex = tableIndexMode == TableIndexMode.GLOBAL_TABLE_INDEX
-                ? shardId
-                : localTableIndex;
-
-        return StorageRoute.builder()
-                .mode(StorageRouteMode.DIRECT_DATASOURCE)
-                .routeName(request.scene())
-                .dataSourceKey(dataSourcePrefix + String.format("%02d", databaseIndex))
-                .tableName(tablePrefix + "_" + String.format("%02d", physicalTableIndex))
-                .shardKeyName(request.shardKeyName())
-                .shardKeyValue(request.shardKeyValue())
-                .attribute("shardId", shardId)
-                .attribute("databaseIndex", databaseIndex)
-                .attribute("localTableIndex", localTableIndex)
-                .attribute("physicalTableIndex", physicalTableIndex)
-                .attribute("tableIndexMode", tableIndexMode.name())
-                .attribute("totalShardCount", totalShardCount)
-                .build();
+        return delegate.resolve(request);
     }
 
     private static String requireText(String value, String message) {
@@ -82,13 +55,6 @@ public final class ShardIdHashStorageRouteResolver implements StorageRouteResolv
             throw new StorageRoutingException(message);
         }
         return value.trim();
-    }
-
-    private static int requirePositive(int value, String message) {
-        if (value <= 0) {
-            throw new StorageRoutingException(message);
-        }
-        return value;
     }
 
     public static final class Builder {

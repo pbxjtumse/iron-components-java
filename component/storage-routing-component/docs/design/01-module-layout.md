@@ -21,9 +21,13 @@ storage-routing-core
 
 ```text
 StorageRoute
+ShardRouteInfo
+PhysicalStorageLocation
 StorageRouteMode
 StorageRouteRequest
-StorageRouteResolver
+resolver.StorageRouteResolver
+resolver.ShardRouteResolver
+mapping.RouteMappingStrategy
 StorageRouteContext
 StorageRouteScope
 StorageRoutingException
@@ -45,7 +49,11 @@ api 不依赖 Spring、JDBC、ShardingSphere、MyCAT。
 ```text
 ThreadLocalStorageRouteContext
 FixedStorageRouteResolver
-HashStorageRouteResolver
+HashShardRouteResolver
+DefaultStorageRouteResolver
+ShardIdHashStorageRouteResolver
+RouteMappingStrategyFactory
+GlobalTableIndexRouteMappingStrategy / LocalTableIndexRouteMappingStrategy
 ```
 
 原则：
@@ -91,7 +99,7 @@ routeMode
 defaultRoute
 ```
 
-当前 HashStorageRouteResolver 先通过 builder 构造即可，不急着抽配置模块。
+当前 `ShardIdHashStorageRouteResolver` 通过 builder 构造，内部组合分片计算与物理映射，不急着抽配置模块。
 
 ## 6. storage-routing-integration 是否需要
 

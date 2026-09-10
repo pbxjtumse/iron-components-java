@@ -33,8 +33,10 @@ Storage Routing 负责产生统一路由结果：
 ```text
 StorageRoute
     mode
-    dataSourceKey
-    tableName
+    routeName
+    logicalTable
+    shardInfo
+    physicalLocation
     shardKeyName
     shardKeyValue
     attributes
@@ -63,7 +65,8 @@ JDBC Connection 管理
 
 ## 4. 与技术组件的关系
 
-未来 Idempotency / Outbox / Task / Message Table 等技术组件应该共同使用同一份 StorageRoute。
+未来 Idempotency / Outbox / Task / Message Table 等技术组件可以读取同一份调用链路由，复用分片依据；
+每种逻辑表仍需各自映射 `PhysicalStorageLocation`。不能把订单路由里的 `tableName` 直接用于幂等或 Outbox SQL。
 
 ```text
 Business Request
@@ -82,3 +85,6 @@ Business Request
 ```
 
 这就是前面真实 MySQL 错库不回滚测试证明的问题。
+
+同一个 `dataSourceKey` 只是路由约定，还需要 Relational Access 与事务管理器实际复用同一事务资源和连接。
+当前 ThreadLocal 上下文只传播数据，不自动完成表映射或事务绑定。

@@ -1,5 +1,5 @@
 @startuml
-title StorageRouteContext - One Route in One Call Chain
+title StorageRouteContext - Context Implemented, Storage Consumers Planned
 
 autonumber
 skinparam shadowing false
@@ -37,6 +37,8 @@ note right of Context
 ThreadLocalStorageRouteContext must clear the route
 when the outermost scope closes, otherwise thread pool
 reuse may leak the previous route into the next request.
+Consumers share shardInfo, but map their own tables.
+Idempotency / Outbox integration is not implemented yet.
 end note
 
 @enduml

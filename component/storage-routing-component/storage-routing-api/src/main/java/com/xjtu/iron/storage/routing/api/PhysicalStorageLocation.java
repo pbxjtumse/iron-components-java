@@ -8,8 +8,8 @@ import java.util.Objects;
  * <p>StorageRoute 负责描述一次存储访问，而 PhysicalStorageLocation 专门描述最终落点。
  * 例如：order-db-05.order_56。</p>
  *
- * <p>未来接入 ShardingSphere-JDBC、MyCAT 或其他路由实现时，
- * 该对象可以由不同的 RouteMappingStrategy 生成。</p>
+ * <p>只表达已经解析出的物理位置，库与表必须同时存在。中间件尚未暴露真实落点时，
+ * 应让 StorageRoute.physicalLocation() 为空，不能把逻辑表或代理入口伪装成物理位置。</p>
  */
 public final class PhysicalStorageLocation {
 
@@ -18,8 +18,8 @@ public final class PhysicalStorageLocation {
     private final String tableName;
 
     private PhysicalStorageLocation(String dataSourceKey, String tableName) {
-        this.dataSourceKey = normalize(dataSourceKey);
-        this.tableName = normalize(tableName);
+        this.dataSourceKey = requireText(dataSourceKey, "dataSourceKey");
+        this.tableName = requireText(tableName, "tableName");
     }
 
     public static PhysicalStorageLocation of(String dataSourceKey, String tableName) {
@@ -34,8 +34,11 @@ public final class PhysicalStorageLocation {
         return tableName;
     }
 
-    private static String normalize(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
+    private static String requireText(String value, String name) {
+        if (value == null || value.isBlank()) {
+            throw new StorageRoutingException(name + " must not be blank");
+        }
+        return value.trim();
     }
 
     @Override

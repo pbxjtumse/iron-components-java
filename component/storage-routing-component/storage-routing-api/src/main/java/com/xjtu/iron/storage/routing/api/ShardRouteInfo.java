@@ -41,6 +41,9 @@ public final class ShardRouteInfo {
         if (totalShardCount <= 0) {
             throw new IllegalArgumentException("totalShardCount must be positive");
         }
+        if (shardId >= totalShardCount || databaseIndex >= totalShardCount || localTableIndex >= totalShardCount) {
+            throw new IllegalArgumentException("shard indexes must be less than totalShardCount");
+        }
         this.shardId = shardId;
         this.databaseIndex = databaseIndex;
         this.localTableIndex = localTableIndex;

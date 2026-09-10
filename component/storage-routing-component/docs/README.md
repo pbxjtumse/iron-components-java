@@ -7,7 +7,7 @@
 当前处于：
 
 ```text
-Phase 2.1：StorageRoute API + ThreadLocal Route Context
+Phase 2.1：结构化 StorageRoute + 分片计算/物理映射编排 + ThreadLocal Route Context
 ```
 
 当前目标不是一次性完成完整分库分表中间件，而是先定住：
@@ -30,6 +30,15 @@ ShardingSphere-JDBC / MyCAT / Direct Routing 如何作为底层实现替换？
 
 02-basic-usage-examples.md
     再看 scene / logicalTable / shardKey / route context 的代码样例
+
+03-storage-route-model.md
+    查看本轮模型调整、兼容变化和各字段的职责
+
+01-storage-route-model.puml
+    查看模型和 Resolver 的类关系
+
+03-storage-route-resolution.puml
+    查看当前代码真实执行的解析流程
 
 01-storage-route-context.puml
     看 StorageRouteContext 如何保证一次调用链内路由一致
@@ -54,14 +63,17 @@ storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/StorageRoute
 storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/StorageRoute.java
     看 Resolver 最终输出什么路由结果
 
-storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/resolver/HashStorageRouteResolver.java
-    看第一版如何根据 shardKeyValue 计算 dataSourceKey 和 tableName
+storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/resolver/HashShardRouteResolver.java
+    看 shardKeyValue 如何得到 ShardRouteInfo
+
+storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/resolver/DefaultStorageRouteResolver.java
+    看分片结果如何经过映射策略生成 StorageRoute
 
 storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/context/ThreadLocalStorageRouteContext.java
     看路由如何绑定到当前调用链
 
-storage-routing-core/src/test/java/com/xjtu/iron/storage/routing/core/StorageRoutingUsageExampleTest.java
-    看完整使用样例
+storage-routing-core/src/test/java/com/xjtu/iron/storage/routing/core/resolver/HashStorageRoutingTest.java
+    看全局/库内表编号、同分片不同表和旧路由结果的回归验证
 ```
 
 ## 5. 后续模块规划

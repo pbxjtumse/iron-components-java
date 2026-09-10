@@ -1,20 +1,14 @@
 package com.xjtu.iron.storage.routing.api;
 
 /**
- * 存储路由解析器。
+ * 存储路由解析器的旧包名兼容入口。
  *
- * <p>它负责把业务侧的 shardKey / logicalTable / scene 转换成 StorageRoute。
- * 具体底层可以是直连多 DataSource、ShardingSphere-JDBC、MyCAT/Proxy，
- * 上层技术组件不应该直接感知这些实现差异。</p>
+ * <p>新代码请依赖 {@link com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver}。
+ * 该接口继承统一契约，不再独立声明另一套方法；现有实现仍可赋值给新、旧两种接口。</p>
+ *
+ * @deprecated 使用 api.resolver 包下的统一入口。
  */
+@Deprecated
 @FunctionalInterface
-public interface StorageRouteResolver {
-
-    /**
-     * 根据请求解析存储路由。
-     *
-     * @param request 路由请求
-     * @return 路由结果
-     */
-    StorageRoute resolve(StorageRouteRequest request);
+public interface StorageRouteResolver extends com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver {
 }

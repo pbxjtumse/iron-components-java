@@ -98,20 +98,19 @@ iron_outbox              -> iron_outbox_017
 ## 4. 一个完整订单例子
 
 ```java
-HashStorageRouteResolver resolver = HashStorageRouteResolver.builder()
+ShardIdHashStorageRouteResolver resolver = ShardIdHashStorageRouteResolver.builder()
         .dataSourcePrefix("order-db-")
-        .dataSourceCount(10)
+        .databaseCount(10)
         .tablePrefix("business_order")
-        .tableCount(100)
-        .dataSourceIndexWidth(1)
-        .tableIndexWidth(3)
+        .tablesPerDatabase(10)
+        .tableIndexMode(TableIndexMode.GLOBAL_TABLE_INDEX)
         .build();
 
 StorageRouteRequest request = StorageRouteRequest.builder()
         .scene("order-create")
         .logicalTable("business_order")
         .shardKeyName("order_id")
-        .shardKeyValue("order-10001")
+        .shardKeyValue("8")
         .attribute("idempotencyTable", "iron_idempotency_record")
         .attribute("outboxTable", "iron_outbox")
         .build();
@@ -119,17 +118,20 @@ StorageRouteRequest request = StorageRouteRequest.builder()
 StorageRoute route = resolver.resolve(request);
 ```
 
-得到的 route 大概是：
+得到的 route 是：
 
 ```text
 mode           = DIRECT_DATASOURCE
 routeName      = order-create
-dataSourceKey  = order-db-某个下标
-tableName      = business_order_某个下标
+logicalTable   = business_order
+shardInfo      = {shardId=56, databaseIndex=5, localTableIndex=6, totalShardCount=100}
+physicalLocation = {dataSourceKey=order-db-05, tableName=business_order_56}
 shardKeyName   = order_id
-shardKeyValue  = order-10001
-attributes     = {logicalTable, dataSourceIndex, tableIndex, ...}
+shardKeyValue  = 8
+attributes     = {idempotencyTable=iron_idempotency_record, outboxTable=iron_outbox}
 ```
+
+`idempotencyTable` 和 `outboxTable` 在这里仅是透传的扩展信息，当前解析器不会据此自动映射其他表。
 
 ## 5. 绑定到当前调用链
 
@@ -137,49 +139,47 @@ attributes     = {logicalTable, dataSourceIndex, tableIndex, ...}
 StorageRouteContext context = new ThreadLocalStorageRouteContext();
 
 try (StorageRouteScope ignored = context.open(route)) {
-    orderRepository.save(order);
-    idempotencyStorage.markSuccess(idempotencyKey);
-    outboxStorage.save(event);
+    StorageRoute current = context.requireCurrent();
+    // 当前已实现：在本线程读取同一份路由。
+    // 后续接入：各 Repository / Storage 读取分片信息，使用各自的表映射并执行 SQL。
 }
 ```
 
-这段代码的核心不是 ThreadLocal 本身，而是：
-
-```text
-orderRepository
-idempotencyStorage
-outboxStorage
-```
-
-都可以拿到同一份 route，避免业务数据和技术组件记录落到不同库。
+业务 Repository、幂等、Outbox 后续可以从上下文读取相同分片依据，但需要各自的物理表。
+例如同一个 `ShardRouteInfo(56, 5, 6, 100)` 可分别映射到 `order-db-05.business_order_56`、
+`order-db-05.iron_idempotency_record_56` 和 `order-db-05.iron_outbox_56`。
+上下文目前只传播数据，未接入上述 Storage，也不会自动创建事务。
 
 ## 6. 10 库 100 表如何理解
 
-当前 HashStorageRouteResolver 的 `tableCount` 表示“每个 DataSource 里的表数量”。
+当前 `databaseCount` 表示库数，`tablesPerDatabase` 表示每库的表数量，总分片数是两者乘积。
 
 例如：
 
 ```text
-dataSourceCount = 10
-tableCount      = 100
+databaseCount     = 10
+tablesPerDatabase = 100
 ```
 
 表示：
 
 ```text
-10 个库
-每个库 100 张 business_order_000 到 business_order_099
+10 个库，每个库 100 张表
+LOCAL_TABLE_INDEX：每库 business_order_00 到 business_order_99
+GLOBAL_TABLE_INDEX：第 0 库 _00 到 _99，第 1 库 _100 到 _199，以此类推
 总物理表数量 = 10 * 100
 ```
 
 若你的业务说“总共 100 张物理表，10 个库，每个库 10 张表”，则应该理解成：
 
 ```text
-dataSourceCount = 10
-tableCount      = 10
+databaseCount     = 10
+tablesPerDatabase = 10
 ```
 
-后续如果需要更复杂的规则，例如全局 100 表均匀映射到 10 库，应该抽 RouteAlgorithm / TableMapping 规则，而不是继续把 HashStorageRouteResolver 变复杂。
+全局 100 表分布到 10 库已经由 `GLOBAL_TABLE_INDEX` 支持。
+如需复用同一分片算法、替换命名策略，可显式组合 `HashShardRouteResolver`、`RouteMappingStrategyFactory` 和
+`DefaultStorageRouteResolver`，见 [StorageRoute 模型](03-storage-route-model.md)。
 
 ## 7. 当前第一版不要误用
 

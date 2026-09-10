@@ -10,6 +10,7 @@ import com.xjtu.iron.storage.routing.api.StorageRouteRequest;
  *
  * <p>它不知道数据库名字，也不知道物理表名字。</p>
  */
+@FunctionalInterface
 public interface ShardRouteResolver {
 
     /**
