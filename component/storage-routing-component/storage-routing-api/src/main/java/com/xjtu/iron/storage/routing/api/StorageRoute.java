@@ -8,51 +8,39 @@ import java.util.Objects;
 /**
  * 一次存储访问的最终路由描述。
  *
- * <p>StorageRoute 不负责计算 shard，也不负责打开 JDBC Connection。
- * 它是 ShardRouteInfo 和物理存储位置之间的桥梁。</p>
- *
- * <p>完整链路：</p>
+ * <p>StorageRoute 连接三个阶段：</p>
  * <pre>
- * orderId
+ * shardKey
  *    |
  *    v
- * ShardResolver
+ * ShardRouteInfo        (逻辑分片结果)
  *    |
  *    v
- * ShardRouteInfo
- *    |
- *    v
- * StorageRoute
+ * PhysicalStorageLocation (物理存储位置)
  *    |
  *    v
  * Relational Access
  * </pre>
+ *
+ * <p>StorageRoute 本身不负责计算 shard，也不负责建立 JDBC Connection。</p>
  */
 public final class StorageRoute {
 
     private final StorageRouteMode mode;
 
-    /** 路由场景，例如 order-create、idempotency-try-acquire。 */
+    /** 当前路由场景，例如 order-create、idempotency-try-acquire。 */
     private final String routeName;
 
-    /** 目标数据源标识，例如 order-db-05。 */
-    private final String dataSourceKey;
+    /** 分片计算结果。 */
+    private final ShardRouteInfo shardInfo;
 
-    /** 目标表，可以是物理表，也可以是逻辑表。 */
-    private final String tableName;
+    /** 最终物理位置，例如 order-db-05.order_56。 */
+    private final PhysicalStorageLocation physicalLocation;
 
-    /** 分片字段，例如 order_id。 */
+    /** 原始分片字段信息，用于日志和诊断。 */
     private final String shardKeyName;
 
-    /** 分片字段值，例如 order-10001。 */
     private final Object shardKeyValue;
-
-    /**
-     * 分片计算结果。
-     *
-     * <p>Phase 2 后优先使用该对象表达 shard 信息。</p>
-     */
-    private final ShardRouteInfo shardInfo;
 
     /** 扩展信息，例如 logicalTable、routeRule 等。 */
     private final Map<String, Object> attributes;
@@ -60,11 +48,10 @@ public final class StorageRoute {
     private StorageRoute(Builder builder) {
         this.mode = Objects.requireNonNull(builder.mode, "mode");
         this.routeName = normalize(builder.routeName);
-        this.dataSourceKey = normalize(builder.dataSourceKey);
-        this.tableName = normalize(builder.tableName);
+        this.shardInfo = builder.shardInfo;
+        this.physicalLocation = builder.physicalLocation;
         this.shardKeyName = normalize(builder.shardKeyName);
         this.shardKeyValue = builder.shardKeyValue;
-        this.shardInfo = builder.shardInfo;
         this.attributes = builder.attributes == null || builder.attributes.isEmpty()
                 ? Collections.emptyMap()
                 : Collections.unmodifiableMap(new LinkedHashMap<>(builder.attributes));
@@ -73,8 +60,7 @@ public final class StorageRoute {
     public static StorageRoute direct(String dataSourceKey, String tableName) {
         return builder()
                 .mode(StorageRouteMode.DIRECT_DATASOURCE)
-                .dataSourceKey(dataSourceKey)
-                .tableName(tableName)
+                .physicalLocation(PhysicalStorageLocation.of(dataSourceKey, tableName))
                 .build();
     }
 
@@ -90,12 +76,25 @@ public final class StorageRoute {
         return routeName;
     }
 
+    public ShardRouteInfo shardInfo() {
+        return shardInfo;
+    }
+
+    public PhysicalStorageLocation physicalLocation() {
+        return physicalLocation;
+    }
+
+    /**
+     * 兼容读取方法。
+     *
+     * <p>真正模型已经迁移到 PhysicalStorageLocation。</p>
+     */
     public String dataSourceKey() {
-        return dataSourceKey;
+        return physicalLocation == null ? null : physicalLocation.dataSourceKey();
     }
 
     public String tableName() {
-        return tableName;
+        return physicalLocation == null ? null : physicalLocation.tableName();
     }
 
     public String shardKeyName() {
@@ -104,10 +103,6 @@ public final class StorageRoute {
 
     public Object shardKeyValue() {
         return shardKeyValue;
-    }
-
-    public ShardRouteInfo shardInfo() {
-        return shardInfo;
     }
 
     public Map<String, Object> attributes() {
@@ -126,11 +121,10 @@ public final class StorageRoute {
 
         private StorageRouteMode mode = StorageRouteMode.DIRECT_DATASOURCE;
         private String routeName;
-        private String dataSourceKey;
-        private String tableName;
+        private ShardRouteInfo shardInfo;
+        private PhysicalStorageLocation physicalLocation;
         private String shardKeyName;
         private Object shardKeyValue;
-        private ShardRouteInfo shardInfo;
         private Map<String, Object> attributes = new LinkedHashMap<>();
 
         private Builder() {
@@ -146,13 +140,26 @@ public final class StorageRoute {
             return this;
         }
 
+        public Builder shardInfo(ShardRouteInfo shardInfo) {
+            this.shardInfo = shardInfo;
+            return this;
+        }
+
+        public Builder physicalLocation(PhysicalStorageLocation physicalLocation) {
+            this.physicalLocation = physicalLocation;
+            return this;
+        }
+
         public Builder dataSourceKey(String dataSourceKey) {
-            this.dataSourceKey = dataSourceKey;
+            this.physicalLocation = PhysicalStorageLocation.of(dataSourceKey,
+                    this.physicalLocation == null ? null : this.physicalLocation.tableName());
             return this;
         }
 
         public Builder tableName(String tableName) {
-            this.tableName = tableName;
+            this.physicalLocation = PhysicalStorageLocation.of(
+                    this.physicalLocation == null ? null : this.physicalLocation.dataSourceKey(),
+                    tableName);
             return this;
         }
 
@@ -163,11 +170,6 @@ public final class StorageRoute {
 
         public Builder shardKeyValue(Object shardKeyValue) {
             this.shardKeyValue = shardKeyValue;
-            return this;
-        }
-
-        public Builder shardInfo(ShardRouteInfo shardInfo) {
-            this.shardInfo = shardInfo;
             return this;
         }
 
@@ -186,9 +188,8 @@ public final class StorageRoute {
         return "StorageRoute{" +
                 "mode=" + mode +
                 ", routeName='" + routeName + '\'' +
-                ", dataSourceKey='" + dataSourceKey + '\'' +
-                ", tableName='" + tableName + '\'' +
                 ", shardInfo=" + shardInfo +
+                ", physicalLocation=" + physicalLocation +
                 '}';
     }
 }
