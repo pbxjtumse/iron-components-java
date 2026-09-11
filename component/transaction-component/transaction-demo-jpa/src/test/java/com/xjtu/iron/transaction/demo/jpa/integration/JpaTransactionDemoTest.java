@@ -1,6 +1,6 @@
 package com.xjtu.iron.transaction.demo.jpa.integration;
 
-import com.xjtu.iron.transaction.demo.jpa.application.JpaTransactionDemoApplication;
+import com.xjtu.iron.transaction.demo.jpa.JpaTransactionDemoApplication;
 import com.xjtu.iron.transaction.demo.jpa.repository.DemoRecordRepository;
 import com.xjtu.iron.transaction.demo.jpa.service.JpaTransactionDemoService;
 import org.junit.jupiter.api.BeforeEach;
