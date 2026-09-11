@@ -2,11 +2,11 @@ package com.xjtu.iron.observability.starter;
 
 import com.xjtu.iron.observability.api.tracing.ITraceService;
 import com.xjtu.iron.observability.api.tracing.context.TraceProviderContext;
-import com.xjtu.iron.observability.core.TraceTemplate;
-import com.xjtu.iron.observability.otel.impl.OtelTraceProviderImpl;
-import com.xjtu.iron.observability.core.noop.NoopTraceProviderImpl;
 import com.xjtu.iron.observability.api.tracing.provider.TraceProvider;
 import com.xjtu.iron.observability.api.tracing.resolver.TraceErrorResolver;
+import com.xjtu.iron.observability.core.TraceTemplate;
+import com.xjtu.iron.observability.core.noop.NoopTraceProviderImpl;
+import com.xjtu.iron.observability.otel.impl.OtelTraceProviderImpl;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

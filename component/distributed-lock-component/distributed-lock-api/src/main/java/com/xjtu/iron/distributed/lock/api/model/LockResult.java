@@ -1,10 +1,10 @@
 package com.xjtu.iron.distributed.lock.api.model;
 
-import com.xjtu.iron.distributed.lock.api.status.LockStage;
-import com.xjtu.iron.distributed.lock.api.status.LockStatus;
 import com.xjtu.iron.distributed.lock.api.LockStatusStageRules;
 import com.xjtu.iron.distributed.lock.api.client.DistributedLockClient;
 import com.xjtu.iron.distributed.lock.api.client.LockCallback;
+import com.xjtu.iron.distributed.lock.api.status.LockStage;
+import com.xjtu.iron.distributed.lock.api.status.LockStatus;
 
 import java.time.Duration;
 import java.util.Objects;

@@ -8,7 +8,6 @@ import com.xjtu.iron.message.core.enrich.MessageEnvelopeEnricher;
 import com.xjtu.iron.message.core.provider.MessageProviderRegistry;
 import com.xjtu.iron.message.core.routing.DestinationResolver;
 import com.xjtu.iron.message.core.send.MessageSendExecutor;
-import com.xjtu.iron.message.spring.boot.autoconfigure.properties.MessageProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

@@ -1,6 +1,7 @@
 package com.xjtu.iron.distributed.lock.core.client;
 
 import com.xjtu.iron.distributed.lock.api.exception.LockLostException;
+import com.xjtu.iron.distributed.lock.api.model.LockAutoRenewMode;
 import com.xjtu.iron.distributed.lock.api.status.LockStage;
 import com.xjtu.iron.distributed.lock.api.status.LockStatus;
 import com.xjtu.iron.distributed.lock.core.execute.LockReleaseOutcome;
@@ -8,7 +9,8 @@ import com.xjtu.iron.distributed.lock.core.observability.LockEventFactory;
 import com.xjtu.iron.distributed.lock.core.observability.LockEventPublisher;
 import com.xjtu.iron.distributed.lock.core.observability.LockEventType;
 import com.xjtu.iron.distributed.lock.core.observability.LockMetricsFacade;
-import com.xjtu.iron.distributed.lock.api.model.LockAutoRenewMode;
+import com.xjtu.iron.distributed.lock.core.watchdog.LockWatchdog;
+import com.xjtu.iron.distributed.lock.core.watchdog.WatchdogLockHandle;
 import com.xjtu.iron.distributed.lock.spi.LockProvider;
 import com.xjtu.iron.distributed.lock.spi.protocol.check.LockCheckRequest;
 import com.xjtu.iron.distributed.lock.spi.protocol.check.LockCheckResponse;
@@ -17,8 +19,6 @@ import com.xjtu.iron.distributed.lock.spi.protocol.release.LockReleaseRequest;
 import com.xjtu.iron.distributed.lock.spi.protocol.release.LockReleaseResponse;
 import com.xjtu.iron.distributed.lock.spi.protocol.renew.LockRenewRequest;
 import com.xjtu.iron.distributed.lock.spi.protocol.renew.LockRenewResponse;
-import com.xjtu.iron.distributed.lock.core.watchdog.LockWatchdog;
-import com.xjtu.iron.distributed.lock.core.watchdog.WatchdogLockHandle;
 
 import java.time.Duration;
 import java.time.Instant;

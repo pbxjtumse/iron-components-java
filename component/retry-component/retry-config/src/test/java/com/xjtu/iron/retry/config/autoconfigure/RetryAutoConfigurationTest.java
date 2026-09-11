@@ -1,9 +1,7 @@
 package com.xjtu.iron.retry.config.autoconfigure;
 
-import com.xjtu.iron.foundation.id.registry.StringIdGeneratorRegistry;
 import com.xjtu.iron.foundation.time.ClockProvider;
 import com.xjtu.iron.retry.api.execution.RetryExecutor;
-import com.xjtu.iron.retry.api.policy.RetryPolicy;
 import com.xjtu.iron.retry.api.policy.RetryPolicyRegistry;
 import com.xjtu.iron.retry.core.time.RetryClock;
 import com.xjtu.iron.retry.core.time.RetrySleeper;

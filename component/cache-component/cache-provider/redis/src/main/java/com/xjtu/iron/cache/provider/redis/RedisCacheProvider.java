@@ -1,9 +1,9 @@
 package com.xjtu.iron.cache.provider.redis;
 
+import com.xjtu.iron.cache.api.enums.CacheLevel;
 import com.xjtu.iron.cache.api.key.CacheKey;
 import com.xjtu.iron.cache.api.model.CacheSpec;
 import com.xjtu.iron.cache.api.model.CacheValue;
-import com.xjtu.iron.cache.api.enums.CacheLevel;
 import com.xjtu.iron.cache.core.CacheProvider;
 
 import java.nio.charset.StandardCharsets;

@@ -3,9 +3,6 @@ package com.xjtu.iron.concurrency.core.rejection;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-
 /**
  * 拒绝感知版 DISCARD 策略。
  *

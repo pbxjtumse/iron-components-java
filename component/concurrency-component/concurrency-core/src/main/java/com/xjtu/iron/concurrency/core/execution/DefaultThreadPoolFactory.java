@@ -6,14 +6,7 @@ import com.xjtu.iron.concurrency.api.execution.pool.ThreadPoolSpec;
 import com.xjtu.iron.concurrency.core.spi.RejectedExecutionHandlerFactory;
 import com.xjtu.iron.concurrency.core.spi.ThreadPoolFactory;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * 默认线程池工厂。

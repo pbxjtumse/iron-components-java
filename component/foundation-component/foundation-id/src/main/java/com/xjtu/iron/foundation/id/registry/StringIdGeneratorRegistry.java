@@ -2,12 +2,7 @@ package com.xjtu.iron.foundation.id.registry;
 
 import com.xjtu.iron.foundation.id.api.StringIdGenerator;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /** 按用途名称管理不可变的字符串 ID 生成器集合。 */
 public final class StringIdGeneratorRegistry {
