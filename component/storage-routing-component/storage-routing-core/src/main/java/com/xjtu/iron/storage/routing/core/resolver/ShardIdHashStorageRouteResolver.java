@@ -1,7 +1,7 @@
 package com.xjtu.iron.storage.routing.core.resolver;
 
 import com.xjtu.iron.storage.routing.api.StorageRoute;
-import com.xjtu.iron.storage.routing.api.StorageRouteRequest;
+import com.xjtu.iron.storage.routing.api.RouteContext;
 import com.xjtu.iron.storage.routing.api.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.api.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.TableIndexMode;
@@ -25,8 +25,11 @@ import java.util.Objects;
  *    +---- tableIndex
  * </pre>
  *
- * <p>保留原有 builder 作为便捷入口，内部委托 HashShardRouteResolver + RouteMappingStrategy +
+ * <p>保留原有 builder 作为便捷入口，内部委托 HashShardResolver + RouteMappingStrategy +
  * DefaultStorageRouteResolver。分片信息统一从 StorageRoute.shardInfo() 读取，不再重复存进 attributes。</p>
+ *
+ * <p>DIRECT_DATASOURCE 是最终路由模式；10 库每库 10 表、10 库每库 100 表等拓扑由 databaseCount
+ * 和 tablesPerDatabase 决定，表编号是全局还是库内重复由 TableIndexMode 决定。</p>
  */
 public final class ShardIdHashStorageRouteResolver implements StorageRouteResolver {
 
@@ -37,7 +40,7 @@ public final class ShardIdHashStorageRouteResolver implements StorageRouteResolv
         String tablePrefix = requireText(builder.tablePrefix, "tablePrefix must not be blank");
         TableIndexMode tableIndexMode = Objects.requireNonNull(builder.tableIndexMode, "tableIndexMode must not be null");
         this.delegate = new DefaultStorageRouteResolver(
-                new HashShardRouteResolver(builder.databaseCount, builder.tablesPerDatabase),
+                new HashShardResolver(builder.databaseCount, builder.tablesPerDatabase),
                 new RouteMappingStrategyFactory(dataSourcePrefix, tablePrefix, 2).create(tableIndexMode));
     }
 
@@ -46,8 +49,8 @@ public final class ShardIdHashStorageRouteResolver implements StorageRouteResolv
     }
 
     @Override
-    public StorageRoute resolve(StorageRouteRequest request) {
-        return delegate.resolve(request);
+    public StorageRoute resolve(RouteContext context) {
+        return delegate.resolve(context);
     }
 
     private static String requireText(String value, String message) {

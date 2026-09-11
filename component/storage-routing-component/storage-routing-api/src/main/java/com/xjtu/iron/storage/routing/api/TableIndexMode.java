@@ -23,6 +23,7 @@ public enum TableIndexMode {
      * <p>例如：
      * db_00 -> order_00 ~ order_09
      * db_01 -> order_00 ~ order_09
+     * 10 库每库 100 表时，仍是每个库内 order_00 ~ order_99。
      * </p>
      */
     LOCAL_TABLE_INDEX

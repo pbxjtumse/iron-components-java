@@ -33,12 +33,14 @@ Storage Routing 负责产生统一路由结果：
 ```text
 StorageRoute
     mode
+    context (RouteContext)
+    shardInfo
+    location (PhysicalStorageLocation)
+
+RouteContext
     routeName
     logicalTable
-    shardInfo
-    physicalLocation
-    shardKeyName
-    shardKeyValue
+    shardKey (CompositeShardKey)
     attributes
 ```
 

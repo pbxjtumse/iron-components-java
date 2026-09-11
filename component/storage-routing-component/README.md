@@ -30,13 +30,16 @@ Storage Routing Component 用来统一表达：
 
 ```text
 storage-routing-api
+    RouteContext
+    ShardKey
+    ShardValue
+    CompositeShardKey
     StorageRoute
     ShardRouteInfo
     PhysicalStorageLocation
     StorageRouteMode
-    StorageRouteRequest
     resolver.StorageRouteResolver
-    resolver.ShardRouteResolver
+    resolver.ShardResolver
     mapping.RouteMappingStrategy
     StorageRouteContext
     StorageRouteScope
@@ -45,16 +48,18 @@ storage-routing-api
 storage-routing-core
     ThreadLocalStorageRouteContext
     FixedStorageRouteResolver
-    HashShardRouteResolver
+    HashShardResolver
     DefaultStorageRouteResolver
     ShardIdHashStorageRouteResolver
     GlobalTableIndexRouteMappingStrategy / LocalTableIndexRouteMappingStrategy
     RouteMappingStrategyFactory
 ```
 
-`StorageRoute` 保留 `logicalTable`，用 `shardInfo` 表达分片结果，用 `physicalLocation` 表达物理库表。
-哈希路由器和默认编排器输出同一套结构，扩展属性只承载业务附加信息。旧的 `api.StorageRouteResolver`
-保留为兼容别名，新代码统一使用 `api.resolver.StorageRouteResolver`。
+`StorageRoute` 组合 `context`、`shardInfo`、`location`。`RouteContext` 保存场景、逻辑表、类型化分片键和扩展属性；
+`StorageRouteContext` 负责访问调用链中的路由结果，两者职责不同。
+
+单字段与复合字段统一使用 `CompositeShardKey`。`ShardResolver` 只计算分片，`RouteMappingStrategy` 只映射物理位置，
+接口位于 API、实现位于 Core。旧请求、旧包名接口与旧哈希解析器名称保留为薄适配入口，自定义接口实现需迁移参数类型。
 
 模型字段、兼容变化与使用限制见 [StorageRoute 模型](docs/design/03-storage-route-model.md)。
 
@@ -97,7 +102,7 @@ docs/sequence/02-storage-route-to-relational-access.puml
     -> StorageRoute 后续如何桥接到 Relational Access
 
 docs/design/03-storage-route-model.md
-    -> 逻辑表、分片结果、物理位置和兼容迁移说明
+    -> 类型化分片键、组合模型、稳定编码与兼容迁移说明
 
 docs/sequence/03-storage-route-resolution.puml
     -> 当前已实现的分片计算、物理映射和结果组装流程

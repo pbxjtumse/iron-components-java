@@ -8,6 +8,7 @@ import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
  *
  * <p>该接口隔离 shard 计算和物理命名规则。</p>
  */
+@FunctionalInterface
 public interface RouteMappingStrategy {
 
     /**

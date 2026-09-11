@@ -50,6 +50,17 @@ class HashStorageRoutingTest {
     }
 
     @Test
+    void localTableIndexShouldSupportTenDatabasesWithTenOrOneHundredTablesPerDatabase() {
+        RouteMappingStrategy mapping = new RouteMappingStrategyFactory("db_", "order", 2)
+                .create(TableIndexMode.LOCAL_TABLE_INDEX);
+
+        assertThat(mapping.map(new ShardRouteInfo(99, 9, 9, 100)))
+                .isEqualTo(PhysicalStorageLocation.of("db_09", "order_09"));
+        assertThat(mapping.map(new ShardRouteInfo(999, 9, 99, 1000)))
+                .isEqualTo(PhysicalStorageLocation.of("db_09", "order_99"));
+    }
+
+    @Test
     void shouldRejectInvalidTopologyBeforeHandlingRequests() {
         assertThatThrownBy(() -> new HashShardRouteResolver(0, 10)).isInstanceOf(StorageRoutingException.class);
         assertThatThrownBy(() -> new HashShardRouteResolver(10, -1)).isInstanceOf(StorageRoutingException.class);
