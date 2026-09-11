@@ -61,6 +61,21 @@ class HashStorageRoutingTest {
     }
 
     @Test
+    void shorthandResolverShouldAllowCustomTableIndexWidthWithoutChangingDataSourceWidth() {
+        StorageRoute route = ShardIdHashStorageRouteResolver.builder()
+                .dataSourcePrefix("db_")
+                .tablePrefix("order")
+                .databaseCount(10)
+                .tablesPerDatabase(100)
+                .tableIndexWidth(3)
+                .tableIndexMode(TableIndexMode.LOCAL_TABLE_INDEX)
+                .build()
+                .resolve(StorageRouteRequest.of("order", "order_id", "8"));
+
+        assertThat(route.physicalLocation()).isEqualTo(PhysicalStorageLocation.of("db_00", "order_056"));
+    }
+
+    @Test
     void shouldRejectInvalidTopologyBeforeHandlingRequests() {
         assertThatThrownBy(() -> new HashShardRouteResolver(0, 10)).isInstanceOf(StorageRoutingException.class);
         assertThatThrownBy(() -> new HashShardRouteResolver(10, -1)).isInstanceOf(StorageRoutingException.class);
@@ -71,6 +86,8 @@ class HashStorageRoutingTest {
     @ParameterizedTest
     @EnumSource(TableIndexMode.class)
     void shouldValidateMappingConfigurationBeforeProducingLocation(TableIndexMode mode) {
+        assertThatThrownBy(() -> new RouteMappingStrategyFactory("db_", "order", 0, 2).create(mode))
+                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("dataSourceIndexWidth");
         assertThatThrownBy(() -> new RouteMappingStrategyFactory("db_", "order", 0).create(mode))
                 .isInstanceOf(StorageRoutingException.class).hasMessageContaining("tableIndexWidth");
         assertThatThrownBy(() -> new RouteMappingStrategyFactory(" ", "order", 2).create(mode))

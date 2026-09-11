@@ -1,17 +1,21 @@
 # 01. Module Layout
 
-> 结论：Storage Routing 最终需要 api / core / spi / config / integration / starter，但第一版不应该一次性创建所有空模块。
+> 结论：当前已经具备 api / core / integration-relational / starter。后续再按真实扩展需求补 spi / config / shardingsphere adapter。
 
 ## 1. 当前第一版模块
 
-当前保留两个模块：
+当前保留这些有真实职责的模块：
 
 ```text
 storage-routing-api
 storage-routing-core
+storage-routing-integration
+    storage-routing-integration-relational
+storage-routing-starter
 ```
 
-原因：当前阶段最重要的是先定住模型和最小实现。
+原因：模型、默认解析、Relational Access 直连桥接与 Spring Boot 默认装配已经能形成最小闭环。
+仍不创建只有目录、没有稳定职责的 SPI / Config 模块。
 
 ## 2. storage-routing-api
 
@@ -96,49 +100,59 @@ StorageRouteMetadataProvider
 dbCount
 tableCount
 dataSourcePrefix
+dataSourceIndexWidth
 tablePrefix
+tableIndexWidth
 hashAlgorithm
 routeMode
 defaultRoute
 ```
 
 当前 `ShardIdHashStorageRouteResolver` 通过 builder 构造，内部组合分片计算与物理映射，不急着抽配置模块。
+Spring Boot starter 当前只提供一层轻量 properties，用于装配默认 hash resolver，不代表已经沉淀出独立配置中心模型。
 
 ## 6. storage-routing-integration 是否需要
 
-需要，而且应该是后续重点。
+已经创建，并落地了 Relational Access 直连桥接。
 
-未来结构建议：
+当前结构：
 
 ```text
 storage-routing-integration
     storage-routing-integration-relational
-    storage-routing-integration-shardingsphere
-    storage-routing-integration-mybatis
 ```
 
 说明：
 
 ```text
-relational 负责 StorageRoute -> SqlRoute
-shardingsphere 负责 StorageRoute -> ShardingSphere Hint / logical datasource
-mybatis 负责业务 Repository 与 RouteContext 协作
+relational 负责 StorageRoute -> SqlRoute，并向 Storage 暴露物理表名
 ```
+
+后续结构建议：
+
+```text
+storage-routing-integration
+    storage-routing-integration-shardingsphere
+    storage-routing-integration-mybatis
+```
+
+`storage-routing-integration-relational` 当前只支持 `DIRECT_DATASOURCE`。`SHARDINGSPHERE_JDBC` 与 `PROXY`
+需要专门 adapter 决定是走统一逻辑 DataSource、Hint，还是代理入口。
 
 ## 7. storage-routing-starter 是否需要
 
-需要，但应该最后创建。
+已经创建，但保持轻量。
 
-Starter 只有在这些东西稳定后才有价值：
+当前自动装配：
 
 ```text
-配置模型稳定
-默认 Resolver 稳定
-Context Bean 稳定
-Integration Bean 稳定
+StorageRouteContext -> ThreadLocalStorageRouteContext
+StorageRouteToSqlRouteBridge -> DefaultStorageRouteToSqlRouteBridge
+StorageRouteResolver -> 仅在 resolver.enabled=true 时按显式库表拓扑创建
 ```
 
-否则 Starter 会很快反复推翻。
+默认 resolver 不自动启用，因为 databaseCount、tablesPerDatabase、dataSourcePrefix、tablePrefix
+都属于业务路由规则，框架不应该猜。
 
 ## 8. 推荐演进顺序
 
@@ -149,12 +163,13 @@ Phase 2.1
 Phase 2.2
     integration-relational
     StorageRoute -> SqlRoute
+    storage-routing-starter
 
 Phase 2.3
     idempotent-provider-jdbc 接 StorageRoute
 
 Phase 2.4
-    config + starter
+    outbox / task / message storage 按同一模型接入
 
 Phase 2.5
     integration-shardingsphere

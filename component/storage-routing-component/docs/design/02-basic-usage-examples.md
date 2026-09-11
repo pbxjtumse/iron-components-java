@@ -107,7 +107,34 @@ try (StorageRouteScope ignored = routeContextStore.open(route)) {
 
 RouteContext 是输入模型。StorageRouteContext 是保存和读取当前路由的接口；ThreadLocalStorageRouteContext 是其实现。关闭最外层作用域后清理线程状态，嵌套作用域关闭后恢复外层路由。
 
-## 6. 固定直连与旧调用迁移
+## 6. StorageRoute 到 Relational Access
+
+直连多数据源场景使用 `StorageRouteToSqlRouteBridge`：
+
+```java
+StorageRouteToSqlRouteBridge bridge = new DefaultStorageRouteToSqlRouteBridge();
+
+String tableName = bridge.requireTableName(singleRoute);
+SqlStatement statement = SqlStatement.of("idempotency.insert",
+        "INSERT INTO " + tableName + "(idempotency_key, order_id, status) VALUES (?, ?, ?)",
+        key, orderId, "SUCCESS");
+
+relationalTemplate.update(bridge.applyRoute(statement, singleRoute));
+```
+
+bridge 只做两件事：
+
+| 数据 | 用途 |
+| --- | --- |
+| `bridge.toSqlRoute(route)` | 交给 Relational Access 选择 DataSource |
+| `bridge.requireTableName(route)` | 交给具体 Storage 拼装已经确定的最终 SQL |
+
+`RelationalTemplate` 不理解分片键，也不改写表名。每个 Storage 仍要基于自己的逻辑表族解析出对应的 `StorageRoute`，
+不能把业务订单表的 `tableName` 直接拿来写幂等表或 Outbox 表。
+
+当前默认 bridge 只支持 `DIRECT_DATASOURCE`。`SHARDINGSPHERE_JDBC` 和 `PROXY` 需要专门 adapter 决定如何接入中间件。
+
+## 7. 固定直连与旧调用迁移
 
 固定直连不需要为了凑模型而伪造分片键：
 
@@ -127,7 +154,7 @@ StorageRoute compatible = resolver.resolve(oldRequest);
 
 复合键请读取 route.context().shardKey().keys()。旧的 shardKeyName()/shardKeyValue() 不会自动取第一个字段，而会报错，防止丢失组合条件。
 
-## 7. 库表数量
+## 8. 库表数量
 
 databaseCount 是库数，tablesPerDatabase 是每库表数，总分片数是两者乘积。
 
@@ -135,16 +162,18 @@ databaseCount 是库数，tablesPerDatabase 是每库表数，总分片数是两
 - 10 库、每库 100 表：共 1000 个分片。
 - GLOBAL_TABLE_INDEX 按全局 shardId 命名表。
 - LOCAL_TABLE_INDEX 按库内 localTableIndex 命名表。
+- dataSourceIndexWidth 控制库号补零宽度，tableIndexWidth 控制表号补零宽度。
 
 `DIRECT_DATASOURCE` 不决定是哪一种表编号，它只表示最终结果已经解析出了 `dataSourceKey` 和 `tableName`。
-直连场景下，两种常见库内编号都走 `LOCAL_TABLE_INDEX`：
+直连场景下，常见配置如下：
 
-| 拓扑 | 配置 | 表后缀含义 | 示例边界 |
+| 拓扑 | 配置 | 表后缀含义 | 示例 |
 | --- | --- | --- | --- |
-| 10 库，每库 10 表 | `databaseCount=10, tablesPerDatabase=10` | 每个库内 `00` 到 `09` | `db_09.order_09` |
-| 10 库，每库 100 表 | `databaseCount=10, tablesPerDatabase=100` | 每个库内 `00` 到 `99` | `db_09.order_99` |
+| 10 库，每库 10 表，全局表号 | `databaseCount=10, tablesPerDatabase=10, tableIndexMode=GLOBAL_TABLE_INDEX` | `db_00` 是 `order_00` 到 `order_09`，`db_01` 是 `order_10` 到 `order_19` | `db_09.order_99` |
+| 10 库，每库 10 表，库内重复表号 | `databaseCount=10, tablesPerDatabase=10, tableIndexMode=LOCAL_TABLE_INDEX` | 每个库内都是 `order_00` 到 `order_09` | `db_09.order_09` |
+| 10 库，每库 100 表，库内重复表号 | `databaseCount=10, tablesPerDatabase=100, tableIndexMode=LOCAL_TABLE_INDEX` | 每个库内都是 `order_00` 到 `order_99` | `db_09.order_99` |
 
-如果希望全局 100 张表编号成 `order_00` 到 `order_99`，使用 `GLOBAL_TABLE_INDEX` 和 `databaseCount=10,
-tablesPerDatabase=10`。这时每个库只承载其中一段全局表号，例如 `db_09.order_90` 到 `db_09.order_99`。
+默认 `dataSourceIndexWidth=2`、`tableIndexWidth=2`，所以库号和表号都是两位。若未来表后缀需要 `000` 到 `999`，
+只调大 `tableIndexWidth` 即可，不必改变库号宽度。
 
 本轮不包含 SQL 解析/改写、扩容迁移、分布式事务或中间件适配。字段顺序、类型、稳定编码与兼容说明见 [StorageRoute 模型](03-storage-route-model.md)。

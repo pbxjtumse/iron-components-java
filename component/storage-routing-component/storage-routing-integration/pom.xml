@@ -6,20 +6,17 @@
 
     <parent>
         <groupId>com.xjtu.iron</groupId>
-        <artifactId>component</artifactId>
+        <artifactId>storage-routing-component</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>storage-routing-component</artifactId>
+    <artifactId>storage-routing-integration</artifactId>
     <packaging>pom</packaging>
-    <name>storage-routing-component</name>
-    <description>Iron Components 存储路由组件，用于统一承载分库分表、读写分离、多租户、冷热数据等路由上下文。</description>
+    <name>storage-routing-integration</name>
+    <description>Storage Routing 与 Relational Access、ShardingSphere 等基础设施的集成模块集合。</description>
 
     <modules>
-        <module>storage-routing-api</module>
-        <module>storage-routing-core</module>
-        <module>storage-routing-integration</module>
-        <module>storage-routing-starter</module>
+        <module>storage-routing-integration-relational</module>
     </modules>
 </project>

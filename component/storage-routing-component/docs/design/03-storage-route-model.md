@@ -35,6 +35,8 @@ RouteContext 是输入数据；StorageRouteContext 是具有 current/open 方法
 | --- | --- |
 | storage-routing-api | 上述七个模型；resolver.StorageRouteResolver、resolver.ShardResolver、mapping.RouteMappingStrategy 等契约 |
 | storage-routing-core | DefaultStorageRouteResolver、HashShardResolver、Global/Local 映射策略、映射工厂、固定路由与 ThreadLocal 实现 |
+| storage-routing-integration-relational | StorageRouteToSqlRouteBridge、DefaultStorageRouteToSqlRouteBridge |
+| storage-routing-starter | StorageRoutingAutoConfiguration、StorageRoutingProperties |
 
 主契约分别是：
 
@@ -101,6 +103,7 @@ DIRECT_DATASOURCE 不是一种表编号算法，它只要求 StorageRoute 中已
 直连 10 库每库 10 表和 10 库每库 100 表都可以用同一个模式表达：databaseCount 固定为 10，
 tablesPerDatabase 分别为 10 或 100，LOCAL_TABLE_INDEX 分别得到每库 order_00 ~ order_09 或
 order_00 ~ order_99。若希望表名使用跨库全局编号，则使用 GLOBAL_TABLE_INDEX。
+库号和表号的补零宽度分别由 dataSourceIndexWidth 与 tableIndexWidth 控制。
 
 字段数量、字段顺序、类型、值格式、编码版本、哈希算法、库表数量都是路由规则。改变规则前必须规划已有数据如何迁移。模型对象自身的 hashCode 用于 JVM 集合，不能替代这里明确的路由哈希协议。
 
@@ -113,7 +116,8 @@ order_00 ~ order_99。若希望表名使用跨库全局编号，则使用 GLOBAL
 - 新 Builder 的 context(...) 不能和旧 routeName/logicalTable/shardKeyName/shardKeyValue/attributes 字段设置混用，防止两份输入互相覆盖。
 - 扩展 attributes 不控制标准分片字段；即使存在同名属性，也不会覆盖显式模型。
 - 分片数量、索引范围、乘法溢出、空解析结果等仍在边界校验；物理编号使用 Locale.ROOT。
-- SHARDINGSPHERE_JDBC / PROXY 仅保留描述字段，本轮没有实现中间件适配或分布式事务。
+- 默认 relational bridge 只接受 DIRECT_DATASOURCE，并要求完整物理位置。
+- SHARDINGSPHERE_JDBC / PROXY 仅保留描述字段，当前没有实现中间件 adapter 或分布式事务。
 
 同分片不等于同表，也不自动等于同事务。后续仍要让各 Storage 映射自己的表，并让 SQL 复用事务管理器管理的同一资源和连接。
 
@@ -139,11 +143,12 @@ order_00 ~ order_99。若希望表名使用跨库全局编号，则使用 GLOBAL
 ## 7. 验证与后续
 
 ```bash
-mvn -pl :storage-routing-core -am test
+mvn -pl :storage-routing-starter -am test
 ```
 
-测试覆盖单字段固定落点、复合键编码与固定落点、字段边界/类型/顺序、不可变集合与上下文、旧调用桥接、非法参数，以及已有 ThreadLocal 行为。
+测试覆盖单字段固定落点、复合键编码与固定落点、字段边界/类型/顺序、不可变集合与上下文、旧调用桥接、
+非法参数、ThreadLocal 行为、StorageRoute 到 Relational Access 的直连桥接，以及 starter 自动装配。
 
-后续仍是 Relational Access 桥接与技术组件 Storage 接入；当前路由链路只决定位置，不建立 JDBC Connection、改写 SQL 或创建事务。
+后续重点是技术组件 Storage 接入当前路由；当前路由链路只决定位置，不建立 JDBC Connection、改写 SQL 或创建事务。
 
 相关图示：[模型关系](../component/01-storage-route-model.puml)、[解析时序](../sequence/03-storage-route-resolution.puml)。
