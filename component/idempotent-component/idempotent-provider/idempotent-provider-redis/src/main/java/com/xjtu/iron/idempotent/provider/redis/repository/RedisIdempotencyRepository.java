@@ -2,9 +2,15 @@ package com.xjtu.iron.idempotent.provider.redis.repository;
 
 import com.xjtu.iron.idempotent.api.policy.IdempotencyWindowPolicy;
 import com.xjtu.iron.idempotent.api.recovery.IdempotencyRecoveryMode;
-import com.xjtu.iron.idempotent.api.repository.*;
-import com.xjtu.iron.idempotent.api.repository.acquire.*;
-import com.xjtu.iron.idempotent.api.repository.recovery.*;
+import com.xjtu.iron.idempotent.api.repository.IdempotencyRecord;
+import com.xjtu.iron.idempotent.api.repository.IdempotencyRepository;
+import com.xjtu.iron.idempotent.api.repository.IdempotencyRepositoryCapabilities;
+import com.xjtu.iron.idempotent.api.repository.acquire.IdempotencyAcquireRequest;
+import com.xjtu.iron.idempotent.api.repository.acquire.IdempotencyAcquireResult;
+import com.xjtu.iron.idempotent.api.repository.acquire.IdempotencyAcquireStatus;
+import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryAcquireRequest;
+import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryResult;
+import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryStatus;
 import com.xjtu.iron.idempotent.api.repository.write.*;
 import com.xjtu.iron.idempotent.api.state.IdempotencyStatus;
 import com.xjtu.iron.idempotent.api.storage.IdempotencyStorageContext;
@@ -14,11 +20,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * WINDOWED Redis 幂等状态仓储。

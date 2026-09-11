@@ -1,9 +1,9 @@
 package com.xjtu.iron.cache.spring.boot.starter.configuration;
 
 import com.xjtu.iron.cache.core.invalidate.LocalCacheInvalidator;
+import com.xjtu.iron.cache.provider.caffeine.CaffeineCacheProvider;
 import com.xjtu.iron.cache.provider.caffeine.CaffeineLocalCacheInvalidator;
 import com.xjtu.iron.cache.provider.caffeine.CaffeineLocalCacheManager;
-import com.xjtu.iron.cache.provider.caffeine.CaffeineCacheProvider;
 import com.xjtu.iron.cache.spring.boot.starter.properties.XjtuIronCacheProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

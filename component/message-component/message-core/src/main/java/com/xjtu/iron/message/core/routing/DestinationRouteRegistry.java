@@ -2,15 +2,7 @@ package com.xjtu.iron.message.core.routing;
 
 import com.xjtu.iron.message.api.model.MessageDestination;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Objects;
+import java.util.*;
 /**
  * 目的地路由注册表，保存逻辑目的地到物理目的地的静态映射。
  *

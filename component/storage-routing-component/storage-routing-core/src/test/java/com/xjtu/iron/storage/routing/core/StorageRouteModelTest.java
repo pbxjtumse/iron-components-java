@@ -1,10 +1,6 @@
 package com.xjtu.iron.storage.routing.core;
 
-import com.xjtu.iron.storage.routing.api.PhysicalStorageLocation;
-import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
-import com.xjtu.iron.storage.routing.api.StorageRoute;
-import com.xjtu.iron.storage.routing.api.StorageRouteMode;
-import com.xjtu.iron.storage.routing.api.StorageRoutingException;
+import com.xjtu.iron.storage.routing.api.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -19,7 +15,7 @@ class StorageRouteModelTest {
 
     @Test
     void shouldKeepLogicalTableSeparateFromPhysicalTable() {
-        StorageRoute route = StorageRoute.direct(" business_order ", " db_05 ", " business_order_56 ");
+        com.xjtu.iron.storage.routing.api.StorageRoute route = StorageRoute.direct(" business_order ", " db_05 ", " business_order_56 ");
 
         assertThat(route.logicalTable()).isEqualTo("business_order");
         assertThat(route.physicalLocation()).isEqualTo(PhysicalStorageLocation.of("db_05", "business_order_56"));

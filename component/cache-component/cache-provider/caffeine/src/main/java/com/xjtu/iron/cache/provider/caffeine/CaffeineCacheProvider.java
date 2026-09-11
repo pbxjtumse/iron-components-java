@@ -1,10 +1,10 @@
 package com.xjtu.iron.cache.provider.caffeine;
 
 import com.github.benmanes.caffeine.cache.Cache;
+import com.xjtu.iron.cache.api.enums.CacheLevel;
 import com.xjtu.iron.cache.api.key.CacheKey;
 import com.xjtu.iron.cache.api.model.CacheSpec;
 import com.xjtu.iron.cache.api.model.CacheValue;
-import com.xjtu.iron.cache.api.enums.CacheLevel;
 import com.xjtu.iron.cache.core.CacheProvider;
 
 import java.time.Duration;

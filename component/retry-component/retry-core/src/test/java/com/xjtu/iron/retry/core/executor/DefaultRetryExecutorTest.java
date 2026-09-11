@@ -1,21 +1,19 @@
 package com.xjtu.iron.retry.core.executor;
 
 
-import com.xjtu.iron.retry.core.policy.DefaultRetryPolicyRegistry;
-
-import com.xjtu.iron.retry.api.execution.RetryCancellationToken;
-import com.xjtu.iron.retry.api.policy.RetryDecision;
+import com.xjtu.iron.retry.api.backoff.BackoffStrategies;
 import com.xjtu.iron.retry.api.backoff.RetryDelaySource;
 import com.xjtu.iron.retry.api.event.RetryEvent;
 import com.xjtu.iron.retry.api.event.RetryEventType;
+import com.xjtu.iron.retry.api.execution.RetryCancellationToken;
 import com.xjtu.iron.retry.api.execution.RetryExecution;
-import com.xjtu.iron.retry.api.policy.RetryFailureCategory;
-import com.xjtu.iron.retry.api.policy.RetryPolicy;
 import com.xjtu.iron.retry.api.execution.RetryResult;
 import com.xjtu.iron.retry.api.execution.RetryStatus;
-import com.xjtu.iron.retry.api.backoff.BackoffStrategies;
+import com.xjtu.iron.retry.api.policy.RetryDecision;
+import com.xjtu.iron.retry.api.policy.RetryFailureCategory;
+import com.xjtu.iron.retry.api.policy.RetryPolicy;
+import com.xjtu.iron.retry.core.policy.DefaultRetryPolicyRegistry;
 import com.xjtu.iron.retry.core.time.RetrySleeper;
-import com.xjtu.iron.retry.core.time.SystemRetryClock;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,10 +24,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** 验证同步执行器的主要成功、失败、取消和基础设施边界。 */
 class DefaultRetryExecutorTest {

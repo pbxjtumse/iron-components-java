@@ -1,9 +1,9 @@
 package com.xjtu.iron.concurrency.core.rejection;
 
+import com.xjtu.iron.concurrency.core.task.CallerRunsAware;
+
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
-
-import com.xjtu.iron.concurrency.core.task.CallerRunsAware;
 
 /**
  * 组件增强版 CALLER_RUNS 策略。

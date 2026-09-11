@@ -1,9 +1,8 @@
 package com.xjtu.iron.retry.api.execution;
 
+import com.xjtu.iron.retry.api.exception.RetryExecutionException;
 import com.xjtu.iron.retry.api.policy.RetryDecision;
 import com.xjtu.iron.retry.api.policy.RetryFailureCategory;
-
-import com.xjtu.iron.retry.api.exception.RetryExecutionException;
 
 import java.time.Duration;
 import java.util.Objects;

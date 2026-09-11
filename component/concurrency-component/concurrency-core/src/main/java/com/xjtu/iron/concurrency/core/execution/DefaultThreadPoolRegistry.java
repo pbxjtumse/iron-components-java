@@ -3,7 +3,6 @@ package com.xjtu.iron.concurrency.core.execution;
 import com.xjtu.iron.concurrency.api.exception.ThreadPoolNotFoundException;
 import com.xjtu.iron.concurrency.core.spi.ThreadPoolRegistry;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
