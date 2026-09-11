@@ -1,7 +1,7 @@
 package com.xjtu.iron.governance.core.event;
 
-import com.xjtu.iron.governance.spi.event.GovernanceEventListener;
 import com.xjtu.iron.governance.model.event.GovernanceEvent;
+import com.xjtu.iron.governance.spi.event.GovernanceEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

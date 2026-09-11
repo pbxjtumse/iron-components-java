@@ -5,15 +5,7 @@ import com.xjtu.iron.relational.api.exception.RelationalFailureType;
 import com.xjtu.iron.relational.spi.exception.SqlExceptionTranslator;
 import com.xjtu.iron.relational.spi.execution.SqlExecutionContext;
 
-import java.sql.SQLDataException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.SQLNonTransientConnectionException;
-import java.sql.SQLRecoverableException;
-import java.sql.SQLSyntaxErrorException;
-import java.sql.SQLTimeoutException;
-import java.sql.SQLTransactionRollbackException;
-import java.sql.SQLTransientConnectionException;
-import java.sql.SQLException;
+import java.sql.*;
 
 /**
  * 基于标准 JDBC 异常层级与 SQLState class 的保守异常翻译器。

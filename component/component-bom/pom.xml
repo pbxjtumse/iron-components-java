@@ -103,11 +103,6 @@
             </dependency>
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
-                <artifactId>storage-routing-integration-relational</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.xjtu.iron</groupId>
                 <artifactId>storage-routing-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>

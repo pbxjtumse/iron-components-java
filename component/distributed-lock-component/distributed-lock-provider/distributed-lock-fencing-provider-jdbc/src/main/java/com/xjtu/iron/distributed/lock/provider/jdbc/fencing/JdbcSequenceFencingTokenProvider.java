@@ -5,11 +5,7 @@ import com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenRequest;
 import com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenResponse;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.*;
 import java.util.Objects;
 import java.util.regex.Pattern;
 

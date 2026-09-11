@@ -137,10 +137,7 @@ public interface StorageRouteResolver {
 
 直连解析链路已经实现：`RouteContext` 的 `CompositeShardKey` → `HashShardResolver` → `ShardRouteInfo` →
 `RouteMappingStrategy` → `PhysicalStorageLocation` → 组合式 `StorageRoute`。
-`ShardResolver` 只接收类型化分片键，单字段同样使用单元素 `CompositeShardKey`。
-`storage-routing-integration-relational` 已提供 `StorageRouteToSqlRouteBridge`，可以把 `DIRECT_DATASOURCE`
-路由交给 Relational Access 选择 DataSource，并把物理表名交给具体 Storage 拼最终 SQL。
-中间件适配和技术组件 Storage 接入仍属于后续工作。
+`ShardResolver` 只接收类型化分片键，单字段同样使用单元素 `CompositeShardKey`。中间件适配和 Relational Access 桥接仍属于后续工作。
 `DIRECT_DATASOURCE` 表示已经解析出物理库表，不表示固定某一种表编号；10 库每库 10 表和 10 库每库 100 表
 都由 `databaseCount`、`tablesPerDatabase` 与 `TableIndexMode` 组合表达。
 
@@ -233,10 +230,9 @@ JdbcIdempotencyStorage 通过 RelationalTemplate 写幂等表
 ```text
 1. Relational Access 打穿同库同事务测试
 2. 抽 sharding-component 的 StorageRoute / StorageRouteResolver
-3. 打通 storage-routing-integration-relational 与 storage-routing-starter
-4. Idempotency JDBC Storage 接 StorageRoute
-5. ShardingSphere-JDBC 模式下验证：MyBatis + RelationalTemplate 共享 ShardingSphereDataSource
-6. 再考虑 ShardingSphere-Proxy、MyCAT、TiDB 等扩展
+3. Idempotency JDBC Storage 接 StorageRoute
+4. ShardingSphere-JDBC 模式下验证：MyBatis + RelationalTemplate 共享 ShardingSphereDataSource
+5. 再考虑 direct datasource 模式、ShardingSphere-Proxy、MyCAT、TiDB 等扩展
 ```
 
 ## 9. 当前结论
@@ -246,4 +242,3 @@ Sharding Component 是必要的，但它不是数据库中间件。
 它是 Iron Components 的“路由上下文标准”。
 
 真正的 SQL 分片执行优先站在 Apache ShardingSphere-JDBC 之上。
-当前 direct bridge 是为了让 Iron 技术组件先共用同一份 StorageRoute，不替代后续 ShardingSphere-JDBC adapter。

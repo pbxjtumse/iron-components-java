@@ -1,12 +1,7 @@
 package com.xjtu.iron.cache.spring.boot.starter.configuration;
 
 import com.xjtu.iron.cache.api.CacheClient;
-import com.xjtu.iron.cache.api.enums.CacheOperation;
-import com.xjtu.iron.cache.core.CacheLoadGuard;
-import com.xjtu.iron.cache.core.CacheMetricsRecorder;
-import com.xjtu.iron.cache.core.CacheProvider;
-import com.xjtu.iron.cache.core.CacheSpecResolver;
-import com.xjtu.iron.cache.core.CacheTtlResolver;
+import com.xjtu.iron.cache.core.*;
 import com.xjtu.iron.cache.core.event.CacheEventPublisher;
 import com.xjtu.iron.cache.core.impl.DefaultCacheClient;
 import com.xjtu.iron.cache.core.impl.DefaultCacheTtlResolver;
@@ -14,8 +9,8 @@ import com.xjtu.iron.cache.core.impl.LocalMutexCacheLoadGuard;
 import com.xjtu.iron.cache.core.trace.CacheTraceContext;
 import com.xjtu.iron.cache.core.trace.NoopCacheTraceContext;
 import com.xjtu.iron.cache.provider.composite.CompositeCacheProvider;
-import com.xjtu.iron.cache.spring.boot.starter.resolver.PropertiesCacheSpecResolver;
 import com.xjtu.iron.cache.spring.boot.starter.properties.XjtuIronCacheProperties;
+import com.xjtu.iron.cache.spring.boot.starter.resolver.PropertiesCacheSpecResolver;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;

@@ -2,14 +2,7 @@ package com.xjtu.iron.distributed.lock.core.fencing.registry;
 
 import com.xjtu.iron.distributed.lock.core.fencing.coordinator.FencingTokenCoordinator;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 默认 fencing token Provider 注册表。

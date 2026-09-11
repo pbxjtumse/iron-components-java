@@ -1,10 +1,6 @@
 package com.xjtu.iron.message.api.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * 声明式消息监听注解，预留给后续 Spring Boot Starter 扫描和自动订阅使用。

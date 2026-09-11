@@ -48,7 +48,6 @@ public class StorageRoutingAutoConfiguration {
                 .tablePrefix(resolver.getTablePrefix())
                 .databaseCount(resolver.getDatabaseCount())
                 .tablesPerDatabase(resolver.getTablesPerDatabase())
-                .dataSourceIndexWidth(resolver.getDataSourceIndexWidth())
                 .tableIndexWidth(resolver.getTableIndexWidth())
                 .tableIndexMode(resolver.getTableIndexMode())
                 .build();
