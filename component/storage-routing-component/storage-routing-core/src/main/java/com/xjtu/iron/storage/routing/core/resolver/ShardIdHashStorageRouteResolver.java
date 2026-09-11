@@ -1,6 +1,10 @@
 package com.xjtu.iron.storage.routing.core.resolver;
 
-import com.xjtu.iron.storage.routing.api.*;
+import com.xjtu.iron.storage.routing.api.StorageRoute;
+import com.xjtu.iron.storage.routing.api.RouteContext;
+import com.xjtu.iron.storage.routing.api.StorageRouteResolver;
+import com.xjtu.iron.storage.routing.api.StorageRoutingException;
+import com.xjtu.iron.storage.routing.api.TableIndexMode;
 import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
 
 import java.util.Objects;
@@ -25,7 +29,8 @@ import java.util.Objects;
  * DefaultStorageRouteResolver。分片信息统一从 StorageRoute.shardInfo() 读取，不再重复存进 attributes。</p>
  *
  * <p>DIRECT_DATASOURCE 是最终路由模式；10 库每库 10 表、10 库每库 100 表等拓扑由 databaseCount
- * 和 tablesPerDatabase 决定，表编号是全局还是库内重复由 TableIndexMode 决定。</p>
+ * 和 tablesPerDatabase 决定，表编号是全局还是库内重复由 TableIndexMode 决定。
+ * dataSourceIndexWidth 与 tableIndexWidth 分别控制库号和表号补零宽度。</p>
  */
 public final class ShardIdHashStorageRouteResolver implements StorageRouteResolver {
 
@@ -37,7 +42,11 @@ public final class ShardIdHashStorageRouteResolver implements StorageRouteResolv
         TableIndexMode tableIndexMode = Objects.requireNonNull(builder.tableIndexMode, "tableIndexMode must not be null");
         this.delegate = new DefaultStorageRouteResolver(
                 new HashShardResolver(builder.databaseCount, builder.tablesPerDatabase),
-                new RouteMappingStrategyFactory(dataSourcePrefix, tablePrefix, 2).create(tableIndexMode));
+                new RouteMappingStrategyFactory(
+                        dataSourcePrefix,
+                        tablePrefix,
+                        builder.dataSourceIndexWidth,
+                        builder.tableIndexWidth).create(tableIndexMode));
     }
 
     public static Builder builder() {
@@ -62,6 +71,8 @@ public final class ShardIdHashStorageRouteResolver implements StorageRouteResolv
         private String tablePrefix = "order";
         private int databaseCount;
         private int tablesPerDatabase;
+        private int dataSourceIndexWidth = 2;
+        private int tableIndexWidth = 2;
         private TableIndexMode tableIndexMode = TableIndexMode.GLOBAL_TABLE_INDEX;
 
         public Builder dataSourcePrefix(String dataSourcePrefix) {
@@ -81,6 +92,16 @@ public final class ShardIdHashStorageRouteResolver implements StorageRouteResolv
 
         public Builder tablesPerDatabase(int tablesPerDatabase) {
             this.tablesPerDatabase = tablesPerDatabase;
+            return this;
+        }
+
+        public Builder dataSourceIndexWidth(int dataSourceIndexWidth) {
+            this.dataSourceIndexWidth = dataSourceIndexWidth;
+            return this;
+        }
+
+        public Builder tableIndexWidth(int tableIndexWidth) {
+            this.tableIndexWidth = tableIndexWidth;
             return this;
         }
 

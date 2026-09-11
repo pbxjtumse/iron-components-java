@@ -12,4 +12,5 @@ package com.xjtu.iron.storage.routing.api;
 @Deprecated
 @FunctionalInterface
 public interface StorageRouteResolver extends com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver {
+    StorageRoute resolve(RouteContext context);
 }

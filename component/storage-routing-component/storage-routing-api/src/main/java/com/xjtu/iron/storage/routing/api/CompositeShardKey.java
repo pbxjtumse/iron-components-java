@@ -1,6 +1,10 @@
 package com.xjtu.iron.storage.routing.api;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * 有序、非空、字段名不重复的不可变分片键集合。单字段同样使用这个模型，无需另建输入类型。
