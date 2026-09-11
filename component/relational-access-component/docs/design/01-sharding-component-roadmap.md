@@ -138,6 +138,8 @@ public interface StorageRouteResolver {
 直连解析链路已经实现：`RouteContext` 的 `CompositeShardKey` → `HashShardResolver` → `ShardRouteInfo` →
 `RouteMappingStrategy` → `PhysicalStorageLocation` → 组合式 `StorageRoute`。
 `ShardResolver` 只接收类型化分片键，单字段同样使用单元素 `CompositeShardKey`。中间件适配和 Relational Access 桥接仍属于后续工作。
+`DIRECT_DATASOURCE` 表示已经解析出物理库表，不表示固定某一种表编号；10 库每库 10 表和 10 库每库 100 表
+都由 `databaseCount`、`tablesPerDatabase` 与 `TableIndexMode` 组合表达。
 
 ## 5. 直连多库模式
 

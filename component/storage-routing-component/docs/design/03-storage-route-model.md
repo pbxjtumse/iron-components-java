@@ -97,6 +97,11 @@ v1;2;9:tenant_id4:LONG2:428:order_id6:STRING1:8
 在 10 库、每库 10 表时，上述复合键得到 shardId=42、databaseIndex=4、localTableIndex=2：
 GLOBAL_TABLE_INDEX 对应 db_04.order_42，LOCAL_TABLE_INDEX 对应 db_04.order_02。
 
+DIRECT_DATASOURCE 不是一种表编号算法，它只要求 StorageRoute 中已经有完整 PhysicalStorageLocation。
+直连 10 库每库 10 表和 10 库每库 100 表都可以用同一个模式表达：databaseCount 固定为 10，
+tablesPerDatabase 分别为 10 或 100，LOCAL_TABLE_INDEX 分别得到每库 order_00 ~ order_09 或
+order_00 ~ order_99。若希望表名使用跨库全局编号，则使用 GLOBAL_TABLE_INDEX。
+
 字段数量、字段顺序、类型、值格式、编码版本、哈希算法、库表数量都是路由规则。改变规则前必须规划已有数据如何迁移。模型对象自身的 hashCode 用于 JVM 集合，不能替代这里明确的路由哈希协议。
 
 ## 5. 构造与执行约束

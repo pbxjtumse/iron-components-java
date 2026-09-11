@@ -13,6 +13,10 @@ public enum StorageRouteMode {
      *
      * <p>典型场景：StorageRoute.dataSourceKey = order-db-1，tableName = business_order_017，
      * 然后 Relational Access 根据 dataSourceKey 获取真实 DataSource。</p>
+     *
+     * <p>该模式只表示结果中已经包含物理 dataSourceKey 和 tableName，不决定 10 库每库 10 表、
+     * 10 库每库 100 表等拓扑。库表数量由 ShardResolver 决定，表后缀规则由 RouteMappingStrategy /
+     * TableIndexMode 决定。</p>
      */
     DIRECT_DATASOURCE,
 

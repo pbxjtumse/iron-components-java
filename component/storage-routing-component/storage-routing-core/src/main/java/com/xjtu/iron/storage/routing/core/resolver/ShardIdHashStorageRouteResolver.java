@@ -27,6 +27,9 @@ import java.util.Objects;
  *
  * <p>保留原有 builder 作为便捷入口，内部委托 HashShardResolver + RouteMappingStrategy +
  * DefaultStorageRouteResolver。分片信息统一从 StorageRoute.shardInfo() 读取，不再重复存进 attributes。</p>
+ *
+ * <p>DIRECT_DATASOURCE 是最终路由模式；10 库每库 10 表、10 库每库 100 表等拓扑由 databaseCount
+ * 和 tablesPerDatabase 决定，表编号是全局还是库内重复由 TableIndexMode 决定。</p>
  */
 public final class ShardIdHashStorageRouteResolver implements StorageRouteResolver {
 

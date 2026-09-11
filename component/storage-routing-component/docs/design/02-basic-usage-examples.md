@@ -136,4 +136,15 @@ databaseCount 是库数，tablesPerDatabase 是每库表数，总分片数是两
 - GLOBAL_TABLE_INDEX 按全局 shardId 命名表。
 - LOCAL_TABLE_INDEX 按库内 localTableIndex 命名表。
 
+`DIRECT_DATASOURCE` 不决定是哪一种表编号，它只表示最终结果已经解析出了 `dataSourceKey` 和 `tableName`。
+直连场景下，两种常见库内编号都走 `LOCAL_TABLE_INDEX`：
+
+| 拓扑 | 配置 | 表后缀含义 | 示例边界 |
+| --- | --- | --- | --- |
+| 10 库，每库 10 表 | `databaseCount=10, tablesPerDatabase=10` | 每个库内 `00` 到 `09` | `db_09.order_09` |
+| 10 库，每库 100 表 | `databaseCount=10, tablesPerDatabase=100` | 每个库内 `00` 到 `99` | `db_09.order_99` |
+
+如果希望全局 100 张表编号成 `order_00` 到 `order_99`，使用 `GLOBAL_TABLE_INDEX` 和 `databaseCount=10,
+tablesPerDatabase=10`。这时每个库只承载其中一段全局表号，例如 `db_09.order_90` 到 `db_09.order_99`。
+
 本轮不包含 SQL 解析/改写、扩容迁移、分布式事务或中间件适配。字段顺序、类型、稳定编码与兼容说明见 [StorageRoute 模型](03-storage-route-model.md)。
