@@ -3,18 +3,21 @@ package com.xjtu.iron.storage.routing.api.resolver;
 import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
 import com.xjtu.iron.storage.routing.api.StorageRouteRequest;
 
+import java.util.Objects;
+
 /**
- * 根据业务请求计算逻辑 shard。
- *
- * <p>该接口只负责：业务请求 -> ShardRouteInfo。</p>
- *
- * <p>它不知道数据库名字，也不知道物理表名字。</p>
+ * 原接口名的兼容入口；旧请求调用会先转换为类型化分片键。
+ * 自定义实现需将实现方法迁移为 resolve(CompositeShardKey)，不能继续依赖请求的其他字段。
+ * @deprecated 使用 ShardResolver。
  */
+@Deprecated
 @FunctionalInterface
-public interface ShardRouteResolver {
+public interface ShardRouteResolver extends ShardResolver {
 
     /**
      * 计算逻辑分片结果。
      */
-    ShardRouteInfo resolve(StorageRouteRequest request);
+    default ShardRouteInfo resolve(StorageRouteRequest request) {
+        return resolve(Objects.requireNonNull(request, "request must not be null").toContext().requireShardKey());
+    }
 }

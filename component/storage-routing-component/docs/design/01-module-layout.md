@@ -20,13 +20,16 @@ storage-routing-core
 包含：
 
 ```text
+RouteContext
+ShardValue
+ShardKey
+CompositeShardKey
 StorageRoute
 ShardRouteInfo
 PhysicalStorageLocation
 StorageRouteMode
-StorageRouteRequest
 resolver.StorageRouteResolver
-resolver.ShardRouteResolver
+resolver.ShardResolver
 mapping.RouteMappingStrategy
 StorageRouteContext
 StorageRouteScope
@@ -49,7 +52,7 @@ api 不依赖 Spring、JDBC、ShardingSphere、MyCAT。
 ```text
 ThreadLocalStorageRouteContext
 FixedStorageRouteResolver
-HashShardRouteResolver
+HashShardResolver
 DefaultStorageRouteResolver
 ShardIdHashStorageRouteResolver
 RouteMappingStrategyFactory

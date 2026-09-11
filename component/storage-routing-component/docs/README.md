@@ -7,7 +7,7 @@
 当前处于：
 
 ```text
-Phase 2.1：结构化 StorageRoute + 分片计算/物理映射编排 + ThreadLocal Route Context
+Phase 2.1：类型化单字段/复合字段 + 组合式 StorageRoute + 分片计算/物理映射编排 + ThreadLocal 上下文
 ```
 
 当前目标不是一次性完成完整分库分表中间件，而是先定住：
@@ -29,13 +29,13 @@ ShardingSphere-JDBC / MyCAT / Direct Routing 如何作为底层实现替换？
     再理解 api / core / spi / config / integration / starter 是否需要
 
 02-basic-usage-examples.md
-    再看 scene / logicalTable / shardKey / route context 的代码样例
+    再看 RouteContext、类型化分片键、逻辑表与上下文传播的代码样例
 
 03-storage-route-model.md
     查看本轮模型调整、兼容变化和各字段的职责
 
 01-storage-route-model.puml
-    查看模型和 Resolver 的类关系
+    查看输入、类型化分片键与组合式结果的类关系
 
 03-storage-route-resolution.puml
     查看当前代码真实执行的解析流程
@@ -57,14 +57,17 @@ storage-routing-core
 ## 4. 当前最建议先看的代码
 
 ```text
-storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/StorageRouteRequest.java
-    看调用方如何表达 logicalTable / scene / shardKey
+storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/RouteContext.java
+    看调用方如何表达 routeName / logicalTable / CompositeShardKey
+
+storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/CompositeShardKey.java
+    看字段顺序、字段名、类型化值和稳定编码
 
 storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/StorageRoute.java
     看 Resolver 最终输出什么路由结果
 
-storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/resolver/HashShardRouteResolver.java
-    看 shardKeyValue 如何得到 ShardRouteInfo
+storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/resolver/HashShardResolver.java
+    看单字段兼容规则和复合键如何得到 ShardRouteInfo
 
 storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/resolver/DefaultStorageRouteResolver.java
     看分片结果如何经过映射策略生成 StorageRoute
@@ -72,8 +75,8 @@ storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/resolver/D
 storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/context/ThreadLocalStorageRouteContext.java
     看路由如何绑定到当前调用链
 
-storage-routing-core/src/test/java/com/xjtu/iron/storage/routing/core/resolver/HashStorageRoutingTest.java
-    看全局/库内表编号、同分片不同表和旧路由结果的回归验证
+storage-routing-core/src/test/java/com/xjtu/iron/storage/routing/core/resolver/HashShardResolverTest.java
+    看类型化键的固定落点、旧调用兼容和同分片不同表
 ```
 
 ## 5. 后续模块规划

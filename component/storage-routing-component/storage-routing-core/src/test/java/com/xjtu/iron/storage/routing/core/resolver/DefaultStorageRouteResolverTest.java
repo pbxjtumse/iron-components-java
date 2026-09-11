@@ -1,6 +1,7 @@
 package com.xjtu.iron.storage.routing.core.resolver;
 
 import com.xjtu.iron.storage.routing.api.PhysicalStorageLocation;
+import com.xjtu.iron.storage.routing.api.RouteContext;
 import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
 import com.xjtu.iron.storage.routing.api.StorageRoute;
 import com.xjtu.iron.storage.routing.api.StorageRouteMode;
@@ -23,7 +24,7 @@ class DefaultStorageRouteResolverTest {
                 .shardKeyName("order_id").shardKeyValue("8").attribute("tenantId", "tenant-1").build();
         ShardRouteInfo shardInfo = new ShardRouteInfo(56, 5, 6, 100);
         DefaultStorageRouteResolver resolver = new DefaultStorageRouteResolver(actual -> {
-            assertThat(actual).isSameAs(request);
+            assertThat(actual).isSameAs(request.toContext().requireShardKey());
             return shardInfo;
         }, actual -> {
             assertThat(actual).isSameAs(shardInfo);
@@ -33,6 +34,7 @@ class DefaultStorageRouteResolverTest {
         StorageRoute route = resolver.resolve(request);
 
         assertThat(route.mode()).isEqualTo(StorageRouteMode.DIRECT_DATASOURCE);
+        assertThat(route.context()).isSameAs(request.toContext());
         assertThat(route.routeName()).isEqualTo("order-create");
         assertThat(route.logicalTable()).isEqualTo("business_order");
         assertThat(route.shardInfo()).isSameAs(shardInfo);
@@ -62,8 +64,8 @@ class DefaultStorageRouteResolverTest {
 
         assertThatThrownBy(() -> resolver.resolve(request())).isInstanceOf(StorageRoutingException.class)
                 .hasMessageContaining("physicalLocation");
-        assertThatThrownBy(() -> resolver.resolve(null)).isInstanceOf(NullPointerException.class)
-                .hasMessageContaining("request");
+        assertThatThrownBy(() -> resolver.resolve((RouteContext) null)).isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("context");
     }
 
     @Test

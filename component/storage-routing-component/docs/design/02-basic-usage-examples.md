@@ -1,202 +1,139 @@
-# 02. Basic Usage Examples
+# 基础使用示例
 
-> 目标：用订单场景解释 StorageRouteRequest / StorageRoute / StorageRouteContext / Resolver 到底怎么用。
+下面的场景全部使用当前模型。API 接口使用 api.resolver 包，算法与映射实现使用 core 包。
 
-## 1. 核心概念一句话
-
-```text
-StorageRouteRequest
-    调用方告诉路由组件：我要处理哪个逻辑表、用哪个分片键、当前是什么业务场景。
-
-StorageRouteResolver
-    路由组件根据 request 算出：本次应该去哪个 dataSourceKey、哪张 tableName。
-
-StorageRoute
-    路由结果：本次存储访问应该去哪。
-
-StorageRouteContext
-    把这份 route 绑定到当前线程，让业务 Repository、幂等、Outbox、任务等拿到同一份路由。
-```
-
-## 2. scene 是什么
-
-`scene` 表示“当前为什么要路由”，不是库名，也不是表名。
-
-常见例子：
-
-```text
-order-create
-order-pay
-idempotency-try-acquire
-idempotency-mark-success
-outbox-save
-task-recover
-```
-
-它主要用于：
-
-```text
-日志
-指标
-告警
-规则区分
-排查问题
-```
-
-例如同样是订单表，创建订单和支付订单可能都用 `business_order` 这张逻辑表，但场景不同：
+## 1. 从分片值到路由输入
 
 ```java
-StorageRouteRequest createOrder = StorageRouteRequest.builder()
-        .scene("order-create")
-        .logicalTable("business_order")
-        .shardKeyName("order_id")
-        .shardKeyValue("order-10001")
-        .build();
+ShardValue tenantValue = ShardValue.of(42L);
+ShardKey tenant = new ShardKey("tenant_id", tenantValue);
+ShardKey order = ShardKey.of("order_id", "8");
 
-StorageRouteRequest payOrder = StorageRouteRequest.builder()
-        .scene("order-pay")
+CompositeShardKey shardKey = CompositeShardKey.of(tenant, order);
+RouteContext context = RouteContext.builder()
+        .routeName("order-create")
         .logicalTable("business_order")
-        .shardKeyName("order_id")
-        .shardKeyValue("order-10001")
+        .shardKey(shardKey)
+        .attribute("traceId", "trace-1")
         .build();
 ```
 
-## 3. logicalTable 是什么
+tenantValue 保存 LONG 类型和值 42；tenant、order 分别表示一个字段；shardKey 按 tenant_id、order_id 的顺序组合字段。
 
-`logicalTable` 表示“业务上我要访问哪类表”。
+routeName 表达场景，logicalTable 表达逻辑表族，traceId 是扩展信息。分片计算只读取 shardKey，其他字段不会影响哈希。
 
-它不是一定带后缀的物理表。
-
-例如：
-
-```text
-logicalTable = business_order
-physical table = business_order_017
-```
-
-对于技术组件也是一样：
-
-```text
-logicalTable = iron_idempotency_record
-physical table = iron_idempotency_record_017
-```
-
-为什么要保留 logicalTable？
-
-因为业务表、幂等表、Outbox 表可能都是同一个分片键，但表前缀不同：
-
-```text
-order_id = order-10001
-
-business_order           -> business_order_017
-iron_idempotency_record  -> iron_idempotency_record_017
-iron_outbox              -> iron_outbox_017
-```
-
-它们应该落到同一个库，但可以是不同的物理表。
-
-## 4. 一个完整订单例子
+## 2. 完整的计算与映射
 
 ```java
-ShardIdHashStorageRouteResolver resolver = ShardIdHashStorageRouteResolver.builder()
-        .dataSourcePrefix("order-db-")
-        .databaseCount(10)
-        .tablePrefix("business_order")
-        .tablesPerDatabase(10)
-        .tableIndexMode(TableIndexMode.GLOBAL_TABLE_INDEX)
-        .build();
+StorageRouteResolver resolver = new DefaultStorageRouteResolver(
+        new HashShardResolver(10, 10),
+        new RouteMappingStrategyFactory("order-db-", "business_order", 2)
+                .create(TableIndexMode.GLOBAL_TABLE_INDEX));
 
-StorageRouteRequest request = StorageRouteRequest.builder()
-        .scene("order-create")
-        .logicalTable("business_order")
-        .shardKeyName("order_id")
-        .shardKeyValue("8")
-        .attribute("idempotencyTable", "iron_idempotency_record")
-        .attribute("outboxTable", "iron_outbox")
-        .build();
-
-StorageRoute route = resolver.resolve(request);
+StorageRoute route = resolver.resolve(context);
 ```
 
-得到的 route 是：
+StorageRouteResolver 的完整包名是 com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver。
 
-```text
-mode           = DIRECT_DATASOURCE
-routeName      = order-create
-logicalTable   = business_order
-shardInfo      = {shardId=56, databaseIndex=5, localTableIndex=6, totalShardCount=100}
-physicalLocation = {dataSourceKey=order-db-05, tableName=business_order_56}
-shardKeyName   = order_id
-shardKeyValue  = 8
-attributes     = {idempotencyTable=iron_idempotency_record, outboxTable=iron_outbox}
-```
+上述固定示例的结果：
 
-`idempotencyTable` 和 `outboxTable` 在这里仅是透传的扩展信息，当前解析器不会据此自动映射其他表。
+| 读取方式 | 结果 |
+| --- | --- |
+| route.context().routeName() | order-create |
+| route.context().logicalTable() | business_order |
+| route.context().shardKey().keys() | tenant_id=LONG(42)，order_id=STRING("8") |
+| route.context().attribute("traceId") | trace-1 |
+| route.shardInfo().shardId() | 42 |
+| route.shardInfo().databaseIndex() | 4 |
+| route.shardInfo().localTableIndex() | 2 |
+| route.location().dataSourceKey() | order-db-04 |
+| route.location().tableName() | business_order_42 |
 
-## 5. 绑定到当前调用链
+若改成 LOCAL_TABLE_INDEX，分片结果不变，物理表名变为 business_order_02。
+
+route.context() 就是传入的 context。结果不把其中字段复制成另一套输入状态。
+
+## 3. 单字段也使用 CompositeShardKey
 
 ```java
-StorageRouteContext context = new ThreadLocalStorageRouteContext();
+RouteContext single = RouteContext.builder()
+        .routeName("order-create")
+        .logicalTable("business_order")
+        .shardKey(CompositeShardKey.of(ShardKey.of("order_id", "8")))
+        .build();
 
-try (StorageRouteScope ignored = context.open(route)) {
-    StorageRoute current = context.requireCurrent();
-    // 当前已实现：在本线程读取同一份路由。
-    // 后续接入：各 Repository / Storage 读取分片信息，使用各自的表映射并执行 SQL。
+StorageRoute singleRoute = resolver.resolve(single);
+```
+
+在同一配置下，单字段 "8" 的原有落点仍是 shardId=56、order-db-05.business_order_56。
+
+单字段哈希保留旧值文本规则；复合字段使用包含字段名、类型和顺序的稳定编码。不要把一个已存在的单字段路由临时增加字段并直接访问旧数据。
+
+## 4. 同分片的订单与 Outbox
+
+```java
+StorageRouteResolver outboxResolver = new DefaultStorageRouteResolver(
+        new HashShardResolver(10, 10),
+        new RouteMappingStrategyFactory("order-db-", "iron_outbox", 2)
+                .create(TableIndexMode.GLOBAL_TABLE_INDEX));
+
+RouteContext outboxContext = RouteContext.builder()
+        .routeName("outbox-save")
+        .logicalTable("iron_outbox")
+        .shardKey(context.requireShardKey())
+        .attribute("traceId", context.attribute("traceId"))
+        .build();
+
+StorageRoute outboxRoute = outboxResolver.resolve(outboxContext);
+```
+
+订单与 Outbox 使用相同分片键、算法、库表数量，所以分片结果相同，但物理表分别是 business_order_42 和 iron_outbox_42。
+
+当前表前缀由映射策略配置，并不会读取 logicalTable 自动生成任意表名。上例分别配置了两个策略；路由结果也不自动保证同一事务，还需要后续存储层复用正确的资源与事务连接。
+
+## 5. RouteContext 与线程上下文
+
+```java
+StorageRouteContext routeContextStore = new ThreadLocalStorageRouteContext();
+
+try (StorageRouteScope ignored = routeContextStore.open(route)) {
+    StorageRoute current = routeContextStore.requireCurrent();
+    RouteContext input = current.context();
+    CompositeShardKey key = input.requireShardKey();
+    // 当前已实现：线程内读取完整路由，复合键不会丢失。
+    // 后续接入：各 Repository / Storage 读取分片信息并映射自己的表。
 }
 ```
 
-业务 Repository、幂等、Outbox 后续可以从上下文读取相同分片依据，但需要各自的物理表。
-例如同一个 `ShardRouteInfo(56, 5, 6, 100)` 可分别映射到 `order-db-05.business_order_56`、
-`order-db-05.iron_idempotency_record_56` 和 `order-db-05.iron_outbox_56`。
-上下文目前只传播数据，未接入上述 Storage，也不会自动创建事务。
+RouteContext 是输入模型。StorageRouteContext 是保存和读取当前路由的接口；ThreadLocalStorageRouteContext 是其实现。关闭最外层作用域后清理线程状态，嵌套作用域关闭后恢复外层路由。
 
-## 6. 10 库 100 表如何理解
+## 6. 固定直连与旧调用迁移
 
-当前 `databaseCount` 表示库数，`tablesPerDatabase` 表示每库的表数量，总分片数是两者乘积。
+固定直连不需要为了凑模型而伪造分片键：
 
-例如：
-
-```text
-databaseCount     = 10
-tablesPerDatabase = 100
+```java
+StorageRoute fixed = StorageRoute.direct("business_order", "order-db", "business_order");
+// fixed.context().logicalTable() == "business_order"
+// fixed.context().shardKey() == null
+// fixed.shardInfo() == null
 ```
 
-表示：
+旧单字段请求仍可通过桥接调用，但新代码应使用前面的 RouteContext：
 
-```text
-10 个库，每个库 100 张表
-LOCAL_TABLE_INDEX：每库 business_order_00 到 business_order_99
-GLOBAL_TABLE_INDEX：第 0 库 _00 到 _99，第 1 库 _100 到 _199，以此类推
-总物理表数量 = 10 * 100
+```java
+StorageRouteRequest oldRequest = StorageRouteRequest.of("business_order", "order_id", "8");
+StorageRoute compatible = resolver.resolve(oldRequest);
 ```
 
-若你的业务说“总共 100 张物理表，10 个库，每个库 10 张表”，则应该理解成：
+复合键请读取 route.context().shardKey().keys()。旧的 shardKeyName()/shardKeyValue() 不会自动取第一个字段，而会报错，防止丢失组合条件。
 
-```text
-databaseCount     = 10
-tablesPerDatabase = 10
-```
+## 7. 库表数量
 
-全局 100 表分布到 10 库已经由 `GLOBAL_TABLE_INDEX` 支持。
-如需复用同一分片算法、替换命名策略，可显式组合 `HashShardRouteResolver`、`RouteMappingStrategyFactory` 和
-`DefaultStorageRouteResolver`，见 [StorageRoute 模型](03-storage-route-model.md)。
+databaseCount 是库数，tablesPerDatabase 是每库表数，总分片数是两者乘积。
 
-## 7. 当前第一版不要误用
+- 10 库、每库 10 表：共 100 个分片。
+- 10 库、每库 100 表：共 1000 个分片。
+- GLOBAL_TABLE_INDEX 按全局 shardId 命名表。
+- LOCAL_TABLE_INDEX 按库内 localTableIndex 命名表。
 
-第一版适合：
-
-```text
-理解模型
-验证上下文传播
-给 Idempotency / Outbox / Task 后续接入打基础
-```
-
-第一版不适合直接承担完整生产分库分表：
-
-```text
-不支持扩容迁移
-不支持复杂分片算法
-不支持 SQL 解析改写
-不支持跨库结果归并
-不支持分布式事务
-```
+本轮不包含 SQL 解析/改写、扩容迁移、分布式事务或中间件适配。字段顺序、类型、稳定编码与兼容说明见 [StorageRoute 模型](03-storage-route-model.md)。

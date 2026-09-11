@@ -1,51 +1,60 @@
 @startuml
-title StorageRoute - Request, Shard and Physical Location
+title StorageRoute - Typed Keys and Composed Result
 top to bottom direction
 skinparam shadowing false
 hide empty members
 
-class StorageRouteRequest {
-  scene
-  logicalTable
-  shardKeyName / shardKeyValue
-  attributes
-}
-
 class StorageRoute {
-  mode / routeName
-  logicalTable
-  shardKeyName / shardKeyValue
-  attributes
-  dataSourceKey() / tableName()
+  mode
+  context: RouteContext
+  shardInfo: ShardRouteInfo
+  location: PhysicalStorageLocation
 }
-
+class RouteContext {
+  routeName
+  logicalTable
+  shardKey: CompositeShardKey
+  attributes
+}
+class CompositeShardKey {
+  keys: ordered list
+  canonicalForm()
+}
+class ShardKey {
+  name
+  value: ShardValue
+}
+class ShardValue {
+  type
+  value
+  canonicalText()
+}
 class ShardRouteInfo {
   shardId
   databaseIndex
   localTableIndex
   totalShardCount
 }
-
 class PhysicalStorageLocation {
   dataSourceKey
   tableName
 }
 
-interface "api.resolver.StorageRouteResolver" as Resolver {
-  resolve(request): StorageRoute
-}
-interface "api.StorageRouteResolver\n(deprecated alias)" as LegacyResolver
-class DefaultStorageRouteResolver
+StorageRoute o-- "1" RouteContext : input
+StorageRoute o-- "0..1" ShardRouteInfo : shard
+StorageRoute o-- "0..1" PhysicalStorageLocation : location
+RouteContext o-- "0..1" CompositeShardKey
+CompositeShardKey o-- "1..*" ShardKey : ordered fields
+ShardKey o-- "1" ShardValue
 
-Resolver <|-- LegacyResolver
-LegacyResolver <|.. DefaultStorageRouteResolver
-DefaultStorageRouteResolver ..> StorageRouteRequest : reads
-DefaultStorageRouteResolver ..> StorageRoute : produces
-StorageRoute o-- "0..1" ShardRouteInfo : shardInfo
-StorageRoute o-- "0..1" PhysicalStorageLocation : physicalLocation
+note right of RouteContext
+Input data, not ThreadLocal storage.
+Fixed routes may omit shardKey.
+Shard resolution requires a key.
+end note
 
 note bottom of PhysicalStorageLocation
 DIRECT_DATASOURCE requires a complete location.
-Logical tables are not physical table fallbacks.
+Each logical table has its own physical mapping.
 end note
 @enduml

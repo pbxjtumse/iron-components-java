@@ -104,28 +104,14 @@ public final class StorageRoute {
      */
     private final StorageRouteMode mode;
 
-    /** 请求场景与逻辑表，不从物理表名反推。 */
-    private final String routeName;
-    private final String logicalTable;
+    /** 输入上下文：场景、逻辑表、类型化分片键和扩展属性只在这里保存。 */
+    private final RouteContext context;
 
     /** 分片计算结果；固定直连可以为空。 */
     private final ShardRouteInfo shardInfo;
 
     /** 已解析的物理库表；DIRECT_DATASOURCE 模式必填。 */
-    private final PhysicalStorageLocation physicalLocation;
-
-    /**
-     * 分片键名称，例如 order_id / user_id / merchant_id。
-     */
-    private final String shardKeyName;
-
-    /**
-     * 分片键值，例如 orderId。
-     */
-    private final Object shardKeyValue;
-
-    /** 业务扩展信息；标准分片字段从 shardInfo 读取。 */
-    private final Map<String, Object> attributes;
+    private final PhysicalStorageLocation location;
 }
 ```
 
@@ -145,12 +131,13 @@ public enum StorageRouteMode {
 
 ```java
 public interface StorageRouteResolver {
-    StorageRoute resolve(StorageRouteRequest request);
+    StorageRoute resolve(RouteContext context);
 }
 ```
 
-直连解析链路已经实现：分片键 → `HashShardRouteResolver` → `ShardRouteInfo` → `RouteMappingStrategy` →
-`PhysicalStorageLocation` → `StorageRoute`。中间件适配和 Relational Access 桥接仍属于后续工作。
+直连解析链路已经实现：`RouteContext` 的 `CompositeShardKey` → `HashShardResolver` → `ShardRouteInfo` →
+`RouteMappingStrategy` → `PhysicalStorageLocation` → 组合式 `StorageRoute`。
+`ShardResolver` 只接收类型化分片键，单字段同样使用单元素 `CompositeShardKey`。中间件适配和 Relational Access 桥接仍属于后续工作。
 
 ## 5. 直连多库模式
 
