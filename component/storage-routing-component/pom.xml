@@ -19,5 +19,7 @@
     <modules>
         <module>storage-routing-api</module>
         <module>storage-routing-core</module>
+        <module>storage-routing-integration</module>
+        <module>storage-routing-starter</module>
     </modules>
 </project>

@@ -1,16 +1,15 @@
 package com.xjtu.iron.storage.routing.api;
 
-import java.util.Map;
 import java.util.Objects;
 
 /**
  * 一次存储访问的组合式路由结果：输入上下文 + 分片结果 + 物理位置。
  *
- * <p>业务场景、逻辑表、分片键和扩展属性只保存在 RouteContext 中；旧便捷读取方法均委托该上下文。
+ * <p>业务场景、逻辑表、分片键和扩展属性只保存在 RouteContext 中。
  * 同分片的订单、幂等、Outbox 可共享 shardInfo，但需要分别映射各自的 location。</p>
  *
  * <p>固定直连可以没有分片键和 shardInfo；DIRECT_DATASOURCE 必须有完整物理位置。
- * mode 仅保留上一版本的描述能力，不代表本轮已经实现 ShardingSphere / Proxy 适配。</p>
+ * mode 描述路由接入形态，不代表本轮已经实现 ShardingSphere / Proxy 适配。</p>
  */
 public final class StorageRoute {
 
@@ -59,7 +58,7 @@ public final class StorageRoute {
         return location;
     }
 
-    /** 上一版本的便捷读取入口，与 location() 指向同一份状态。 */
+    /** 与 location() 指向同一份状态的便捷读取入口。 */
     public PhysicalStorageLocation physicalLocation() {
         return location;
     }
@@ -82,36 +81,12 @@ public final class StorageRoute {
         return location == null ? null : location.tableName();
     }
 
-    /** @deprecated 仅兼容单字段；复合键请读取 context().shardKey().keys()。 */
-    @Deprecated
-    public String shardKeyName() {
-        return context.shardKey() == null ? null : context.shardKey().singleKey().name();
-    }
-
-    /** @deprecated 仅兼容单字段；复合键会报错，避免静默丢弃其他字段。 */
-    @Deprecated
-    public Object shardKeyValue() {
-        return context.shardKey() == null ? null : context.shardKey().singleKey().value().value();
-    }
-
-    public Map<String, Object> attributes() {
-        return context.attributes();
-    }
-
-    public Object attribute(String name) {
-        return context.attribute(name);
-    }
-
     public static final class Builder {
 
         private StorageRouteMode mode = StorageRouteMode.DIRECT_DATASOURCE;
         private RouteContext context;
-        private final RouteContext.Builder legacyContext = RouteContext.builder();
-        private boolean legacyContextConfigured;
-        private String shardKeyName;
-        private Object shardKeyValue;
         private ShardRouteInfo shardInfo;
-        // 暂存库表，build 时校验，保留旧链式调用的任意字段设置顺序。
+        // 暂存库表，build 时统一校验，允许 dataSourceKey/tableName 任意设置顺序。
         private String dataSourceKey;
         private String tableName;
 
@@ -125,22 +100,6 @@ public final class StorageRoute {
 
         public Builder context(RouteContext context) {
             this.context = Objects.requireNonNull(context, "context must not be null");
-            return this;
-        }
-
-        /** @deprecated 请在 RouteContext 中设置，不能与 context(...) 混用。 */
-        @Deprecated
-        public Builder routeName(String routeName) {
-            legacyContextConfigured = true;
-            legacyContext.routeName(routeName);
-            return this;
-        }
-
-        /** @deprecated 请在 RouteContext 中设置，不能与 context(...) 混用。 */
-        @Deprecated
-        public Builder logicalTable(String logicalTable) {
-            legacyContextConfigured = true;
-            legacyContext.logicalTable(logicalTable);
             return this;
         }
 
@@ -169,49 +128,8 @@ public final class StorageRoute {
             return this;
         }
 
-        /** @deprecated 请使用 RouteContext + CompositeShardKey。 */
-        @Deprecated
-        public Builder shardKeyName(String shardKeyName) {
-            legacyContextConfigured = true;
-            this.shardKeyName = shardKeyName;
-            return this;
-        }
-
-        /** @deprecated 请使用 RouteContext + CompositeShardKey。 */
-        @Deprecated
-        public Builder shardKeyValue(Object shardKeyValue) {
-            legacyContextConfigured = true;
-            this.shardKeyValue = shardKeyValue;
-            return this;
-        }
-
-        /** @deprecated 请在 RouteContext 中设置，不能与 context(...) 混用。 */
-        @Deprecated
-        public Builder attributes(Map<String, Object> attributes) {
-            legacyContextConfigured = true;
-            legacyContext.attributes(attributes);
-            return this;
-        }
-
-        /** @deprecated 请在 RouteContext 中设置，不能与 context(...) 混用。 */
-        @Deprecated
-        public Builder attribute(String name, Object value) {
-            legacyContextConfigured = true;
-            legacyContext.attribute(name, value);
-            return this;
-        }
-
         private RouteContext buildContext() {
-            if (context != null) {
-                if (legacyContextConfigured) {
-                    throw new StorageRoutingException("context must not be mixed with legacy context builder fields");
-                }
-                return context;
-            }
-            // 旧 Builder 只在边界转换一次，最终结果不再保存平铺的请求字段。
-            legacyContext.shardKey(shardKeyName == null && shardKeyValue == null ? null
-                    : CompositeShardKey.of(ShardKey.of(shardKeyName, shardKeyValue)));
-            return legacyContext.build();
+            return context == null ? RouteContext.builder().build() : context;
         }
 
         private PhysicalStorageLocation buildLocation() {

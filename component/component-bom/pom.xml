@@ -101,6 +101,11 @@
                 <artifactId>storage-routing-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>storage-routing-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

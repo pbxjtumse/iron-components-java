@@ -1,6 +1,10 @@
 package com.xjtu.iron.storage.routing.api;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * 有序、非空、字段名不重复的不可变分片键集合。单字段同样使用这个模型，无需另建输入类型。
@@ -42,7 +46,7 @@ public final class CompositeShardKey {
         return keys.size();
     }
 
-    /** 旧单字段读取入口使用此方法；复合键不能静默截取第一个字段。 */
+    /** 需要单字段语义时使用此方法；复合键不能静默截取第一个字段。 */
     public ShardKey singleKey() {
         if (keys.size() != 1) {
             throw new StorageRoutingException("Expected a single shard key; read all fields through context().shardKey()");

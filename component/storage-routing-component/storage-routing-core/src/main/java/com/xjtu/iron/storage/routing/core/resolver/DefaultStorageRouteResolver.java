@@ -1,8 +1,13 @@
 package com.xjtu.iron.storage.routing.core.resolver;
 
-import com.xjtu.iron.storage.routing.api.*;
+import com.xjtu.iron.storage.routing.api.PhysicalStorageLocation;
+import com.xjtu.iron.storage.routing.api.RouteContext;
+import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
+import com.xjtu.iron.storage.routing.api.StorageRoute;
+import com.xjtu.iron.storage.routing.api.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.mapping.RouteMappingStrategy;
 import com.xjtu.iron.storage.routing.api.resolver.ShardResolver;
+import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 
 import java.util.Objects;
 
@@ -12,8 +17,7 @@ import java.util.Objects;
  * <p>从 RouteContext 取出 CompositeShardKey，交给 ShardResolver 计算编号，再交给 RouteMappingStrategy
  * 生成物理位置，最终组装 StorageRoute(context, shardInfo, location)。场景、表族、扩展属性不进入哈希算法。</p>
  *
- * <p>当前映射策略由构造函数指定，不会根据 logicalTable 自动选择规则。各表族需要配置自己的映射策略。
- * 实现旧包名接口仅为保留调用兼容，新代码依赖 api.resolver.StorageRouteResolver。</p>
+ * <p>当前映射策略由构造函数指定，不会根据 logicalTable 自动选择规则。各表族需要配置自己的映射策略。</p>
  */
 public final class DefaultStorageRouteResolver implements StorageRouteResolver {
 

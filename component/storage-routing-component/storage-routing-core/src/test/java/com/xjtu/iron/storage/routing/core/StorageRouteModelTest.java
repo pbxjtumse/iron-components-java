@@ -1,6 +1,11 @@
 package com.xjtu.iron.storage.routing.core;
 
-import com.xjtu.iron.storage.routing.api.*;
+import com.xjtu.iron.storage.routing.api.PhysicalStorageLocation;
+import com.xjtu.iron.storage.routing.api.RouteContext;
+import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
+import com.xjtu.iron.storage.routing.api.StorageRoute;
+import com.xjtu.iron.storage.routing.api.StorageRouteMode;
+import com.xjtu.iron.storage.routing.api.StorageRoutingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -15,7 +20,7 @@ class StorageRouteModelTest {
 
     @Test
     void shouldKeepLogicalTableSeparateFromPhysicalTable() {
-        com.xjtu.iron.storage.routing.api.StorageRoute route = StorageRoute.direct(" business_order ", " db_05 ", " business_order_56 ");
+        StorageRoute route = StorageRoute.direct(" business_order ", " db_05 ", " business_order_56 ");
 
         assertThat(route.logicalTable()).isEqualTo("business_order");
         assertThat(route.physicalLocation()).isEqualTo(PhysicalStorageLocation.of("db_05", "business_order_56"));
@@ -26,7 +31,7 @@ class StorageRouteModelTest {
     }
 
     @Test
-    void legacyBuilderShouldAcceptEitherFieldOrder() {
+    void builderShouldAcceptEitherPhysicalLocationFieldOrder() {
         StorageRoute dataSourceFirst = StorageRoute.builder().dataSourceKey("db_05").tableName("order_56").build();
         StorageRoute tableFirst = StorageRoute.builder().tableName("order_56").dataSourceKey("db_05").build();
 
@@ -63,23 +68,24 @@ class StorageRouteModelTest {
     @Test
     void shouldSnapshotAttributesWithoutMutatingCallerOrPreviousResult() {
         Map<String, Object> source = new LinkedHashMap<>(Map.of("tenantId", "tenant-1"));
-        StorageRoute.Builder builder = StorageRoute.builder().dataSourceKey("db_05").tableName("order_56")
-                .attributes(source).attribute("traceId", "trace-1");
+        RouteContext.Builder contextBuilder = RouteContext.builder().attributes(source).attribute("traceId", "trace-1");
         source.put("tenantId", "tenant-2");
-        StorageRoute route = builder.build();
-        builder.attribute("traceId", "trace-2");
+        StorageRoute route = StorageRoute.builder().dataSourceKey("db_05").tableName("order_56")
+                .context(contextBuilder.build()).build();
+        contextBuilder.attribute("traceId", "trace-2");
 
         assertThat(source).doesNotContainKey("traceId");
-        assertThat(route.attributes()).containsEntry("tenantId", "tenant-1").containsEntry("traceId", "trace-1");
-        assertThatThrownBy(() -> route.attributes().put("tenantId", "changed"))
+        assertThat(route.context().attributes()).containsEntry("tenantId", "tenant-1").containsEntry("traceId", "trace-1");
+        assertThatThrownBy(() -> route.context().attributes().put("tenantId", "changed"))
                 .isInstanceOf(UnsupportedOperationException.class);
-        assertThat(builder.build().attribute("traceId")).isEqualTo("trace-2");
+        assertThat(contextBuilder.build().attribute("traceId")).isEqualTo("trace-2");
     }
 
     @ParameterizedTest
     @EnumSource(value = StorageRouteMode.class, names = {"SHARDINGSPHERE_JDBC", "PROXY"})
     void delegatedModesShouldNotPretendLogicalTableIsPhysical(StorageRouteMode mode) {
-        StorageRoute route = StorageRoute.builder().mode(mode).logicalTable("business_order").build();
+        StorageRoute route = StorageRoute.builder().mode(mode)
+                .context(RouteContext.builder().logicalTable("business_order").build()).build();
 
         assertThat(route.logicalTable()).isEqualTo("business_order");
         assertThat(route.physicalLocation()).isNull();

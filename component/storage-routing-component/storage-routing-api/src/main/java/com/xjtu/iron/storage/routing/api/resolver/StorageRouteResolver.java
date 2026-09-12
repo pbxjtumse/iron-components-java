@@ -1,10 +1,7 @@
 package com.xjtu.iron.storage.routing.api.resolver;
 
-import com.xjtu.iron.storage.routing.api.RouteContext;
 import com.xjtu.iron.storage.routing.api.StorageRoute;
-import com.xjtu.iron.storage.routing.api.StorageRouteRequest;
-
-import java.util.Objects;
+import com.xjtu.iron.storage.routing.api.RouteContext;
 
 /**
  * Storage Route 总入口。
@@ -18,10 +15,4 @@ public interface StorageRouteResolver {
      * 根据输入上下文生成完整 StorageRoute。
      */
     StorageRoute resolve(RouteContext context);
-
-    /** @deprecated 旧单字段调用入口；新代码直接传入 RouteContext。 */
-    @Deprecated
-    default StorageRoute resolve(StorageRouteRequest request) {
-        return resolve(Objects.requireNonNull(request, "request must not be null").toContext());
-    }
 }

@@ -127,7 +127,7 @@ public enum StorageRouteMode {
 
 ### StorageRouteResolver
 
-新代码使用 `api.resolver.StorageRouteResolver`。旧的 `api.StorageRouteResolver` 保留为兼容别名。
+统一契约在 `api.resolver.StorageRouteResolver`，行为收敛到同一个 RouteContext 入口。
 
 ```java
 public interface StorageRouteResolver {

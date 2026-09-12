@@ -1,6 +1,12 @@
 package com.xjtu.iron.storage.routing.core.resolver;
 
-import com.xjtu.iron.storage.routing.api.*;
+import com.xjtu.iron.storage.routing.api.CompositeShardKey;
+import com.xjtu.iron.storage.routing.api.PhysicalStorageLocation;
+import com.xjtu.iron.storage.routing.api.RouteContext;
+import com.xjtu.iron.storage.routing.api.ShardKey;
+import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
+import com.xjtu.iron.storage.routing.api.StorageRoute;
+import com.xjtu.iron.storage.routing.api.TableIndexMode;
 import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,21 +24,20 @@ class HashShardResolverTest {
 
     @ParameterizedTest
     @MethodSource("singleFieldCompatibilityVectors")
-    @SuppressWarnings("deprecation")
-    void typedSingletonsShouldPreservePinnedLegacyAssignments(Object value, int expectedShard) {
+    void typedSingletonsShouldPreservePinnedAssignments(Object value, int expectedShard) {
         CompositeShardKey key = CompositeShardKey.of(ShardKey.of("order_id", value));
         HashShardResolver resolver = new HashShardResolver(10, 10);
         ShardRouteInfo actual = resolver.resolve(key);
 
         assertThat(actual.shardId()).isEqualTo(expectedShard);
-        StorageRoute legacy = ShardIdHashStorageRouteResolver.builder().databaseCount(10).tablesPerDatabase(10).build()
-                .resolve(StorageRouteRequest.of("order", "order_id", value));
-        assertThat(legacy.shardInfo()).isEqualTo(actual);
-        assertThat(legacy.context().shardKey()).isEqualTo(key);
+        StorageRoute route = ShardIdHashStorageRouteResolver.builder().databaseCount(10).tablesPerDatabase(10).build()
+                .resolve(RouteContext.builder().logicalTable("order").shardKey(key).build());
+        assertThat(route.shardInfo()).isEqualTo(actual);
+        assertThat(route.context().shardKey()).isEqualTo(key);
     }
 
     static Stream<Arguments> singleFieldCompatibilityVectors() {
-        // 固定期望值，防止新旧适配器共用错误实现时相互验证而漏掉路由迁移。
+        // 固定期望值，防止外层路由器与底层分片器共用错误实现时相互验证而漏掉回归。
         return Stream.of(Arguments.of("8", 56), Arguments.of((byte) 8, 56), Arguments.of((short) 8, 56),
                 Arguments.of(8, 56), Arguments.of(8L, 56), Arguments.of(new BigInteger("8"), 56),
                 Arguments.of(new BigDecimal("1.00"), 1), Arguments.of(" 8 ", 20), Arguments.of("", 0),

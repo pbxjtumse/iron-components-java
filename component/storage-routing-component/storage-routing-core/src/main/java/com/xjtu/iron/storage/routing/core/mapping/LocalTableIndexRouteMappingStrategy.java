@@ -21,11 +21,21 @@ public final class LocalTableIndexRouteMappingStrategy implements RouteMappingSt
 
     private final String dataSourcePrefix;
     private final String tablePrefix;
+    private final int dataSourceIndexWidth;
     private final int tableIndexWidth;
 
     public LocalTableIndexRouteMappingStrategy(
             String dataSourcePrefix,
             String tablePrefix,
+            int tableIndexWidth
+    ) {
+        this(dataSourcePrefix, tablePrefix, tableIndexWidth, tableIndexWidth);
+    }
+
+    public LocalTableIndexRouteMappingStrategy(
+            String dataSourcePrefix,
+            String tablePrefix,
+            int dataSourceIndexWidth,
             int tableIndexWidth
     ) {
         if (dataSourcePrefix == null || dataSourcePrefix.isBlank() || tablePrefix == null || tablePrefix.isBlank()) {
@@ -34,8 +44,12 @@ public final class LocalTableIndexRouteMappingStrategy implements RouteMappingSt
         if (tableIndexWidth <= 0) {
             throw new StorageRoutingException("tableIndexWidth must be positive");
         }
+        if (dataSourceIndexWidth <= 0) {
+            throw new StorageRoutingException("dataSourceIndexWidth must be positive");
+        }
         this.dataSourcePrefix = dataSourcePrefix.trim();
         this.tablePrefix = tablePrefix.trim();
+        this.dataSourceIndexWidth = dataSourceIndexWidth;
         this.tableIndexWidth = tableIndexWidth;
     }
 
@@ -43,12 +57,12 @@ public final class LocalTableIndexRouteMappingStrategy implements RouteMappingSt
     public PhysicalStorageLocation map(ShardRouteInfo shardRouteInfo) {
         Objects.requireNonNull(shardRouteInfo, "shardRouteInfo must not be null");
         return PhysicalStorageLocation.of(
-                dataSourcePrefix + format(shardRouteInfo.databaseIndex()),
-                tablePrefix + "_" + format(shardRouteInfo.localTableIndex())
+                dataSourcePrefix + format(shardRouteInfo.databaseIndex(), dataSourceIndexWidth),
+                tablePrefix + "_" + format(shardRouteInfo.localTableIndex(), tableIndexWidth)
         );
     }
 
-    private String format(int value) {
-        return String.format(Locale.ROOT, "%0" + tableIndexWidth + "d", value);
+    private String format(int value, int width) {
+        return String.format(Locale.ROOT, "%0" + width + "d", value);
     }
 }
