@@ -129,7 +129,7 @@ order_00 ~ order_99。若希望表名使用跨库全局编号，则使用 GLOBAL
 | resolver.resolve(StorageRouteRequest) | 保留默认方法，转交 resolve(RouteContext) |
 | HashShardRouteResolver | 保留为弃用薄适配器，委托 HashShardResolver |
 | ShardRouteResolver | 保留旧名称与请求调用桥接，新实现应使用 ShardResolver |
-| api.StorageRouteResolver | 保留旧包名别名，新代码使用 api.resolver.StorageRouteResolver |
+| api.StorageRouteResolver | 保留包名兼容 facade，不再标记 deprecated；统一契约仍在 api.resolver.StorageRouteResolver |
 | StorageRoute.direct(...)、库表便捷 getter/Builder | 保留 |
 | route.routeName()/logicalTable()/attributes() | 保留，但数据来自 route.context() |
 | route.shardKeyName()/shardKeyValue() | 只兼容单字段；复合字段调用会报错，应读取 context().shardKey().keys() |

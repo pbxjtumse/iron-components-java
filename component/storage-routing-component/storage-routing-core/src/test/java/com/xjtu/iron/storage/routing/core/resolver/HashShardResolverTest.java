@@ -6,7 +6,6 @@ import com.xjtu.iron.storage.routing.api.RouteContext;
 import com.xjtu.iron.storage.routing.api.ShardKey;
 import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
 import com.xjtu.iron.storage.routing.api.StorageRoute;
-import com.xjtu.iron.storage.routing.api.StorageRouteRequest;
 import com.xjtu.iron.storage.routing.api.TableIndexMode;
 import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
 import org.junit.jupiter.api.Test;
@@ -25,17 +24,16 @@ class HashShardResolverTest {
 
     @ParameterizedTest
     @MethodSource("singleFieldCompatibilityVectors")
-    @SuppressWarnings("deprecation")
-    void typedSingletonsShouldPreservePinnedLegacyAssignments(Object value, int expectedShard) {
+    void typedSingletonsShouldPreservePinnedAssignments(Object value, int expectedShard) {
         CompositeShardKey key = CompositeShardKey.of(ShardKey.of("order_id", value));
         HashShardResolver resolver = new HashShardResolver(10, 10);
         ShardRouteInfo actual = resolver.resolve(key);
 
         assertThat(actual.shardId()).isEqualTo(expectedShard);
-        StorageRoute legacy = ShardIdHashStorageRouteResolver.builder().databaseCount(10).tablesPerDatabase(10).build()
-                .resolve(StorageRouteRequest.of("order", "order_id", value));
-        assertThat(legacy.shardInfo()).isEqualTo(actual);
-        assertThat(legacy.context().shardKey()).isEqualTo(key);
+        StorageRoute route = ShardIdHashStorageRouteResolver.builder().databaseCount(10).tablesPerDatabase(10).build()
+                .resolve(RouteContext.builder().logicalTable("order").shardKey(key).build());
+        assertThat(route.shardInfo()).isEqualTo(actual);
+        assertThat(route.context().shardKey()).isEqualTo(key);
     }
 
     static Stream<Arguments> singleFieldCompatibilityVectors() {

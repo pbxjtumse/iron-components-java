@@ -1,9 +1,11 @@
 package com.xjtu.iron.storage.routing.core.resolver;
 
+import com.xjtu.iron.storage.routing.api.CompositeShardKey;
 import com.xjtu.iron.storage.routing.api.PhysicalStorageLocation;
+import com.xjtu.iron.storage.routing.api.RouteContext;
+import com.xjtu.iron.storage.routing.api.ShardKey;
 import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
 import com.xjtu.iron.storage.routing.api.StorageRoute;
-import com.xjtu.iron.storage.routing.api.StorageRouteRequest;
 import com.xjtu.iron.storage.routing.api.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.TableIndexMode;
 import com.xjtu.iron.storage.routing.api.mapping.RouteMappingStrategy;
@@ -25,9 +27,9 @@ class HashStorageRoutingTest {
             "polygenelubricants, 52, 5, 2, order_52, order_02"})
     void modelRefactoringShouldPreserveExistingShardAndTableAssignments(String key, int shardId, int databaseIndex,
             int localTableIndex, String globalTable, String localTable) {
-        StorageRouteRequest request = StorageRouteRequest.of("order", "order_id", key);
-        StorageRoute global = resolver(TableIndexMode.GLOBAL_TABLE_INDEX).resolve(request);
-        StorageRoute local = resolver(TableIndexMode.LOCAL_TABLE_INDEX).resolve(request);
+        RouteContext context = context(key);
+        StorageRoute global = resolver(TableIndexMode.GLOBAL_TABLE_INDEX).resolve(context);
+        StorageRoute local = resolver(TableIndexMode.LOCAL_TABLE_INDEX).resolve(context);
 
         assertThat(global.shardInfo()).isEqualTo(new ShardRouteInfo(shardId, databaseIndex, localTableIndex, 100));
         assertThat(local.shardInfo()).isEqualTo(global.shardInfo());
@@ -41,7 +43,7 @@ class HashStorageRoutingTest {
 
     @Test
     void sameShardShouldMapBusinessAndTechnicalRecordsToDifferentTablesInTheSameDatabase() {
-        ShardRouteInfo shard = new HashShardRouteResolver(10, 10).resolve(StorageRouteRequest.of("order", "order_id", "8"));
+        ShardRouteInfo shard = new HashShardResolver(10, 10).resolve(CompositeShardKey.of(ShardKey.of("order_id", "8")));
         RouteMappingStrategy orders = new RouteMappingStrategyFactory("db_", "order", 2).create(TableIndexMode.GLOBAL_TABLE_INDEX);
         RouteMappingStrategy idempotency = new RouteMappingStrategyFactory("db_", "idempotency", 2).create(TableIndexMode.GLOBAL_TABLE_INDEX);
 
@@ -70,15 +72,15 @@ class HashStorageRoutingTest {
                 .tableIndexWidth(3)
                 .tableIndexMode(TableIndexMode.LOCAL_TABLE_INDEX)
                 .build()
-                .resolve(StorageRouteRequest.of("order", "order_id", "8"));
+                .resolve(context("8"));
 
         assertThat(route.physicalLocation()).isEqualTo(PhysicalStorageLocation.of("db_00", "order_056"));
     }
 
     @Test
     void shouldRejectInvalidTopologyBeforeHandlingRequests() {
-        assertThatThrownBy(() -> new HashShardRouteResolver(0, 10)).isInstanceOf(StorageRoutingException.class);
-        assertThatThrownBy(() -> new HashShardRouteResolver(10, -1)).isInstanceOf(StorageRoutingException.class);
+        assertThatThrownBy(() -> new HashShardResolver(0, 10)).isInstanceOf(StorageRoutingException.class);
+        assertThatThrownBy(() -> new HashShardResolver(10, -1)).isInstanceOf(StorageRoutingException.class);
         assertThatThrownBy(() -> ShardIdHashStorageRouteResolver.builder().databaseCount(65_536).tablesPerDatabase(65_536).build())
                 .isInstanceOf(StorageRoutingException.class).hasMessageContaining("totalShardCount");
     }
@@ -99,7 +101,7 @@ class HashStorageRoutingTest {
         Locale previous = Locale.getDefault(Locale.Category.FORMAT);
         try {
             Locale.setDefault(Locale.Category.FORMAT, Locale.forLanguageTag("ar-EG"));
-            StorageRoute route = resolver(TableIndexMode.LOCAL_TABLE_INDEX).resolve(StorageRouteRequest.of("order", "order_id", "8"));
+            StorageRoute route = resolver(TableIndexMode.LOCAL_TABLE_INDEX).resolve(context("8"));
             assertThat(route.physicalLocation()).isEqualTo(PhysicalStorageLocation.of("db_05", "order_06"));
         } finally {
             Locale.setDefault(Locale.Category.FORMAT, previous);
@@ -108,5 +110,12 @@ class HashStorageRoutingTest {
 
     private static ShardIdHashStorageRouteResolver resolver(TableIndexMode mode) {
         return ShardIdHashStorageRouteResolver.builder().databaseCount(10).tablesPerDatabase(10).tableIndexMode(mode).build();
+    }
+
+    private static RouteContext context(String shardKeyValue) {
+        return RouteContext.builder()
+                .logicalTable("order")
+                .shardKey(CompositeShardKey.of(ShardKey.of("order_id", shardKeyValue)))
+                .build();
     }
 }
