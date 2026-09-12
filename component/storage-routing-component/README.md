@@ -67,7 +67,7 @@ storage-routing-starter
 `StorageRouteContext` 负责访问调用链中的路由结果，两者职责不同。
 
 单字段与复合字段统一使用 `CompositeShardKey`。`ShardResolver` 只计算分片，`RouteMappingStrategy` 只映射物理位置，
-接口位于 API、实现位于 Core。旧请求、旧包名接口与旧哈希解析器名称保留为薄适配入口，自定义接口实现需迁移参数类型。
+接口位于 API、实现位于 Core。路由输入统一为 `RouteContext`，分片输入统一为 `CompositeShardKey`。
 
 Relational bridge 负责把 `DIRECT_DATASOURCE` 的 `StorageRoute` 转成 `SqlRoute`，同时暴露 Storage 拼 SQL 所需的物理表名。
 Spring Boot starter 默认装配 `StorageRouteContext` 与 bridge；哈希 resolver 需要显式配置库表拓扑后启用。
@@ -85,7 +85,7 @@ xjtu.iron.storage-routing.resolver.table-index-width=2
 xjtu.iron.storage-routing.resolver.table-index-mode=GLOBAL_TABLE_INDEX
 ```
 
-模型字段、兼容变化与使用限制见 [StorageRoute 模型](docs/design/03-storage-route-model.md)。
+模型字段、API 边界与使用限制见 [StorageRoute 模型](docs/design/03-storage-route-model.md)。
 
 ## 3. 当前第一版不做什么
 
@@ -126,7 +126,7 @@ docs/sequence/02-storage-route-to-relational-access.puml
     -> StorageRoute 如何桥接到 Relational Access
 
 docs/design/03-storage-route-model.md
-    -> 类型化分片键、组合模型、稳定编码与兼容迁移说明
+    -> 类型化分片键、组合模型与稳定编码说明
 
 docs/sequence/03-storage-route-resolution.puml
     -> 当前已实现的分片计算、物理映射和结果组装流程

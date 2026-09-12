@@ -7,6 +7,7 @@ import com.xjtu.iron.relational.core.DefaultRelationalTemplate;
 import com.xjtu.iron.relational.core.connection.DefaultConnectionProvider;
 import com.xjtu.iron.relational.core.connection.RoutingDataSourceResolver;
 import com.xjtu.iron.relational.core.exception.StandardSqlExceptionTranslator;
+import com.xjtu.iron.storage.routing.api.RouteContext;
 import com.xjtu.iron.storage.routing.api.StorageRoute;
 import com.xjtu.iron.storage.routing.api.StorageRouteMode;
 import com.xjtu.iron.storage.routing.api.StorageRoutingException;
@@ -44,7 +45,8 @@ class DefaultStorageRouteToSqlRouteBridgeTest {
     @ParameterizedTest
     @EnumSource(value = StorageRouteMode.class, names = {"SHARDINGSPHERE_JDBC", "PROXY"})
     void defaultBridgeShouldRejectModesThatNeedDedicatedAdapters(StorageRouteMode mode) {
-        StorageRoute route = StorageRoute.builder().mode(mode).logicalTable("iron_idempotency_record").build();
+        StorageRoute route = StorageRoute.builder().mode(mode)
+                .context(RouteContext.builder().logicalTable("iron_idempotency_record").build()).build();
 
         assertThatThrownBy(() -> bridge.toSqlRoute(route))
                 .isInstanceOf(StorageRoutingException.class)

@@ -127,7 +127,7 @@ public enum StorageRouteMode {
 
 ### StorageRouteResolver
 
-统一契约在 `api.resolver.StorageRouteResolver`。旧的 `api.StorageRouteResolver` 保留为包名兼容 facade，不再作为废弃入口扩散告警。
+统一契约在 `api.resolver.StorageRouteResolver`，行为收敛到同一个 RouteContext 入口。
 
 ```java
 public interface StorageRouteResolver {

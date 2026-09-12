@@ -6,7 +6,6 @@ import com.xjtu.iron.storage.routing.api.RouteContext;
 import com.xjtu.iron.storage.routing.api.ShardKey;
 import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
 import com.xjtu.iron.storage.routing.api.StorageRoute;
-import com.xjtu.iron.storage.routing.api.StorageRouteRequest;
 import com.xjtu.iron.storage.routing.api.StorageRoutingException;
 import com.xjtu.iron.storage.routing.core.resolver.DefaultStorageRouteResolver;
 import org.junit.jupiter.api.Test;
@@ -43,34 +42,10 @@ class RouteCompositionTest {
         assertThat(route.shardInfo()).isSameAs(shard);
         assertThat(route.location()).isEqualTo(location);
         assertThat(route.physicalLocation()).isSameAs(route.location());
-        assertThat(route.routeName()).isEqualTo(context.routeName());
-        assertThat(route.logicalTable()).isEqualTo(context.logicalTable());
-        assertThat(route.attributes()).isSameAs(context.attributes());
-        assertThat(route.attribute("traceId")).isEqualTo("trace-1");
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    void oldSingleFieldGettersShouldFailForCompositeKeysInsteadOfTakingTheFirstField() {
-        StorageRoute route = StorageRoute.builder().context(RouteContext.builder()
-                        .shardKey(CompositeShardKey.of(ShardKey.of("tenant_id", 42L), ShardKey.of("order_id", "8"))).build())
-                .location(PhysicalStorageLocation.of("db_05", "order_56")).build();
-
-        assertThatThrownBy(route::shardKeyName).isInstanceOf(StorageRoutingException.class);
-        assertThatThrownBy(route::shardKeyValue).isInstanceOf(StorageRoutingException.class);
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    void contextAndLegacyBuilderMetadataShouldNotCreateCompetingSourcesOfTruth() {
-        RouteContext context = RouteContext.builder().routeName("order-create").build();
-
-        assertThatThrownBy(() -> StorageRoute.builder().context(context).routeName("other")
-                .location(PhysicalStorageLocation.of("db", "orders")).build())
-                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("mixed");
-        assertThatThrownBy(() -> StorageRoute.builder().attribute("tenant", "other").context(context)
-                .location(PhysicalStorageLocation.of("db", "orders")).build())
-                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("mixed");
+        assertThat(route.context().routeName()).isEqualTo(context.routeName());
+        assertThat(route.context().logicalTable()).isEqualTo(context.logicalTable());
+        assertThat(route.context().attributes()).isSameAs(context.attributes());
+        assertThat(route.context().attribute("traceId")).isEqualTo("trace-1");
     }
 
     @Test
@@ -99,19 +74,5 @@ class RouteCompositionTest {
         assertThat(calculated).isFalse();
         assertThat(StorageRoute.direct("db", "orders").context()).isNotNull();
         assertThat(StorageRoute.direct("db", "orders").context().shardKey()).isNull();
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    void legacyRequestShouldConvertOnceAndRetainItsSingleTypedValue() {
-        StorageRouteRequest request = StorageRouteRequest.builder().scene("order-create").logicalTable("order")
-                .shardKeyName("order_id").shardKeyValue(8L).attribute("traceId", "trace-1").build();
-
-        assertThat(request.toContext()).isSameAs(request.toContext());
-        assertThat(request.toContext().shardKey().keys()).containsExactly(ShardKey.of("order_id", 8L));
-        assertThat(request.toContext().routeName()).isEqualTo("order-create");
-        assertThat(request.toContext().logicalTable()).isEqualTo("order");
-        assertThat(request.shardKeyValue()).isEqualTo(8L);
-        assertThat(request.attribute("traceId")).isEqualTo("trace-1");
     }
 }

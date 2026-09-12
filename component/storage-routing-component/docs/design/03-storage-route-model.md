@@ -12,7 +12,7 @@
 | RouteContext | routeName、logicalTable、CompositeShardKey、attributes |
 | ShardRouteInfo | shardId、databaseIndex、localTableIndex、totalShardCount |
 | PhysicalStorageLocation | 完整物理 dataSourceKey 和 tableName |
-| StorageRoute | context、shardInfo、location，保留原有 mode 描述字段 |
+| StorageRoute | context、shardInfo、location、mode |
 
 StorageRoute 的核心结构：
 
@@ -25,7 +25,7 @@ public final class StorageRoute {
 }
 ```
 
-routeName、logicalTable、分片键、attributes 只保存在 RouteContext。旧便捷 getter 从该对象读取，不再保存第二份平铺字段。
+routeName、logicalTable、分片键、attributes 只保存在 RouteContext，StorageRoute 不再保存第二份平铺字段。
 
 RouteContext 是输入数据；StorageRouteContext 是具有 current/open 方法的上下文访问接口，ThreadLocalStorageRouteContext 负责在线程内传播结果。这三个名称的职责不同。
 
@@ -73,12 +73,12 @@ null、数组、集合、任意业务对象、浮点数、可变 Number 及上�
 
 | 字段数 | HashShardResolver 的哈希输入 |
 | --- | --- |
-| 1 | 该字段值的稳定文本；保持受支持类型在旧版 String.valueOf(value).hashCode() 下的落点 |
+| 1 | 该字段值的稳定文本；保持单字段历史落点 |
 | 大于 1 | CompositeShardKey.canonicalForm() 的 v1 编码，包含字段顺序、名称、类型和值 |
 
 两者均对输入文本使用 Java String.hashCode，然后用 Math.floorMod(hash, totalShardCount) 得到 shardId。
 
-单字段兼容规则意味着字段名、类型标记不参与单字段哈希。例如 STRING("8") 与 LONG(8) 都仍落到原来的分片，这不影响模型保留类型信息。不能将“模型值不同”误解为“必须落在不同分片”。
+单字段历史落点规则意味着字段名、类型标记不参与单字段哈希。例如 STRING("8") 与 LONG(8) 都仍落到原来的分片，这不影响模型保留类型信息。不能将“模型值不同”误解为“必须落在不同分片”。
 
 复合键 v1 编码：
 
@@ -113,7 +113,7 @@ order_00 ~ order_99。若希望表名使用跨库全局编号，则使用 GLOBAL
 - RouteContext 可不带键，以容纳固定直连元数据；需要计算分片的解析器在计算前拒绝缺失的键。
 - DIRECT_DATASOURCE 必须有完整物理位置；固定直连可没有 shardInfo。
 - location 与 physicalLocation() 是同一份状态；物理位置未知时，dataSourceKey()/tableName() 返回 null，不以逻辑表替代。
-- 新 Builder 的 context(...) 不能和旧 routeName/logicalTable/shardKeyName/shardKeyValue/attributes 字段设置混用，防止两份输入互相覆盖。
+- StorageRoute.Builder 只接收完整 RouteContext，不提供平铺的 routeName/logicalTable/shardKey 字段设置入口，防止两份输入互相覆盖。
 - 扩展 attributes 不控制标准分片字段；即使存在同名属性，也不会覆盖显式模型。
 - 分片数量、索引范围、乘法溢出、空解析结果等仍在边界校验；物理编号使用 Locale.ROOT。
 - 默认 relational bridge 只接受 DIRECT_DATASOURCE，并要求完整物理位置。
@@ -121,24 +121,19 @@ order_00 ~ order_99。若希望表名使用跨库全局编号，则使用 GLOBAL
 
 同分片不等于同表，也不自动等于同事务。后续仍要让各 Storage 映射自己的表，并让 SQL 复用事务管理器管理的同一资源和连接。
 
-## 6. 兼容与迁移
+## 6. API 收敛
 
-| 旧用法 | 处理方式 |
+| 收敛项 | 当前处理 |
 | --- | --- |
-| StorageRouteRequest.builder()/of(...) | 保留为弃用适配器，内部只有一份 RouteContext；构造时转成单元素 CompositeShardKey |
-| resolver.resolve(StorageRouteRequest) | 保留默认方法，转交 resolve(RouteContext) |
-| HashShardRouteResolver | 保留为弃用薄适配器，委托 HashShardResolver |
-| ShardRouteResolver | 保留旧名称与请求调用桥接，新实现应使用 ShardResolver |
-| api.StorageRouteResolver | 保留包名兼容 facade，不再标记 deprecated；统一契约仍在 api.resolver.StorageRouteResolver |
-| StorageRoute.direct(...)、库表便捷 getter/Builder | 保留 |
-| route.routeName()/logicalTable()/attributes() | 保留，但数据来自 route.context() |
-| route.shardKeyName()/shardKeyValue() | 只兼容单字段；复合字段调用会报错，应读取 context().shardKey().keys() |
-| 旧平铺的上下文 Builder 方法 | 保留并弃用，构造时转换；不能与 context(...) 混用 |
+| 路由输入 | 统一为 RouteContext |
+| 分片输入 | 统一为 CompositeShardKey |
+| 路由入口 | StorageRouteResolver.resolve(RouteContext) |
+| 分片入口 | ShardResolver.resolve(CompositeShardKey) |
+| StorageRoute.Builder | 只接收 context(...)、shardInfo(...)、location(...) 或物理库表字段 |
 | 分片编号放入 attributes | 不再注入；使用 route.shardInfo() |
 
-兼容的是旧调用入口，不是所有自定义 SPI 实现的源代码或二进制签名。自行实现 StorageRouteResolver 的类需将方法参数改为 RouteContext；自行实现 ShardRouteResolver 的类需改为 CompositeShardKey，并迁移到 ShardResolver。需要重新编译这些实现。
-
-由于存在旧请求重载，测试 null 参数时应明确转换成 RouteContext 或 StorageRouteRequest，避免 Java 重载歧义。旧 Object 分片值入口也受本轮明确类型集合约束，不能继续传入任意对象。
+组件尚未上线，不保留额外入口；路由、分片、映射各自只有一套主契约。
+复合字段请读取 route.context().shardKey().keys()；单字段也按同一模型表达，避免后续 Storage 接入时出现两套输入协议。
 
 ## 7. 验证与后续
 
@@ -146,7 +141,7 @@ order_00 ~ order_99。若希望表名使用跨库全局编号，则使用 GLOBAL
 mvn -pl :storage-routing-starter -am test
 ```
 
-测试覆盖单字段固定落点、复合键编码与固定落点、字段边界/类型/顺序、不可变集合与上下文、旧调用桥接、
+测试覆盖单字段固定落点、复合键编码与固定落点、字段边界/类型/顺序、不可变集合与上下文、
 非法参数、ThreadLocal 行为、StorageRoute 到 Relational Access 的直连桥接，以及 starter 自动装配。
 
 后续重点是技术组件 Storage 接入当前路由；当前路由链路只决定位置，不建立 JDBC Connection、改写 SQL 或创建事务。

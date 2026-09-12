@@ -65,9 +65,9 @@ RouteContext single = RouteContext.builder()
 StorageRoute singleRoute = resolver.resolve(single);
 ```
 
-在同一配置下，单字段 "8" 的原有落点仍是 shardId=56、order-db-05.business_order_56。
+在同一配置下，单字段 "8" 的历史落点仍是 shardId=56、order-db-05.business_order_56。
 
-单字段哈希保留旧值文本规则；复合字段使用包含字段名、类型和顺序的稳定编码。不要把一个已存在的单字段路由临时增加字段并直接访问旧数据。
+单字段哈希保留历史值文本规则；复合字段使用包含字段名、类型和顺序的稳定编码。不要把一个已存在的单字段路由临时增加字段并直接访问历史数据。
 
 ## 4. 同分片的订单与 Outbox
 
@@ -134,7 +134,7 @@ bridge 只做两件事：
 
 当前默认 bridge 只支持 `DIRECT_DATASOURCE`。`SHARDINGSPHERE_JDBC` 和 `PROXY` 需要专门 adapter 决定如何接入中间件。
 
-## 7. 固定直连与旧调用迁移
+## 7. 固定直连
 
 固定直连不需要为了凑模型而伪造分片键：
 
@@ -145,14 +145,7 @@ StorageRoute fixed = StorageRoute.direct("business_order", "order-db", "business
 // fixed.shardInfo() == null
 ```
 
-旧单字段请求仍可通过桥接调用，但新代码应使用前面的 RouteContext：
-
-```java
-StorageRouteRequest oldRequest = StorageRouteRequest.of("business_order", "order_id", "8");
-StorageRoute compatible = resolver.resolve(oldRequest);
-```
-
-复合键请读取 route.context().shardKey().keys()。旧的 shardKeyName()/shardKeyValue() 不会自动取第一个字段，而会报错，防止丢失组合条件。
+单字段与复合键都通过 route.context().shardKey().keys() 读取；StorageRoute 不提供单字段专用入口，避免丢失组合条件。
 
 ## 8. 库表数量
 
@@ -176,4 +169,4 @@ databaseCount 是库数，tablesPerDatabase 是每库表数，总分片数是两
 默认 `dataSourceIndexWidth=2`、`tableIndexWidth=2`，所以库号和表号都是两位。若未来表后缀需要 `000` 到 `999`，
 只调大 `tableIndexWidth` 即可，不必改变库号宽度。
 
-本轮不包含 SQL 解析/改写、扩容迁移、分布式事务或中间件适配。字段顺序、类型、稳定编码与兼容说明见 [StorageRoute 模型](03-storage-route-model.md)。
+本轮不包含 SQL 解析/改写、扩容迁移、分布式事务或中间件适配。字段顺序、类型与稳定编码见 [StorageRoute 模型](03-storage-route-model.md)。

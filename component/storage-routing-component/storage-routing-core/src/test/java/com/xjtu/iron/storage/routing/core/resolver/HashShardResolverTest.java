@@ -37,7 +37,7 @@ class HashShardResolverTest {
     }
 
     static Stream<Arguments> singleFieldCompatibilityVectors() {
-        // 固定期望值，防止新旧适配器共用错误实现时相互验证而漏掉路由迁移。
+        // 固定期望值，防止外层路由器与底层分片器共用错误实现时相互验证而漏掉回归。
         return Stream.of(Arguments.of("8", 56), Arguments.of((byte) 8, 56), Arguments.of((short) 8, 56),
                 Arguments.of(8, 56), Arguments.of(8L, 56), Arguments.of(new BigInteger("8"), 56),
                 Arguments.of(new BigDecimal("1.00"), 1), Arguments.of(" 8 ", 20), Arguments.of("", 0),

@@ -2,9 +2,9 @@ package com.xjtu.iron.storage.routing.core.resolver;
 
 import com.xjtu.iron.storage.routing.api.StorageRoute;
 import com.xjtu.iron.storage.routing.api.RouteContext;
-import com.xjtu.iron.storage.routing.api.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.api.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.TableIndexMode;
+import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
 
 import java.util.Objects;
@@ -25,7 +25,7 @@ import java.util.Objects;
  *    +---- tableIndex
  * </pre>
  *
- * <p>保留原有 builder 作为便捷入口，内部委托 HashShardResolver + RouteMappingStrategy +
+ * <p>提供 builder 作为便捷入口，内部委托 HashShardResolver + RouteMappingStrategy +
  * DefaultStorageRouteResolver。分片信息统一从 StorageRoute.shardInfo() 读取，不再重复存进 attributes。</p>
  *
  * <p>DIRECT_DATASOURCE 是最终路由模式；10 库每库 10 表、10 库每库 100 表等拓扑由 databaseCount

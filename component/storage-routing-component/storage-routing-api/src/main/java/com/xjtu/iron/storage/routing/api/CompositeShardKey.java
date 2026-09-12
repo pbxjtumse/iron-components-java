@@ -46,7 +46,7 @@ public final class CompositeShardKey {
         return keys.size();
     }
 
-    /** 旧单字段读取入口使用此方法；复合键不能静默截取第一个字段。 */
+    /** 需要单字段语义时使用此方法；复合键不能静默截取第一个字段。 */
     public ShardKey singleKey() {
         if (keys.size() != 1) {
             throw new StorageRoutingException("Expected a single shard key; read all fields through context().shardKey()");

@@ -33,7 +33,7 @@ ShardingSphere-JDBC / MyCAT / Direct Routing 如何作为底层实现替换？
     再看 RouteContext、类型化分片键、逻辑表与上下文传播的代码样例
 
 03-storage-route-model.md
-    查看本轮模型调整、兼容变化和各字段的职责
+    查看本轮模型调整、API 收敛和各字段的职责
 
 01-storage-route-model.puml
     查看输入、类型化分片键与组合式结果的类关系
@@ -71,7 +71,7 @@ storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/StorageRoute
     看 Resolver 最终输出什么路由结果
 
 storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/resolver/HashShardResolver.java
-    看单字段兼容规则和复合键如何得到 ShardRouteInfo
+    看单字段历史落点规则和复合键如何得到 ShardRouteInfo
 
 storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/resolver/DefaultStorageRouteResolver.java
     看分片结果如何经过映射策略生成 StorageRoute
@@ -86,7 +86,7 @@ storage-routing-starter/src/main/java/com/xjtu/iron/storage/routing/starter/auto
     看 Spring Boot 下默认 Context、bridge 和可选 hash resolver 如何装配
 
 storage-routing-core/src/test/java/com/xjtu/iron/storage/routing/core/resolver/HashShardResolverTest.java
-    看类型化键的固定落点、旧调用兼容和同分片不同表
+    看类型化键的固定落点和同分片不同表
 ```
 
 ## 5. 后续模块规划

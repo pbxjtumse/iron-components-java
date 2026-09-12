@@ -46,7 +46,7 @@ class DefaultStorageRouteResolverTest {
         assertThat(route.dataSourceKey()).isEqualTo("db_05");
         assertThat(route.tableName()).isEqualTo("business_order_56");
         assertThat(route.context().requireShardKey().singleKey()).isEqualTo(ShardKey.of("order_id", "8"));
-        assertThat(route.attributes()).containsOnlyKeys("tenantId").containsEntry("tenantId", "tenant-1");
+        assertThat(route.context().attributes()).containsOnlyKeys("tenantId").containsEntry("tenantId", "tenant-1");
     }
 
     @Test
@@ -73,15 +73,14 @@ class DefaultStorageRouteResolverTest {
     }
 
     @Test
-    void allBuiltInResolversShouldWorkWithBothInterfacePackages() {
-        // 编译时同时约束新、旧接口，避免仅名称相同、实现却不能注入同一入口的问题再次出现。
-        List<com.xjtu.iron.storage.routing.api.StorageRouteResolver> compatResolvers = List.of(
+    void allBuiltInResolversShouldWorkWithTheUnifiedInterface() {
+        List<StorageRouteResolver> resolvers = List.of(
                 new FixedStorageRouteResolver(StorageRoute.direct("db_05", "order_56")),
                 new DefaultStorageRouteResolver(new HashShardResolver(10, 10),
                         shard -> PhysicalStorageLocation.of("db_05", "order_56")),
                 ShardIdHashStorageRouteResolver.builder().databaseCount(10).tablesPerDatabase(10).build());
 
-        for (StorageRouteResolver resolver : compatResolvers) {
+        for (StorageRouteResolver resolver : resolvers) {
             assertThat(resolver.resolve(request()).physicalLocation())
                     .isEqualTo(PhysicalStorageLocation.of("db_05", "order_56"));
         }

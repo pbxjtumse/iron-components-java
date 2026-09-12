@@ -38,7 +38,7 @@ class HashStorageRoutingTest {
         assertThat(global.tableName()).isEqualTo(globalTable);
         assertThat(local.tableName()).isEqualTo(localTable);
         assertThat(global.logicalTable()).isEqualTo("order");
-        assertThat(global.attributes()).isEmpty();
+        assertThat(global.context().attributes()).isEmpty();
     }
 
     @Test
