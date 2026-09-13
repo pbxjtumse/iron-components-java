@@ -4,8 +4,12 @@ import com.xjtu.iron.idempotent.integration.storage.routing.StorageRoutingIdempo
 import com.xjtu.iron.idempotent.provider.jdbc.routing.IdempotencyJdbcRouteResolver;
 import com.xjtu.iron.idempotent.starter.properties.IdempotencyProperties;
 import com.xjtu.iron.storage.routing.api.StorageRouteContext;
+import com.xjtu.iron.storage.routing.api.mapping.RouteMappingStrategy;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
+import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
 import com.xjtu.iron.storage.routing.integration.relational.StorageRouteToSqlRouteBridge;
+import com.xjtu.iron.storage.routing.starter.autoconfigure.StorageRoutingProperties;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -15,19 +19,45 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 
 /**
- * 幂等 JDBC Storage 与 Storage Routing 的可选自动集成。
+ * 幂等 JDBC Storage 与 Storage Routing 的自动集成。
  *
- * <p>只有业务工程真正引入并启用了 storage-routing-starter，且 Resolver / Context / Relational bridge
- * 都已存在时才生效。否则 IdempotencyAutoConfiguration 会装配固定单库单表路由，保持原有使用方式。</p>
+ * <p>Storage Routing 的全局 resolver 决定“一个分片键属于哪个 shard”；幂等组件不能直接复用它的 business table
+ * 物理位置，因为业务表、幂等表、Outbox 表虽然共享 shardInfo，却必须各自映射自己的 physical table。</p>
+ *
+ * <p>因此本配置会额外创建一份 idempotencyRouteMappingStrategy：数据库拓扑、编号模式和宽度复用
+ * StorageRoutingProperties，表前缀使用 xjtu.iron.idempotent.jdbc.table-name。固定单库单表模式仍由
+ * FixedIdempotencyJdbcRouteResolver 负责，不经过本配置。</p>
  */
 @AutoConfiguration(
         afterName = "com.xjtu.iron.storage.routing.starter.autoconfigure.StorageRoutingAutoConfiguration",
         before = IdempotencyAutoConfiguration.class
 )
-@EnableConfigurationProperties(IdempotencyProperties.class)
-@ConditionalOnClass(StorageRoutingIdempotencyJdbcRouteResolver.class)
+@EnableConfigurationProperties({IdempotencyProperties.class, StorageRoutingProperties.class})
+@ConditionalOnClass({StorageRoutingIdempotencyJdbcRouteResolver.class, RouteMappingStrategyFactory.class, StorageRoutingProperties.class})
 @ConditionalOnProperty(prefix = "xjtu.iron.idempotent.jdbc.routing", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class IdempotencyStorageRoutingAutoConfiguration {
+
+    /**
+     * 为幂等表单独创建物理映射策略。
+     *
+     * <p>这里故意不复用 StorageRouteResolver 返回的 physical table：默认 resolver 的 tablePrefix 通常属于业务表。
+     * 我们只共享 shardInfo，然后用幂等表自己的 prefix 再映射一次。</p>
+     */
+    @Bean(name = "idempotencyRouteMappingStrategy")
+    @ConditionalOnBean(StorageRouteResolver.class)
+    @ConditionalOnMissingBean(name = "idempotencyRouteMappingStrategy")
+    public RouteMappingStrategy idempotencyRouteMappingStrategy(
+            IdempotencyProperties idempotencyProperties,
+            StorageRoutingProperties storageRoutingProperties
+    ) {
+        StorageRoutingProperties.Resolver routing = storageRoutingProperties.getResolver();
+        return new RouteMappingStrategyFactory(
+                routing.getDataSourcePrefix(),
+                idempotencyProperties.getJdbc().getTableName(),
+                routing.getDataSourceIndexWidth(),
+                routing.getTableIndexWidth())
+                .create(routing.getTableIndexMode());
+    }
 
     @Bean
     @ConditionalOnBean({StorageRouteResolver.class, StorageRouteContext.class, StorageRouteToSqlRouteBridge.class})
@@ -35,12 +65,15 @@ public class IdempotencyStorageRoutingAutoConfiguration {
     public IdempotencyJdbcRouteResolver storageRoutingIdempotencyJdbcRouteResolver(
             StorageRouteResolver storageRouteResolver,
             StorageRouteContext storageRouteContext,
+            @Qualifier("idempotencyRouteMappingStrategy") RouteMappingStrategy idempotencyMappingStrategy,
             StorageRouteToSqlRouteBridge relationalBridge,
             IdempotencyProperties properties
     ) {
-        // V2 先让现有 jdbc.table-name 同时作为“固定物理表名 / 路由逻辑表名”的基线配置，
-        // Storage Routing 启用后最终物理表仍由 RouteMappingStrategy 决定，不会直接使用该名称执行 SQL。
         return new StorageRoutingIdempotencyJdbcRouteResolver(
-                properties.getJdbc().getTableName(), storageRouteResolver, storageRouteContext, relationalBridge);
+                properties.getJdbc().getTableName(),
+                storageRouteResolver,
+                storageRouteContext,
+                idempotencyMappingStrategy,
+                relationalBridge);
     }
 }
