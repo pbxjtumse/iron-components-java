@@ -27,6 +27,11 @@
         </dependency>
         <dependency>
             <groupId>com.xjtu.iron</groupId>
+            <artifactId>idempotent-integration-storage-routing</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.xjtu.iron</groupId>
             <artifactId>distributed-lock-api</artifactId>
         </dependency>
         <dependency>
