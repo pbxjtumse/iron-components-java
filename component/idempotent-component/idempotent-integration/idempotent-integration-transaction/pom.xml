@@ -5,17 +5,13 @@
         <groupId>com.xjtu.iron</groupId>
         <artifactId>idempotent-integration</artifactId>
         <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>idempotent-integration-transaction</artifactId>
     <packaging>jar</packaging>
-
     <name>idempotent-integration-transaction</name>
-    <url>http://maven.apache.org</url>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <description>idempotent-component 与 transaction-component 的本地事务集成。</description>
 
     <dependencies>
         <dependency>

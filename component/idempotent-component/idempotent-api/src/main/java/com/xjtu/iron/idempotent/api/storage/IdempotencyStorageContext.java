@@ -1,16 +1,29 @@
 package com.xjtu.iron.idempotent.api.storage;
 
 /**
- * 幂等记录的逻辑存储与分片路由上下文。
+ * 一条幂等记录的逻辑存储上下文。
  *
- * <p>三个字段职责严格分离：</p>
+ * <p>它只保存 Idempotency 自己必须稳定持久化的三个维度，不暴露具体数据库、表名、
+ * StorageRoute 或 Relational SqlRoute。真正的物理库表位置由 provider/integration 层解析。</p>
+ *
  * <ul>
- *     <li>{@code storeName}：逻辑 Store 名称，例如 message-consume / payment；不等于 jdbc / redis 这类 Provider 名称。</li>
- *     <li>{@code shardKey}：在线点查和写入的稳定路由键，未来由 Sharded JDBC Provider 映射到具体库表。</li>
- *     <li>{@code scanBucket}：Reliable Recovery 扫描桶；它是固定逻辑桶，不代表物理表号。</li>
+ *     <li>{@code storeName}：逻辑 Store/场景，例如 message-consume、payment；不是 jdbc/redis Provider 名称，
+ *         也不是数据库名或表名。</li>
+ *     <li>{@code shardKey}：没有业务 StorageRouteContext 时的稳定点路由 fallback key。
+ *         如果当前业务链已经绑定 CompositeShardKey/ShardRouteInfo，Storage Routing 集成优先复用业务分片，
+ *         不再对该 long 值重复计算分片。</li>
+ *     <li>{@code scanBucket}：Reliable Recovery 的逻辑扫描桶。它只用于把“某个物理 shard 内需要扫描的幂等记录”
+ *         再切成稳定小桶，绝不等于 databaseIndex、tableIndex 或 shardId。</li>
  * </ul>
  *
- * <p>V2 当前仍可以全部落到 JDBC 单表，但从 API 开始不再假设幂等数据永远只有一张物理表。</p>
+ * <p>因此在线访问与恢复扫描分别是：</p>
+ * <pre>
+ * point access = business bound shardInfo OR fallback shardKey -> physical shard -> idempotency table
+ * recovery     = external physical-shard enumeration x scanBucket
+ * </pre>
+ *
+ * <p>该对象是不可变值对象，可以安全地随着 Acquire/Recovery/Write 请求跨层传递；同一幂等物理记录跨 generation
+ * 必须保持 storeName/shardKey/scanBucket 稳定。</p>
  */
 public final class IdempotencyStorageContext {
 

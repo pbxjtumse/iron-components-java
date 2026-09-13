@@ -1,5 +1,4 @@
 package com.xjtu.iron.idempotent.integration.transaction;
-
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionCoordinator;
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionException;
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionOutcome;
