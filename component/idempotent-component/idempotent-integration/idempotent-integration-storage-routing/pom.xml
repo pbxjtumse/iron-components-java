@@ -5,12 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.xjtu.iron</groupId>
-        <artifactId>idempotent-component</artifactId>
+        <artifactId>idempotent-integration</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>idempotent-integration-storage-routing</artifactId>
+    <packaging>jar</packaging>
     <name>idempotent-integration-storage-routing</name>
     <description>Idempotency JDBC Storage 与 Storage Routing / Relational bridge 的路由集成。</description>
 
