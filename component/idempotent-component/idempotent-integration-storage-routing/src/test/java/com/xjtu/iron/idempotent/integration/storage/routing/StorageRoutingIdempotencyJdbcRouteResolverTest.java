@@ -186,6 +186,7 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
     ) {
         return new StorageRoutingIdempotencyJdbcRouteResolver(
                 "iron_idempotency_record",
+                "iron_idempotency_record",
                 routeResolver,
                 routeContext,
                 idempotencyMapping,
