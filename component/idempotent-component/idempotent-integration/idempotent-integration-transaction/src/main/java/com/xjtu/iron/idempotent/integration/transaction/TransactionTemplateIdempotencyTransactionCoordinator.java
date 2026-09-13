@@ -1,14 +1,6 @@
 package com.xjtu.iron.idempotent.integration.transaction;
 
-import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionCoordinator;
-import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionException;
-import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionOutcome;
-import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionalWork;
-import com.xjtu.iron.transaction.api.definition.TransactionOptions;
-import com.xjtu.iron.transaction.api.definition.TransactionPropagation;
-import com.xjtu.iron.transaction.api.exception.TransactionExecutionException;
-import com.xjtu.iron.transaction.api.execution.TransactionExecutor;
-import com.xjtu.iron.transaction.api.status.TransactionOutcome;
+
 
 import java.util.Objects;
 
