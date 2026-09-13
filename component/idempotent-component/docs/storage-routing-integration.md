@@ -131,6 +131,8 @@ current business StorageRoute.shardInfo
     -> iron_idempotency_record_56          ✓
 ```
 
+对于没有 `shardInfo` 的 DIRECT_DATASOURCE 也遵守同一原则：只复用 `dataSourceKey`，不复用业务 `tableName`。
+
 ## 4. Point Access 主流程
 
 ### 4.1 当前已有业务 StorageRoute
@@ -165,6 +167,16 @@ JdbcIdempotencyRepository
 ```
 
 注意：这里不会再次 hash。业务入口已经决定了 shard，技术组件必须复用同一个 shard 事实。
+
+如果当前绑定的是固定 DIRECT_DATASOURCE 且没有 shardInfo，则：
+
+```text
+reuse business dataSourceKey
+    +
+use idempotency directTableName
+```
+
+不会把业务表名带入幂等 SQL。
 
 ### 4.2 没有业务 StorageRoute
 
@@ -341,13 +353,18 @@ xjtu.iron.storage-routing.resolver
   table-index-mode
 ```
 
-Idempotency 提供自己的表族前缀：
+Idempotency 路由配置独立表达两个概念：
 
 ```text
-xjtu.iron.idempotent.jdbc.table-name=iron_idempotency_record
+xjtu.iron.idempotent.jdbc.routing.enabled=true
+xjtu.iron.idempotent.jdbc.routing.logical-table=iron_idempotency_record
+xjtu.iron.idempotent.jdbc.routing.table-prefix=iron_idempotency_record
 ```
 
-启用路由后，上述名称作为幂等表映射前缀：
+- `logical-table` 只进入 `RouteContext`，表达逻辑表族。
+- `table-prefix` 只用于把共享 `ShardRouteInfo` 映射为幂等物理表。
+
+例如：
 
 ```text
 iron_idempotency_record_00
@@ -355,11 +372,13 @@ iron_idempotency_record_01
 ...
 ```
 
-固定单库单表模式下仍直接使用：
+固定单库单表模式完全独立，继续使用：
 
 ```text
-iron_idempotency_record
+xjtu.iron.idempotent.jdbc.table-name=iron_idempotency_record
 ```
+
+这样 `table-name` 不再同时承担“固定物理表名”和“分片表前缀”两种语义。
 
 ## 10. 当前不做的事情
 
@@ -377,6 +396,7 @@ Integration 测试至少固定以下语义：
 1. 无业务路由时，fallback shardKey 可以计算 shard，但最终物理表必须重新映射成幂等表。
 2. 有业务 route 时复用原始 CompositeShardKey + ShardRouteInfo，不重新 hash。
 3. Business physical table 永远不能被 Idempotency SQL 直接使用。
-4. Recovery 未绑定物理 shard 时 fail-fast。
-5. Recovery 已绑定 shard 时复用 shardInfo 并映射幂等表。
-6. 固定直连、没有 shardInfo 的单库单表模式保持可用。
+4. DIRECT_DATASOURCE 只复用 dataSourceKey，不复用 business tableName。
+5. Recovery 未绑定物理 shard 时 fail-fast。
+6. Recovery 已绑定 shard 时复用 shardInfo 并映射幂等表。
+7. 固定单库单表模式保持可用。
