@@ -30,8 +30,12 @@ import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionCoordinat
 import com.xjtu.iron.idempotent.integration.transaction.SpringTransactionJdbcExecutionManager;
 import com.xjtu.iron.idempotent.integration.transaction.TransactionTemplateIdempotencyTransactionCoordinator;
 import com.xjtu.iron.idempotent.provider.jdbc.execution.DataSourceJdbcExecutionManager;
+import com.xjtu.iron.idempotent.provider.jdbc.execution.FixedJdbcExecutionManagerResolver;
 import com.xjtu.iron.idempotent.provider.jdbc.execution.JdbcExecutionManager;
-import com.xjtu.iron.idempotent.provider.jdbc.repository.JdbcIdempotencyRepository;
+import com.xjtu.iron.idempotent.provider.jdbc.execution.JdbcExecutionManagerResolver;
+import com.xjtu.iron.idempotent.provider.jdbc.repository.RoutedJdbcIdempotencyRepository;
+import com.xjtu.iron.idempotent.provider.jdbc.routing.FixedIdempotencyJdbcRouteResolver;
+import com.xjtu.iron.idempotent.provider.jdbc.routing.IdempotencyJdbcRouteResolver;
 import com.xjtu.iron.idempotent.provider.redis.repository.RedisIdempotencyRepository;
 import com.xjtu.iron.idempotent.starter.hash.JacksonSha256IdempotencyRequestHasher;
 import com.xjtu.iron.idempotent.starter.observation.JacksonIdempotencySnapshotPolicyFactory;
@@ -176,6 +180,16 @@ public class IdempotencyAutoConfiguration {
     }
 
     /**
+     * 单 DataSource 的默认 manager resolver。真实多库场景可以提供 RoutingJdbcExecutionManagerResolver 或自定义实现覆盖。
+     */
+    @Bean
+    @ConditionalOnBean(JdbcExecutionManager.class)
+    @ConditionalOnMissingBean(JdbcExecutionManagerResolver.class)
+    public JdbcExecutionManagerResolver idempotencyJdbcExecutionManagerResolver(JdbcExecutionManager jdbc) {
+        return FixedJdbcExecutionManagerResolver.defaultDataSource(jdbc);
+    }
+
+    /**
      * Tx-B Coordinator：只负责 REQUIRED 业务事务边界，不负责 Tx-A/Tx-C 的 Connection 获取。
      */
     @Bean
@@ -186,11 +200,25 @@ public class IdempotencyAutoConfiguration {
         return new TransactionTemplateIdempotencyTransactionCoordinator(transactionExecutor);
     }
 
+    /**
+     * 没有启用 Storage Routing 时继续使用固定单表。若 IdempotencyStorageRoutingAutoConfiguration 已经提供路由实现，
+     * 这里会自动让位，不存在两套路由同时生效。
+     */
+    @Bean
+    @ConditionalOnMissingBean(IdempotencyJdbcRouteResolver.class)
+    public IdempotencyJdbcRouteResolver fixedIdempotencyJdbcRouteResolver(IdempotencyProperties properties) {
+        return FixedIdempotencyJdbcRouteResolver.defaultDataSource(properties.getJdbc().getTableName());
+    }
+
     @Bean(name = "jdbcIdempotencyRepository")
     @ConditionalOnBean(DataSource.class)
     @ConditionalOnProperty(prefix = "xjtu.iron.idempotent.jdbc", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public IdempotencyRepository jdbcIdempotencyRepository(JdbcExecutionManager jdbc, IdempotencyProperties properties) {
-        return new JdbcIdempotencyRepository(jdbc, properties.getJdbc().getTableName());
+    @ConditionalOnMissingBean(name = "jdbcIdempotencyRepository")
+    public IdempotencyRepository jdbcIdempotencyRepository(
+            IdempotencyJdbcRouteResolver routeResolver,
+            JdbcExecutionManagerResolver executionManagerResolver
+    ) {
+        return new RoutedJdbcIdempotencyRepository(routeResolver, executionManagerResolver);
     }
 
     // -------------------- Registry / Policy --------------------
