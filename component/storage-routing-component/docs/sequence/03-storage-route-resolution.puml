@@ -1,0 +1,33 @@
+@startuml
+title Storage Route Resolution - Typed Keys
+autonumber
+skinparam shadowing false
+hide footbox
+
+actor Caller
+participant DefaultStorageRouteResolver as Resolver
+participant HashShardResolver as Shard
+participant RouteMappingStrategy as Mapping
+
+Caller -> Caller : build ShardValue / ShardKey\nand CompositeShardKey / RouteContext
+Caller -> Resolver : resolve(context)
+Resolver -> Resolver : context.requireShardKey()
+Resolver -> Shard : resolve(CompositeShardKey)
+alt one field
+  Shard -> Shard : hash stable value text\n(preserve old single-field assignments)
+else multiple fields
+  Shard -> Shard : hash v1 canonical encoding\n(names, types, values and order)
+end
+Shard -> Shard : floorMod and derive indexes
+Shard --> Resolver : ShardRouteInfo
+Resolver -> Mapping : map(shardInfo)
+Mapping --> Resolver : PhysicalStorageLocation
+Resolver -> Resolver : StorageRoute.builder().context(context)\n.shardInfo(shardInfo).location(location).build()
+Resolver --> Caller : StorageRoute
+
+note over Resolver, Mapping
+Missing keys and missing results fail immediately.
+Context metadata does not enter shard calculation.
+No JDBC execution or transaction begins here.
+end note
+@enduml

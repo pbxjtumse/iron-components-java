@@ -1,0 +1,52 @@
+@startuml
+title Relational Access v1 - Multi DataSource Routing
+
+autonumber
+skinparam shadowing false
+
+actor "JdbcXXXStorage" as Storage
+participant "SqlStatement" as Statement
+participant "DefaultRelationalTemplate" as RT
+participant "DefaultConnectionProvider" as CP
+participant "RoutingDataSourceResolver" as Resolver
+participant "DataSource" as DS
+participant "Connection" as Conn
+database "Target Database" as DB
+
+Storage -> Statement : withRoute(SqlRoute.of("infra-db"))
+Storage -> RT : update(statement)
+RT -> RT : createExecutionContext(route=dataSourceKey)
+RT -> CP : acquire(context)
+CP -> Resolver : resolve(context)
+
+alt default route
+  Resolver --> CP : defaultDataSource
+else named route exists
+  Resolver --> CP : mapped DataSource
+else named route missing
+  Resolver --> RT : RelationalAccessException(DATA_SOURCE_ROUTING_ERROR)
+end
+
+CP -> DS : getConnection()
+DS --> CP : Connection
+CP --> RT : ConnectionHandle(OWNED)
+RT -> Conn : prepareStatement(sql)
+Conn -> DB : execute SQL
+DB --> Conn : result
+RT --> Storage : UpdateResult / Query result
+
+note right of Resolver
+RoutingDataSourceResolver only maps:
+dataSourceKey -> DataSource
+
+It does not calculate shard,
+physical table name,
+or business routing key.
+end note
+
+note bottom of Statement
+Target table remains inside SQL.
+Target database is selected by SqlRoute.dataSourceKey.
+end note
+
+@enduml

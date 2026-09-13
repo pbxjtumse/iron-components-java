@@ -1,0 +1,129 @@
+@startuml
+title Relational Access v1 - Code-level Class Diagram
+
+left to right direction
+skinparam shadowing false
+skinparam linetype polyline
+skinparam classAttributeIconSize 0
+
+package "relational-api\n[Storage Adapter depends here]" {
+  interface RelationalTemplate {
+    + queryOne(statement, mapper)
+    + queryList(statement, mapper)
+    + queryScalar(statement, type)
+    + update(statement)
+    + batchUpdate(statement)
+    + batch(statement)
+  }
+  class SqlStatement
+  class BatchSqlStatement
+  class SqlParameter
+  class SqlExecutionOptions
+  class SqlRoute
+  interface RowMapper
+  class UpdateResult
+  class BatchResult
+  class RelationalAccessException
+  enum RelationalFailureType
+}
+
+package "relational-core" {
+  class DefaultRelationalTemplate
+  class SqlStatementValidator
+  class JdbcParameterBinder
+  class JdbcStatementConfigurer
+  class DefaultConnectionProvider
+  class DefaultConnectionHandle
+  class SingleDataSourceResolver
+  class RoutingDataSourceResolver
+  class StandardSqlExceptionTranslator
+}
+
+package "relational-spi.connection" {
+  interface ConnectionProvider
+  interface ConnectionHandle
+  enum ConnectionOwnership
+  interface DataSourceResolver
+}
+
+package "relational-spi.exception" {
+  interface SqlExceptionTranslator
+}
+
+package "relational-spi.execution" {
+  interface SqlExecutionListener
+  class SqlExecutionContext
+  enum SqlExecutionKind
+}
+
+package "relational-integration-spring" {
+  class SpringTransactionAwareConnectionProvider
+  class SpringConnectionHandle
+}
+
+class "javax.sql.DataSource" as DataSource
+class "java.sql.Connection" as Connection
+class "PreparedStatement / ResultSet" as JDBC
+class "Spring DataSourceUtils" as DataSourceUtils
+
+RelationalTemplate <|.. DefaultRelationalTemplate
+DefaultRelationalTemplate --> SqlStatementValidator
+DefaultRelationalTemplate --> JdbcParameterBinder
+DefaultRelationalTemplate --> JdbcStatementConfigurer
+DefaultRelationalTemplate --> ConnectionProvider
+DefaultRelationalTemplate --> SqlExceptionTranslator
+DefaultRelationalTemplate --> SqlExecutionListener
+DefaultRelationalTemplate ..> SqlExecutionContext
+DefaultRelationalTemplate ..> SqlExecutionKind
+DefaultRelationalTemplate ..> RelationalAccessException
+
+SqlStatement --> SqlParameter
+SqlStatement --> SqlExecutionOptions
+SqlStatement --> SqlRoute
+BatchSqlStatement --> SqlParameter
+BatchSqlStatement --> SqlExecutionOptions
+BatchSqlStatement --> SqlRoute
+RelationalAccessException --> RelationalFailureType
+
+DefaultConnectionProvider ..|> ConnectionProvider
+DefaultConnectionProvider --> DataSourceResolver
+DefaultConnectionProvider --> DefaultConnectionHandle
+DefaultConnectionHandle ..|> ConnectionHandle
+DefaultConnectionHandle --> ConnectionOwnership
+SingleDataSourceResolver ..|> DataSourceResolver
+SingleDataSourceResolver --> DataSource
+RoutingDataSourceResolver ..|> DataSourceResolver
+RoutingDataSourceResolver --> DataSource
+StandardSqlExceptionTranslator ..|> SqlExceptionTranslator
+
+SpringTransactionAwareConnectionProvider ..|> ConnectionProvider
+SpringTransactionAwareConnectionProvider --> DataSourceResolver
+SpringTransactionAwareConnectionProvider --> SpringConnectionHandle
+SpringConnectionHandle ..|> ConnectionHandle
+SpringConnectionHandle --> DataSourceUtils
+
+ConnectionHandle --> Connection
+DefaultRelationalTemplate --> JDBC
+
+note bottom of ConnectionProvider
+Core only knows this entry.
+Default provider and Spring provider
+can be swapped without changing Storage SQL.
+end note
+
+note bottom of SqlStatement
+Storage owns final SQL + route.
+Relational Access does not compute shard.
+end note
+
+note bottom of RoutingDataSourceResolver
+dataSourceKey -> DataSource mapping only.
+It does not calculate shard or table name.
+end note
+
+note bottom of SpringTransactionAwareConnectionProvider
+Does NOT begin/commit/rollback.
+It only participates in an ambient Spring transaction.
+end note
+
+@enduml

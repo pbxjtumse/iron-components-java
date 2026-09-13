@@ -1,0 +1,58 @@
+@startuml
+title Relational Access v1 - MyBatis + RelationalTemplate Share One Spring Transaction
+
+autonumber
+skinparam shadowing false
+
+actor Business
+participant "TransactionExecutor\nREQUIRED" as TX
+participant "Spring Transaction Manager" as STM
+participant "OrderRepository" as Repo
+participant MyBatis
+participant "JdbcIdempotencyStorage" as Idem
+participant "RelationalTemplate" as RT
+participant "SpringTransactionAwareConnectionProvider" as SCP
+participant "DataSourceResolver" as DSR
+participant "DataSourceUtils" as DSU
+database DataSource as DS
+participant "transaction-bound Connection A" as Conn
+database Database as DB
+
+Business -> TX : execute(REQUIRED, callback)
+TX -> STM : begin/join transaction
+STM -> DS : acquire Connection A
+STM -> Conn : bind to current thread/resource
+
+TX -> Repo : business SQL
+Repo -> MyBatis : update order
+MyBatis -> DSU : get transaction-aware connection
+DSU --> MyBatis : Connection A
+MyBatis -> Conn : execute business UPDATE
+Conn -> DB : UPDATE business_order
+
+TX -> Idem : markSuccess(...)
+Idem -> RT : update(mark-success SQL)
+RT -> SCP : acquire(context)
+SCP -> DSR : resolve(context)
+DSR --> SCP : same DataSource
+SCP -> DSU : doGetConnection(DataSource)
+DSU --> SCP : same Connection A
+SCP -> DSU : isConnectionTransactional(A, DS)
+DSU --> SCP : true
+SCP --> RT : BORROWED ConnectionHandle(A)
+RT -> Conn : execute idempotency UPDATE
+Conn -> DB : UPDATE iron_idempotency
+RT -> SCP : handle.close()
+SCP -> DSU : doReleaseConnection(A, DS)
+note right
+transaction-bound connection:
+logical release only,
+physical connection stays open
+end note
+
+TX -> STM : commit
+STM -> Conn : COMMIT both business + idempotency SQL
+STM -> Conn : unbind / physical release
+TX --> Business : success
+
+@enduml

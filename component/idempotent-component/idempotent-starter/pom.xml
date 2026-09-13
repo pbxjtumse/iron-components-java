@@ -27,10 +27,6 @@
         </dependency>
         <dependency>
             <groupId>com.xjtu.iron</groupId>
-            <artifactId>idempotent-integration-transaction</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.xjtu.iron</groupId>
             <artifactId>distributed-lock-api</artifactId>
         </dependency>
         <dependency>
@@ -56,6 +52,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.xjtu.iron</groupId>
+            <artifactId>transaction-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.xjtu.iron</groupId>
+            <artifactId>idempotent-integration-transaction</artifactId>
         </dependency>
     </dependencies>
 </project>

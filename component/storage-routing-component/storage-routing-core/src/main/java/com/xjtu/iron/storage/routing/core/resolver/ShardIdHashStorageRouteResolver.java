@@ -1,0 +1,117 @@
+package com.xjtu.iron.storage.routing.core.resolver;
+
+import com.xjtu.iron.storage.routing.api.StorageRoute;
+import com.xjtu.iron.storage.routing.api.RouteContext;
+import com.xjtu.iron.storage.routing.api.StorageRoutingException;
+import com.xjtu.iron.storage.routing.api.TableIndexMode;
+import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
+import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
+
+import java.util.Objects;
+
+/**
+ * 基于 shardId 的分库分表路由器。
+ *
+ * <p>这是 Phase 2 推荐模型。核心思想不是分别计算数据库和表，而是：</p>
+ *
+ * <pre>
+ * shardKey
+ *    |
+ *    v
+ * shardId = hash(shardKey) % totalShardCount
+ *    |
+ *    +---- databaseIndex
+ *    |
+ *    +---- tableIndex
+ * </pre>
+ *
+ * <p>提供 builder 作为便捷入口，内部委托 HashShardResolver + RouteMappingStrategy +
+ * DefaultStorageRouteResolver。分片信息统一从 StorageRoute.shardInfo() 读取，不再重复存进 attributes。</p>
+ *
+ * <p>DIRECT_DATASOURCE 是最终路由模式；10 库每库 10 表、10 库每库 100 表等拓扑由 databaseCount
+ * 和 tablesPerDatabase 决定，表编号是全局还是库内重复由 TableIndexMode 决定。
+ * dataSourceIndexWidth 与 tableIndexWidth 分别控制库号和表号补零宽度。</p>
+ */
+public final class ShardIdHashStorageRouteResolver implements StorageRouteResolver {
+
+    private final DefaultStorageRouteResolver delegate;
+
+    private ShardIdHashStorageRouteResolver(Builder builder) {
+        String dataSourcePrefix = requireText(builder.dataSourcePrefix, "dataSourcePrefix must not be blank");
+        String tablePrefix = requireText(builder.tablePrefix, "tablePrefix must not be blank");
+        TableIndexMode tableIndexMode = Objects.requireNonNull(builder.tableIndexMode, "tableIndexMode must not be null");
+        this.delegate = new DefaultStorageRouteResolver(
+                new HashShardResolver(builder.databaseCount, builder.tablesPerDatabase),
+                new RouteMappingStrategyFactory(
+                        dataSourcePrefix,
+                        tablePrefix,
+                        builder.dataSourceIndexWidth,
+                        builder.tableIndexWidth).create(tableIndexMode));
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    @Override
+    public StorageRoute resolve(RouteContext context) {
+        return delegate.resolve(context);
+    }
+
+    private static String requireText(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new StorageRoutingException(message);
+        }
+        return value.trim();
+    }
+
+    public static final class Builder {
+
+        private String dataSourcePrefix = "db_";
+        private String tablePrefix = "order";
+        private int databaseCount;
+        private int tablesPerDatabase;
+        private int dataSourceIndexWidth = 2;
+        private int tableIndexWidth = 2;
+        private TableIndexMode tableIndexMode = TableIndexMode.GLOBAL_TABLE_INDEX;
+
+        public Builder dataSourcePrefix(String dataSourcePrefix) {
+            this.dataSourcePrefix = dataSourcePrefix;
+            return this;
+        }
+
+        public Builder tablePrefix(String tablePrefix) {
+            this.tablePrefix = tablePrefix;
+            return this;
+        }
+
+        public Builder databaseCount(int databaseCount) {
+            this.databaseCount = databaseCount;
+            return this;
+        }
+
+        public Builder tablesPerDatabase(int tablesPerDatabase) {
+            this.tablesPerDatabase = tablesPerDatabase;
+            return this;
+        }
+
+        public Builder dataSourceIndexWidth(int dataSourceIndexWidth) {
+            this.dataSourceIndexWidth = dataSourceIndexWidth;
+            return this;
+        }
+
+        public Builder tableIndexWidth(int tableIndexWidth) {
+            this.tableIndexWidth = tableIndexWidth;
+            return this;
+        }
+
+        public Builder tableIndexMode(TableIndexMode tableIndexMode) {
+            this.tableIndexMode = tableIndexMode;
+            return this;
+        }
+
+        public ShardIdHashStorageRouteResolver build() {
+            return new ShardIdHashStorageRouteResolver(this);
+        }
+    }
+}

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.xjtu.iron</groupId>
+        <artifactId>storage-routing-component</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>storage-routing-integration</artifactId>
+    <packaging>pom</packaging>
+    <name>storage-routing-integration</name>
+    <description>Storage Routing 与 Relational Access、ShardingSphere 等基础设施的集成模块集合。</description>
+
+    <modules>
+        <module>storage-routing-integration-relational</module>
+    </modules>
+</project>

@@ -1,9 +1,9 @@
 package com.xjtu.iron.distributed.lock.demo;
 
+import com.xjtu.iron.distributed.lock.api.LockWaitStrategy;
 import com.xjtu.iron.distributed.lock.api.client.DistributedLockClient;
 import com.xjtu.iron.distributed.lock.api.model.LockOptions;
 import com.xjtu.iron.distributed.lock.api.model.LockResult;
-import com.xjtu.iron.distributed.lock.api.LockWaitStrategy;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;

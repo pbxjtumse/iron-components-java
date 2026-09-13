@@ -1,0 +1,84 @@
+@startuml
+title Relational Access Component - L0 Overall Boundary (v1 Current)
+
+left to right direction
+skinparam shadowing false
+skinparam linetype polyline
+skinparam componentStyle rectangle
+skinparam nodesep 55
+skinparam ranksep 60
+
+package "Business / Template Layer" {
+  [Business Template\nOrder / Payment / Clearing] as Business
+  [Business Repository Port] as BizRepo
+}
+
+package "High-level Technical Component APIs\n[Business Template depends here]" {
+  [Idempotency API\nIdempotencyExecutor] as IdemApi
+  [Message API\nMessageTemplate] as MsgApi
+  [Retry API\nRetryExecutor] as RetryApi
+  [Transaction API\nTransactionExecutor] as TxApi
+}
+
+package "Technical Component Storage Adapters\n[depend on relational-api]" {
+  [JdbcIdempotencyStorage] as IdemStorage
+  [JdbcOutboxStorage] as OutboxStorage
+  [JdbcTaskStorage] as TaskStorage
+}
+
+package "Relational Access Component" {
+  [relational-api\nRelationalTemplate\nSqlStatement / RowMapper] as RAApi
+  [relational-core\nDefaultRelationalTemplate] as RACore
+  [relational-spi\nConnectionProvider / Resolver\nTranslator / Listener] as RASpi
+  [relational-integration-spring\nSpringTransactionAwareConnectionProvider] as SpringIntegration
+}
+
+package "Business Persistence Framework" {
+  [MyBatis / JPA / jOOQ] as BizPersistence
+}
+
+component "Spring Transaction Infrastructure" as SpringTx
+database "DataSource / JDBC" as DS
+database "Relational Database" as DB
+
+Business --> IdemApi : high-level capability
+Business --> MsgApi
+Business --> RetryApi
+Business --> TxApi
+Business --> BizRepo
+
+BizRepo --> BizPersistence
+BizPersistence --> SpringTx : transaction-aware access
+SpringTx --> DS
+
+IdemApi --> IdemStorage
+MsgApi --> OutboxStorage : optional outbox
+IdemStorage --> RAApi
+OutboxStorage --> RAApi
+TaskStorage --> RAApi
+
+RAApi <|.. RACore : implements
+RACore --> RASpi : consumes SPI
+SpringIntegration ..|> RASpi : implements ConnectionProvider
+SpringIntegration --> SpringTx : DataSourceUtils
+RACore --> DS : default provider path
+DS --> DB
+
+TxApi --> SpringTx : begin/join/commit/rollback
+
+note top of Business
+Business Template stays farther away from JDBC.
+It normally sees high-level component APIs and its own Repository ports.
+end note
+
+note bottom of IdemStorage
+Storage Adapter owns domain-storage translation:
+tryAcquire -> final SQL + parameters + physical table + route + result interpretation.
+end note
+
+note bottom of SpringIntegration
+Spring integration does not create transaction propagation.
+It only makes RelationalTemplate participate in the ambient transaction Connection.
+end note
+
+@enduml

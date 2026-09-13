@@ -1,0 +1,42 @@
+@startuml
+title Relational Access v1 - Connection Ownership / Release Lifecycle
+
+hide empty description
+skinparam shadowing false
+left to right direction
+
+state "REQUEST\nConnectionProvider.acquire" as REQUEST
+state "DEFAULT_OWNED\nDefaultConnectionProvider\nDataSource.getConnection" as DEFAULT_OWNED
+state "SPRING_OWNED\nSpring Provider\nno ambient transaction" as SPRING_OWNED
+state "SPRING_BORROWED\nSpring Provider\ntransaction-bound connection" as SPRING_BORROWED
+state "USING_CONNECTION" as USING
+state "PHYSICAL_CLOSE_OR_POOL_RETURN" as PHYSICAL_RELEASE
+state "LOGICAL_RELEASE_ONLY" as LOGICAL_RELEASE
+state "OUTER_TRANSACTION_COMMIT_ROLLBACK" as OUTER_TX
+state "OUTER_PHYSICAL_RELEASE" as OUTER_RELEASE
+
+[*] --> REQUEST
+
+REQUEST --> DEFAULT_OWNED : DefaultConnectionProvider
+REQUEST --> SPRING_OWNED : SpringProvider\nno bound tx
+REQUEST --> SPRING_BORROWED : SpringProvider\nDataSourceUtils.isConnectionTransactional=true
+
+DEFAULT_OWNED --> USING
+SPRING_OWNED --> USING
+SPRING_BORROWED --> USING
+
+USING --> PHYSICAL_RELEASE : handle.close()\nDEFAULT OWNED -> Connection.close
+USING --> PHYSICAL_RELEASE : handle.close()\nSPRING OWNED -> DataSourceUtils.doReleaseConnection
+USING --> LOGICAL_RELEASE : handle.close()\nSPRING BORROWED -> DataSourceUtils.doReleaseConnection
+
+PHYSICAL_RELEASE --> [*]
+LOGICAL_RELEASE --> OUTER_TX : physical connection remains bound
+OUTER_TX --> OUTER_RELEASE : commit / rollback
+OUTER_RELEASE --> [*]
+
+note bottom of SPRING_BORROWED
+BORROWED is the key to MyBatis + RelationalTemplate
+sharing one physical local transaction.
+end note
+
+@enduml

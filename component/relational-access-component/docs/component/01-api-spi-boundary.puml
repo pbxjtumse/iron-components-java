@@ -1,0 +1,143 @@
+@startuml
+title Relational Access Component - L1 API / SPI / Implementation Boundary (v1 Current)
+
+left to right direction
+skinparam shadowing false
+skinparam linetype polyline
+skinparam classAttributeIconSize 0
+skinparam nodesep 45
+skinparam ranksep 55
+
+package "relational-api\n[Level B: Storage Adapter Public API]" {
+  interface RelationalTemplate {
+    queryOne(statement, rowMapper)
+    queryList(statement, rowMapper)
+    queryScalar(statement, requiredType)
+    update(statement)
+    batchUpdate(statement)
+    batch(statement)
+  }
+  interface "RowMapper<T>" as RowMapper
+  class SqlStatement
+  class BatchSqlStatement
+  class SqlParameter
+  class SqlExecutionOptions
+  class SqlRoute
+  class UpdateResult
+  class BatchResult
+  class RelationalAccessException
+  enum RelationalFailureType
+}
+
+package "relational-spi.connection" {
+  interface ConnectionProvider {
+    acquire(context)
+  }
+  interface ConnectionHandle {
+    connection()
+    ownership()
+    close()
+  }
+  enum ConnectionOwnership {
+    OWNED
+    BORROWED
+  }
+  interface DataSourceResolver {
+    resolve(context)
+  }
+}
+
+package "relational-spi.exception" {
+  interface SqlExceptionTranslator {
+    translate(context, SQLException)
+  }
+}
+
+package "relational-spi.execution" {
+  interface SqlExecutionListener {
+    beforeExecute(context)
+    afterSuccess(context, elapsed)
+    afterFailure(context, elapsed, failure)
+  }
+  class SqlExecutionContext
+  enum SqlExecutionKind
+}
+
+package "relational-core\n[Implemented]" {
+  class DefaultRelationalTemplate
+  class SqlStatementValidator
+  class JdbcParameterBinder
+  class JdbcStatementConfigurer
+  class DefaultConnectionProvider
+  class DefaultConnectionHandle
+  class SingleDataSourceResolver
+  class RoutingDataSourceResolver
+  class StandardSqlExceptionTranslator
+}
+
+package "relational-integration-spring\n[Implemented]" {
+  class SpringTransactionAwareConnectionProvider
+  class SpringConnectionHandle
+}
+
+RelationalTemplate <|.. DefaultRelationalTemplate
+DefaultRelationalTemplate --> SqlStatementValidator
+DefaultRelationalTemplate --> JdbcParameterBinder
+DefaultRelationalTemplate --> JdbcStatementConfigurer
+DefaultRelationalTemplate --> ConnectionProvider
+DefaultRelationalTemplate --> SqlExceptionTranslator
+DefaultRelationalTemplate --> SqlExecutionListener
+
+RelationalTemplate ..> SqlStatement
+RelationalTemplate ..> BatchSqlStatement
+RelationalTemplate ..> RowMapper
+RelationalTemplate ..> UpdateResult
+RelationalTemplate ..> BatchResult
+SqlStatement --> SqlParameter
+SqlStatement --> SqlExecutionOptions
+SqlStatement --> SqlRoute
+RelationalAccessException --> RelationalFailureType
+
+ConnectionProvider ..> SqlExecutionContext
+ConnectionProvider ..> ConnectionHandle
+ConnectionHandle --> ConnectionOwnership
+DataSourceResolver ..> SqlExecutionContext
+SqlExceptionTranslator ..> SqlExecutionContext
+SqlExceptionTranslator ..> RelationalAccessException
+SqlExecutionListener ..> SqlExecutionContext
+SqlExecutionContext --> SqlExecutionOptions
+SqlExecutionContext --> SqlRoute
+SqlExecutionContext --> SqlExecutionKind
+
+DefaultConnectionProvider ..|> ConnectionProvider
+DefaultConnectionProvider --> DataSourceResolver
+DefaultConnectionProvider --> DefaultConnectionHandle
+DefaultConnectionHandle ..|> ConnectionHandle
+SingleDataSourceResolver ..|> DataSourceResolver
+RoutingDataSourceResolver ..|> DataSourceResolver
+StandardSqlExceptionTranslator ..|> SqlExceptionTranslator
+
+SpringTransactionAwareConnectionProvider ..|> ConnectionProvider
+SpringTransactionAwareConnectionProvider --> DataSourceResolver
+SpringTransactionAwareConnectionProvider --> SpringConnectionHandle
+SpringConnectionHandle ..|> ConnectionHandle
+
+note top of RelationalTemplate
+Level B:
+JdbcIdempotencyStorage / JdbcOutboxStorage / JdbcTaskStorage use this API.
+They do NOT reach ConnectionProvider directly.
+end note
+
+note top of DataSourceResolver
+Level C:
+SingleDataSourceResolver handles default DataSource.
+RoutingDataSourceResolver handles dataSourceKey -> DataSource map.
+Neither one calculates shard or table name.
+end note
+
+note bottom
+RelationalDialect and generated-key API are intentionally not part of v1.
+The component focuses on stable SQL execution, not ORM-style persistence.
+end note
+
+@enduml

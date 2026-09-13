@@ -8,12 +8,12 @@ import com.xjtu.iron.distributed.lock.core.fencing.registry.DefaultFencingTokenP
 import com.xjtu.iron.distributed.lock.spi.LockProvider;
 import com.xjtu.iron.distributed.lock.spi.LockProviderCapabilities;
 import com.xjtu.iron.distributed.lock.spi.protocol.acquire.LockAcquireRequest;
-import com.xjtu.iron.distributed.lock.spi.protocol.check.LockCheckRequest;
-import com.xjtu.iron.distributed.lock.spi.protocol.release.LockReleaseRequest;
-import com.xjtu.iron.distributed.lock.spi.protocol.renew.LockRenewRequest;
 import com.xjtu.iron.distributed.lock.spi.protocol.acquire.LockAcquireResponse;
+import com.xjtu.iron.distributed.lock.spi.protocol.check.LockCheckRequest;
 import com.xjtu.iron.distributed.lock.spi.protocol.check.LockCheckResponse;
+import com.xjtu.iron.distributed.lock.spi.protocol.release.LockReleaseRequest;
 import com.xjtu.iron.distributed.lock.spi.protocol.release.LockReleaseResponse;
+import com.xjtu.iron.distributed.lock.spi.protocol.renew.LockRenewRequest;
 import com.xjtu.iron.distributed.lock.spi.protocol.renew.LockRenewResponse;
 import org.junit.jupiter.api.Test;
 

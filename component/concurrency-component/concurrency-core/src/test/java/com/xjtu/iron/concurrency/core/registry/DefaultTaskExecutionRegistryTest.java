@@ -1,19 +1,20 @@
 package com.xjtu.iron.concurrency.core.registry;
 
 import com.xjtu.iron.concurrency.api.enums.task.AsyncTaskStatus;
+import com.xjtu.iron.concurrency.api.error.AsyncError;
 import com.xjtu.iron.concurrency.api.event.TaskExecutionEvent;
 import com.xjtu.iron.concurrency.api.execution.registry.TaskExecutionSnapshot;
 import com.xjtu.iron.concurrency.api.task.TaskExecutionMode;
 import com.xjtu.iron.concurrency.api.task.TaskMetadata;
 import com.xjtu.iron.concurrency.api.task.TaskResultMode;
 import com.xjtu.iron.concurrency.api.task.TaskTimingSnapshot;
-import com.xjtu.iron.concurrency.api.error.AsyncError;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DefaultTaskExecutionRegistryTest {
 

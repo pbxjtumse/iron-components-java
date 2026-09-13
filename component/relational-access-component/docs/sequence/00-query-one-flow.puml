@@ -1,0 +1,85 @@
+@startuml
+title Relational Access v1 - queryOne Exact Main Flow
+
+autonumber
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+
+actor "JdbcXXXStorage" as Caller
+participant "DefaultRelationalTemplate" as RT
+participant "SqlStatementValidator" as Validator
+participant "SqlExecutionListener" as Listener
+participant "ConnectionProvider" as CP
+participant "DataSourceResolver" as DSR
+database "DataSource" as DS
+participant "ConnectionHandle" as Handle
+participant "Connection" as Conn
+participant "JdbcStatementConfigurer" as Configurer
+participant "JdbcParameterBinder" as Binder
+participant "PreparedStatement" as PS
+participant "ResultSet" as RS
+participant "RowMapper<T>" as Mapper
+participant "SqlExceptionTranslator" as Translator
+database Database as DB
+
+Caller -> RT : queryOne(SqlStatement, RowMapper)
+RT -> Validator : validate(statement)
+RT -> RT : build SqlExecutionContext(QUERY_ONE)
+RT -> Listener : beforeExecute(context)
+note right
+listener exception is swallowed;
+observation cannot break SQL
+end note
+
+RT -> CP : acquire(context)
+CP -> DSR : resolve(context)
+DSR --> CP : DataSource
+CP -> DS : get/reuse Connection
+DS --> CP : Connection
+CP --> RT : ConnectionHandle
+
+RT -> Handle : connection()
+Handle --> RT : Connection
+RT -> Conn : prepareStatement(sql)
+Conn --> RT : PreparedStatement
+RT -> Configurer : configure(PS, options)
+RT -> Binder : bind(PS, parameters)
+RT -> PS : executeQuery()
+PS -> DB : SELECT ...
+DB --> PS : rows
+PS --> RT : ResultSet
+
+RT -> RS : next()
+alt zero row
+  RT -> RS : close()
+  RT -> PS : close()
+  RT -> Handle : close()
+  RT -> Listener : afterSuccess(context, elapsed)
+  RT --> Caller : Optional.empty()
+else first row exists
+  RT -> Mapper : map(ResultSet)
+  Mapper --> RT : T (must not be null)
+  RT -> RS : next()
+  alt second row exists
+    RT -> RS : close()
+    RT -> PS : close()
+    RT -> Handle : close()
+    RT -> Listener : afterFailure(NON_UNIQUE_RESULT)
+    RT --> Caller : throw RelationalAccessException
+  else exactly one row
+    RT -> RS : close()
+    RT -> PS : close()
+    RT -> Handle : close()
+    RT -> Listener : afterSuccess(context, elapsed)
+    RT --> Caller : Optional<T>
+  end
+end
+
+opt any JDBC SQLException
+  RT -> Translator : translate(context, SQLException)
+  Translator --> RT : RelationalAccessException
+  RT -> Listener : afterFailure(context, elapsed, translated)
+  RT --> Caller : throw translated
+end
+
+@enduml

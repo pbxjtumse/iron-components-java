@@ -1,0 +1,60 @@
+@startuml
+title StorageRoute - Typed Keys and Composed Result
+top to bottom direction
+skinparam shadowing false
+hide empty members
+
+class StorageRoute {
+  mode
+  context: RouteContext
+  shardInfo: ShardRouteInfo
+  location: PhysicalStorageLocation
+}
+class RouteContext {
+  routeName
+  logicalTable
+  shardKey: CompositeShardKey
+  attributes
+}
+class CompositeShardKey {
+  keys: ordered list
+  canonicalForm()
+}
+class ShardKey {
+  name
+  value: ShardValue
+}
+class ShardValue {
+  type
+  value
+  canonicalText()
+}
+class ShardRouteInfo {
+  shardId
+  databaseIndex
+  localTableIndex
+  totalShardCount
+}
+class PhysicalStorageLocation {
+  dataSourceKey
+  tableName
+}
+
+StorageRoute o-- "1" RouteContext : input
+StorageRoute o-- "0..1" ShardRouteInfo : shard
+StorageRoute o-- "0..1" PhysicalStorageLocation : location
+RouteContext o-- "0..1" CompositeShardKey
+CompositeShardKey o-- "1..*" ShardKey : ordered fields
+ShardKey o-- "1" ShardValue
+
+note right of RouteContext
+Input data, not ThreadLocal storage.
+Fixed routes may omit shardKey.
+Shard resolution requires a key.
+end note
+
+note bottom of PhysicalStorageLocation
+DIRECT_DATASOURCE requires a complete location.
+Each logical table has its own physical mapping.
+end note
+@enduml

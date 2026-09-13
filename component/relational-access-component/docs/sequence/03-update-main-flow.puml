@@ -1,0 +1,54 @@
+@startuml
+title Relational Access v1 - update() Exact Flow
+
+autonumber
+skinparam shadowing false
+
+actor "JdbcIdempotencyStorage" as Storage
+participant "DefaultRelationalTemplate" as RT
+participant "SqlStatementValidator" as Validator
+participant "SqlExecutionListener" as Listener
+participant "ConnectionProvider" as CP
+participant "DataSourceResolver" as DSR
+database DataSource as DS
+participant "ConnectionHandle" as Handle
+participant "Connection" as Conn
+participant "JdbcStatementConfigurer" as Configurer
+participant "JdbcParameterBinder" as Binder
+participant "PreparedStatement" as PS
+database Database as DB
+
+Storage -> Storage : domain operation -> SQL + params + route
+Storage -> RT : update(SqlStatement)
+RT -> Validator : validate(statement)
+RT -> RT : contextOf(UPDATE)
+RT -> Listener : beforeExecute(context)
+RT -> CP : acquire(context)
+CP -> DSR : resolve(context)
+DSR --> CP : DataSource
+CP -> DS : get/reuse connection
+DS --> CP : Connection
+CP --> RT : ConnectionHandle
+RT -> Handle : connection()
+Handle --> RT : Connection
+RT -> Conn : prepareStatement(sql)
+Conn --> RT : PreparedStatement
+RT -> Configurer : configure(PS, options)
+RT -> Binder : bind(PS, parameters)
+RT -> PS : executeUpdate()
+PS -> DB : INSERT / UPDATE / DELETE
+DB --> PS : affectedRows
+PS --> RT : affectedRows
+RT -> PS : close()
+RT -> Handle : close()
+RT -> Listener : afterSuccess(context, elapsed)
+RT --> Storage : UpdateResult(affectedRows)
+
+Storage -> Storage : interpret storage semantics
+note right
+Example:
+affectedRows == 1 -> CAS acquired
+affectedRows == 0 -> conflict / stale
+end note
+
+@enduml

@@ -23,6 +23,8 @@
         <module>message-component</module>
         <module>idempotent-component</module>
         <module>transaction-component</module>
+        <module>relational-access-component</module>
+        <module>storage-routing-component</module>
     </modules>
     <dependencyManagement>
         <dependencies>
@@ -390,6 +392,38 @@
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
                 <artifactId>retry-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- relational-access-component -->
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>relational-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>relational-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- storage-routing-component -->
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>storage-routing-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>storage-routing-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>storage-routing-integration-relational</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>storage-routing-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

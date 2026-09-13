@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.xjtu.iron</groupId>
+        <artifactId>component</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>storage-routing-component</artifactId>
+    <packaging>pom</packaging>
+    <name>storage-routing-component</name>
+    <description>Iron Components 存储路由组件，用于统一承载分库分表、读写分离、多租户、冷热数据等路由上下文。</description>
+
+    <modules>
+        <module>storage-routing-api</module>
+        <module>storage-routing-core</module>
+        <module>storage-routing-integration</module>
+        <module>storage-routing-starter</module>
+    </modules>
+</project>

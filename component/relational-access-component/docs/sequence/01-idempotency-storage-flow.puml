@@ -1,0 +1,66 @@
+@startuml
+title Idempotency -> Storage -> Relational Access v1 Boundary
+
+autonumber
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+
+actor "Business Template" as Business
+participant "IdempotencyExecutor\n[High-level API]" as Executor
+participant "IdempotencyStorage\n[Storage Port]" as StoragePort
+participant "JdbcIdempotencyStorage\n[Adapter]" as JdbcStorage
+participant "ShardingRouter\n[optional / external]" as Router
+participant "RelationalTemplate\n[relational-api]" as RT
+participant "ConnectionProvider\n[relational-spi]" as CP
+participant "DataSourceResolver\n[relational-spi]" as DSR
+database DataSource as DS
+database Database as DB
+
+Business -> Executor : execute(scene, businessKey, callback)
+Executor -> StoragePort : tryAcquire(key, ownerToken, ...)
+StoragePort -> JdbcStorage : implementation call
+
+note over JdbcStorage
+Domain-storage translation boundary:
+tryAcquire -> physical table + final SQL + parameters + result interpretation
+end note
+
+opt sharding enabled
+  JdbcStorage -> Router : route(shardKey)
+  Router --> JdbcStorage : dataSourceKey + physicalTable
+end
+
+JdbcStorage -> JdbcStorage : choose SQL\ninsert safe physical table\nbuild SqlStatement + SqlRoute
+JdbcStorage -> RT : update(SqlStatement)
+
+note over RT
+Relational Access knows no ACQUIRED / PROCESSING / ownerToken semantics.
+It only executes a determined relational operation.
+end note
+
+RT -> CP : acquire(SqlExecutionContext)
+CP -> DSR : resolve(context)
+DSR --> CP : DataSource
+CP -> DS : get/reuse Connection
+DS --> CP : Connection
+CP --> RT : ConnectionHandle
+RT -> DB : execute final UPDATE/INSERT
+DB --> RT : affectedRows
+RT --> JdbcStorage : UpdateResult
+
+alt affectedRows == 1
+  JdbcStorage --> StoragePort : AcquireStatus.ACQUIRED
+  StoragePort --> Executor : ACQUIRED
+  Executor -> Business : execute callback
+else affectedRows == 0
+  JdbcStorage -> RT : queryOne(current-record SQL) if domain semantics require
+  RT -> CP : acquire(context)
+  CP --> RT : ConnectionHandle
+  RT -> DB : SELECT current record
+  DB --> RT : row
+  RT --> JdbcStorage : Optional<Record>
+  JdbcStorage --> StoragePort : PROCESSING / SUCCESS / FAILED / ...
+  StoragePort --> Executor : domain storage result
+end
+
+@enduml

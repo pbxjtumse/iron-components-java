@@ -1,0 +1,50 @@
+@startuml
+title ShardingSphere-JDBC First Mode - Shared Logical DataSource
+
+autonumber
+skinparam shadowing false
+hide footbox
+
+actor "Business Service" as Service
+participant "Sharding Route Context\n(optional)" as RouteContext
+participant "Spring TransactionManager" as TX
+participant "Business Mapper\n(MyBatis)" as MyBatis
+participant "JdbcIdempotencyStorage" as IdemStorage
+participant "RelationalTemplate" as RT
+participant "SpringTransactionAware\nConnectionProvider" as Provider
+database "ShardingSphereDataSource\n(logical DataSource)" as SS
+collections "Physical Shards\norder_db_0..N / tables" as Shards
+
+Service -> RouteContext : calculate/hold shardKey(orderId)
+Service -> TX : begin transaction(ShardingSphereDataSource)
+TX -> SS : get transaction-bound logical Connection
+
+Service -> MyBatis : insert business_order(order_id, ...)
+MyBatis -> SS : SQL contains shardKey/order_id
+SS -> Shards : route/rewrite/execute business SQL
+
+Service -> IdemStorage : markSuccess(idempotencyKey, shardKey)
+IdemStorage -> RT : update(logical table SQL + shardKey condition)
+RT -> Provider : acquire(context)
+Provider -> SS : DataSourceUtils.doGetConnection(logical DataSource)
+SS --> Provider : same transaction-bound logical Connection
+RT -> SS : SQL contains shardKey/order_id
+SS -> Shards : route/rewrite/execute idempotency SQL
+
+alt all success
+  TX -> SS : COMMIT
+else any failure
+  TX -> SS : ROLLBACK
+end
+
+note right of SS
+ShardingSphere-JDBC is the routing/rewrite/execute engine.
+Iron Relational Access treats it as a normal DataSource.
+end note
+
+note right of IdemStorage
+In this mode the idempotency SQL must carry the shard key.
+Otherwise ShardingSphere may not route precisely.
+end note
+
+@enduml
