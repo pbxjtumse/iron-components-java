@@ -36,7 +36,9 @@ public class IdempotencyStorageRoutingAutoConfiguration {
             StorageRouteToSqlRouteBridge relationalBridge,
             IdempotencyProperties properties
     ) {
+        // V2 先让现有 jdbc.table-name 同时作为“固定物理表名 / 路由逻辑表名”的基线配置，
+        // Storage Routing 启用后最终物理表仍由 RouteMappingStrategy 决定，不会直接使用该名称执行 SQL。
         return new StorageRoutingIdempotencyJdbcRouteResolver(
-                properties.getJdbc().getLogicalTable(), storageRouteResolver, storageRouteContext, relationalBridge);
+                properties.getJdbc().getTableName(), storageRouteResolver, storageRouteContext, relationalBridge);
     }
 }
