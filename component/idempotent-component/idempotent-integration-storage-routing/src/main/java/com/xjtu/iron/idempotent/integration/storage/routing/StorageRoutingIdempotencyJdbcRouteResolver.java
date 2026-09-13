@@ -5,6 +5,7 @@ import com.xjtu.iron.idempotent.api.storage.IdempotencyStorageContext;
 import com.xjtu.iron.idempotent.provider.jdbc.routing.IdempotencyJdbcRoute;
 import com.xjtu.iron.idempotent.provider.jdbc.routing.IdempotencyJdbcRouteResolver;
 import com.xjtu.iron.storage.routing.api.CompositeShardKey;
+import com.xjtu.iron.storage.routing.api.PhysicalStorageLocation;
 import com.xjtu.iron.storage.routing.api.RouteContext;
 import com.xjtu.iron.storage.routing.api.ShardKey;
 import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
@@ -45,6 +46,9 @@ import java.util.Optional;
  * <p>点查/写入优先复用 {@link StorageRouteContext} 中已经绑定的业务 shardKey/shardInfo，保证业务表与幂等表
  * 落在同一数据库分片。没有绑定业务路由时，才使用 IdempotencyStorageContext.shardKey 构造稳定 fallback key，
  * 交给 StorageRouteResolver 计算 shardInfo。</p>
+ *
+ * <p>DIRECT_DATASOURCE 且没有 shardInfo 时同样不能复用 business tableName：只能复用 dataSourceKey，
+ * 幂等表名始终使用本组件自己的 logicalTable。这样即使业务使用固定直连，也不会把幂等 SQL 写进业务表。</p>
  *
  * <p>Recovery 扫描是二维问题：外部 Reliable Task 先枚举物理 shard 并打开 StorageRouteContext，
  * 幂等组件再在该物理 shard 内按 scanBucket 查询。scanBucket 从来不等于物理表号。</p>
@@ -96,16 +100,17 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
                 .attribute("idempotency.key", idempotencyKey)
                 .build();
 
-        // 已经有业务路由时，优先复用它算好的 shardInfo；这比再次 hash 更强，避免算法/键规范漂移。
         ShardRouteInfo boundShard = boundRoute.map(StorageRoute::shardInfo).orElse(null);
         if (boundShard != null) {
             return toJdbcRoute(remap(context, boundShard));
         }
 
-        // 独立调用场景由全局 StorageRouteResolver 计算 shardInfo；若是固定直连 resolver 没有 shardInfo，
-        // 则保留 resolver 自己给出的物理位置。
+        if (boundRoute.isPresent()) {
+            return toJdbcRoute(directIdempotencyRoute(context, boundRoute.get().dataSourceKey()));
+        }
+
         StorageRoute resolved = storageRouteResolver.resolve(context);
-        return toJdbcRoute(remapIfSharded(context, resolved));
+        return toJdbcRoute(normalizeResolvedRoute(context, resolved));
     }
 
     @Override
@@ -117,23 +122,23 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
         boundRoute.map(StorageRoute::context).map(RouteContext::shardKey).ifPresent(contextBuilder::shardKey);
         RouteContext context = contextBuilder.build();
 
-        // Reliable Task 已经枚举并绑定物理 shard 时，直接复用该 shardInfo 映射到幂等表。
         ShardRouteInfo boundShard = boundRoute.map(StorageRoute::shardInfo).orElse(null);
         if (boundShard != null) {
             return List.of(toJdbcRoute(remap(context, boundShard)));
         }
 
+        if (boundRoute.isPresent()) {
+            return List.of(toJdbcRoute(directIdempotencyRoute(context, boundRoute.get().dataSourceKey())));
+        }
+
         try {
             StorageRoute resolved = storageRouteResolver.resolve(context);
-            return List.of(toJdbcRoute(remapIfSharded(context, resolved)));
+            return List.of(toJdbcRoute(normalizeResolvedRoute(context, resolved)));
         } catch (StorageRoutingException error) {
-            if (boundRoute.isEmpty()) {
-                throw new StorageRoutingException(
-                        "Recovery scan cannot resolve a sharded idempotency table without a bound StorageRoute. "
-                                + "The external Reliable Task must enumerate a physical shard, open StorageRouteContext, "
-                                + "and then scan scanBucket=" + query.getScanBucket(), error);
-            }
-            throw error;
+            throw new StorageRoutingException(
+                    "Recovery scan cannot resolve a sharded idempotency table without a bound StorageRoute. "
+                            + "The external Reliable Task must enumerate a physical shard, open StorageRouteContext, "
+                            + "and then scan scanBucket=" + query.getScanBucket(), error);
         }
     }
 
@@ -149,9 +154,7 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
         return CompositeShardKey.of(ShardKey.of(FALLBACK_SHARD_FIELD, storageContext.getShardKey()));
     }
 
-    /**
-     * 只复用 shardInfo，不复用 business physical location。
-     */
+    /** 只复用 shardInfo，不复用 business physical location。 */
     private StorageRoute remap(RouteContext context, ShardRouteInfo shardInfo) {
         return StorageRoute.builder()
                 .context(context)
@@ -160,9 +163,19 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
                 .build();
     }
 
-    private StorageRoute remapIfSharded(RouteContext context, StorageRoute resolved) {
+    /** 有 shardInfo 就重新映射幂等表；无 shardInfo 就只复用 dataSourceKey。 */
+    private StorageRoute normalizeResolvedRoute(RouteContext context, StorageRoute resolved) {
         Objects.requireNonNull(resolved, "storageRouteResolver returned null");
-        return resolved.shardInfo() == null ? resolved : remap(context, resolved.shardInfo());
+        return resolved.shardInfo() == null
+                ? directIdempotencyRoute(context, resolved.dataSourceKey())
+                : remap(context, resolved.shardInfo());
+    }
+
+    private StorageRoute directIdempotencyRoute(RouteContext context, String dataSourceKey) {
+        return StorageRoute.builder()
+                .context(context)
+                .location(PhysicalStorageLocation.of(dataSourceKey, logicalTable))
+                .build();
     }
 
     private IdempotencyJdbcRoute toJdbcRoute(StorageRoute route) {
