@@ -5,9 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.xjtu.iron</groupId>
-        <artifactId>idempotent-component</artifactId>
+        <artifactId>idempotent-integration</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>idempotent-integration-storage-routing</artifactId>
