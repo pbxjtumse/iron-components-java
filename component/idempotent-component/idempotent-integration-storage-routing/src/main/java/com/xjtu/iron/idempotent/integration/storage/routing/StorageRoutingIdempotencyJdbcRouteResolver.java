@@ -31,6 +31,9 @@ import java.util.Optional;
  * business location 直接当成 idempotency location；因此本实现会复用 shardInfo，再通过
  * idempotencyMappingStrategy 重新映射幂等表位置。</p>
  *
+ * <p>{@code logicalTable} 只进入 RouteContext 表达逻辑表族；{@code directTableName} 只用于没有 shardInfo 的
+ * DIRECT_DATASOURCE 场景。两者默认可以相同，但架构职责明确分离。</p>
+ *
  * <pre>
  * Business Route
  *   RouteContext + CompositeShardKey
@@ -48,7 +51,7 @@ import java.util.Optional;
  * 交给 StorageRouteResolver 计算 shardInfo。</p>
  *
  * <p>DIRECT_DATASOURCE 且没有 shardInfo 时同样不能复用 business tableName：只能复用 dataSourceKey，
- * 幂等表名始终使用本组件自己的 logicalTable。这样即使业务使用固定直连，也不会把幂等 SQL 写进业务表。</p>
+ * 幂等表名使用本组件自己的 directTableName。这样即使业务使用固定直连，也不会把幂等 SQL 写进业务表。</p>
  *
  * <p>Recovery 扫描是二维问题：外部 Reliable Task 先枚举物理 shard 并打开 StorageRouteContext，
  * 幂等组件再在该物理 shard 内按 scanBucket 查询。scanBucket 从来不等于物理表号。</p>
@@ -58,6 +61,7 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
     public static final String FALLBACK_SHARD_FIELD = "idempotency_shard_key";
 
     private final String logicalTable;
+    private final String directTableName;
     private final StorageRouteResolver storageRouteResolver;
     private final StorageRouteContext storageRouteContext;
     private final RouteMappingStrategy idempotencyMappingStrategy;
@@ -65,15 +69,14 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
 
     public StorageRoutingIdempotencyJdbcRouteResolver(
             String logicalTable,
+            String directTableName,
             StorageRouteResolver storageRouteResolver,
             StorageRouteContext storageRouteContext,
             RouteMappingStrategy idempotencyMappingStrategy,
             StorageRouteToSqlRouteBridge relationalBridge
     ) {
-        if (logicalTable == null || logicalTable.isBlank()) {
-            throw new IllegalArgumentException("logicalTable must not be blank");
-        }
-        this.logicalTable = logicalTable.trim();
+        this.logicalTable = requireText(logicalTable, "logicalTable");
+        this.directTableName = requireText(directTableName, "directTableName");
         this.storageRouteResolver = Objects.requireNonNull(storageRouteResolver, "storageRouteResolver must not be null");
         this.storageRouteContext = Objects.requireNonNull(storageRouteContext, "storageRouteContext must not be null");
         this.idempotencyMappingStrategy = Objects.requireNonNull(
@@ -174,7 +177,7 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
     private StorageRoute directIdempotencyRoute(RouteContext context, String dataSourceKey) {
         return StorageRoute.builder()
                 .context(context)
-                .location(PhysicalStorageLocation.of(dataSourceKey, logicalTable))
+                .location(PhysicalStorageLocation.of(dataSourceKey, directTableName))
                 .build();
     }
 
@@ -182,5 +185,12 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
         String dataSourceKey = relationalBridge.toSqlRoute(route).dataSourceKey();
         String tableName = relationalBridge.requireTableName(route);
         return IdempotencyJdbcRoute.of(dataSourceKey, tableName);
+    }
+
+    private static String requireText(String value, String name) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(name + " must not be blank");
+        }
+        return value.trim();
     }
 }
