@@ -76,6 +76,7 @@ public class IdempotencyStorageRoutingAutoConfiguration {
     ) {
         return new StorageRoutingIdempotencyJdbcRouteResolver(
                 idempotencyRouting.getLogicalTable(),
+                idempotencyRouting.getTablePrefix(),
                 storageRouteResolver,
                 storageRouteContext,
                 idempotencyMappingStrategy,
