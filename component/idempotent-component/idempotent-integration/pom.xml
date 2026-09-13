@@ -13,9 +13,10 @@
     <artifactId>idempotent-integration</artifactId>
     <packaging>pom</packaging>
     <name>idempotent-integration</name>
-    <description>idempotent-component 与 transaction-component 的本地事务集成。</description>
+    <description>idempotent-component 与 transaction / storage-routing 等技术组件的集成层。</description>
+
     <modules>
         <module>idempotent-integration-transaction</module>
+        <module>idempotent-integration-storage-routing</module>
     </modules>
-
 </project>
