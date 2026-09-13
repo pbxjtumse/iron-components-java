@@ -32,6 +32,14 @@
         </dependency>
         <dependency>
             <groupId>com.xjtu.iron</groupId>
+            <artifactId>storage-routing-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.xjtu.iron</groupId>
+            <artifactId>storage-routing-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.xjtu.iron</groupId>
             <artifactId>distributed-lock-api</artifactId>
         </dependency>
         <dependency>
