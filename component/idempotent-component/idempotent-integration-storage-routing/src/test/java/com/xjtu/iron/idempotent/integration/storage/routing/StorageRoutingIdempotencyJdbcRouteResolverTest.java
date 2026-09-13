@@ -136,10 +136,10 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
     }
 
     @Test
-    void directResolverWithoutShardInfoShouldRemainSupported() {
+    void directResolverWithoutShardInfoShouldReuseOnlyDatasourceNotBusinessTable() {
         StorageRouteResolver directResolver = context -> StorageRoute.builder()
                 .context(context)
-                .location(PhysicalStorageLocation.of("single-db", "iron_idempotency_record"))
+                .location(PhysicalStorageLocation.of("single-db", "business_order"))
                 .build();
 
         StorageRoutingIdempotencyJdbcRouteResolver resolver = resolver(
@@ -153,6 +153,30 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
                 IdempotencyStorageContext.of("default", 0L, 0), "default", "IDEMP-1");
 
         assertThat(route).isEqualTo(IdempotencyJdbcRoute.of("single-db", "iron_idempotency_record"));
+    }
+
+    @Test
+    void boundDirectBusinessRouteShouldNotLeakBusinessTableIntoIdempotencySql() {
+        TestStorageRouteContext current = new TestStorageRouteContext();
+        current.set(StorageRoute.builder()
+                .context(RouteContext.builder().routeName("order").logicalTable("business_order").build())
+                .location(PhysicalStorageLocation.of("order-db", "business_order"))
+                .build());
+
+        StorageRouteResolver routeResolver = context -> {
+            throw new AssertionError("bound direct route should not require another routing resolution");
+        };
+        StorageRoutingIdempotencyJdbcRouteResolver resolver = resolver(
+                routeResolver,
+                current,
+                shard -> {
+                    throw new AssertionError("direct route without shardInfo must not invoke sharded mapping");
+                });
+
+        IdempotencyJdbcRoute route = resolver.resolvePoint(
+                IdempotencyStorageContext.of("order-write", 0L, 0), "order", "CREATE-1");
+
+        assertThat(route).isEqualTo(IdempotencyJdbcRoute.of("order-db", "iron_idempotency_record"));
     }
 
     private StorageRoutingIdempotencyJdbcRouteResolver resolver(
