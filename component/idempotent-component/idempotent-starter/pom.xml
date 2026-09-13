@@ -30,13 +30,20 @@
             <artifactId>idempotent-integration-storage-routing</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!--
+            只用于可选 Storage Routing 自动集成的编译期类型。
+            标记 optional，避免普通幂等使用方被强制带入分库分表 Starter；
+            真正启用分库分表的业务工程应显式引入 storage-routing-starter。
+        -->
         <dependency>
             <groupId>com.xjtu.iron</groupId>
             <artifactId>storage-routing-core</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.xjtu.iron</groupId>
             <artifactId>storage-routing-starter</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.xjtu.iron</groupId>
