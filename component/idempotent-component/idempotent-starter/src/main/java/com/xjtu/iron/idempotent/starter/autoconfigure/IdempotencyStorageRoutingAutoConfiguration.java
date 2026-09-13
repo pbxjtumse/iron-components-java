@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -23,6 +24,7 @@ import org.springframework.context.annotation.Bean;
         afterName = "com.xjtu.iron.storage.routing.starter.autoconfigure.StorageRoutingAutoConfiguration",
         before = IdempotencyAutoConfiguration.class
 )
+@EnableConfigurationProperties(IdempotencyProperties.class)
 @ConditionalOnClass(StorageRoutingIdempotencyJdbcRouteResolver.class)
 @ConditionalOnProperty(prefix = "xjtu.iron.idempotent.jdbc.routing", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class IdempotencyStorageRoutingAutoConfiguration {
