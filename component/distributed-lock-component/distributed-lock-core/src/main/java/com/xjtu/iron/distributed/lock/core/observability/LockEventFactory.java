@@ -2,9 +2,9 @@ package com.xjtu.iron.distributed.lock.core.observability;
 
 import com.xjtu.iron.distributed.lock.api.status.LockStage;
 import com.xjtu.iron.distributed.lock.api.status.LockStatus;
-import com.xjtu.iron.distributed.lock.spi.protocol.common.LockLease;
-import com.xjtu.iron.distributed.lock.spi.protocol.acquire.LockAcquireRequest;
 import com.xjtu.iron.distributed.lock.spi.LockProvider;
+import com.xjtu.iron.distributed.lock.spi.protocol.acquire.LockAcquireRequest;
+import com.xjtu.iron.distributed.lock.spi.protocol.common.LockLease;
 
 /** 统一创建 LockEvent，避免事件字段在 client/handle 中重复拼装。 */
 public final class LockEventFactory {

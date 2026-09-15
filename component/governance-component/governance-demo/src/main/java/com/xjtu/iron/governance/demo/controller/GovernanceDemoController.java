@@ -3,7 +3,10 @@ package com.xjtu.iron.governance.demo.controller;
 
 import com.xjtu.iron.governance.api.template.GovernanceTemplate;
 import com.xjtu.iron.governance.demo.service.CouponService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/demo/governance")

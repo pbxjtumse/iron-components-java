@@ -4,11 +4,7 @@ package com.xjtu.iron.distributed.lock.core.registry;
 import com.xjtu.iron.distributed.lock.spi.LockProvider;
 import com.xjtu.iron.distributed.lock.spi.LockProviderRegistry;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * 默认 LockProvider 注册表。

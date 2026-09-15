@@ -3,9 +3,7 @@ package com.xjtu.iron.retry.core.policy;
 import com.xjtu.iron.retry.api.policy.RetryPolicy;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** 验证默认命名策略注册表的显式覆盖语义。 */
 class DefaultRetryPolicyRegistryTest {

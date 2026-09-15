@@ -1,0 +1,40 @@
+@startuml
+title StorageRoute to Relational Access - Direct Bridge
+
+autonumber
+skinparam shadowing false
+hide footbox
+
+actor "Business Service" as Service
+participant "StorageRouteContext" as Context
+participant "IdempotencyStorage" as Idem
+participant "StorageRouteToSqlRouteBridge" as Bridge
+participant "RelationalTemplate" as Template
+participant "RoutingDataSourceResolver" as Resolver
+database "order-db-1" as DB1
+
+Service -> Context : open(idempotencyRoute)
+Service -> Idem : markSuccess(idempotencyKey)
+
+Idem -> Context : current()
+Context --> Idem : StorageRoute(context.logicalTable=iron_idempotency_record,\nlocation=order-db-1.iron_idempotency_record_017)
+
+Idem -> Bridge : toSqlRoute(StorageRoute)
+Bridge --> Idem : SqlRoute(dataSourceKey=order-db-1)
+Idem -> Bridge : requireTableName(StorageRoute)
+Bridge --> Idem : iron_idempotency_record_017
+
+Idem -> Template : update(SqlStatement.withRoute(SqlRoute))
+Template -> Resolver : resolve(order-db-1)
+Resolver --> Template : DataSource(order-db-1)
+Template -> DB1 : INSERT / UPDATE technical record
+
+note right of Bridge
+The bridge belongs to storage-routing-integration-relational,
+not to relational-api.
+Relational Access should not depend on Storage Routing.
+The route must already refer to the idempotency table;
+an order table location cannot be reused as-is.
+end note
+
+@enduml

@@ -1,10 +1,9 @@
 package com.xjtu.iron.retry.api.policy;
 
+import com.xjtu.iron.retry.api.backoff.BackoffStrategies;
 import com.xjtu.iron.retry.api.backoff.RetryDelay;
 import com.xjtu.iron.retry.api.backoff.RetryDelaySource;
 import com.xjtu.iron.retry.api.execution.RetryAttempt;
-
-import com.xjtu.iron.retry.api.backoff.BackoffStrategies;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -13,9 +12,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** 验证 RetryPolicy 的分类、校验和退避契约。 */
 class RetryPolicyTest {

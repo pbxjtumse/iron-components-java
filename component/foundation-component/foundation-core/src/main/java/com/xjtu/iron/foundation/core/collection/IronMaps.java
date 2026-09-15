@@ -2,11 +2,7 @@ package com.xjtu.iron.foundation.core.collection;
 
 import com.xjtu.iron.foundation.core.text.IronStrings;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Iron Foundation Map 工具门面。

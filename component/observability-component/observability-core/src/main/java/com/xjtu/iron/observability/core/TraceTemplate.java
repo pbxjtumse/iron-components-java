@@ -1,11 +1,11 @@
 package com.xjtu.iron.observability.core;
 
-import com.xjtu.iron.observability.core.noop.NoopTraceSpan;
 import com.xjtu.iron.observability.api.tracing.ITraceService;
 import com.xjtu.iron.observability.api.tracing.ITraceSpan;
 import com.xjtu.iron.observability.api.tracing.template.ITraceCallback;
 import com.xjtu.iron.observability.api.tracing.template.ITraceRunnable;
 import com.xjtu.iron.observability.api.tracing.template.ITraceSpanCallback;
+import com.xjtu.iron.observability.core.noop.NoopTraceSpan;
 
 import java.util.Map;
 import java.util.Objects;

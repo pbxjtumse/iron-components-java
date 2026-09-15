@@ -1,7 +1,7 @@
 package com.xjtu.iron.concurrency.demo;
 
-import com.xjtu.iron.concurrency.api.execution.template.AsyncBatchResult;
 import com.xjtu.iron.concurrency.api.execution.executor.AsyncExecutor;
+import com.xjtu.iron.concurrency.api.execution.template.AsyncBatchResult;
 import com.xjtu.iron.concurrency.api.execution.template.AsyncTaskOutcome;
 import com.xjtu.iron.concurrency.api.execution.template.AsyncTemplate;
 import com.xjtu.iron.concurrency.api.execution.template.NamedFuture;

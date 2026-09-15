@@ -1,6 +1,6 @@
 package com.xjtu.iron.transaction.demo.jpa.integration;
 
-import com.xjtu.iron.transaction.demo.jpa.application.JpaTransactionDemoApplication;
+import com.xjtu.iron.transaction.demo.jpa.JpaTransactionDemoApplication;
 import com.xjtu.iron.transaction.demo.jpa.repository.DemoRecordRepository;
 import com.xjtu.iron.transaction.demo.jpa.service.JpaTransactionDemoService;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,9 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(classes = JpaTransactionDemoApplication.class)
 @ActiveProfiles("test")

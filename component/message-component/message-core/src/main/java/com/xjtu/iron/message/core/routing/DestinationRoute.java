@@ -3,11 +3,7 @@ package com.xjtu.iron.message.core.routing;
 import com.xjtu.iron.message.api.model.MessageDestination;
 import com.xjtu.iron.message.spi.ProviderDestination;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * 表示逻辑目的地到 Provider 物理目的地的精确路由。

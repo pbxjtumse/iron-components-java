@@ -87,9 +87,10 @@ StorageRoute -> 被业务 Repository / 技术组件 Storage 共同使用
 当前是直连多库模式，还是 ShardingSphere-JDBC 模式？
 ```
 
-## 4. 建议的核心模型
+## 4. 已落地的核心模型
 
-未来可以抽成独立 `sharding-component`，优先提供 `sharding-api`。
+当前已经建立独立 `storage-routing-component`，提供 `storage-routing-api` 与 `storage-routing-core`。
+以下为字段摘要，完整约束见 [StorageRoute 模型](../../../storage-routing-component/docs/design/03-storage-route-model.md)。
 
 ### StorageRoute
 
@@ -103,31 +104,14 @@ public final class StorageRoute {
      */
     private final StorageRouteMode mode;
 
-    /**
-     * 逻辑数据源 key。
-     *
-     * DIRECT_DATASOURCE 模式下通常必填，例如 order-db-1。
-     * SHARDINGSPHERE_JDBC 模式下通常为空，因为只有一个 ShardingSphereDataSource。
-     */
-    private final String dataSourceKey;
+    /** 输入上下文：场景、逻辑表、类型化分片键和扩展属性只在这里保存。 */
+    private final RouteContext context;
 
-    /**
-     * 技术组件表名。
-     *
-     * DIRECT_DATASOURCE 模式下可以是物理表名。
-     * SHARDINGSPHERE_JDBC 模式下通常是逻辑表名。
-     */
-    private final String tableName;
+    /** 分片计算结果；固定直连可以为空。 */
+    private final ShardRouteInfo shardInfo;
 
-    /**
-     * 分片键名称，例如 order_id / user_id / merchant_id。
-     */
-    private final String shardKeyName;
-
-    /**
-     * 分片键值，例如 orderId。
-     */
-    private final Object shardKeyValue;
+    /** 已解析的物理库表；DIRECT_DATASOURCE 模式必填。 */
+    private final PhysicalStorageLocation location;
 }
 ```
 
@@ -136,17 +120,26 @@ public final class StorageRoute {
 ```java
 public enum StorageRouteMode {
     DIRECT_DATASOURCE,
-    SHARDINGSPHERE_JDBC
+    SHARDINGSPHERE_JDBC,
+    PROXY
 }
 ```
 
 ### StorageRouteResolver
 
+统一契约在 `api.resolver.StorageRouteResolver`，行为收敛到同一个 RouteContext 入口。
+
 ```java
 public interface StorageRouteResolver {
-    StorageRoute resolve(StorageRouteRequest request);
+    StorageRoute resolve(RouteContext context);
 }
 ```
+
+直连解析链路已经实现：`RouteContext` 的 `CompositeShardKey` → `HashShardResolver` → `ShardRouteInfo` →
+`RouteMappingStrategy` → `PhysicalStorageLocation` → 组合式 `StorageRoute`。
+`ShardResolver` 只接收类型化分片键，单字段同样使用单元素 `CompositeShardKey`。中间件适配和 Relational Access 桥接仍属于后续工作。
+`DIRECT_DATASOURCE` 表示已经解析出物理库表，不表示固定某一种表编号；10 库每库 10 表和 10 库每库 100 表
+都由 `databaseCount`、`tablesPerDatabase` 与 `TableIndexMode` 组合表达。
 
 ## 5. 直连多库模式
 

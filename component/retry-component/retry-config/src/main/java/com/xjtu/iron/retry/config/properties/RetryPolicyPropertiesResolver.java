@@ -1,11 +1,6 @@
 package com.xjtu.iron.retry.config.properties;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /** 解析命名策略继承、默认值覆盖、显式列表清空和循环依赖。 */
 final class RetryPolicyPropertiesResolver {

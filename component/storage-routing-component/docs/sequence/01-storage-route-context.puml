@@ -1,0 +1,45 @@
+@startuml
+title StorageRouteContext - Context Implemented, Storage Consumers Planned
+
+autonumber
+skinparam shadowing false
+hide footbox
+
+actor "Business Service" as Service
+participant "StorageRouteResolver" as Resolver
+participant "StorageRouteContext" as Context
+participant "Business Repository" as Repository
+participant "IdempotencyStorage" as Idem
+participant "OutboxStorage" as Outbox
+
+Service -> Resolver : resolve(RouteContext with typed shard key)
+Resolver --> Service : StorageRoute(context, shardInfo, location)
+
+Service -> Context : open(route)
+activate Context
+
+Service -> Repository : save order
+Repository -> Context : current()
+Context --> Repository : same StorageRoute
+
+Service -> Idem : markSuccess
+Idem -> Context : current()
+Context --> Idem : same StorageRoute
+
+Service -> Outbox : save event
+Outbox -> Context : current()
+Context --> Outbox : same StorageRoute
+
+Service -> Context : close scope
+deactivate Context
+
+note right of Context
+ThreadLocalStorageRouteContext must clear the route
+when the outermost scope closes, otherwise thread pool
+reuse may leak the previous route into the next request.
+Consumers share shardInfo, but map their own tables.
+RouteContext is input data, not this context store.
+Idempotency / Outbox integration is not implemented yet.
+end note
+
+@enduml

@@ -1,11 +1,7 @@
 package com.xjtu.iron.cache.spring.boot.starter.configuration;
 
 import com.xjtu.iron.cache.core.CacheProvider;
-import com.xjtu.iron.cache.provider.redis.JacksonRedisCacheSerializer;
-import com.xjtu.iron.cache.provider.redis.RedisBinaryClient;
-import com.xjtu.iron.cache.provider.redis.RedisCacheProvider;
-import com.xjtu.iron.cache.provider.redis.RedisCacheSerializer;
-import com.xjtu.iron.cache.provider.redis.SpringDataRedisBinaryClient;
+import com.xjtu.iron.cache.provider.redis.*;
 import com.xjtu.iron.cache.spring.boot.starter.properties.XjtuIronCacheProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

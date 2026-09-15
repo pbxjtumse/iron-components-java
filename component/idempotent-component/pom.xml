@@ -18,4 +18,5 @@
         <module>idempotent-starter</module>
         <module>idempotent-demo</module>
     </modules>
+
 </project>

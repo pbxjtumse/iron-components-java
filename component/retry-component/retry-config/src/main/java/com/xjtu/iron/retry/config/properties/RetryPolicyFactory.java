@@ -1,8 +1,8 @@
 package com.xjtu.iron.retry.config.properties;
 
+import com.xjtu.iron.retry.api.backoff.BackoffStrategies;
 import com.xjtu.iron.retry.api.backoff.BackoffStrategy;
 import com.xjtu.iron.retry.api.policy.RetryPolicy;
-import com.xjtu.iron.retry.api.backoff.BackoffStrategies;
 
 import java.util.ArrayList;
 import java.util.List;

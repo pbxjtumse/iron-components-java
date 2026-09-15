@@ -1,7 +1,7 @@
 package com.xjtu.iron.governance.core.resolver;
 
-import com.xjtu.iron.governance.config.api.GovernanceRuleRepository;
 import com.xjtu.iron.governance.api.context.GovernanceContext;
+import com.xjtu.iron.governance.config.api.GovernanceRuleRepository;
 import com.xjtu.iron.governance.model.policy.GovernancePolicy;
 import com.xjtu.iron.governance.model.rule.GovernanceRuleSet;
 

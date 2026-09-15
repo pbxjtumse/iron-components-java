@@ -3,15 +3,9 @@ package com.xjtu.iron.foundation.id.snowflake;
 import com.xjtu.iron.foundation.id.api.IdGenerationException;
 import org.junit.jupiter.api.Test;
 
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SnowflakeLongIdGeneratorTest {
 

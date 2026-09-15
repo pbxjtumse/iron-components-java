@@ -5,8 +5,10 @@ import java.util.Optional;
 /**
  * 当前执行上下文中的存储路由。
  *
+ * <p>这是用于保存、读取路由结果的接口；{@link RouteContext} 是一次路由的输入模型，两者职责不同。</p>
+ *
  * <p>它用于保证一次业务执行链路中，业务 Repository、IdempotencyStorage、OutboxStorage、TaskStorage
- * 可以读取同一份路由结果，避免业务数据和技术组件记录落到不同分片。</p>
+ * 可以读取同一份路由结果，复用分片依据。它不自动映射各表、切换数据源或开启事务。</p>
  */
 public interface StorageRouteContext {
 
