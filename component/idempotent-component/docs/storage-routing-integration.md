@@ -135,6 +135,33 @@ current business StorageRoute.shardInfo
 
 ## 4. Point Access 主流程
 
+### 4.0 一次 execute 只决定一次 StorageRoute
+
+Starter 在核心 `IdempotencyExecutor` 外层装配
+`StorageRouteAwareIdempotencyExecutor`：
+
+```text
+IdempotencyRequest
+    ↓
+IdempotencyRouteContextFactory
+    ↓  默认使用 idempotency key
+StorageRouteResolver.resolve(...)         仅一次
+    ↓
+StorageRouteContext.open(route)
+    ├─ tryAcquire
+    ├─ Business callback
+    └─ markSuccess / markFailed
+    ↓
+close scope
+```
+
+这样 Repository 的每次状态操作虽然仍会解析自己的幂等物理表，但读取的是同一个已绑定
+`StorageRoute`，不会在 `tryAcquire`、完成状态和失败状态之间重复 hash。
+
+默认的 `DefaultIdempotencyRouteContextFactory` 使用幂等 key 作为单字段分片键。业务可以替换
+`IdempotencyRouteContextFactory`，改为 tenantId、merchantId 或复合键；一旦业务入口已经绑定
+`StorageRoute`，装饰器将直接复用业务路由，Factory 和全局 Resolver 都不会再次调用。
+
 ### 4.1 当前已有业务 StorageRoute
 
 这是业务写 + 幂等状态需要同分片、同本地事务时的推荐路径。
@@ -339,6 +366,26 @@ Tx-C REQUIRES_NEW
 
 Relational Access 只负责执行已确定 SQL；它不理解 ACQUIRED、PROCESSING、ownerToken/version，也不决定事务传播级别。
 
+### 8.1 同连接事务的成立条件
+
+`SpringTransactionJdbcExecutionManager` 通过 `DataSourceUtils` 获取当前事务绑定的连接，因此在同一个
+Spring 本地事务中，Business SQL 与 `markSuccess` 可以复用同一条 `Connection`。但在多数据源拓扑中还需要
+满足一个额外条件：事务执行器/事务管理器必须与当前 `StorageRoute.dataSourceKey` 指向同一个 DataSource。
+
+```text
+StorageRoute.dataSourceKey = db_03
+        ↓
+JdbcExecutionManager(db_03)
+        +
+TransactionManager(db_03)
+        ↓
+same transaction-bound Connection
+```
+
+固定使用 `db_00` 的事务管理器、却把 Repository 路由到 `db_03`，不会形成同库本地事务。生产级 10 库模式
+需要按 `dataSourceKey` 选择匹配的 `JdbcExecutionManager + TransactionExecutor` 组合；本阶段先固定并验证这一约束，
+不把它伪装成跨库原子事务。
+
 ## 9. 配置关系
 
 Storage Routing 提供共享拓扑：
@@ -388,6 +435,7 @@ xjtu.iron.idempotent.jdbc.table-name=iron_idempotency_record
 - Integration 不复用业务表 physical location。
 - Recovery 不在 Idempotency 内部启动定时扫描线程。
 - 本轮不同时重写 JDBC SQL 到 RelationalTemplate，避免把“路由正确性”和“SQL/事务执行迁移”混成一个不可验证的大改动。
+- 本轮不提供跨库分布式事务；同连接保证只适用于业务 SQL 与幂等 SQL 落在同一 dataSource 的本地事务。
 
 ## 11. 验证重点
 
@@ -400,3 +448,6 @@ Integration 测试至少固定以下语义：
 5. Recovery 未绑定物理 shard 时 fail-fast。
 6. Recovery 已绑定 shard 时复用 shardInfo 并映射幂等表。
 7. 固定单库单表模式保持可用。
+8. 一次 execute 只调用一次 StorageRouteResolver，所有状态操作共享该作用域。
+9. Spring 本地事务中 Business SQL 与 markSuccess 使用同一条 transaction-bound Connection。
+10. 10 库 × 每库 10 表的 100 个 shard 均可完成首次执行与重复回放。

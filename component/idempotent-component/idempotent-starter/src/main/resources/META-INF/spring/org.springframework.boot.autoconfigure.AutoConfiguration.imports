@@ -1,3 +1,4 @@
 com.xjtu.iron.idempotent.starter.autoconfigure.IdempotencyStorageRoutingAutoConfiguration
 com.xjtu.iron.idempotent.starter.autoconfigure.IdempotencyAutoConfiguration
+com.xjtu.iron.idempotent.starter.autoconfigure.IdempotencyStorageRoutingExecutionAutoConfiguration
 com.xjtu.iron.idempotent.starter.autoconfigure.IdempotencyOperationsAutoConfiguration
