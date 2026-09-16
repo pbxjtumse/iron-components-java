@@ -13,7 +13,7 @@ end
 local function snapshot(code)
     return {
         tostring(code),
-        h('store_name'), h('shard_key'), h('scan_bucket'),
+        h('store_name'), h('scan_bucket'),
         h('namespace'), h('key'), h('route_key'), h('request_hash'),
         h('status'), h('owner_token'), h('version'), h('result_payload'),
         h('failure_code'), h('failure_message'), h('failure_retryable'),

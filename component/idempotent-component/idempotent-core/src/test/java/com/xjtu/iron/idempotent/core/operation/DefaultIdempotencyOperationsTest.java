@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DefaultIdempotencyOperationsTest {
 
-    private static final IdempotencyStorageContext STORAGE = IdempotencyStorageContext.of("message-consume", 10001L, 33);
+    private static final IdempotencyStorageContext STORAGE = IdempotencyStorageContext.of("message-consume", 33);
 
     @Test
     void acquireShouldExposeDuplicateDiscardedAndPassStorageContextToRepository() {
@@ -48,7 +48,6 @@ class DefaultIdempotencyOperationsTest {
 
         assertThat(result.getStatus()).isEqualTo(IdempotencyOperationAcquireStatus.DUPLICATE_DISCARDED);
         assertThat(repository.lastAcquire.getStorageContext().getStoreName()).isEqualTo("message-consume");
-        assertThat(repository.lastAcquire.getStorageContext().getShardKey()).isEqualTo(10001L);
         assertThat(repository.lastAcquire.getStorageContext().getScanBucket()).isEqualTo(33);
     }
 
@@ -112,8 +111,7 @@ class DefaultIdempotencyOperationsTest {
         @Override
         public IdempotencyWriteResult markDiscarded(IdempotencyDiscardRequest request) {
             this.lastDiscard = request;
-            IdempotencyRecord record = IdempotencyRecord.builder().storeName(request.getStorageContext().getStoreName())
-                    .shardKey(request.getStorageContext().getShardKey()).scanBucket(request.getStorageContext().getScanBucket())
+            IdempotencyRecord record = IdempotencyRecord.builder().storeName(request.getStorageContext().getStoreName()).scanBucket(request.getStorageContext().getScanBucket())
                     .namespace(request.getNamespace()).key(request.getKey()).status(IdempotencyStatus.DISCARDED)
                     .ownerToken(request.getOwnerToken()).version(request.getVersion()).build();
             return IdempotencyWriteResult.of(IdempotencyWriteStatus.UPDATED, record);
@@ -125,8 +123,8 @@ class DefaultIdempotencyOperationsTest {
         }
 
         private IdempotencyRecord record(IdempotencyStorageContext storage, String namespace, String key) {
-            return IdempotencyRecord.builder().storeName(storage.getStoreName()).shardKey(storage.getShardKey())
-                    .scanBucket(storage.getScanBucket()).namespace(namespace).key(key).status(IdempotencyStatus.PROCESSING)
+            return IdempotencyRecord.builder().storeName(storage.getStoreName()).scanBucket(storage.getScanBucket())
+                    .namespace(namespace).key(key).status(IdempotencyStatus.PROCESSING)
                     .ownerToken("owner-A").version(1).build();
         }
     }

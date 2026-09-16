@@ -23,9 +23,6 @@ public final class IdempotencyRecoveryRequest {
     /** 待恢复记录所在逻辑 Store。 */
     private final String storeName;
 
-    /** 待恢复记录的点查/写入分片键。 */
-    private final long shardKey;
-
     /** 待恢复记录所属扫描桶。 */
     private final int scanBucket;
 
@@ -47,7 +44,6 @@ public final class IdempotencyRecoveryRequest {
         this.routeKey = builder.routeKey;
         this.storeName = builder.storeName == null || builder.storeName.isBlank()
                 ? IdempotencyStorageContext.DEFAULT_STORE_NAME : builder.storeName.trim();
-        this.shardKey = builder.shardKey;
         this.scanBucket = builder.scanBucket;
         this.expectedOwnerToken = builder.expectedOwnerToken;
         this.expectedVersion = builder.expectedVersion;
@@ -61,7 +57,6 @@ public final class IdempotencyRecoveryRequest {
     public String getRequestHash() { return requestHash; }
     public String getRouteKey() { return routeKey; }
     public String getStoreName() { return storeName; }
-    public long getShardKey() { return shardKey; }
     public int getScanBucket() { return scanBucket; }
     public String getExpectedOwnerToken() { return expectedOwnerToken; }
     public Long getExpectedVersion() { return expectedVersion; }
@@ -69,7 +64,7 @@ public final class IdempotencyRecoveryRequest {
     public IdempotencyPolicy getPolicy() { return policy; }
 
     public IdempotencyStorageContext storageContext() {
-        return IdempotencyStorageContext.of(storeName, shardKey, scanBucket);
+        return IdempotencyStorageContext.of(storeName, scanBucket);
     }
 
     public static final class Builder {
@@ -84,9 +79,6 @@ public final class IdempotencyRecoveryRequest {
 
         /** 逻辑 Store，默认 default。 */
         private String storeName = IdempotencyStorageContext.DEFAULT_STORE_NAME;
-
-        /** 分片键，必须与 candidate 一致。 */
-        private long shardKey;
 
         /** 扫描桶，不能为负数。 */
         private int scanBucket;
@@ -107,7 +99,6 @@ public final class IdempotencyRecoveryRequest {
         public Builder requestHash(String value) { this.requestHash = value; return this; }
         public Builder routeKey(String value) { this.routeKey = value; return this; }
         public Builder storeName(String value) { this.storeName = value; return this; }
-        public Builder shardKey(long value) { this.shardKey = value; return this; }
         public Builder scanBucket(int value) { this.scanBucket = value; return this; }
         public Builder expectedOwnerToken(String value) { this.expectedOwnerToken = value; return this; }
         public Builder expectedVersion(Long value) { this.expectedVersion = value; return this; }

@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class JdbcIdempotencyRepositoryTest {
 
-    private static final IdempotencyStorageContext STORAGE = IdempotencyStorageContext.of("test-store", 101L, 7);
+    private static final IdempotencyStorageContext STORAGE = IdempotencyStorageContext.of("test-store", 7);
     private JdbcIdempotencyRepository repository;
 
     @BeforeEach
@@ -105,11 +105,11 @@ class JdbcIdempotencyRepositoryTest {
     }
 
     @Test
-    void storageRoutingMetadataMustRemainStable() {
+    void scanBucketMustRemainStable() {
         Instant now = Instant.now();
         repository.tryAcquire(acquire("A", now, Duration.ofSeconds(30)));
-        IdempotencyStorageContext changedShard = IdempotencyStorageContext.of("test-store", 202L, 7);
-        IdempotencyAcquireResult result = repository.tryAcquire(acquire(changedShard, "B", now.plusMillis(1), Duration.ofSeconds(30)));
+        IdempotencyStorageContext changedBucket = IdempotencyStorageContext.of("test-store", 8);
+        IdempotencyAcquireResult result = repository.tryAcquire(acquire(changedBucket, "B", now.plusMillis(1), Duration.ofSeconds(30)));
         assertThat(result.getStatus()).isEqualTo(IdempotencyAcquireStatus.KEY_CONFLICT);
     }
 
@@ -117,7 +117,7 @@ class JdbcIdempotencyRepositoryTest {
     void recoveryScanUsesStoreAndScanBucket() {
         Instant now = Instant.now();
         repository.tryAcquire(acquire("A", now, Duration.ofMillis(10)));
-        repository.tryAcquire(acquire(IdempotencyStorageContext.of("other-store", 101L, 7), "B", now, Duration.ofMillis(10)));
+        repository.tryAcquire(acquire(IdempotencyStorageContext.of("other-store", 7), "B", now, Duration.ofMillis(10)));
 
         List<IdempotencyRecoveryCandidate> candidates = repository.findRecoveryCandidates(
                 new IdempotencyRecoveryQuery("test-store", "n", 7, now.plusSeconds(1), 20));

@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class StorageRoutingIdempotencyJdbcRouteResolverTest {
 
     @Test
-    void shouldUseFallbackShardKeyAndRemapGlobalResolverLocationToIdempotencyTable() {
+    void shouldUseIdempotencyKeyAndRemapGlobalResolverLocationToIdempotencyTable() {
         AtomicReference<RouteContext> captured = new AtomicReference<>();
         ShardRouteInfo shardInfo = new ShardRouteInfo(17, 3, 5, 100);
         StorageRouteResolver routeResolver = context -> {
@@ -44,14 +44,14 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
         StorageRoutingIdempotencyJdbcRouteResolver resolver = resolver(
                 routeResolver, new TestStorageRouteContext(), idempotencyMapping);
         IdempotencyJdbcRoute route = resolver.resolvePoint(
-                IdempotencyStorageContext.of("message-consume", 10023L, 417), "message", "MSG-10001");
+                IdempotencyStorageContext.of("message-consume", 417), "message", "MSG-10001");
 
         assertThat(route.dataSourceKey()).isEqualTo("idempotency-db-03");
         assertThat(route.tableName()).isEqualTo("iron_idempotency_record_017");
         assertThat(captured.get().routeName()).isEqualTo("message-consume");
         assertThat(captured.get().logicalTable()).isEqualTo("iron_idempotency_record");
-        assertThat(captured.get().requireShardKey().singleKey().name())
-                .isEqualTo(StorageRoutingIdempotencyJdbcRouteResolver.FALLBACK_SHARD_FIELD);
+        assertThat(captured.get().requireShardKey().singleKey().name()).isEqualTo(DefaultIdempotencyRouteContextFactory.IDEMPOTENCY_KEY_FIELD);
+        assertThat(captured.get().requireShardKey().singleKey().value().canonicalText()).isEqualTo("MSG-10001");
         assertThat(captured.get().attribute("idempotency.scanBucket")).isEqualTo(417);
     }
 
@@ -82,7 +82,7 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
 
         StorageRoutingIdempotencyJdbcRouteResolver resolver = resolver(routeResolver, current, idempotencyMapping);
         IdempotencyJdbcRoute route = resolver.resolvePoint(
-                IdempotencyStorageContext.of("order-write", 999L, 18), "order", "CREATE-90001");
+                IdempotencyStorageContext.of("order-write", 18), "order", "CREATE-90001");
 
         assertThat(route).isEqualTo(IdempotencyJdbcRoute.of("order-db-02", "iron_idempotency_record_031"));
         assertThat(unexpectedResolverCall.get()).isNull();
@@ -150,7 +150,7 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
                 });
 
         IdempotencyJdbcRoute route = resolver.resolvePoint(
-                IdempotencyStorageContext.of("default", 0L, 0), "default", "IDEMP-1");
+                IdempotencyStorageContext.of("default", 0), "default", "IDEMP-1");
 
         assertThat(route).isEqualTo(IdempotencyJdbcRoute.of("single-db", "iron_idempotency_record"));
     }
@@ -174,7 +174,7 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
                 });
 
         IdempotencyJdbcRoute route = resolver.resolvePoint(
-                IdempotencyStorageContext.of("order-write", 0L, 0), "order", "CREATE-1");
+                IdempotencyStorageContext.of("order-write", 0), "order", "CREATE-1");
 
         assertThat(route).isEqualTo(IdempotencyJdbcRoute.of("order-db", "iron_idempotency_record"));
     }

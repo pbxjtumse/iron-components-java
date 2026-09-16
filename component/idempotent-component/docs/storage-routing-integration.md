@@ -1,113 +1,99 @@
-# IdempotencyStorage 与 Storage Routing 集成设计
+# Idempotency 与 Storage Routing 集成设计及使用指南
 
-> 本文描述 `idempotent-component v2 — Shard-Ready Storage` 当前实现，只保留推荐模型，不维护旧路由兼容路线。
+> 本文描述 `feature/idempotent-v2-route-aware-storage` 的最终模型。当前尚未上线，因此直接删除旧 `shardKey` 协议，不保留过渡 API 和兼容字段。
 
-## 1. 设计目标
+## 1. 最终结论
 
-Idempotency 的正确性模型和物理存储路由必须解耦：
+幂等请求只描述幂等业务语义，不重复携带 Storage Routing 的分片模型：
 
-```text
-Idempotency Core
-  ownerToken + version
-  PROCESSING / SUCCESS / FAILED / DISCARDED
-  Acquire / Recovery / Completion CAS
-        │
-        ▼
-IdempotencyRepository
-        │
-        ▼
-Idempotency JDBC Routing
-        │
-        ├─ 复用当前业务 shardInfo（优先）
-        └─ Idempotency shardKey fallback（无业务路由时）
-        │
-        ▼
-Idempotency-specific RouteMappingStrategy
-        │
-        ▼
-dataSourceKey + physical idempotency table
-        │
-        ▼
-JdbcIdempotencyRepository
+```java
+IdempotencyRequest {
+    String key;
+    String requestHash;
+    String routeKey;
+    String storeName;
+    int scanBucket;
+    String policyName;
+}
 ```
 
-关键原则：
+`IdempotencyRequest` 不再包含 `long shardKey`，也不直接依赖 `CompositeShardKey`。物理路由只有两条路径：
 
-1. **同一个业务分片共享的是 `CompositeShardKey / ShardRouteInfo`，不是物理表名。**
-2. 业务表、幂等表、Outbox 表可以在同一数据库 shard，但必须分别映射自己的物理表。
-3. Idempotency Core 不依赖 Storage Routing 的类型，只有 integration 模块依赖二者。
-4. `scanBucket` 不是 shardId/tableIndex；Recovery 是“物理 shard 枚举 × scanBucket”的二维扫描。
-5. Storage Routing 只回答“去哪”；owner/version、状态 CAS、事务语义仍属于 Idempotency。
+1. 业务代码已经打开 `StorageRouteScope`：幂等组件复用当前 `StorageRoute`，不进行第二次 hash。
+2. 当前没有业务路由：`DefaultIdempotencyRouteContextFactory` 使用幂等 `key` 构造 `CompositeShardKey`，一次性解析并绑定 `StorageRoute`。
 
-## 2. 三层路由身份
+因此不需要再增加 `StorageRoutedIdempotencyExecutor`，也不存在“请求 shardKey、显式 CompositeShardKey、外层 RouteContext”三套入口之间的优先级和冲突检查。业务始终注入并调用同一个 `IdempotencyExecutor`。
 
-### 2.1 IdempotencyStorageContext
+## 2. 模块边界
+
+```text
+idempotent-api/core
+  └─ 幂等 key、状态机、owner/version、Recovery、结果策略
+
+idempotent-provider-jdbc
+  └─ JDBC 状态持久化与 IdempotencyJdbcRoute 抽象
+
+idempotent-integration-storage-routing
+  ├─ StorageRouteAwareIdempotencyExecutor
+  ├─ DefaultIdempotencyRouteContextFactory
+  └─ StorageRoutingIdempotencyJdbcRouteResolver
+
+idempotent-starter
+  └─ 自动装配 route-aware Executor、JDBC route resolver 和幂等表映射策略
+```
+
+`idempotent-api`、`idempotent-core` 和 Provider 不依赖 Storage Routing 类型。只有 integration 模块同时依赖两个组件，这样普通单库、Redis 或不使用分库分表的应用不会被迫理解 `CompositeShardKey`。
+
+## 3. 三种不同的 key
+
+| 名称 | 职责 | 是否决定物理分片 |
+| --- | --- | --- |
+| `IdempotencyRequest.key` | 同一次逻辑请求的唯一身份，重试时必须稳定 | 没有外层业务路由时，作为默认分片输入 |
+| `routeKey` | 业务元数据与诊断信息，Recovery 时原样保留 | 否，不参与默认物理路由 |
+| `scanBucket` | 在一个已经确定的物理 shard 内拆分 Recovery 扫描任务 | 否，绝不等于 shardId/tableIndex |
+
+`storeName` 是逻辑存储域，例如 `payment`、`message-consume`，不是 Provider 名、数据库名或表名。
+
+`IdempotencyStorageContext` 最终只有：
 
 ```java
 IdempotencyStorageContext {
     String storeName;
-    long shardKey;
     int scanBucket;
 }
 ```
 
-- `storeName`：逻辑 Store/场景，例如 `payment`、`message-consume`。
-- `shardKey`：无业务路由上下文时的点路由 fallback key。
-- `scanBucket`：Recovery 在单个物理 shard 内使用的逻辑扫描桶。
+物理库表身份保存在执行期的 `StorageRouteContext` 中，不再复制到幂等请求、记录、Recovery Candidate、JDBC 列或 Redis Hash。
 
-它故意不知道 `db_03`、`iron_idempotency_record_017`、`StorageRoute` 或 `SqlRoute`。
+## 4. 一次执行为什么只解析一次路由
 
-### 2.2 StorageRouteContext
-
-业务入口已经完成路由时，会把完整 `StorageRoute` 绑定到当前执行作用域：
+Starter 使用 `StorageRouteAwareIdempotencyExecutor` 装饰核心 Executor：
 
 ```text
-RouteContext
-  CompositeShardKey(tenant_id, order_id, ...)
-        ↓
-ShardResolver
-        ↓
-ShardRouteInfo
-        ↓
-Business MappingStrategy
-        ↓
-Business PhysicalStorageLocation
-        ↓
-StorageRouteContext.open(route)
+IdempotencyRequest
+        │
+        ├─ 已有 StorageRoute ───────────────┐
+        │                                   │
+        └─ 无 StorageRoute                  │
+             ↓                              │
+   DefaultIdempotencyRouteContextFactory    │
+             ↓ idempotency key              │
+   StorageRouteResolver.resolve() 仅一次     │
+             ↓                              │
+   StorageRouteContext.open(route) ◀────────┘
+             ↓
+   tryAcquire → business callback → markSuccess/markFailed
+             ↓
+        close scope
 ```
 
-后续 Business Repository、Idempotency、Outbox、Task Storage 都可以读取同一份分片身份。
+作用域覆盖完整的 `execute()` 或 `recover()`。因此 Acquire、业务回调、完成写和失败写看到的是同一个路由事实，不会因为重复计算或配置变化而落到不同库。
 
-### 2.3 IdempotencyJdbcRoute
+路由创建、解析或绑定异常会映射为 `REPOSITORY_ERROR`；核心 Executor 自己的异常语义仍由核心状态机处理。
 
-JDBC Provider 最终只需要：
+## 5. 为什么只能复用 shardInfo，不能复用业务表名
 
-```java
-IdempotencyJdbcRoute {
-    String dataSourceKey;
-    String tableName;
-}
-```
-
-它是最终执行位置，不携带幂等状态，也不负责分片计算。
-
-## 3. 为什么不能直接复用业务 StorageRoute.location
-
-Storage Routing 当前模型把计算与映射分开：
-
-```text
-CompositeShardKey
-    ↓
-ShardResolver
-    ↓
-ShardRouteInfo
-    ↓
-RouteMappingStrategy
-    ↓
-PhysicalStorageLocation
-```
-
-同一个 `ShardRouteInfo(56, db=5, localTable=6)` 可以有不同表族：
+同一个 `ShardRouteInfo(56, db=5, localTable=6)` 可以映射到多个表族：
 
 ```text
 business mapping     -> db_05.business_order_56
@@ -115,171 +101,116 @@ idempotency mapping  -> db_05.iron_idempotency_record_56
 outbox mapping       -> db_05.iron_outbox_56
 ```
 
-因此 Idempotency Integration **只能复用 shardInfo，不能复用 business physical table**。
+业务和幂等可以共享数据库分片，但不能共享物理表名。`StorageRoutingIdempotencyJdbcRouteResolver` 的处理规则是：
 
-这也是本轮打通的核心：
+- 当前路由有 `shardInfo`：复用 `shardInfo`，通过幂等专属 `RouteMappingStrategy` 重新映射表名。
+- 当前是 `DIRECT_DATASOURCE` 且没有 `shardInfo`：只复用 `dataSourceKey`，使用幂等配置的 `directTableName`。
+- 当前没有路由：按幂等 key 得到 route，再按上述规则映射。
 
-```text
-错误：
-current business StorageRoute.location
-    -> business_order_56
-    -> Idempotency SQL 直接执行            X
+## 6. 业务使用方式
 
-正确：
-current business StorageRoute.shardInfo
-    -> Idempotency RouteMappingStrategy
-    -> iron_idempotency_record_56          ✓
+### 6.1 场景 A：业务不关心分片，直接按幂等 key 路由
+
+这是消息消费、独立后台任务或业务表不要求和幂等表同 shard 时的最简方式。业务只构造幂等请求：
+
+```java
+IdempotencyRequest request = IdempotencyRequest.builder()
+        .key("create-order:" + command.requestId())
+        .requestHash(requestHasher.hash(command))
+        .routeKey("merchant:" + command.merchantId())
+        .storeName("order-create")
+        .scanBucket(Math.floorMod(command.requestId().hashCode(), 128))
+        .policyName("order-durable")
+        .build();
+
+IdempotencyResult<Order> result = idempotencyExecutor.execute(request, context -> orderService.create(command));
 ```
 
-对于没有 `shardInfo` 的 DIRECT_DATASOURCE 也遵守同一原则：只复用 `dataSourceKey`，不复用业务 `tableName`。
+业务代码不需要创建 `CompositeShardKey`。外层没有路由时，默认 Factory 使用 `request.key` 路由。
 
-## 4. Point Access 主流程
+### 6.2 场景 B：业务表和幂等表必须落到同一个 shard
 
-### 4.1 当前已有业务 StorageRoute
+这是推荐的同库本地事务路径。`CompositeShardKey` 属于业务/application 层，因为只有业务知道应按 `tenantId`、`merchantId`、`userId` 还是复合维度路由：
 
-这是业务写 + 幂等状态需要同分片、同本地事务时的推荐路径。
+```java
+CompositeShardKey shardKey = CompositeShardKey.of(
+        ShardKey.of("tenant_id", command.tenantId()),
+        ShardKey.of("merchant_id", command.merchantId()));
 
-```text
-Business entry
-    ↓
-StorageRouteResolver.resolve(business RouteContext)
-    ↓
-StorageRouteContext.open(businessRoute)
-    ↓
-Business Repository
-    └─ uses business table
+RouteContext routeContext = RouteContext.builder()
+        .routeName("order-create")
+        .logicalTable("business_order")
+        .shardKey(shardKey)
+        .build();
 
-Idempotency Executor
-    ↓
-RoutedJdbcIdempotencyRepository
-    ↓
-StorageRoutingIdempotencyJdbcRouteResolver.resolvePoint(...)
-    ↓
-read current StorageRoute
-    ↓
-reuse CompositeShardKey + ShardRouteInfo
-    ↓
-Idempotency RouteMappingStrategy.map(shardInfo)
-    ↓
-IdempotencyJdbcRoute(db_XX, iron_idempotency_record_YY)
-    ↓
-JdbcIdempotencyRepository
+StorageRoute businessRoute = storageRouteResolver.resolve(routeContext);
+try (StorageRouteScope ignored = storageRouteContext.open(businessRoute)) {
+    IdempotencyRequest request = IdempotencyRequest.builder()
+            .key("create-order:" + command.requestId())
+            .requestHash(requestHasher.hash(command))
+            .routeKey("merchant:" + command.merchantId())
+            .storeName("order-create")
+            .scanBucket(Math.floorMod(command.requestId().hashCode(), 128))
+            .policyName("order-durable")
+            .build();
+
+    return idempotencyExecutor.execute(request, context -> orderRepository.insert(command));
+}
 ```
 
-注意：这里不会再次 hash。业务入口已经决定了 shard，技术组件必须复用同一个 shard 事实。
+此时 `StorageRouteAwareIdempotencyExecutor` 检测到已有路由，直接进入 delegate。JDBC route resolver 复用当前 `ShardRouteInfo`，但把业务表重新映射成幂等表；不会使用幂等 key 二次 hash。
 
-如果当前绑定的是固定 DIRECT_DATASOURCE 且没有 shardInfo，则：
+### 6.3 场景 C：只按一个业务字段分片
 
-```text
-reuse business dataSourceKey
-    +
-use idempotency directTableName
+单字段也使用 `CompositeShardKey`，保持 Storage Routing 输入协议统一：
+
+```java
+CompositeShardKey shardKey = CompositeShardKey.of(ShardKey.of("user_id", command.userId()));
 ```
 
-不会把业务表名带入幂等 SQL。
+不要把 `userId` 填回 `IdempotencyRequest` 作为另一个 shard 字段。它只存在于业务 `RouteContext`，幂等组件通过当前 `StorageRoute` 间接复用结果。
 
-### 4.2 没有业务 StorageRoute
+### 6.4 哪些代码属于业务，哪些由组件完成
 
-例如独立消息消费、后台任务或单独调用 Idempotency 时：
+| 工作 | 所属层 |
+| --- | --- |
+| 决定按 tenant/user/merchant/order 哪个字段分片 | 业务/application 层 |
+| 构造业务 `CompositeShardKey` 和 `RouteContext` | 业务/application 层 |
+| 打开业务 `StorageRouteScope` | 业务入口模板或应用服务 |
+| 构造 `IdempotencyRequest` | 业务/application 层 |
+| 无业务路由时按幂等 key 生成默认 RouteContext | 幂等 integration |
+| 一次执行只解析并绑定一次 StorageRoute | 幂等 integration |
+| 将共享 shardInfo 映射成幂等物理表 | 幂等 integration |
+| owner/version CAS、状态机、结果回放 | 幂等 core/provider |
 
-```text
-IdempotencyStorageContext.shardKey
-    ↓
-CompositeShardKey(idempotency_shard_key, shardKey)
-    ↓
-StorageRouteResolver
-    ↓
-ShardRouteInfo
-    ↓
-丢弃 resolver 的 business physical table（若有）
-    ↓
-Idempotency RouteMappingStrategy.map(shardInfo)
-    ↓
-IdempotencyJdbcRoute
-```
+可以在业务模板层封装“解析业务路由 + 打开 scope + 调用 IdempotencyExecutor”，但不应把 tenant/merchant 等业务字段硬编码进技术组件。
 
-这里 `shardKey` 才真正承担 fallback 路由职责。
+## 7. Recovery 路由
 
-## 5. Recovery 路由模型
-
-Recovery 没有单条业务请求天然携带的 shardKey，因此不能用一个 `scanBucket` 推导物理库表。
-
-正确模型是：
+`scanBucket` 只能缩小一个物理 shard 内的扫描范围，不能推导物理库表。正确模型是：
 
 ```text
-Physical Shard Enumeration
-    ×
-scanBucket Enumeration
+physical shard enumeration × scanBucket enumeration
 ```
 
-例如 100 个物理 shard、1024 个逻辑 bucket：
+外部 Reliable Task 先枚举物理 shard，绑定对应 `StorageRoute`，再查询桶：
 
-```text
-shard 0
-  bucket 0
-  bucket 1
-  ...
-
-shard 1
-  bucket 0
-  bucket 1
-  ...
+```java
+for (StorageRoute shardRoute : physicalShardRoutes) {
+    try (StorageRouteScope ignored = storageRouteContext.open(shardRoute)) {
+        IdempotencyRecoveryQuery query = new IdempotencyRecoveryQuery(
+                "order-create", "order", assignedBucket, deadline, batchSize);
+        List<IdempotencyRecoveryCandidate> candidates = recoveryQueryService.findCandidates(query);
+        // 每个 candidate 在同一物理 shard 作用域中 recover。
+    }
+}
 ```
 
-外部 Reliable Task 的职责：
+真实分片模式下，如果 Recovery 没有绑定物理 shard，resolver 会 fail-fast，而不是错误地拿 `scanBucket` 猜表。`IdempotencyRecoveryRequest` 同样不携带 shardKey；它复用 Recovery 调度器已经打开的 route scope。
 
-```text
-for each physical shard:
-    open StorageRouteContext(shard route)
-    for assigned scanBucket:
-        IdempotencyRecoveryQueryService.findCandidates(...)
-```
+## 8. JDBC 与事务
 
-Idempotency 的职责：
-
-```text
-bound shardInfo
-    ↓
-map to idempotency physical table
-    ↓
-WHERE store_name = ?
-  AND scan_bucket = ?
-  AND recovery_mode = 'EXTERNAL_TASK'
-  AND status = 'PROCESSING' / retryable FAILED
-  ...
-```
-
-如果当前使用真实分片 resolver，但 Recovery 没有绑定任何物理 shard，上层直接扫描会 fail-fast，而不是猜测库表。
-
-## 6. storeName / shardKey / scanBucket 的最终关系
-
-```text
-storeName
-= 幂等逻辑 Store / 场景隔离
-= 参与幂等记录唯一身份
-= 不等于 Provider / DataSource / table
-
-shardKey
-= 无业务 StorageRoute 时的稳定 point-routing fallback
-= 有 bound shardInfo 时不参与重新分片
-
-scanBucket
-= Recovery 扫描并行度维度
-= 只在已经确定的物理 shard 内过滤
-= 不等于 shardId / databaseIndex / tableIndex
-```
-
-不要建立以下错误等式：
-
-```text
-storeName == databaseName      X
-shardKey == tableIndex         X
-scanBucket == tableIndex       X
-```
-
-## 7. RoutedJdbcIdempotencyRepository 的职责
-
-`RoutedJdbcIdempotencyRepository` 是 JDBC Provider 的路由门面：
+`RoutedJdbcIdempotencyRepository` 只负责路由到对应的 `JdbcExecutionManager + physicalTable`，状态 SQL 仍集中在 `JdbcIdempotencyRepository`：
 
 ```text
 IdempotencyRepository API
@@ -288,115 +219,84 @@ RoutedJdbcIdempotencyRepository
       ↓
 IdempotencyJdbcRouteResolver
       ↓
-IdempotencyJdbcRoute
+IdempotencyJdbcRoute(dataSourceKey, tableName)
       ↓
 JdbcExecutionManagerResolver
       ↓
-JdbcIdempotencyRepository(dataSourceKey + physicalTable)
+JdbcIdempotencyRepository
 ```
 
-它不复制 SQL 状态机；真正的：
+`SpringTransactionJdbcExecutionManager` 使用 `DataSourceUtils` 获取事务绑定连接。业务 SQL 与 `markSuccess` 要复用同一连接，必须同时满足：
 
-- UNIQUE
-- SELECT FOR UPDATE
-- ownerToken/version CAS
-- WINDOWED rollover
-- Recovery CAS
-- SUCCESS / FAILED / DISCARDED
+1. 两者位于同一个 Spring 本地事务。
+2. 两者的 `StorageRoute.dataSourceKey` 相同。
+3. `TransactionManager` 与 `JdbcExecutionManager` 使用该 key 对应的同一个 `DataSource`。
 
-仍然只在 `JdbcIdempotencyRepository` 中实现。
+组件不会把跨库操作伪装成单库原子事务。10 库模式下需要按 `dataSourceKey` 选择匹配的事务执行器。
 
-## 8. 与 Relational Access 的边界
+## 9. 10 库 × 10 表配置
 
-本轮完成的是 **Storage Routing 路由正确性闭环**。
+全局编号模式（`db_00` 为表 00-09，`db_01` 为表 10-19）：
 
-当前 JDBC Provider 仍使用 `JdbcExecutionManager + raw JDBC`。下一阶段可以按已有 Relational Access 设计迁移：
-
-```text
-JdbcIdempotencyRepository / future JdbcIdempotencyStorage
-      ↓
-RelationalTemplate
-      ↓
-ConnectionProvider / DataSourceResolver
+```yaml
+xjtu:
+  iron:
+    storage-routing:
+      resolver:
+        enabled: true
+        data-source-prefix: db_
+        database-count: 10
+        tables-per-database: 10
+        data-source-index-width: 2
+        table-index-width: 2
+        table-index-mode: GLOBAL_TABLE_INDEX
+    idempotent:
+      jdbc:
+        routing:
+          enabled: true
+          logical-table: iron_idempotency_record
+          table-prefix: iron_idempotency_record
 ```
 
-同时把事务职责进一步收口：
+库内编号模式（每个库都是表 00-09）只需切换：
 
-```text
-Tx-A REQUIRES_NEW
-    TransactionExecutor
-      -> Idempotency JDBC Storage
-      -> RelationalTemplate
-
-Tx-B REQUIRED
-    Business
-    + markSuccess(owner/version)
-    use same transaction-bound Connection
-
-Tx-C REQUIRES_NEW
-    markFailed
+```yaml
+table-index-mode: LOCAL_TABLE_INDEX
 ```
 
-Relational Access 只负责执行已确定 SQL；它不理解 ACQUIRED、PROCESSING、ownerToken/version，也不决定事务传播级别。
+固定单库单表仍使用：
 
-## 9. 配置关系
-
-Storage Routing 提供共享拓扑：
-
-```text
-xjtu.iron.storage-routing.resolver
-  data-source-prefix
-  database-count
-  tables-per-database
-  data-source-index-width
-  table-index-width
-  table-index-mode
+```yaml
+xjtu.iron.idempotent.jdbc.table-name: iron_idempotency_record
 ```
 
-Idempotency 路由配置独立表达两个概念：
+`logical-table` 是路由语义，`table-prefix` 是分片表前缀，`table-name` 是固定模式完整表名，三者不应混用。
 
-```text
-xjtu.iron.idempotent.jdbc.routing.enabled=true
-xjtu.iron.idempotent.jdbc.routing.logical-table=iron_idempotency_record
-xjtu.iron.idempotent.jdbc.routing.table-prefix=iron_idempotency_record
-```
+## 10. 数据结构变更
 
-- `logical-table` 只进入 `RouteContext`，表达逻辑表族。
-- `table-prefix` 只用于把共享 `ShardRouteInfo` 映射为幂等物理表。
+本轮是未上线阶段的破坏性清理：
 
-例如：
+- 删除 `IdempotencyRequest.shardKey` 和 Builder 方法。
+- 删除 `IdempotencyRecoveryRequest.shardKey`。
+- 删除 `IdempotencyStorageContext.shardKey`。
+- 删除 `IdempotencyRecord`、`IdempotencyRecoveryCandidate` 的 shardKey。
+- 删除 JDBC `shard_key` 列和索引。
+- 删除 Redis Hash 的 `shard_key` 字段并同步所有 Lua 参数及快照下标。
 
-```text
-iron_idempotency_record_00
-iron_idempotency_record_01
-...
-```
+如果本地已有旧测试库或 Redis 测试数据，应重新建表并清理旧 key；当前不提供旧 schema 的在线迁移兼容逻辑。
 
-固定单库单表模式完全独立，继续使用：
+## 11. 验证清单
 
-```text
-xjtu.iron.idempotent.jdbc.table-name=iron_idempotency_record
-```
-
-这样 `table-name` 不再同时承担“固定物理表名”和“分片表前缀”两种语义。
-
-## 10. 当前不做的事情
-
-- Idempotency Core 不管理 Storage Routing 拓扑。
-- Idempotency 不自己实现 hash 分片算法。
-- `scanBucket` 不承担物理路由。
-- Integration 不复用业务表 physical location。
-- Recovery 不在 Idempotency 内部启动定时扫描线程。
-- 本轮不同时重写 JDBC SQL 到 RelationalTemplate，避免把“路由正确性”和“SQL/事务执行迁移”混成一个不可验证的大改动。
-
-## 11. 验证重点
-
-Integration 测试至少固定以下语义：
-
-1. 无业务路由时，fallback shardKey 可以计算 shard，但最终物理表必须重新映射成幂等表。
-2. 有业务 route 时复用原始 CompositeShardKey + ShardRouteInfo，不重新 hash。
-3. Business physical table 永远不能被 Idempotency SQL 直接使用。
+1. 无业务 route 时，默认按幂等 key 计算一次 route。
+2. 有业务 route 时复用原始 `CompositeShardKey + ShardRouteInfo`，不重新 hash。
+3. Business physical table 永远不会被幂等 SQL 使用。
 4. DIRECT_DATASOURCE 只复用 dataSourceKey，不复用 business tableName。
-5. Recovery 未绑定物理 shard 时 fail-fast。
-6. Recovery 已绑定 shard 时复用 shardInfo 并映射幂等表。
-7. 固定单库单表模式保持可用。
+5. 一次 execute/recover 的所有状态操作共享同一个 route scope。
+6. Recovery 未绑定物理 shard 时 fail-fast。
+7. JDBC 与 Redis 不再保存或比较旧 shardKey。
+8. 10 库 × 每库 10 表的 100 个 shard 均能完成首次执行和重复回放。
+9. Spring 本地事务中 Business SQL 与 markSuccess 使用同一 transaction-bound Connection。
+
+## 12. 后续阶段
+
+当前顺序仍然是先稳定 Direct DataSource 全链路，再增加 ShardingSphere-JDBC Adapter。Adapter 应复用现有 `IdempotencyJdbcRouteResolver` 边界，不重新把业务分片字段塞回 `IdempotencyRequest`。JDBC SQL 迁移到 `RelationalTemplate` 也应作为独立阶段进行，避免把路由正确性、状态机和 SQL 执行机制一次性混改。

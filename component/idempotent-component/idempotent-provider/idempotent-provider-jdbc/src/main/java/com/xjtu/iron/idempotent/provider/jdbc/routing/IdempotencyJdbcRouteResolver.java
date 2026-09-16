@@ -11,7 +11,7 @@ import java.util.List;
  * <p>该接口刻意不暴露 StorageRoute/SqlRoute，让 idempotent-provider-jdbc 不反向依赖具体分库分表实现。
  * Storage Routing 集成通过独立 integration 模块实现本接口，固定单库单表场景则使用 FixedIdempotencyJdbcRouteResolver。</p>
  *
- * <p>点查/写入与 Recovery 扫描是两种不同路由问题：前者有稳定 shardKey，可以解析一个目标分片；
+ * <p>点查/写入与 Recovery 扫描是两种不同路由问题：前者有幂等 key，集成层还可以复用外层已绑定的业务路由；
  * 后者按 scanBucket 扫描，可能需要扫描多个物理分片，所以返回 List。</p>
  */
 public interface IdempotencyJdbcRouteResolver {

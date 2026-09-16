@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DefaultIdempotencyExecutorTest {
 
-    private static final IdempotencyStorageContext STORAGE = IdempotencyStorageContext.of("order-store", 1001L, 17);
+    private static final IdempotencyStorageContext STORAGE = IdempotencyStorageContext.of("order-store", 17);
 
     @Test
     void duplicateSuccessWithoutResultPolicyShouldReplayWithoutExecutingAgain() {
@@ -136,8 +136,7 @@ class DefaultIdempotencyExecutorTest {
 
     private IdempotencyRequest request(String key) {
         return IdempotencyRequest.builder().key(key).routeKey("merchant:1").requestHash("hash-" + key)
-                .storeName(STORAGE.getStoreName()).shardKey(STORAGE.getShardKey()).scanBucket(STORAGE.getScanBucket())
-                .policyName("test-durable").build();
+                .storeName(STORAGE.getStoreName()).scanBucket(STORAGE.getScanBucket()).policyName("test-durable").build();
     }
 
     private DefaultIdempotencyExecutor executor(IdempotencyRepository repository) {
@@ -167,8 +166,7 @@ class DefaultIdempotencyExecutorTest {
             String identity = identity(r.getStorageContext(), r.getNamespace(), r.getKey());
             IdempotencyRecord current = data.get(identity);
             if (current == null) {
-                current = IdempotencyRecord.builder().storeName(r.getStorageContext().getStoreName())
-                        .shardKey(r.getStorageContext().getShardKey()).scanBucket(r.getStorageContext().getScanBucket())
+                current = IdempotencyRecord.builder().storeName(r.getStorageContext().getStoreName()).scanBucket(r.getStorageContext().getScanBucket())
                         .namespace(r.getNamespace()).key(r.getKey()).routeKey(r.getRouteKey()).requestHash(r.getRequestHash())
                         .status(IdempotencyStatus.PROCESSING).ownerToken(r.getOwnerToken()).version(1)
                         .recoveryMode(r.getRecoveryMode()).windowPolicy(r.getWindowPolicy())
@@ -217,7 +215,7 @@ class DefaultIdempotencyExecutorTest {
         }
 
         private IdempotencyRecord completed(IdempotencyRecord current, IdempotencyStatus status, String resultPayload, Instant now) {
-            return IdempotencyRecord.builder().storeName(current.getStoreName()).shardKey(current.getShardKey()).scanBucket(current.getScanBucket())
+            return IdempotencyRecord.builder().storeName(current.getStoreName()).scanBucket(current.getScanBucket())
                     .namespace(current.getNamespace()).key(current.getKey()).routeKey(current.getRouteKey()).requestHash(current.getRequestHash())
                     .status(status).ownerToken(current.getOwnerToken()).version(current.getVersion()).resultPayload(resultPayload)
                     .recoveryMode(current.getRecoveryMode()).windowPolicy(current.getWindowPolicy()).updatedAt(now).completedAt(now).build();

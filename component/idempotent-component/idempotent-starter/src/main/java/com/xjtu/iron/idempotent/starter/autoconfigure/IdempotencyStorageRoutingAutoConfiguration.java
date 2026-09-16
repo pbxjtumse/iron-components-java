@@ -1,6 +1,8 @@
 package com.xjtu.iron.idempotent.starter.autoconfigure;
 
 import com.xjtu.iron.idempotent.integration.storage.routing.StorageRoutingIdempotencyJdbcRouteResolver;
+import com.xjtu.iron.idempotent.integration.storage.routing.DefaultIdempotencyRouteContextFactory;
+import com.xjtu.iron.idempotent.integration.storage.routing.IdempotencyRouteContextFactory;
 import com.xjtu.iron.idempotent.provider.jdbc.routing.IdempotencyJdbcRouteResolver;
 import com.xjtu.iron.idempotent.starter.properties.IdempotencyProperties;
 import com.xjtu.iron.idempotent.starter.properties.IdempotencyStorageRoutingProperties;
@@ -41,6 +43,14 @@ import org.springframework.context.annotation.Bean;
 @ConditionalOnClass({StorageRoutingIdempotencyJdbcRouteResolver.class, RouteMappingStrategyFactory.class, StorageRoutingProperties.class})
 @ConditionalOnProperty(prefix = "xjtu.iron.idempotent.jdbc.routing", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class IdempotencyStorageRoutingAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(IdempotencyRouteContextFactory.class)
+    public IdempotencyRouteContextFactory idempotencyRouteContextFactory(
+            IdempotencyStorageRoutingProperties idempotencyRouting
+    ) {
+        return new DefaultIdempotencyRouteContextFactory(idempotencyRouting.getLogicalTable());
+    }
 
     /**
      * 为幂等表单独创建物理映射策略。

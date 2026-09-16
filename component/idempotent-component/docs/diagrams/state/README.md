@@ -35,7 +35,7 @@ DISCARDED
 
 `PROCESSING_EXPIRED`、`FAILED_RETRYABLE`、`REPLAYED`、`STALE_CANDIDATE` 等都不是数据库 `status`。
 
-完整图同时覆盖：普通 `execute()`、owner/version CAS、Tx-B/Tx-C 完成语义、Reliable Recovery 二次 CAS、WINDOWED generation rollover、`DISCARDED`、Shard-Ready `storeName/shardKey/scanBucket` 以及低层 `IdempotencyOperations` 状态投影。
+完整图同时覆盖：普通 `execute()`、owner/version CAS、Tx-B/Tx-C 完成语义、Reliable Recovery 二次 CAS、WINDOWED generation rollover、`DISCARDED`、`storeName/scanBucket`、外层 StorageRoute 以及低层 `IdempotencyOperations` 状态投影。
 
 视觉图重点突出：
 

@@ -1,9 +1,8 @@
 CREATE TABLE IF NOT EXISTS iron_idempotency_record (
     id BIGINT NOT NULL AUTO_INCREMENT,
 
-    -- Shard-Ready Storage：逻辑 Store 与在线/扫描路由元数据。
+    -- 逻辑 Store 与 Recovery 扫描分桶；物理分片由 StorageRoute 决定。
     store_name VARCHAR(64) NOT NULL DEFAULT 'default',
-    shard_key BIGINT NOT NULL DEFAULT 0,
     scan_bucket INT NOT NULL DEFAULT 0,
 
     namespace VARCHAR(128) NOT NULL,
@@ -43,8 +42,5 @@ CREATE TABLE IF NOT EXISTS iron_idempotency_record (
     UNIQUE KEY uk_iron_idempotency_identity (store_name, namespace, idempotency_key),
     KEY idx_iron_idempotency_recovery_scan (
         store_name, scan_bucket, recovery_mode, status, processing_expire_at, id
-    ),
-    KEY idx_iron_idempotency_shard (
-        store_name, shard_key, namespace, idempotency_key
     )
 );

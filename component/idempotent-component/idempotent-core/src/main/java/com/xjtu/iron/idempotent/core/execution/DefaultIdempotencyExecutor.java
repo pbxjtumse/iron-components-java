@@ -49,7 +49,8 @@ import java.util.Objects;
  * 默认幂等执行器。
  *
  * <p>V2 主链仍保持：Request -> Policy -> optional short Lock -> Repository atomic state -> StateMachine -> Business -> final CAS。
- * 新增的 storeName/shardKey/scanBucket 只扩展“记录落在哪里/如何扫描”，不会改变 generation 正确性模型。</p>
+ * 新增的 storeName/scanBucket 只扩展“记录属于哪个存储域/如何扫描”，物理路由由外层 Storage Routing 集成负责，
+ * 不会改变 generation 正确性模型。</p>
  */
 public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
 

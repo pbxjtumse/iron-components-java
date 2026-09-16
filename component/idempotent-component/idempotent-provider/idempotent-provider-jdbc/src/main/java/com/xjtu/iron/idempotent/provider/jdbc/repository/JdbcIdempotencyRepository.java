@@ -28,8 +28,7 @@ import java.util.Optional;
 /**
  * JDBC 幂等状态仓储：DURABLE 的默认实现，也支持 WINDOWED。
  *
- * <p>V2 单表实现已经完整携带 storeName / shardKey / scanBucket，但当前仍写入同一张物理表。
- * 后续真正分库分表时，Core 的 generation/state contract 不需要重新设计。</p>
+ * <p>storeName / scanBucket 属于逻辑记录与恢复扫描模型；物理分片由外层 StorageRoute 决定，不在记录中重复持久化。</p>
  *
  * <p>正确性核心仍然是 UNIQUE + 行锁 + ownerToken/version 条件写；DistributedLock 只负责降低热点竞争。</p>
  */
@@ -91,7 +90,7 @@ public final class JdbcIdempotencyRepository implements IdempotencyRepository, I
             return IdempotencyAcquireResult.providerError(new IllegalStateException("idempotency record disappeared after duplicate key"));
         }
 
-        // shardKey / scanBucket 属于持久路由身份，即使 WINDOWED 开启新 generation 也不允许漂移。
+        // scanBucket 属于稳定恢复扫描身份，即使 WINDOWED 开启新 generation 也不允许漂移。
         if (storageConflict(current, storage)) {
             return IdempotencyAcquireResult.of(IdempotencyAcquireStatus.KEY_CONFLICT, current);
         }
@@ -316,7 +315,7 @@ public final class JdbcIdempotencyRepository implements IdempotencyRepository, I
     }
 
     private List<IdempotencyRecoveryCandidate> queryRecoveryCandidates(Connection connection, IdempotencyRecoveryQuery query) throws SQLException {
-        String sql = "SELECT store_name,shard_key,scan_bucket,namespace,idempotency_key,route_key,request_hash,status,owner_token,version,"
+        String sql = "SELECT store_name,scan_bucket,namespace,idempotency_key,route_key,request_hash,status,owner_token,version,"
                 + "processing_expire_at,failure_code FROM " + table
                 + " WHERE store_name=? AND scan_bucket=? AND recovery_mode=? AND namespace=?"
                 + " AND (window_expire_at IS NULL OR window_expire_at>?)"
@@ -339,11 +338,9 @@ public final class JdbcIdempotencyRepository implements IdempotencyRepository, I
 
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    result.add(new IdempotencyRecoveryCandidate(
-                            rs.getString("store_name"), rs.getLong("shard_key"), rs.getInt("scan_bucket"),
-                            rs.getString("namespace"), rs.getString("idempotency_key"), rs.getString("route_key"),
-                            rs.getString("request_hash"), IdempotencyStatus.valueOf(rs.getString("status")),
-                            rs.getString("owner_token"), rs.getLong("version"),
+                    result.add(new IdempotencyRecoveryCandidate(rs.getString("store_name"), rs.getInt("scan_bucket"), rs.getString("namespace"),
+                            rs.getString("idempotency_key"), rs.getString("route_key"), rs.getString("request_hash"),
+                            IdempotencyStatus.valueOf(rs.getString("status")), rs.getString("owner_token"), rs.getLong("version"),
                             toInstant(rs.getTimestamp("processing_expire_at")), rs.getString("failure_code")));
                 }
             }
@@ -356,14 +353,13 @@ public final class JdbcIdempotencyRepository implements IdempotencyRepository, I
         IdempotencyStorageContext storage = request.getStorageContext();
         WindowTimes times = initialWindowTimes(request);
         String sql = "INSERT INTO " + table
-                + " (store_name,shard_key,scan_bucket,namespace,idempotency_key,route_key,request_hash,status,owner_token,version,"
+                + " (store_name,scan_bucket,namespace,idempotency_key,route_key,request_hash,status,owner_token,version,"
                 + "result_payload,failure_code,failure_message,failure_retryable,recovery_mode,window_policy,processing_expire_at,"
                 + "window_expire_at,retention_expire_at,created_at,updated_at,completed_at)"
-                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             int i = 1;
             statement.setString(i++, storage.getStoreName());
-            statement.setLong(i++, storage.getShardKey());
             statement.setInt(i++, storage.getScanBucket());
             statement.setString(i++, request.getNamespace());
             statement.setString(i++, request.getKey());
@@ -544,7 +540,7 @@ public final class JdbcIdempotencyRepository implements IdempotencyRepository, I
     }
 
     private String selectSql(boolean forUpdate) {
-        return "SELECT store_name,shard_key,scan_bucket,namespace,idempotency_key,route_key,request_hash,status,owner_token,version,"
+        return "SELECT store_name,scan_bucket,namespace,idempotency_key,route_key,request_hash,status,owner_token,version,"
                 + "result_payload,failure_code,failure_message,failure_retryable,recovery_mode,window_policy,processing_expire_at,"
                 + "window_expire_at,retention_expire_at,created_at,updated_at,completed_at FROM " + table
                 + " WHERE store_name=? AND namespace=? AND idempotency_key=?" + (forUpdate ? " FOR UPDATE" : "");
@@ -553,7 +549,6 @@ public final class JdbcIdempotencyRepository implements IdempotencyRepository, I
     private IdempotencyRecord map(ResultSet rs) throws SQLException {
         return IdempotencyRecord.builder()
                 .storeName(rs.getString("store_name"))
-                .shardKey(rs.getLong("shard_key"))
                 .scanBucket(rs.getInt("scan_bucket"))
                 .namespace(rs.getString("namespace"))
                 .key(rs.getString("idempotency_key"))
@@ -579,7 +574,7 @@ public final class JdbcIdempotencyRepository implements IdempotencyRepository, I
     }
 
     private boolean storageConflict(IdempotencyRecord current, IdempotencyStorageContext requested) {
-        return current.getShardKey() != requested.getShardKey() || current.getScanBucket() != requested.getScanBucket();
+        return current.getScanBucket() != requested.getScanBucket();
     }
 
     private boolean isWindowExpired(IdempotencyRecord record, Instant now) {

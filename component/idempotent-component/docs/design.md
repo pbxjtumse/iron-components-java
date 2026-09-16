@@ -179,9 +179,9 @@ DURABLE
 推荐：
 
 ```text
-routeKey       = merchantId / userId / shard key
+routeKey       = merchantId / userId 等业务路由元数据（不直接决定物理分片）
 idempotencyKey = operation + requestId
 requestHash    = canonical business fingerprint
 ```
 
-相同 key 跨 route/hash 使用必须返回冲突。
+相同 key 跨 route/hash 使用必须返回冲突。真正的物理分片由外层 StorageRouteContext 或默认的 idempotencyKey 路由决定。

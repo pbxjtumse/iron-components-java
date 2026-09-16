@@ -16,9 +16,6 @@ public final class IdempotencyRecoveryCandidate {
     /** 记录所在逻辑 Store。 */
     private final String storeName;
 
-    /** 点查/写入分片键。 */
-    private final long shardKey;
-
     /** 扫描桶。 */
     private final int scanBucket;
 
@@ -49,11 +46,9 @@ public final class IdempotencyRecoveryCandidate {
     /** retryable FAILED 的失败码，便于恢复任务记录原因。 */
     private final String failureCode;
 
-    public IdempotencyRecoveryCandidate(String storeName, long shardKey, int scanBucket, String namespace, String key, String routeKey,
-                                        String requestHash, IdempotencyStatus status, String ownerToken, long version,
-                                        Instant processingExpireAt, String failureCode) {
+    public IdempotencyRecoveryCandidate(String storeName, int scanBucket, String namespace, String key, String routeKey, String requestHash,
+                                        IdempotencyStatus status, String ownerToken, long version, Instant processingExpireAt, String failureCode) {
         this.storeName = storeName;
-        this.shardKey = shardKey;
         this.scanBucket = scanBucket;
         this.namespace = namespace;
         this.key = key;
@@ -67,7 +62,6 @@ public final class IdempotencyRecoveryCandidate {
     }
 
     public String getStoreName() { return storeName; }
-    public long getShardKey() { return shardKey; }
     public int getScanBucket() { return scanBucket; }
     public String getNamespace() { return namespace; }
     public String getKey() { return key; }
@@ -80,6 +74,6 @@ public final class IdempotencyRecoveryCandidate {
     public String getFailureCode() { return failureCode; }
 
     public IdempotencyStorageContext storageContext() {
-        return IdempotencyStorageContext.of(storeName, shardKey, scanBucket);
+        return IdempotencyStorageContext.of(storeName, scanBucket);
     }
 }
