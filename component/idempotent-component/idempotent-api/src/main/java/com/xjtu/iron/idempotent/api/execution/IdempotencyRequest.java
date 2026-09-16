@@ -24,7 +24,7 @@ public final class IdempotencyRequest {
     /** 请求业务内容指纹；用于识别同 key 携带不同参数的错误复用。 */
     private final String requestHash;
 
-    /** 业务路由元数据，例如租户、商户或订单路由；不等于幂等存储分片键。 */
+    /** 业务路由元数据，例如租户、商户或订单路由；不等于幂等存储分片键。不直接参与默认物理分片 */
     private final String routeKey;
 
     /** 逻辑 Store 名称，用来隔离不同物理/逻辑存储域，默认 default。 */

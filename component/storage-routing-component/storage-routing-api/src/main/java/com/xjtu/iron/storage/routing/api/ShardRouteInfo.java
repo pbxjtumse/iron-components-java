@@ -11,7 +11,7 @@ import java.util.Objects;
  */
 public final class ShardRouteInfo {
 
-    /** 全局 shard 编号。 */
+    /** shard 编号。 */
     private final int shardId;
 
     /** 数据库编号。 */
