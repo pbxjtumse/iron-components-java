@@ -10,7 +10,7 @@ import java.util.Objects;
  * 业务 callback 获取到的当前幂等执行权上下文。
  *
  * <p>只有真正抢到 PROCESSING 执行权的调用才会拿到该对象。V2 同时暴露 StorageContext，
- * 使业务/适配层在需要记录诊断信息或向后续任务传递恢复路由时，可以拿到稳定的 storeName/shardKey/scanBucket。</p>
+ * 使业务/适配层在需要记录诊断信息或向后续任务传递恢复信息时，可以拿到稳定的 storeName/scanBucket。</p>
  */
 public final class IdempotencyContext {
 
@@ -61,7 +61,6 @@ public final class IdempotencyContext {
 
     public IdempotencyStorageContext getStorageContext() { return storageContext; }
     public String getStoreName() { return storageContext.getStoreName(); }
-    public long getShardKey() { return storageContext.getShardKey(); }
     public int getScanBucket() { return storageContext.getScanBucket(); }
     public String getNamespace() { return namespace; }
     public String getKey() { return key; }

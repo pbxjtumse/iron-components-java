@@ -43,8 +43,7 @@ import java.util.Objects;
  * <p>因此一次 execute/recover 最多只调用一次全局
  * StorageRouteResolver。</p>
  */
-public final class StorageRouteAwareIdempotencyExecutor
-    implements IdempotencyExecutor {
+public final class StorageRouteAwareIdempotencyExecutor implements IdempotencyExecutor {
 
     /**
      * 真正执行幂等状态机的核心执行器。
@@ -70,12 +69,8 @@ public final class StorageRouteAwareIdempotencyExecutor
      */
     private final StorageRouteContext storageRouteContext;
 
-    public StorageRouteAwareIdempotencyExecutor(
-        IdempotencyExecutor delegate,
-        IdempotencyRouteContextFactory routeContextFactory,
-        StorageRouteResolver storageRouteResolver,
-        StorageRouteContext storageRouteContext
-    ) {
+    public StorageRouteAwareIdempotencyExecutor(IdempotencyExecutor delegate, IdempotencyRouteContextFactory routeContextFactory,
+                                                StorageRouteResolver storageRouteResolver, StorageRouteContext storageRouteContext) {
         this.delegate = Objects.requireNonNull(delegate, "delegate must not be null");
         this.routeContextFactory = Objects.requireNonNull(routeContextFactory, "routeContextFactory must not be null");
         this.storageRouteResolver = Objects.requireNonNull(storageRouteResolver, "storageRouteResolver must not be null");
@@ -83,11 +78,7 @@ public final class StorageRouteAwareIdempotencyExecutor
     }
 
     @Override
-    public <T> IdempotencyResult<T> execute(
-        IdempotencyRequest request,
-        IdempotencyResultPolicy<T> resultPolicy,
-        IdempotencyCallback<T> callback
-    ) {
+    public <T> IdempotencyResult<T> execute(IdempotencyRequest request, IdempotencyResultPolicy<T> resultPolicy, IdempotencyCallback<T> callback) {
         /*
          * 非法请求仍然交给核心 Executor 统一校验。
          *
@@ -98,35 +89,22 @@ public final class StorageRouteAwareIdempotencyExecutor
             return delegate.execute(request, resultPolicy, callback);
         }
 
-        return executeWithinRoute(
-            () -> routeContextFactory.create(request),
-            IdempotencyStage.ACQUIRE_STATE,
-            () -> delegate.execute(request, resultPolicy, callback)
-        );
+        return executeWithinRoute(() -> routeContextFactory.create(request), IdempotencyStage.ACQUIRE_STATE,
+                () -> delegate.execute(request, resultPolicy, callback));
     }
 
     @Override
-    public <T> IdempotencyResult<T> recover(
-        IdempotencyRecoveryRequest request,
-        IdempotencyResultPolicy<T> resultPolicy,
-        IdempotencyCallback<T> callback
-    ) {
+    public <T> IdempotencyResult<T> recover(IdempotencyRecoveryRequest request, IdempotencyResultPolicy<T> resultPolicy, IdempotencyCallback<T> callback) {
         if (request == null || request.getKey() == null || request.getKey().isBlank()) {
             return delegate.recover(request, resultPolicy, callback);
         }
 
-        return executeWithinRoute(
-            () -> routeContextFactory.create(request),
-            IdempotencyStage.RECOVER_STATE,
-            () -> delegate.recover(request, resultPolicy, callback)
-        );
+        return executeWithinRoute(() -> routeContextFactory.create(request), IdempotencyStage.RECOVER_STATE,
+                () -> delegate.recover(request, resultPolicy, callback));
     }
 
-    private <T> IdempotencyResult<T> executeWithinRoute(
-        RouteContextSupplier defaultRouteContextSupplier,
-        IdempotencyStage routeFailureStage,
-        RoutedInvocation<T> invocation
-    ) {
+    private <T> IdempotencyResult<T> executeWithinRoute(RouteContextSupplier defaultRouteContextSupplier,
+                                                        IdempotencyStage routeFailureStage, RoutedInvocation<T> invocation) {
         /*
          * 路由分支一：
          *

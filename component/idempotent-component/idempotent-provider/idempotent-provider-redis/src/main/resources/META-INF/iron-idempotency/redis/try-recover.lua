@@ -2,7 +2,7 @@
 -- ARGV:
 -- 1 nowMs, 2 newOwner, 3 requestHash, 4 routeKey,
 -- 5 processingTimeoutMs, 6 recoverProcessingTimeout, 7 recoverFailed,
--- 8 expectedOwner, 9 expectedVersion, 10 shardKey, 11 scanBucket
+-- 8 expectedOwner, 9 expectedVersion, 10 scanBucket
 local key = KEYS[1]
 local now = tonumber(ARGV[1])
 local newOwner = ARGV[2]
@@ -13,8 +13,7 @@ local recoverProcessingTimeout = ARGV[6] == '1'
 local recoverFailed = ARGV[7] == '1'
 local expectedOwner = ARGV[8]
 local expectedVersion = ARGV[9]
-local shardKey = ARGV[10]
-local scanBucket = ARGV[11]
+local scanBucket = ARGV[10]
 
 local function h(name)
     local value = redis.call('HGET', key, name)
@@ -25,7 +24,7 @@ end
 local function snapshot(code, reason)
     return {
         tostring(code), reason or '',
-        h('store_name'), h('shard_key'), h('scan_bucket'),
+        h('store_name'), h('scan_bucket'),
         h('namespace'), h('key'), h('route_key'), h('request_hash'),
         h('status'), h('owner_token'), h('version'), h('result_payload'),
         h('failure_code'), h('failure_message'), h('failure_retryable'),
@@ -42,7 +41,7 @@ if windowExpireAt > 0 and windowExpireAt <= now then return snapshot(4, '') end
 
 if expectedVersion ~= '' and h('version') ~= expectedVersion then return snapshot(8, '') end
 if expectedOwner ~= '' and h('owner_token') ~= expectedOwner then return snapshot(8, '') end
-if h('shard_key') ~= shardKey or h('scan_bucket') ~= scanBucket then return snapshot(7, '') end
+if h('scan_bucket') ~= scanBucket then return snapshot(7, '') end
 if h('route_key') ~= routeKey then return snapshot(7, '') end
 local oldHash = h('request_hash')
 if oldHash ~= '' and requestHash ~= '' and oldHash ~= requestHash then return snapshot(7, '') end

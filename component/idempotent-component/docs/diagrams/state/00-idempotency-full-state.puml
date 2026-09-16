@@ -255,17 +255,17 @@ Write projection：
 end note
 
 note as STORAGE_NOTE
-V2 Storage Identity / Routing
+Storage Identity / Routing
 
 逻辑唯一身份：
 storeName + namespace + idempotencyKey
 
-稳定路由元数据：
-shardKey   = online point routing
-scanBucket = recovery scan routing
+执行期路由与扫描元数据：
+StorageRoute = online physical routing
+scanBucket   = recovery scan routing
 
-同一物理记录跨 generation：
-shardKey / scanBucket 不允许漂移，漂移 -> KEY_CONFLICT。
+同一幂等身份跨 generation 的 scanBucket 不允许漂移，漂移 -> KEY_CONFLICT。
+物理分片由 StorageRouteContext 绑定，不写入幂等记录。
 
 routeKey / requestHash 是业务身份保护；
 Repository 仍通过 UNIQUE / row lock / Lua / owner-version CAS 保证正确性。

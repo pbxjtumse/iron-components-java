@@ -13,7 +13,7 @@ import java.time.Instant;
  * <p>这是真正的“Idempotency State”。它记录的是某个逻辑请求历史上执行到哪里，
  * 而不是分布式锁当前是否被持有。</p>
  *
- * <p>V2 增加 storeName / shardKey / scanBucket，使单表实现从数据模型开始具备未来分库分表与分桶扫描能力。</p>
+ * <p>storeName / scanBucket 描述逻辑存储域与恢复扫描分桶；物理分片身份由 Storage Routing 作用域负责。</p>
  *
  * <p>其中最关键的组合是 {@code status + ownerToken + version + processingExpireAt}：
  * status 描述业务阶段，ownerToken/version 描述当前 generation，processingExpireAt 描述执行权租约。</p>
@@ -22,9 +22,6 @@ public final class IdempotencyRecord {
 
     /** 逻辑 Store 名称；例如 message-consume / payment。 */
     private final String storeName;
-
-    /** 在线点查/写入的稳定分片路由键。 */
-    private final long shardKey;
 
     /** Reliable Recovery 使用的稳定逻辑扫描桶，不等于物理表号。 */
     private final int scanBucket;
@@ -83,7 +80,6 @@ public final class IdempotencyRecord {
 
     private IdempotencyRecord(Builder builder) {
         this.storeName = builder.storeName;
-        this.shardKey = builder.shardKey;
         this.scanBucket = builder.scanBucket;
         this.namespace = builder.namespace;
         this.key = builder.key;
@@ -109,7 +105,6 @@ public final class IdempotencyRecord {
     public static Builder builder() { return new Builder(); }
 
     public String getStoreName() { return storeName; }
-    public long getShardKey() { return shardKey; }
     public int getScanBucket() { return scanBucket; }
     public String getNamespace() { return namespace; }
     public String getKey() { return key; }
@@ -132,12 +127,11 @@ public final class IdempotencyRecord {
     public Instant getCompletedAt() { return completedAt; }
 
     public IdempotencyStorageContext storageContext() {
-        return IdempotencyStorageContext.of(storeName == null ? IdempotencyStorageContext.DEFAULT_STORE_NAME : storeName, shardKey, scanBucket);
+        return IdempotencyStorageContext.of(storeName == null ? IdempotencyStorageContext.DEFAULT_STORE_NAME : storeName, scanBucket);
     }
 
     public static final class Builder {
         private String storeName = IdempotencyStorageContext.DEFAULT_STORE_NAME;
-        private long shardKey;
         private int scanBucket;
         private String namespace;
         private String key;
@@ -160,7 +154,6 @@ public final class IdempotencyRecord {
         private Instant completedAt;
 
         public Builder storeName(String value) { this.storeName = value; return this; }
-        public Builder shardKey(long value) { this.shardKey = value; return this; }
         public Builder scanBucket(int value) { this.scanBucket = value; return this; }
         public Builder namespace(String value) { this.namespace = value; return this; }
         public Builder key(String value) { this.key = value; return this; }

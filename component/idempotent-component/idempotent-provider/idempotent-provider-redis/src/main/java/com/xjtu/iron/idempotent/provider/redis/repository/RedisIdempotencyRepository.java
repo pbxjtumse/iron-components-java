@@ -25,8 +25,8 @@ import java.util.*;
 /**
  * WINDOWED Redis 幂等状态仓储。
  *
- * <p>V2 与 JDBC 共用 storeName/shardKey/scanBucket、四态状态机和 owner/version generation 语义。
- * Redis 当前仍不提供 Recovery 全量扫描能力，但 Hash 中会完整保存 Storage 元数据，保证协议一致。</p>
+ * <p>Redis 与 JDBC 共用 storeName/scanBucket、四态状态机和 owner/version generation 语义。
+ * Redis 当前仍不提供 Recovery 全量扫描能力，但 Hash 中会保存逻辑存储与恢复元数据，保证协议一致。</p>
  */
 public final class RedisIdempotencyRepository implements IdempotencyRepository {
 
@@ -108,7 +108,6 @@ public final class RedisIdempotencyRepository implements IdempotencyRepository {
                     String.valueOf(request.getRecordRetentionTtl().toMillis()),
                     request.getRecoveryMode().name(),
                     storage.getStoreName(),
-                    String.valueOf(storage.getShardKey()),
                     String.valueOf(storage.getScanBucket()),
                     request.getNamespace(),
                     request.getKey());
@@ -139,7 +138,6 @@ public final class RedisIdempotencyRepository implements IdempotencyRepository {
                     request.isRecoverFailed() ? "1" : "0",
                     empty(request.getExpectedOwnerToken()),
                     request.getExpectedVersion() == null ? "" : String.valueOf(request.getExpectedVersion()),
-                    String.valueOf(storage.getShardKey()),
                     String.valueOf(storage.getScanBucket()));
             return parseRecovery(raw);
         } catch (Exception error) {
@@ -273,37 +271,36 @@ public final class RedisIdempotencyRepository implements IdempotencyRepository {
     }
 
     /**
-     * V2 snapshot 共 22 个字段：storeName,shardKey,scanBucket,namespace,key,routeKey,requestHash,status,owner,version,result,
+     * Snapshot 共 21 个字段：storeName,scanBucket,namespace,key,routeKey,requestHash,status,owner,version,result,
      * failureCode,failureMessage,retryable,recoveryMode,windowPolicy,processingExpireAt,windowExpireAt,retentionExpireAt,
      * createdAt,updatedAt,completedAt。
      */
     private IdempotencyRecord snapshot(List<?> values, int offset) {
-        if (values.size() < offset + 22) {
+        if (values.size() < offset + 21) {
             return null;
         }
         return IdempotencyRecord.builder()
                 .storeName(nullable(text(values.get(offset))))
-                .shardKey(Long.parseLong(text(values.get(offset + 1))))
-                .scanBucket(Integer.parseInt(text(values.get(offset + 2))))
-                .namespace(nullable(text(values.get(offset + 3))))
-                .key(nullable(text(values.get(offset + 4))))
-                .routeKey(nullable(text(values.get(offset + 5))))
-                .requestHash(nullable(text(values.get(offset + 6))))
-                .status(IdempotencyStatus.valueOf(text(values.get(offset + 7))))
-                .ownerToken(nullable(text(values.get(offset + 8))))
-                .version(Long.parseLong(text(values.get(offset + 9))))
-                .resultPayload(nullable(text(values.get(offset + 10))))
-                .failureCode(nullable(text(values.get(offset + 11))))
-                .failureMessage(nullable(text(values.get(offset + 12))))
-                .failureRetryable("1".equals(text(values.get(offset + 13))))
-                .recoveryMode(enumValue(IdempotencyRecoveryMode.class, text(values.get(offset + 14)), IdempotencyRecoveryMode.NONE))
-                .windowPolicy(enumValue(IdempotencyWindowPolicy.class, text(values.get(offset + 15)), IdempotencyWindowPolicy.FIXED_FROM_FIRST_ACQUIRE))
-                .processingExpireAt(epochMillis(text(values.get(offset + 16))))
-                .windowExpireAt(epochMillis(text(values.get(offset + 17))))
-                .retentionExpireAt(epochMillis(text(values.get(offset + 18))))
-                .createdAt(epochMillis(text(values.get(offset + 19))))
-                .updatedAt(epochMillis(text(values.get(offset + 20))))
-                .completedAt(epochMillis(text(values.get(offset + 21))))
+                .scanBucket(Integer.parseInt(text(values.get(offset + 1))))
+                .namespace(nullable(text(values.get(offset + 2))))
+                .key(nullable(text(values.get(offset + 3))))
+                .routeKey(nullable(text(values.get(offset + 4))))
+                .requestHash(nullable(text(values.get(offset + 5))))
+                .status(IdempotencyStatus.valueOf(text(values.get(offset + 6))))
+                .ownerToken(nullable(text(values.get(offset + 7))))
+                .version(Long.parseLong(text(values.get(offset + 8))))
+                .resultPayload(nullable(text(values.get(offset + 9))))
+                .failureCode(nullable(text(values.get(offset + 10))))
+                .failureMessage(nullable(text(values.get(offset + 11))))
+                .failureRetryable("1".equals(text(values.get(offset + 12))))
+                .recoveryMode(enumValue(IdempotencyRecoveryMode.class, text(values.get(offset + 13)), IdempotencyRecoveryMode.NONE))
+                .windowPolicy(enumValue(IdempotencyWindowPolicy.class, text(values.get(offset + 14)), IdempotencyWindowPolicy.FIXED_FROM_FIRST_ACQUIRE))
+                .processingExpireAt(epochMillis(text(values.get(offset + 15))))
+                .windowExpireAt(epochMillis(text(values.get(offset + 16))))
+                .retentionExpireAt(epochMillis(text(values.get(offset + 17))))
+                .createdAt(epochMillis(text(values.get(offset + 18))))
+                .updatedAt(epochMillis(text(values.get(offset + 19))))
+                .completedAt(epochMillis(text(values.get(offset + 20))))
                 .build();
     }
 
@@ -311,7 +308,6 @@ public final class RedisIdempotencyRepository implements IdempotencyRepository {
         // find() 是只读诊断/查询路径，直接把 Redis Hash 当前内容映射成统一 Record 快照。
         return IdempotencyRecord.builder()
                 .storeName(value(values, "store_name"))
-                .shardKey(Long.parseLong(value(values, "shard_key")))
                 .scanBucket(Integer.parseInt(value(values, "scan_bucket")))
                 .namespace(value(values, "namespace"))
                 .key(value(values, "key"))

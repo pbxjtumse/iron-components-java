@@ -5,7 +5,7 @@ import java.time.Instant;
 /**
  * 外部任务组件查询恢复候选项时使用的分桶扫描条件。
  *
- * <p>V2 不再用 routeKey 扫描大表。在线路由交给 shardKey；Reliable Recovery 使用稳定的 scanBucket 分桶扫描。</p>
+ * <p>V2 不再用 routeKey 扫描大表。在线物理路由交给外层 Storage Routing；Reliable Recovery 使用稳定的 scanBucket 分桶扫描。</p>
  * <p>它只是 Repository 查询协议，不代表幂等组件自己拥有定时扫描线程。</p>
  */
 public final class IdempotencyRecoveryQuery {

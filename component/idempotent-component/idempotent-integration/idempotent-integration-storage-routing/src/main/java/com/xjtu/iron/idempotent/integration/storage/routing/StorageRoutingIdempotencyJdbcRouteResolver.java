@@ -47,8 +47,7 @@ import java.util.Optional;
  * </pre>
  *
  * <p>点查/写入优先复用 {@link StorageRouteContext} 中已经绑定的业务 shardKey/shardInfo，保证业务表与幂等表
- * 落在同一数据库分片。没有绑定业务路由时，才使用 IdempotencyStorageContext.shardKey 构造稳定 fallback key，
- * 交给 StorageRouteResolver 计算 shardInfo。</p>
+ * 落在同一数据库分片。没有绑定业务路由时，才使用幂等 key 构造默认分片键，交给 StorageRouteResolver 计算 shardInfo。</p>
  *
  * <p>DIRECT_DATASOURCE 且没有 shardInfo 时同样不能复用 business tableName：只能复用 dataSourceKey，
  * 幂等表名使用本组件自己的 directTableName。这样即使业务使用固定直连，也不会把幂等 SQL 写进业务表。</p>
@@ -58,8 +57,6 @@ import java.util.Optional;
  */
 public final class StorageRoutingIdempotencyJdbcRouteResolver implements IdempotencyJdbcRouteResolver {
 
-    public static final String FALLBACK_SHARD_FIELD = "idempotency_shard_key";
-
     private final String logicalTable;
     private final String directTableName;
     private final StorageRouteResolver storageRouteResolver;
@@ -67,14 +64,9 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
     private final RouteMappingStrategy idempotencyMappingStrategy;
     private final StorageRouteToSqlRouteBridge relationalBridge;
 
-    public StorageRoutingIdempotencyJdbcRouteResolver(
-            String logicalTable,
-            String directTableName,
-            StorageRouteResolver storageRouteResolver,
-            StorageRouteContext storageRouteContext,
-            RouteMappingStrategy idempotencyMappingStrategy,
-            StorageRouteToSqlRouteBridge relationalBridge
-    ) {
+    public StorageRoutingIdempotencyJdbcRouteResolver(String logicalTable, String directTableName, StorageRouteResolver storageRouteResolver,
+                                                      StorageRouteContext storageRouteContext, RouteMappingStrategy idempotencyMappingStrategy,
+                                                      StorageRouteToSqlRouteBridge relationalBridge) {
         this.logicalTable = requireText(logicalTable, "logicalTable");
         this.directTableName = requireText(directTableName, "directTableName");
         this.storageRouteResolver = Objects.requireNonNull(storageRouteResolver, "storageRouteResolver must not be null");
@@ -85,18 +77,11 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
     }
 
     @Override
-    public IdempotencyJdbcRoute resolvePoint(
-            IdempotencyStorageContext storageContext,
-            String namespace,
-            String idempotencyKey
-    ) {
+    public IdempotencyJdbcRoute resolvePoint(IdempotencyStorageContext storageContext, String namespace, String idempotencyKey) {
         Objects.requireNonNull(storageContext, "storageContext must not be null");
 
         Optional<StorageRoute> boundRoute = this.storageRouteContext.current();
-        CompositeShardKey shardKey = boundRoute
-                .map(StorageRoute::context)
-                .map(RouteContext::shardKey)
-                .orElseGet(() -> fallbackShardKey(storageContext));
+        CompositeShardKey shardKey = boundRoute.map(StorageRoute::context).map(RouteContext::shardKey).orElseGet(() -> defaultShardKey(idempotencyKey));
 
         RouteContext context = baseContext(storageContext.getStoreName(), namespace, storageContext.getScanBucket())
                 .shardKey(shardKey)
@@ -153,8 +138,8 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
                 .attribute("idempotency.scanBucket", scanBucket);
     }
 
-    private CompositeShardKey fallbackShardKey(IdempotencyStorageContext storageContext) {
-        return CompositeShardKey.of(ShardKey.of(FALLBACK_SHARD_FIELD, storageContext.getShardKey()));
+    private CompositeShardKey defaultShardKey(String idempotencyKey) {
+        return CompositeShardKey.of(ShardKey.of(DefaultIdempotencyRouteContextFactory.IDEMPOTENCY_KEY_FIELD, requireText(idempotencyKey, "idempotencyKey")));
     }
 
     /** 只复用 shardInfo，不复用 business physical location。 */

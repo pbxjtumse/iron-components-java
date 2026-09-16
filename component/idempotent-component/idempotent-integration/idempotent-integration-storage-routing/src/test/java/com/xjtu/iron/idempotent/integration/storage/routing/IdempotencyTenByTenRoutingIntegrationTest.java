@@ -19,8 +19,10 @@ import com.xjtu.iron.idempotent.provider.jdbc.repository.RoutedJdbcIdempotencyRe
 import com.xjtu.iron.storage.routing.api.CompositeShardKey;
 import com.xjtu.iron.storage.routing.api.ShardKey;
 import com.xjtu.iron.storage.routing.api.TableIndexMode;
+import com.xjtu.iron.storage.routing.api.mapping.RouteMappingStrategy;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.core.context.ThreadLocalStorageRouteContext;
+import com.xjtu.iron.storage.routing.core.mapping.GlobalTableIndexRouteMappingStrategy;
 import com.xjtu.iron.storage.routing.core.mapping.LocalTableIndexRouteMappingStrategy;
 import com.xjtu.iron.storage.routing.core.resolver.HashShardResolver;
 import com.xjtu.iron.storage.routing.core.resolver.ShardIdHashStorageRouteResolver;
@@ -51,8 +53,17 @@ class IdempotencyTenByTenRoutingIntegrationTest {
     private static final String TABLE_PREFIX = "iron_idempotency_record";
 
     @Test
-    void shouldRouteAllStateOperationsAcrossTenDatabasesAndTenTables() throws Exception {
-        Map<String, DataSource> dataSources = createTopology();
+    void shouldRouteAllStateOperationsAcrossTenDatabasesAndTenLocalTables() throws Exception {
+        verifyTenByTen(TableIndexMode.LOCAL_TABLE_INDEX);
+    }
+
+    @Test
+    void shouldRouteAllStateOperationsAcrossTenDatabasesAndOneHundredGlobalTables() throws Exception {
+        verifyTenByTen(TableIndexMode.GLOBAL_TABLE_INDEX);
+    }
+
+    private void verifyTenByTen(TableIndexMode tableIndexMode) throws Exception {
+        Map<String, DataSource> dataSources = createTopology(tableIndexMode);
         ThreadLocalStorageRouteContext routeContext = new ThreadLocalStorageRouteContext();
         ShardIdHashStorageRouteResolver topologyResolver = ShardIdHashStorageRouteResolver.builder()
                 .dataSourcePrefix("db_")
@@ -61,7 +72,7 @@ class IdempotencyTenByTenRoutingIntegrationTest {
                 .tablesPerDatabase(TABLES_PER_DATABASE)
                 .dataSourceIndexWidth(2)
                 .tableIndexWidth(2)
-                .tableIndexMode(TableIndexMode.LOCAL_TABLE_INDEX)
+                .tableIndexMode(tableIndexMode)
                 .build();
         AtomicInteger routeResolutions = new AtomicInteger();
         StorageRouteResolver storageRouteResolver = input -> {
@@ -69,14 +80,12 @@ class IdempotencyTenByTenRoutingIntegrationTest {
             return topologyResolver.resolve(input);
         };
 
-        StorageRoutingIdempotencyJdbcRouteResolver jdbcRouteResolver =
-                new StorageRoutingIdempotencyJdbcRouteResolver(
-                        TABLE_PREFIX,
-                        TABLE_PREFIX,
-                        storageRouteResolver,
-                        routeContext,
-                        new LocalTableIndexRouteMappingStrategy("db_", TABLE_PREFIX, 2, 2),
-                        new DefaultStorageRouteToSqlRouteBridge());
+        RouteMappingStrategy idempotencyMapping = tableIndexMode == TableIndexMode.GLOBAL_TABLE_INDEX
+                ? new GlobalTableIndexRouteMappingStrategy("db_", TABLE_PREFIX, 2, 2)
+                : new LocalTableIndexRouteMappingStrategy("db_", TABLE_PREFIX, 2, 2);
+        StorageRoutingIdempotencyJdbcRouteResolver jdbcRouteResolver = new StorageRoutingIdempotencyJdbcRouteResolver(
+                TABLE_PREFIX, TABLE_PREFIX, storageRouteResolver, routeContext, idempotencyMapping,
+                new DefaultStorageRouteToSqlRouteBridge());
 
         Map<String, JdbcExecutionManager> managers = new LinkedHashMap<>();
         dataSources.forEach((key, dataSource) -> managers.put(key, new DataSourceJdbcExecutionManager(dataSource)));
@@ -114,7 +123,8 @@ class IdempotencyTenByTenRoutingIntegrationTest {
         for (int database = 0; database < DATABASE_COUNT; database++) {
             DataSource dataSource = dataSources.get(String.format("db_%02d", database));
             for (int table = 0; table < TABLES_PER_DATABASE; table++) {
-                assertThat(rowCount(dataSource, String.format("%s_%02d", TABLE_PREFIX, table)))
+                int physicalTableIndex = tableIndexMode == TableIndexMode.GLOBAL_TABLE_INDEX ? database * TABLES_PER_DATABASE + table : table;
+                assertThat(rowCount(dataSource, String.format("%s_%02d", TABLE_PREFIX, physicalTableIndex)))
                         .as("db_%02d table_%02d", database, table)
                         .isEqualTo(1);
             }
@@ -144,7 +154,7 @@ class IdempotencyTenByTenRoutingIntegrationTest {
                 Clock.fixed(Instant.parse("2026-09-15T00:00:00Z"), ZoneOffset.UTC));
     }
 
-    private Map<String, DataSource> createTopology() throws Exception {
+    private Map<String, DataSource> createTopology(TableIndexMode tableIndexMode) throws Exception {
         Map<String, DataSource> result = new LinkedHashMap<>();
         for (int database = 0; database < DATABASE_COUNT; database++) {
             JdbcDataSource dataSource = new JdbcDataSource();
@@ -152,7 +162,8 @@ class IdempotencyTenByTenRoutingIntegrationTest {
             dataSource.setUser("sa");
             result.put(String.format("db_%02d", database), dataSource);
             for (int table = 0; table < TABLES_PER_DATABASE; table++) {
-                createTable(dataSource, String.format("%s_%02d", TABLE_PREFIX, table));
+                int physicalTableIndex = tableIndexMode == TableIndexMode.GLOBAL_TABLE_INDEX ? database * TABLES_PER_DATABASE + table : table;
+                createTable(dataSource, String.format("%s_%02d", TABLE_PREFIX, physicalTableIndex));
             }
         }
         return Map.copyOf(result);
@@ -161,7 +172,7 @@ class IdempotencyTenByTenRoutingIntegrationTest {
     private void createTable(DataSource dataSource, String table) throws Exception {
         String ddl = "CREATE TABLE " + table + " ("
                 + "id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,"
-                + "store_name VARCHAR(64) NOT NULL, shard_key BIGINT NOT NULL, scan_bucket INT NOT NULL,"
+                + "store_name VARCHAR(64) NOT NULL, scan_bucket INT NOT NULL,"
                 + "namespace VARCHAR(128) NOT NULL, idempotency_key VARCHAR(256) NOT NULL,"
                 + "route_key VARCHAR(256), request_hash VARCHAR(128), status VARCHAR(32) NOT NULL,"
                 + "owner_token VARCHAR(128), version BIGINT NOT NULL, result_payload CLOB,"

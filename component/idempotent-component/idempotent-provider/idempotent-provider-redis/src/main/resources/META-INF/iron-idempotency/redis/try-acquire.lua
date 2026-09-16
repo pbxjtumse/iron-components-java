@@ -5,7 +5,7 @@
 -- ARGV:
 -- 1 nowMs, 2 ownerToken, 3 requestHash, 4 routeKey, 5 processingTimeoutMs,
 -- 6 idempotencyWindowMs, 7 windowPolicy, 8 recordRetentionTtlMs, 9 recoveryMode,
--- 10 storeName, 11 shardKey, 12 scanBucket, 13 namespace, 14 logicalKey
+-- 10 storeName, 11 scanBucket, 12 namespace, 13 logicalKey
 local key = KEYS[1]
 local now = tonumber(ARGV[1])
 local owner = ARGV[2]
@@ -17,10 +17,9 @@ local windowPolicy = ARGV[7]
 local retentionMs = tonumber(ARGV[8])
 local recoveryMode = ARGV[9]
 local storeName = ARGV[10]
-local shardKey = ARGV[11]
-local scanBucket = ARGV[12]
-local namespace = ARGV[13]
-local logicalKey = ARGV[14]
+local scanBucket = ARGV[11]
+local namespace = ARGV[12]
+local logicalKey = ARGV[13]
 
 local function h(name)
     local value = redis.call('HGET', key, name)
@@ -39,7 +38,7 @@ end
 local function snapshot(code, rollover)
     return {
         tostring(code), rollover and '1' or '0',
-        h('store_name'), h('shard_key'), h('scan_bucket'),
+        h('store_name'), h('scan_bucket'),
         h('namespace'), h('key'), h('route_key'), h('request_hash'),
         h('status'), h('owner_token'), h('version'), h('result_payload'),
         h('failure_code'), h('failure_message'), h('failure_retryable'),
@@ -53,7 +52,6 @@ local function start_generation(version, createdAt)
     local retentionExpireAt = physical_expire_at(windowExpireAt)
     redis.call('HSET', key,
         'store_name', storeName,
-        'shard_key', shardKey,
         'scan_bucket', scanBucket,
         'namespace', namespace,
         'key', logicalKey,
@@ -90,8 +88,8 @@ if redis.call('EXISTS', key) == 0 then
     return snapshot(1, false)
 end
 
--- shardKey / scanBucket 是存储路由身份，不能因为 WINDOWED 新 generation 而漂移。
-if h('shard_key') ~= shardKey or h('scan_bucket') ~= scanBucket then
+-- scanBucket 是稳定的恢复扫描身份，不能因为 WINDOWED 新 generation 而漂移。
+if h('scan_bucket') ~= scanBucket then
     return snapshot(7, false)
 end
 
