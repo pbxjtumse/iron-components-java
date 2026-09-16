@@ -32,36 +32,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.xjtu.iron</groupId>
-            <artifactId>idempotent-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.xjtu.iron</groupId>
-            <artifactId>idempotent-integration-transaction</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.xjtu.iron</groupId>
-            <artifactId>transaction-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.xjtu.iron</groupId>
-            <artifactId>transaction-provider-spring</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-jdbc</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
