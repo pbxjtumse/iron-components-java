@@ -35,6 +35,9 @@ ShardingSphere-JDBC / MyCAT / Direct Routing 如何作为底层实现替换？
 03-storage-route-model.md
     查看本轮模型调整、API 收敛和各字段的职责
 
+04-storage-expansion-development-plan.md
+    查看扩容的七类开发待办、三批实施顺序和 ShardingSphere 迁移边界
+
 01-storage-route-model.puml
     查看输入、类型化分片键与组合式结果的类关系
 
@@ -47,6 +50,8 @@ ShardingSphere-JDBC / MyCAT / Direct Routing 如何作为底层实现替换？
 02-storage-route-to-relational-access.puml
     看 StorageRoute 如何转成 Relational Access 可执行的 SqlRoute
 ```
+
+扩容规划入口：[存储扩容开发计划：幂等存储、ShardingSphere 接入与迁移](design/04-storage-expansion-development-plan.md)。该文档是基于当前代码整理的开发待办，不表示中间件适配或迁移能力已经完成。
 
 ## 3. 当前代码模块
 
