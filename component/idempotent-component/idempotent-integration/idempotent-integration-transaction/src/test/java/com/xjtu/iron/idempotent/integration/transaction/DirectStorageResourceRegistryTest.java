@@ -35,8 +35,10 @@ class DirectStorageResourceRegistryTest {
     @Test
     void synchronizationOnlyConnectionDoesNotCountAsAnActualLocalTransaction() {
         var resource = new DirectStorageResource("db_03", new DriverManagerDataSource());
+        var connection = (java.sql.Connection) java.lang.reflect.Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] {java.sql.Connection.class},
+                (proxy, method, args) -> { throw new AssertionError("binding inspection must not access JDBC: " + method.getName()); });
         TransactionSynchronizationManager.setActualTransactionActive(true);
-        TransactionSynchronizationManager.bindResource(resource.dataSource(), new ConnectionHolder((java.sql.Connection) null));
+        TransactionSynchronizationManager.bindResource(resource.dataSource(), new ConnectionHolder(connection));
         try {
             assertThatThrownBy(resource::assertCompatibleTransaction).isInstanceOf(IllegalStateException.class).hasMessageContaining("another resource");
         } finally {
