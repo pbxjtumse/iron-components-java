@@ -159,7 +159,7 @@ public class IdempotencyAutoConfiguration {
      */
     @Bean
     @ConditionalOnBean(DataSource.class)
-    @ConditionalOnMissingBean(JdbcExecutionManager.class)
+    @ConditionalOnMissingBean({JdbcExecutionManager.class, JdbcExecutionManagerResolver.class})
     public JdbcExecutionManager idempotencyJdbcExecutionManager(
             DataSource dataSource,
             ObjectProvider<TransactionExecutor> transactionExecutor,
@@ -211,7 +211,7 @@ public class IdempotencyAutoConfiguration {
     }
 
     @Bean(name = "jdbcIdempotencyRepository")
-    @ConditionalOnBean(DataSource.class)
+    @ConditionalOnBean(JdbcExecutionManagerResolver.class)
     @ConditionalOnProperty(prefix = "xjtu.iron.idempotent.jdbc", name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(name = "jdbcIdempotencyRepository")
     public IdempotencyRepository jdbcIdempotencyRepository(

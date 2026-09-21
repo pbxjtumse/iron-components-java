@@ -20,6 +20,18 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class StorageRoutingIdempotencyJdbcRouteResolverTest {
 
     @Test
+    void boundRouteMustNotBeRemappedIntoAnotherDatabase() {
+        TestStorageRouteContext current = new TestStorageRouteContext();
+        current.set(sharded(RouteContext.builder().logicalTable("business").build(), new ShardRouteInfo(17, 1, 7, 100), "db_01", "business_07"));
+        var resolver = resolver(input -> { throw new AssertionError("must not rehash"); }, current,
+                shard -> PhysicalStorageLocation.of("other_db_01", "idempotency_07"));
+        assertThatThrownBy(() -> resolver.resolvePoint(IdempotencyStorageContext.of("default", 0), "default", "key"))
+                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("same dataSourceKey");
+        assertThatThrownBy(() -> resolver.resolveRecoveryRoutes(new IdempotencyRecoveryQuery("default", "default", 0, Instant.now(), 10)))
+                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("same dataSourceKey");
+    }
+
+    @Test
     void shouldUseIdempotencyKeyAndRemapGlobalResolverLocationToIdempotencyTable() {
         AtomicReference<RouteContext> captured = new AtomicReference<>();
         ShardRouteInfo shardInfo = new ShardRouteInfo(17, 3, 5, 100);
