@@ -1,7 +1,7 @@
 package com.xjtu.iron.storage.routing.starter.autoconfigure;
 
 import com.xjtu.iron.relational.api.statement.SqlRoute;
-import com.xjtu.iron.storage.routing.api.StorageRouteContext;
+import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.core.context.ThreadLocalStorageRouteContext;
 import com.xjtu.iron.storage.routing.core.resolver.ShardIdHashStorageRouteResolver;

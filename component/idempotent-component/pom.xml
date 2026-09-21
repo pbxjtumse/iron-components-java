@@ -17,6 +17,7 @@
         <module>idempotent-integration</module>
         <module>idempotent-starter</module>
         <module>idempotent-demo</module>
+        <module>idempotent-storage-routing-e2e</module>
     </modules>
 
 </project>

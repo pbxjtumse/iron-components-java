@@ -273,9 +273,18 @@ public class IdempotencyProperties {
 
         /** 幂等记录表名，只允许字母、数字和下划线。 */
         private String tableName = "iron_idempotency_record";
+        private final Direct direct = new Direct();
+        public Direct getDirect() { return direct; }
         public boolean isEnabled() { return enabled; }
         public void setEnabled(boolean enabled) { this.enabled = enabled; }
         public String getTableName() { return tableName; }
         public void setTableName(String tableName) { this.tableName = tableName; }
+
+        public static class Direct {
+            /** 显式启用统一物理资源注册表与同库 Tx-A/B/C；默认不改变现有单库装配。 */
+            private boolean enabled;
+            public boolean isEnabled() { return enabled; }
+            public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        }
     }
 }

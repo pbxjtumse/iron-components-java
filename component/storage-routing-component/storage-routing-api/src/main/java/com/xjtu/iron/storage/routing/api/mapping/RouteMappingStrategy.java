@@ -1,7 +1,7 @@
 package com.xjtu.iron.storage.routing.api.mapping;
 
-import com.xjtu.iron.storage.routing.api.PhysicalStorageLocation;
-import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
+import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
+import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
 
 /**
  * 将逻辑 shard 结果映射为物理存储位置。

@@ -87,4 +87,44 @@ public final class IdempotencyAcquireRequest {
     public Duration getRecordRetentionTtl() { return recordRetentionTtl; }
     public IdempotencyRecoveryMode getRecoveryMode() { return recoveryMode; }
     public Instant getNow() { return now; }
+
+    /** 命名参数构造入口。与原构造器保持相同语义，不隐式生成 owner、时间或策略。 */
+    public static Builder builder() { return new Builder(); }
+
+    public static final class Builder {
+        private IdempotencyStorageContext storageContext;
+        private String namespace;
+        private String key;
+        private String requestHash;
+        private String routeKey;
+        private String ownerToken;
+        private IdempotencyMode mode;
+        private Duration processingTimeout;
+        private Duration idempotencyWindow;
+        private IdempotencyWindowPolicy windowPolicy;
+        private Duration recordRetentionTtl;
+        private IdempotencyRecoveryMode recoveryMode;
+        private Instant now;
+
+        private Builder() { }
+
+        public Builder storageContext(IdempotencyStorageContext storageContext) { this.storageContext = storageContext; return this; }
+        public Builder namespace(String namespace) { this.namespace = namespace; return this; }
+        public Builder key(String key) { this.key = key; return this; }
+        public Builder requestHash(String requestHash) { this.requestHash = requestHash; return this; }
+        public Builder routeKey(String routeKey) { this.routeKey = routeKey; return this; }
+        public Builder ownerToken(String ownerToken) { this.ownerToken = ownerToken; return this; }
+        public Builder mode(IdempotencyMode mode) { this.mode = mode; return this; }
+        public Builder processingTimeout(Duration processingTimeout) { this.processingTimeout = processingTimeout; return this; }
+        public Builder idempotencyWindow(Duration idempotencyWindow) { this.idempotencyWindow = idempotencyWindow; return this; }
+        public Builder windowPolicy(IdempotencyWindowPolicy windowPolicy) { this.windowPolicy = windowPolicy; return this; }
+        public Builder recordRetentionTtl(Duration recordRetentionTtl) { this.recordRetentionTtl = recordRetentionTtl; return this; }
+        public Builder recoveryMode(IdempotencyRecoveryMode recoveryMode) { this.recoveryMode = recoveryMode; return this; }
+        public Builder now(Instant now) { this.now = now; return this; }
+
+        public IdempotencyAcquireRequest build() {
+            return new IdempotencyAcquireRequest(storageContext, namespace, key, requestHash, routeKey, ownerToken, mode,
+                    processingTimeout, idempotencyWindow, windowPolicy, recordRetentionTtl, recoveryMode, now);
+        }
+    }
 }

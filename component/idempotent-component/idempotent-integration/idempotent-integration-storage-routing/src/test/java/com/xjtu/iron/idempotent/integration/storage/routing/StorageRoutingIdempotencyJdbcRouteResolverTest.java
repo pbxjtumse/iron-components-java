@@ -3,21 +3,39 @@ package com.xjtu.iron.idempotent.integration.storage.routing;
 import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryQuery;
 import com.xjtu.iron.idempotent.api.storage.IdempotencyStorageContext;
 import com.xjtu.iron.idempotent.provider.jdbc.routing.IdempotencyJdbcRoute;
-
-import com.xjtu.iron.storage.routing.api.*;
+import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
+import com.xjtu.iron.storage.routing.api.context.StorageRouteScope;
+import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
+import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
+import com.xjtu.iron.storage.routing.api.key.ShardKey;
 import com.xjtu.iron.storage.routing.api.mapping.RouteMappingStrategy;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
+import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
+import com.xjtu.iron.storage.routing.api.route.RouteContext;
+import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.integration.relational.DefaultStorageRouteToSqlRouteBridge;
-import org.junit.jupiter.api.Test;
-
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class StorageRoutingIdempotencyJdbcRouteResolverTest {
+
+    @Test
+    void boundRouteMustNotBeRemappedIntoAnotherDatabase() {
+        TestStorageRouteContext current = new TestStorageRouteContext();
+        current.set(sharded(RouteContext.builder().logicalTable("business").build(), new ShardRouteInfo(17, 1, 7, 100), "db_01", "business_07"));
+        var resolver = resolver(input -> { throw new AssertionError("must not rehash"); }, current,
+                shard -> PhysicalStorageLocation.of("other_db_01", "idempotency_07"));
+        assertThatThrownBy(() -> resolver.resolvePoint(IdempotencyStorageContext.of("default", 0), "default", "key"))
+                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("same dataSourceKey");
+        assertThatThrownBy(() -> resolver.resolveRecoveryRoutes(new IdempotencyRecoveryQuery("default", "default", 0, Instant.now(), 10)))
+                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("same dataSourceKey");
+    }
 
     @Test
     void shouldUseIdempotencyKeyAndRemapGlobalResolverLocationToIdempotencyTable() {

@@ -65,6 +65,12 @@ public final class SpringTransactionJdbcExecutionManager implements JdbcExecutio
             throw new IllegalStateException("markSuccess requires an active local transaction, but no transaction is active");
         }
 
+        // 必须在 getConnection 之前检查：DataSourceUtils 可能把另一个库的新连接注册到当前 synchronization，
+        // 那并不意味着它由当前 DataSourceTransactionManager 提交或回滚。
+        if (!TransactionSynchronizationManager.hasResource(dataSource)) {
+            throw new IllegalStateException("current transaction does not bind the idempotency DataSource");
+        }
+
         Connection connection = DataSourceUtils.getConnection(dataSource);
         try {
             if (!DataSourceUtils.isConnectionTransactional(connection, dataSource)) {

@@ -1,6 +1,6 @@
 package com.xjtu.iron.storage.routing.starter.autoconfigure;
 
-import com.xjtu.iron.storage.routing.api.TableIndexMode;
+import com.xjtu.iron.storage.routing.api.mapping.TableIndexMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**

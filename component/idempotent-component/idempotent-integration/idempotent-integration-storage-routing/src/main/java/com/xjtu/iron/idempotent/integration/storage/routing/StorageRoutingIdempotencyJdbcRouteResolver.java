@@ -4,18 +4,18 @@ import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryQuery
 import com.xjtu.iron.idempotent.api.storage.IdempotencyStorageContext;
 import com.xjtu.iron.idempotent.provider.jdbc.routing.IdempotencyJdbcRoute;
 import com.xjtu.iron.idempotent.provider.jdbc.routing.IdempotencyJdbcRouteResolver;
-import com.xjtu.iron.storage.routing.api.CompositeShardKey;
-import com.xjtu.iron.storage.routing.api.PhysicalStorageLocation;
-import com.xjtu.iron.storage.routing.api.RouteContext;
-import com.xjtu.iron.storage.routing.api.ShardKey;
-import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
-import com.xjtu.iron.storage.routing.api.StorageRoute;
-import com.xjtu.iron.storage.routing.api.StorageRouteContext;
-import com.xjtu.iron.storage.routing.api.StorageRoutingException;
+import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
+import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
+import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
+import com.xjtu.iron.storage.routing.api.key.ShardKey;
 import com.xjtu.iron.storage.routing.api.mapping.RouteMappingStrategy;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
+import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
+import com.xjtu.iron.storage.routing.api.route.RouteContext;
+import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
+import com.xjtu.iron.storage.routing.api.route.StorageRouteMode;
 import com.xjtu.iron.storage.routing.integration.relational.StorageRouteToSqlRouteBridge;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -81,6 +81,7 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
         Objects.requireNonNull(storageContext, "storageContext must not be null");
 
         Optional<StorageRoute> boundRoute = this.storageRouteContext.current();
+        boundRoute.ifPresent(this::requireDirect);
         CompositeShardKey shardKey = boundRoute.map(StorageRoute::context).map(RouteContext::shardKey).orElseGet(() -> defaultShardKey(idempotencyKey));
 
         RouteContext context = baseContext(storageContext.getStoreName(), namespace, storageContext.getScanBucket())
@@ -90,7 +91,7 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
 
         ShardRouteInfo boundShard = boundRoute.map(StorageRoute::shardInfo).orElse(null);
         if (boundShard != null) {
-            return toJdbcRoute(remap(context, boundShard));
+            return toJdbcRoute(remapBound(context, boundRoute.orElseThrow()));
         }
 
         if (boundRoute.isPresent()) {
@@ -106,13 +107,14 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
         Objects.requireNonNull(query, "query must not be null");
 
         Optional<StorageRoute> boundRoute = storageRouteContext.current();
+        boundRoute.ifPresent(this::requireDirect);
         RouteContext.Builder contextBuilder = baseContext(query.getStoreName(), query.getNamespace(), query.getScanBucket());
         boundRoute.map(StorageRoute::context).map(RouteContext::shardKey).ifPresent(contextBuilder::shardKey);
         RouteContext context = contextBuilder.build();
 
         ShardRouteInfo boundShard = boundRoute.map(StorageRoute::shardInfo).orElse(null);
         if (boundShard != null) {
-            return List.of(toJdbcRoute(remap(context, boundShard)));
+            return List.of(toJdbcRoute(remapBound(context, boundRoute.orElseThrow())));
         }
 
         if (boundRoute.isPresent()) {
@@ -143,6 +145,14 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
     }
 
     /** 只复用 shardInfo，不复用 business physical location。 */
+    private StorageRoute remapBound(RouteContext context, StorageRoute bound) {
+        StorageRoute mapped = remap(context, bound.shardInfo());
+        if (!Objects.equals(mapped.dataSourceKey(), bound.dataSourceKey())) {
+            throw new StorageRoutingException("bound route and idempotency mapping must use the same dataSourceKey");
+        }
+        return mapped;
+    }
+
     private StorageRoute remap(RouteContext context, ShardRouteInfo shardInfo) {
         return StorageRoute.builder()
                 .context(context)
@@ -154,9 +164,16 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
     /** 有 shardInfo 就重新映射幂等表；无 shardInfo 就只复用 dataSourceKey。 */
     private StorageRoute normalizeResolvedRoute(RouteContext context, StorageRoute resolved) {
         Objects.requireNonNull(resolved, "storageRouteResolver returned null");
+        requireDirect(resolved);
         return resolved.shardInfo() == null
                 ? directIdempotencyRoute(context, resolved.dataSourceKey())
                 : remap(context, resolved.shardInfo());
+    }
+
+    private void requireDirect(StorageRoute route) {
+        if (route.mode() != StorageRouteMode.DIRECT_DATASOURCE) {
+            throw new StorageRoutingException("idempotency JDBC physical-table routing requires DIRECT_DATASOURCE; middleware adapter is not installed");
+        }
     }
 
     private StorageRoute directIdempotencyRoute(RouteContext context, String dataSourceKey) {

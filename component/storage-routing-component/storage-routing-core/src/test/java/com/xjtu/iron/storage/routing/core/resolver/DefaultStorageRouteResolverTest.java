@@ -1,18 +1,17 @@
 package com.xjtu.iron.storage.routing.core.resolver;
 
-import com.xjtu.iron.storage.routing.api.CompositeShardKey;
-import com.xjtu.iron.storage.routing.api.PhysicalStorageLocation;
-import com.xjtu.iron.storage.routing.api.RouteContext;
-import com.xjtu.iron.storage.routing.api.ShardKey;
-import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
-import com.xjtu.iron.storage.routing.api.StorageRoute;
-import com.xjtu.iron.storage.routing.api.StorageRouteMode;
-import com.xjtu.iron.storage.routing.api.StorageRoutingException;
+import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
+import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
+import com.xjtu.iron.storage.routing.api.key.ShardKey;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
-import org.junit.jupiter.api.Test;
-
+import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
+import com.xjtu.iron.storage.routing.api.route.RouteContext;
+import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
+import com.xjtu.iron.storage.routing.api.route.StorageRouteMode;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

@@ -3,7 +3,7 @@ package com.xjtu.iron.idempotent.starter.autoconfigure;
 import com.xjtu.iron.idempotent.api.execution.IdempotencyExecutor;
 import com.xjtu.iron.idempotent.integration.storage.routing.IdempotencyRouteContextFactory;
 import com.xjtu.iron.idempotent.integration.storage.routing.StorageRouteAwareIdempotencyExecutor;
-import com.xjtu.iron.storage.routing.api.StorageRouteContext;
+import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

@@ -16,6 +16,10 @@
     <dependencies>
         <dependency>
             <groupId>com.xjtu.iron</groupId>
+            <artifactId>idempotent-integration-transaction</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.xjtu.iron</groupId>
             <artifactId>idempotent-provider-jdbc</artifactId>
         </dependency>
         <dependency>

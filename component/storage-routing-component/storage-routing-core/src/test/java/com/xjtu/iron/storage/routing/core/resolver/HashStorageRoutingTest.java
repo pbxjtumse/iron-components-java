@@ -1,21 +1,20 @@
 package com.xjtu.iron.storage.routing.core.resolver;
 
-import com.xjtu.iron.storage.routing.api.CompositeShardKey;
-import com.xjtu.iron.storage.routing.api.PhysicalStorageLocation;
-import com.xjtu.iron.storage.routing.api.RouteContext;
-import com.xjtu.iron.storage.routing.api.ShardKey;
-import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
-import com.xjtu.iron.storage.routing.api.StorageRoute;
-import com.xjtu.iron.storage.routing.api.StorageRoutingException;
-import com.xjtu.iron.storage.routing.api.TableIndexMode;
+import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
+import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
+import com.xjtu.iron.storage.routing.api.key.ShardKey;
 import com.xjtu.iron.storage.routing.api.mapping.RouteMappingStrategy;
+import com.xjtu.iron.storage.routing.api.mapping.TableIndexMode;
+import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
+import com.xjtu.iron.storage.routing.api.route.RouteContext;
+import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
+import java.util.Locale;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
-
-import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
