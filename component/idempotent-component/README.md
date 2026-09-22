@@ -177,3 +177,7 @@ PlantUML 图位于 `docs/diagrams/`。
 - 内置扫描调度中心。
 
 这些场景仍需要下游幂等、业务唯一约束、事务消息 / Outbox、补偿、对账或外部 Reliable Task。
+
+## 执行器阅读入口
+
+[从 DefaultIdempotencyExecutor 开始读幂等执行流程](docs/executor-reading-guide.md)：职责分包、取得执行权后的事务处理，以及路由落库的阅读顺序。

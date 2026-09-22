@@ -1,4 +1,4 @@
-package com.xjtu.iron.idempotent.core.execution;
+package com.xjtu.iron.idempotent.core.execution.preparation;
 
 import com.xjtu.iron.idempotent.api.policy.IdempotencyPolicy;
 import com.xjtu.iron.idempotent.api.repository.IdempotencyRepository;
@@ -12,7 +12,7 @@ import java.util.Objects;
  * <p>它与并行组件中的 TaskDefinition 思路一致：
  * Request/Policy/ResultPolicy/Repository 先解析完成，主执行流程不再到处读取可选配置。</p>
  */
-final class IdempotencyExecutionDefinition<T> {
+public final class IdempotencyExecutionDefinition<T> {
 
     private final IdempotencyPolicy policy;
     private final IdempotencyRepository repository;
@@ -24,7 +24,7 @@ final class IdempotencyExecutionDefinition<T> {
         this.resultPolicy = Objects.requireNonNull(resultPolicy, "resultPolicy must not be null");
     }
 
-    IdempotencyPolicy policy() { return policy; }
-    IdempotencyRepository repository() { return repository; }
-    IdempotencyResultPolicy<T> resultPolicy() { return resultPolicy; }
+    public IdempotencyPolicy policy() { return policy; }
+    public IdempotencyRepository repository() { return repository; }
+    public IdempotencyResultPolicy<T> resultPolicy() { return resultPolicy; }
 }

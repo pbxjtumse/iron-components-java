@@ -26,6 +26,10 @@ import com.xjtu.iron.idempotent.core.repository.DefaultIdempotencyRepositoryRegi
 import com.xjtu.iron.idempotent.core.repository.IdempotencyRepositoryRegistry;
 import com.xjtu.iron.idempotent.core.state.DefaultIdempotencyStateMachine;
 import org.junit.jupiter.api.Test;
+import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionCoordinator;
+import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionalWork;
+import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionException;
+import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionOutcome;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -134,12 +138,102 @@ class DefaultIdempotencyExecutorTest {
         assertThat(calls[0]).isZero();
     }
 
+    @Test
+    void acquiredBusinessAndCompletionStayInsideTheSameTransactionWork() {
+        MemoryRepository repository = new MemoryRepository();
+        repository.transactionSupported = true;
+        var executor = executor(repository, recordingCoordinator(repository.trace));
+        var result = executor.execute(request("tx-success"), ctx -> {
+            repository.trace.add("business");
+            assertThat(ctx.getOwnerToken()).isNotBlank();
+            assertThat(ctx.getVersion()).isEqualTo(1);
+            return "ok";
+        });
+        assertThat(result.getStatus()).isEqualTo(IdempotencyResultStatus.EXECUTED);
+        assertThat(repository.trace).containsExactly("acquire", "begin", "business", "success", "commit");
+    }
+
+    @Test
+    void rejectedCompletionRollsBackAndNeverMarksTheNewOwnerFailed() {
+        MemoryRepository repository = new MemoryRepository();
+        repository.transactionSupported = true;
+        repository.completionStatus = IdempotencyWriteStatus.STALE_OWNER;
+        var result = executor(repository, recordingCoordinator(repository.trace)).execute(request("stale"), ctx -> {
+            repository.trace.add("business");
+            return "ok";
+        });
+        assertThat(result.getStatus()).isEqualTo(IdempotencyResultStatus.OWNERSHIP_LOST);
+        assertThat(repository.trace).containsExactly("acquire", "begin", "business", "success", "rollback");
+    }
+
+    @Test
+    void resultCaptureFailureRollsBackBeforeFailurePersistence() {
+        MemoryRepository repository = new MemoryRepository();
+        repository.transactionSupported = true;
+        var snapshot = IdempotencyResultPolicies.snapshot(new com.xjtu.iron.idempotent.api.result.IdempotencyResultSerializer<String>() {
+            @Override public String serialize(String value) { throw new IllegalStateException("capture failed"); }
+            @Override public String deserialize(String value) { return value; }
+        });
+        var result = executor(repository, recordingCoordinator(repository.trace)).execute(request("capture"), snapshot, ctx -> {
+            repository.trace.add("business");
+            return "ok";
+        });
+        assertThat(result.getStatus()).isEqualTo(IdempotencyResultStatus.RESULT_POLICY_ERROR);
+        assertThat(repository.trace).containsExactly("acquire", "begin", "business", "rollback", "failed");
+    }
+
+    @Test
+    void unknownCommitDoesNotOverwritePotentiallyCommittedSuccessWithFailed() {
+        MemoryRepository repository = new MemoryRepository();
+        repository.transactionSupported = true;
+        IdempotencyTransactionCoordinator coordinator = new IdempotencyTransactionCoordinator() {
+            @Override public <T> T executeRequired(String name, String routeKey, IdempotencyTransactionalWork<T> work) throws Exception {
+                work.execute();
+                throw new IdempotencyTransactionException("unknown commit", "COMMIT", IdempotencyTransactionOutcome.COMMIT_UNKNOWN, null);
+            }
+        };
+        var result = executor(repository, coordinator).execute(request("unknown"), ctx -> "ok");
+        assertThat(result.getStatus()).isEqualTo(IdempotencyResultStatus.TRANSACTION_COMMIT_UNKNOWN);
+        assertThat(repository.trace).containsExactly("acquire", "success");
+    }
+
+    @Test
+    void processingAndRetryableFailureDoNotExecuteNormalRequestAgain() {
+        for (var status : List.of(IdempotencyAcquireStatus.PROCESSING_ACTIVE, IdempotencyAcquireStatus.PROCESSING_EXPIRED,
+                IdempotencyAcquireStatus.FAILED_RETRYABLE, IdempotencyAcquireStatus.KEY_CONFLICT)) {
+            MemoryRepository repository = new MemoryRepository();
+            repository.acquireStatus = status;
+            var result = executor(repository).execute(request("not-acquired"), ctx -> { throw new AssertionError("must not execute"); });
+            assertThat(result.getStatus()).isEqualTo(new DefaultIdempotencyStateMachine().onAcquire(status).resultStatus());
+            assertThat(repository.trace).containsExactly("acquire");
+        }
+    }
+
+    /** 这里只验证核心委托和异常边界；真实数据库回滚由 DirectStorageRoutingIT 验证。 */
+    private IdempotencyTransactionCoordinator recordingCoordinator(List<String> trace) {
+        return new IdempotencyTransactionCoordinator() {
+            @Override public <T> T executeRequired(String name, String routeKey, IdempotencyTransactionalWork<T> work) throws Exception {
+                trace.add("begin");
+                try {
+                    T value = work.execute();
+                    trace.add("commit");
+                    return value;
+                } catch (Exception error) {
+                    trace.add("rollback");
+                    throw error;
+                }
+            }
+        };
+    }
+
     private IdempotencyRequest request(String key) {
         return IdempotencyRequest.builder().key(key).routeKey("merchant:1").requestHash("hash-" + key)
                 .storeName(STORAGE.getStoreName()).scanBucket(STORAGE.getScanBucket()).policyName("test-durable").build();
     }
 
-    private DefaultIdempotencyExecutor executor(IdempotencyRepository repository) {
+    private DefaultIdempotencyExecutor executor(IdempotencyRepository repository) { return executor(repository, null); }
+
+    private DefaultIdempotencyExecutor executor(IdempotencyRepository repository, IdempotencyTransactionCoordinator coordinator) {
         IdempotencyRepositoryRegistry repositoryRegistry = new DefaultIdempotencyRepositoryRegistry(List.of(repository), "mem", "mem");
         IdempotencyPolicy policy = IdempotencyPolicy.builder().name("test-durable").mode(IdempotencyMode.DURABLE)
                 .processingTimeout(java.time.Duration.ofSeconds(1)).recoveryPolicy(IdempotencyRecoveryPolicy.externalTask()).build();
@@ -147,22 +241,28 @@ class DefaultIdempotencyExecutorTest {
         return new DefaultIdempotencyExecutor(repositoryRegistry, policyRegistry,
                 (namespace, key) -> UUID.randomUUID().toString(),
                 (error, at) -> new IdempotencyFailureInfo("BUSINESS_ERROR", error.getMessage(), false, at),
-                null, null, new DefaultIdempotencyStateMachine(), null, null,
+                null, coordinator, new DefaultIdempotencyStateMachine(), null, null,
                 Clock.fixed(Instant.parse("2026-08-17T00:00:00Z"), ZoneOffset.UTC));
     }
 
     private static final class MemoryRepository implements IdempotencyRepository {
         private final Map<String, IdempotencyRecord> data = new HashMap<>();
+        private final List<String> trace = new ArrayList<>();
+        private boolean transactionSupported;
+        private IdempotencyWriteStatus completionStatus = IdempotencyWriteStatus.UPDATED;
+        private IdempotencyAcquireStatus acquireStatus;
 
         @Override public String providerName() { return "mem"; }
         @Override
         public IdempotencyRepositoryCapabilities capabilities() {
             return IdempotencyRepositoryCapabilities.builder().windowedSupported(true).durableSupported(true)
-                    .resultPayloadSupported(true).businessTransactionParticipationSupported(false).recoveryQuerySupported(false).build();
+                    .resultPayloadSupported(true).businessTransactionParticipationSupported(transactionSupported).recoveryQuerySupported(false).build();
         }
 
         @Override
         public synchronized IdempotencyAcquireResult tryAcquire(IdempotencyAcquireRequest r) {
+            trace.add("acquire");
+            if (acquireStatus != null) return IdempotencyAcquireResult.of(acquireStatus, null);
             String identity = identity(r.getStorageContext(), r.getNamespace(), r.getKey());
             IdempotencyRecord current = data.get(identity);
             if (current == null) {
@@ -190,6 +290,8 @@ class DefaultIdempotencyExecutorTest {
 
         @Override
         public synchronized IdempotencyWriteResult markSuccess(IdempotencySuccessRequest r) {
+            trace.add("success");
+            if (completionStatus != IdempotencyWriteStatus.UPDATED) return IdempotencyWriteResult.of(completionStatus, null);
             IdempotencyRecord current = data.get(identity(r.getStorageContext(), r.getNamespace(), r.getKey()));
             IdempotencyRecord next = completed(current, IdempotencyStatus.SUCCESS, r.getResultPayload(), r.getNow());
             data.put(identity(r.getStorageContext(), r.getNamespace(), r.getKey()), next);
@@ -197,6 +299,7 @@ class DefaultIdempotencyExecutorTest {
         }
 
         @Override public IdempotencyWriteResult markFailed(IdempotencyFailureRequest request) {
+            trace.add("failed");
             return IdempotencyWriteResult.of(IdempotencyWriteStatus.UPDATED,
                     data.get(identity(request.getStorageContext(), request.getNamespace(), request.getKey())));
         }
