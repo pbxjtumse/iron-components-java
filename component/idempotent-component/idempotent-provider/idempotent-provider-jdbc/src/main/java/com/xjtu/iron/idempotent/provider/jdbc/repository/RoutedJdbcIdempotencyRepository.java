@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * 支持 Storage Routing 的 JDBC IdempotencyRepository 门面。
- *
+ * <p>【为本次操作选择数据源和幂等表，再委托执行】</p>
  * <p>该类不重新实现幂等 SQL，也不复制 ownerToken/version、WINDOWED、Recovery 等状态逻辑。
  * 它只在每次调用前把 IdempotencyStorageContext 解析成最终 JDBC 路由，然后复用现有
  * {@link JdbcIdempotencyRepository} 作为“单个 dataSourceKey + 物理表”的原子状态实现。</p>
