@@ -1,5 +1,6 @@
-package com.xjtu.iron.storage.routing.api;
+package com.xjtu.iron.storage.routing.api.key;
 
+import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;

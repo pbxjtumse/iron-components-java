@@ -2,7 +2,7 @@ package com.xjtu.iron.idempotent.integration.storage.routing;
 
 import com.xjtu.iron.idempotent.api.execution.IdempotencyRequest;
 import com.xjtu.iron.idempotent.api.recovery.IdempotencyRecoveryRequest;
-import com.xjtu.iron.storage.routing.api.RouteContext;
+import com.xjtu.iron.storage.routing.api.route.RouteContext;
 
 /**
  * 把幂等请求转换成一次 Storage Routing 输入。

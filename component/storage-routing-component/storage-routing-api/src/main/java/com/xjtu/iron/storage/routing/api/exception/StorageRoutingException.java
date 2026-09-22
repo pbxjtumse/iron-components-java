@@ -1,4 +1,4 @@
-package com.xjtu.iron.storage.routing.api;
+package com.xjtu.iron.storage.routing.api.exception;
 
 /**
  * 存储路由异常。

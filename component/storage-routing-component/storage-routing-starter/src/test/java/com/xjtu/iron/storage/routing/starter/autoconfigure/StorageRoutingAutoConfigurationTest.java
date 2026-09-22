@@ -1,13 +1,13 @@
 package com.xjtu.iron.storage.routing.starter.autoconfigure;
 
-import com.xjtu.iron.storage.routing.api.CompositeShardKey;
-import com.xjtu.iron.storage.routing.api.PhysicalStorageLocation;
-import com.xjtu.iron.storage.routing.api.RouteContext;
-import com.xjtu.iron.storage.routing.api.ShardKey;
-import com.xjtu.iron.storage.routing.api.StorageRoute;
-import com.xjtu.iron.storage.routing.api.StorageRouteContext;
-import com.xjtu.iron.storage.routing.api.StorageRouteScope;
+import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
+import com.xjtu.iron.storage.routing.api.context.StorageRouteScope;
+import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
+import com.xjtu.iron.storage.routing.api.key.ShardKey;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
+import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
+import com.xjtu.iron.storage.routing.api.route.RouteContext;
+import com.xjtu.iron.storage.routing.api.route.StorageRoute;
 import com.xjtu.iron.storage.routing.core.context.ThreadLocalStorageRouteContext;
 import com.xjtu.iron.storage.routing.integration.relational.StorageRouteToSqlRouteBridge;
 import org.junit.jupiter.api.Test;

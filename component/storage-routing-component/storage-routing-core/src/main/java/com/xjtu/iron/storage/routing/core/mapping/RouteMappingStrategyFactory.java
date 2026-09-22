@@ -1,8 +1,7 @@
 package com.xjtu.iron.storage.routing.core.mapping;
 
-import com.xjtu.iron.storage.routing.api.TableIndexMode;
 import com.xjtu.iron.storage.routing.api.mapping.RouteMappingStrategy;
-
+import com.xjtu.iron.storage.routing.api.mapping.TableIndexMode;
 import java.util.Objects;
 
 /**

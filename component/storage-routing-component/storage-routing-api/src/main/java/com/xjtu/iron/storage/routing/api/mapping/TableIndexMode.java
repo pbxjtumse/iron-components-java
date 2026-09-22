@@ -1,4 +1,4 @@
-package com.xjtu.iron.storage.routing.api;
+package com.xjtu.iron.storage.routing.api.mapping;
 
 /**
  * 物理表编号策略。

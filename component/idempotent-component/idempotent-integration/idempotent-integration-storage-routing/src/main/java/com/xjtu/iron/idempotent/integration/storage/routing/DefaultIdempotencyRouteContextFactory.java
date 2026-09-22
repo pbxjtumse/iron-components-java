@@ -2,10 +2,9 @@ package com.xjtu.iron.idempotent.integration.storage.routing;
 
 import com.xjtu.iron.idempotent.api.execution.IdempotencyRequest;
 import com.xjtu.iron.idempotent.api.recovery.IdempotencyRecoveryRequest;
-import com.xjtu.iron.storage.routing.api.CompositeShardKey;
-import com.xjtu.iron.storage.routing.api.RouteContext;
-import com.xjtu.iron.storage.routing.api.ShardKey;
-
+import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
+import com.xjtu.iron.storage.routing.api.key.ShardKey;
+import com.xjtu.iron.storage.routing.api.route.RouteContext;
 import java.util.Objects;
 
 /** 默认按幂等 key 计算分片的 RouteContextFactory。 */

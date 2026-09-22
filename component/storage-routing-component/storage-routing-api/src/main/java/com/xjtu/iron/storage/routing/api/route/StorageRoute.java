@@ -1,5 +1,6 @@
-package com.xjtu.iron.storage.routing.api;
+package com.xjtu.iron.storage.routing.api.route;
 
+import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
 import java.util.Objects;
 
 /**

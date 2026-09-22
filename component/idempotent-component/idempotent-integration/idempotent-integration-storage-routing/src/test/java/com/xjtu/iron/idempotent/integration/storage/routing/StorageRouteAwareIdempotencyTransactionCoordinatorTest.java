@@ -1,13 +1,15 @@
 package com.xjtu.iron.idempotent.integration.storage.routing;
 
-import com.xjtu.iron.storage.routing.api.StorageRoute;
+import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
+import com.xjtu.iron.storage.routing.api.route.StorageRoute;
 import com.xjtu.iron.storage.routing.core.context.ThreadLocalStorageRouteContext;
 import com.xjtu.iron.transaction.api.definition.TransactionOptions;
 import com.xjtu.iron.transaction.api.definition.TransactionPropagation;
 import com.xjtu.iron.transaction.api.execution.TransactionCallback;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutor;
-import org.junit.jupiter.api.Test;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.jupiter.api.Test;
+
 import static org.assertj.core.api.Assertions.*;
 
 class StorageRouteAwareIdempotencyTransactionCoordinatorTest {
@@ -32,6 +34,6 @@ class StorageRouteAwareIdempotencyTransactionCoordinatorTest {
         }
         assertThat(routes.current()).isEmpty();
         assertThatThrownBy(() -> coordinator.executeRequired("order", null, () -> "never"))
-                .isInstanceOf(com.xjtu.iron.storage.routing.api.StorageRoutingException.class);
+                .isInstanceOf(com.xjtu.iron.storage.routing.api.exception.StorageRoutingException.class);
     }
 }

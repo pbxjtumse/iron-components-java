@@ -66,13 +66,13 @@ storage-routing-starter
 ## 4. 当前最建议先看的代码
 
 ```text
-storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/RouteContext.java
+storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/route/RouteContext.java
     看调用方如何表达 routeName / logicalTable / CompositeShardKey
 
-storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/CompositeShardKey.java
+storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/key/CompositeShardKey.java
     看字段顺序、字段名、类型化值和稳定编码
 
-storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/StorageRoute.java
+storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/route/StorageRoute.java
     看 Resolver 最终输出什么路由结果
 
 storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/resolver/HashShardResolver.java

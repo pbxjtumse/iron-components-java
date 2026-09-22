@@ -270,8 +270,8 @@ WHERE storage_routing_key = ? AND store_name = ? AND namespace = ? AND idempoten
 ### 7.1 当前代码入口
 
 - [StorageRoute 模型说明](03-storage-route-model.md)
-- [CompositeShardKey](../../storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/CompositeShardKey.java)
-- [StorageRoute](../../storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/StorageRoute.java)
+- [CompositeShardKey](../../storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/key/CompositeShardKey.java)
+- [StorageRoute](../../storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/route/StorageRoute.java)
 - [Direct bridge](../../storage-routing-integration/storage-routing-integration-relational/src/main/java/com/xjtu/iron/storage/routing/integration/relational/DefaultStorageRouteToSqlRouteBridge.java)
 - [路由装饰执行器](../../../idempotent-component/idempotent-integration/idempotent-integration-storage-routing/src/main/java/com/xjtu/iron/idempotent/integration/storage/routing/StorageRouteAwareIdempotencyExecutor.java)
 - [幂等 JDBC 路由解析器](../../../idempotent-component/idempotent-integration/idempotent-integration-storage-routing/src/main/java/com/xjtu/iron/idempotent/integration/storage/routing/StorageRoutingIdempotencyJdbcRouteResolver.java)

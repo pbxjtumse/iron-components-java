@@ -150,3 +150,7 @@ Phase 2.4：第一优先级接入 ShardingSphere-JDBC
 ```bash
 mvn -pl :storage-routing-starter -am test
 ```
+
+## 从零阅读
+
+先阅读 [从零理解路由与作用域](docs/从零理解路由与作用域.md)，再运行 `RoutingBasicsTest`；完整 Direct E2E 用于最后验证，不作为入门入口。

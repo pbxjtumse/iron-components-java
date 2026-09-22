@@ -7,20 +7,20 @@ import com.xjtu.iron.idempotent.integration.transaction.DirectStorageResourceReg
 import com.xjtu.iron.idempotent.provider.jdbc.execution.JdbcExecutionManagerResolver;
 import com.xjtu.iron.idempotent.provider.jdbc.routing.IdempotencyJdbcRouteResolver;
 import com.xjtu.iron.idempotent.starter.properties.IdempotencyProperties;
-import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
-import com.xjtu.iron.storage.routing.api.StorageRouteContext;
+import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
+import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
 import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
 import com.xjtu.iron.storage.routing.starter.autoconfigure.StorageRoutingProperties;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutorResolver;
+import java.util.Map;
+import javax.sql.DataSource;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.SmartInitializingSingleton;
-import javax.sql.DataSource;
-import java.util.Map;
 
 /** 显式 opt-in 的 Direct 本地事务装配；资源注册表同时驱动 Tx-A/B/C。 */
 @AutoConfiguration(after = IdempotencyStorageRoutingAutoConfiguration.class, before = IdempotencyAutoConfiguration.class)

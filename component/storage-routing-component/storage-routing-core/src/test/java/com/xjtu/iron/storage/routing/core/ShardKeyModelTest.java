@@ -1,16 +1,15 @@
 package com.xjtu.iron.storage.routing.core;
 
-import com.xjtu.iron.storage.routing.api.CompositeShardKey;
-import com.xjtu.iron.storage.routing.api.ShardKey;
-import com.xjtu.iron.storage.routing.api.ShardValue;
-import com.xjtu.iron.storage.routing.api.StorageRoutingException;
-import org.junit.jupiter.api.Test;
-
+import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
+import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
+import com.xjtu.iron.storage.routing.api.key.ShardKey;
+import com.xjtu.iron.storage.routing.api.key.ShardValue;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

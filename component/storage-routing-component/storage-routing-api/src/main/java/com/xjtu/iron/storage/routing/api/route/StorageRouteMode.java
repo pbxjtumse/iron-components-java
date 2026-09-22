@@ -1,4 +1,5 @@
-package com.xjtu.iron.storage.routing.api;
+package com.xjtu.iron.storage.routing.api.route;
+
 
 /**
  * 存储路由模式。

@@ -1,10 +1,9 @@
 package com.xjtu.iron.storage.routing.core.resolver;
 
-import com.xjtu.iron.storage.routing.api.CompositeShardKey;
-import com.xjtu.iron.storage.routing.api.ShardRouteInfo;
-import com.xjtu.iron.storage.routing.api.StorageRoutingException;
+import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
+import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
 import com.xjtu.iron.storage.routing.api.resolver.ShardResolver;
-
+import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
 import java.util.Objects;
 
 /**
