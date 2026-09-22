@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * 默认 Recovery candidate 查询服务。
+ * 默认 Recovery candidate 查询服务
  *
  * <p>它只负责“发现可能需要恢复的快照”，绝不修改 owner/version，也绝不直接执行业务。扫描结果必须交给
  * IdempotencyExecutor.recover(...)，由 tryRecover(expectedOwner, expectedVersion) 再做一次实时原子校验。</p>
