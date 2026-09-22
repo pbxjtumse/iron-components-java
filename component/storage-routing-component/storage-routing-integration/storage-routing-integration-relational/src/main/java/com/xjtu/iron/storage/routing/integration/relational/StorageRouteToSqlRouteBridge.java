@@ -2,7 +2,7 @@ package com.xjtu.iron.storage.routing.integration.relational;
 
 import com.xjtu.iron.relational.api.statement.SqlRoute;
 import com.xjtu.iron.relational.api.statement.SqlStatement;
-import com.xjtu.iron.storage.routing.api.route.StorageRoute;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import java.util.Objects;
 
 /**

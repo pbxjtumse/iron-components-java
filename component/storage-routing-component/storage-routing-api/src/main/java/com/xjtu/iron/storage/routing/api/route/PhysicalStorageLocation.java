@@ -4,7 +4,7 @@ import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
 import java.util.Objects;
 
 /**
- * 物理存储位置。
+ * 【物理存储】位置。
  *
  * <p>StorageRoute 负责描述一次存储访问，而 PhysicalStorageLocation 专门描述最终落点。
  * 例如：order-db-05.order_56。</p>

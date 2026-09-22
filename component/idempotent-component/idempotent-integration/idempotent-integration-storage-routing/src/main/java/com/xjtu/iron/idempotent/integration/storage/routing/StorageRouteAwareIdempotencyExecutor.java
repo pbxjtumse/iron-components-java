@@ -12,7 +12,7 @@ import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
 import com.xjtu.iron.storage.routing.api.context.StorageRouteScope;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
-import com.xjtu.iron.storage.routing.api.route.StorageRoute;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import java.util.Objects;
 
 /**

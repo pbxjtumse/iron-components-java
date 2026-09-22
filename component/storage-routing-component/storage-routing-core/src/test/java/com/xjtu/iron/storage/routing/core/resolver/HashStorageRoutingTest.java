@@ -8,7 +8,7 @@ import com.xjtu.iron.storage.routing.api.mapping.TableIndexMode;
 import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
 import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
-import com.xjtu.iron.storage.routing.api.route.StorageRoute;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
 import java.util.Locale;
 import org.junit.jupiter.api.Test;

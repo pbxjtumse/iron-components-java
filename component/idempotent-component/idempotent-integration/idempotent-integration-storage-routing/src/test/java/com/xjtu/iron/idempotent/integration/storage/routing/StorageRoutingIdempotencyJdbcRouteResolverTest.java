@@ -13,7 +13,7 @@ import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
 import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
-import com.xjtu.iron.storage.routing.api.route.StorageRoute;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.integration.relational.DefaultStorageRouteToSqlRouteBridge;
 import java.time.Instant;
 import java.util.Optional;

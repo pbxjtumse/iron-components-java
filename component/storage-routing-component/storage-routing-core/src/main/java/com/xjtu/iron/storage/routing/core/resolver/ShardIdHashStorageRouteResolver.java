@@ -4,7 +4,7 @@ import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.mapping.TableIndexMode;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
-import com.xjtu.iron.storage.routing.api.route.StorageRoute;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
 import java.util.Objects;
 

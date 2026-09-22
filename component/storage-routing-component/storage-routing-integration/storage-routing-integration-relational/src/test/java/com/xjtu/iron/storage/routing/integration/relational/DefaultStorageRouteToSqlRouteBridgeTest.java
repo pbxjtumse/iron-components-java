@@ -9,7 +9,7 @@ import com.xjtu.iron.relational.core.connection.RoutingDataSourceResolver;
 import com.xjtu.iron.relational.core.exception.StandardSqlExceptionTranslator;
 import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
-import com.xjtu.iron.storage.routing.api.route.StorageRoute;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.api.route.StorageRouteMode;
 import java.sql.Connection;
 import java.sql.SQLException;

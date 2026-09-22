@@ -4,7 +4,7 @@ import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionCoordinat
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionalWork;
 import com.xjtu.iron.idempotent.integration.transaction.TransactionTemplateIdempotencyTransactionCoordinator;
 import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
-import com.xjtu.iron.storage.routing.api.route.StorageRoute;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.api.route.StorageRouteMode;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutorResolver;
 import java.util.Objects;

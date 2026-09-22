@@ -1,7 +1,7 @@
 package com.xjtu.iron.storage.routing.api.resolver;
 
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
-import com.xjtu.iron.storage.routing.api.route.StorageRoute;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 
 /**
  * Storage Route 总入口。

@@ -7,7 +7,7 @@ import com.xjtu.iron.storage.routing.api.key.ShardKey;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
-import com.xjtu.iron.storage.routing.api.route.StorageRoute;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.core.context.ThreadLocalStorageRouteContext;
 import com.xjtu.iron.storage.routing.integration.relational.StorageRouteToSqlRouteBridge;
 import org.junit.jupiter.api.Test;

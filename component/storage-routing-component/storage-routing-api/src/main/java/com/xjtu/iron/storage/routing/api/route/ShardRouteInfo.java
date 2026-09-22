@@ -3,7 +3,7 @@ package com.xjtu.iron.storage.routing.api.route;
 import java.util.Objects;
 
 /**
- * 分片计算结果。
+ * 【逻辑分片】计算结果。
  *
  * <p>ShardRouteInfo 专门描述“算出来的 shard 信息”，与最终物理位置解耦。
  * 例如：orderId -> shardId=56，再由不同 Adapter 决定映射到
