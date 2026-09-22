@@ -53,6 +53,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import javax.sql.DataSource;
@@ -98,22 +99,21 @@ public class IdempotencyAutoConfiguration {
         return new DefaultIdempotencyFailureClassifier();
     }
 
-    /**
-     * 结果快照不再通过 Executor 的 Class<T> 处理。
-     * Jackson 只作为 ResultPolicy 的可选类型安全工厂存在。
-     */
-    @Bean
+    /** 隔离可选类型，避免 Spring 在解析主配置方法的泛型签名时提前加载 ObjectMapper。 */
+    @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(ObjectMapper.class)
-    @ConditionalOnMissingBean(IdempotencySnapshotPolicyFactory.class)
-    public IdempotencySnapshotPolicyFactory idempotencySnapshotPolicyFactory(ObjectProvider<ObjectMapper> provider) {
-        return new JacksonIdempotencySnapshotPolicyFactory(provider.getIfAvailable(ObjectMapper::new));
-    }
+    static class JacksonConfiguration {
+        @Bean
+        @ConditionalOnMissingBean(IdempotencySnapshotPolicyFactory.class)
+        public IdempotencySnapshotPolicyFactory idempotencySnapshotPolicyFactory(ObjectProvider<ObjectMapper> provider) {
+            return new JacksonIdempotencySnapshotPolicyFactory(provider.getIfAvailable(ObjectMapper::new));
+        }
 
-    @Bean
-    @ConditionalOnClass(ObjectMapper.class)
-    @ConditionalOnMissingBean(IdempotencyRequestHasher.class)
-    public IdempotencyRequestHasher idempotencyRequestHasher(ObjectProvider<ObjectMapper> provider) {
-        return new JacksonSha256IdempotencyRequestHasher(provider.getIfAvailable(ObjectMapper::new));
+        @Bean
+        @ConditionalOnMissingBean(IdempotencyRequestHasher.class)
+        public IdempotencyRequestHasher idempotencyRequestHasher(ObjectProvider<ObjectMapper> provider) {
+            return new JacksonSha256IdempotencyRequestHasher(provider.getIfAvailable(ObjectMapper::new));
+        }
     }
 
     @Bean
@@ -122,12 +122,15 @@ public class IdempotencyAutoConfiguration {
         return new SpringIdempotencyEventPublisher(publisher);
     }
 
-    @Bean
+    @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(MeterRegistry.class)
-    @ConditionalOnBean(MeterRegistry.class)
-    @ConditionalOnMissingBean(IdempotencyMetrics.class)
-    public IdempotencyMetrics idempotencyMetrics(MeterRegistry registry) {
-        return new MicrometerIdempotencyMetrics(registry);
+    static class MicrometerConfiguration {
+        @Bean
+        @ConditionalOnBean(MeterRegistry.class)
+        @ConditionalOnMissingBean(IdempotencyMetrics.class)
+        public IdempotencyMetrics idempotencyMetrics(MeterRegistry registry) {
+            return new MicrometerIdempotencyMetrics(registry);
+        }
     }
 
     @Bean

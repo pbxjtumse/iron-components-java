@@ -10,6 +10,7 @@ import com.xjtu.iron.storage.routing.starter.autoconfigure.StorageRoutingAutoCon
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import static org.assertj.core.api.Assertions.*;
 
@@ -28,9 +29,23 @@ class DirectStorageAutoConfigurationTest {
             assertThat(context).hasNotFailed().hasSingleBean(DirectStorageResourceRegistry.class).hasSingleBean(JdbcExecutionManagerResolver.class);
             assertThat(context.getBean(IdempotencyTransactionCoordinator.class)).isInstanceOf(StorageRouteAwareIdempotencyTransactionCoordinator.class);
             assertThat(context.getBean(IdempotencyExecutor.class)).isNotNull();
+            assertThat(context).hasSingleBean(com.xjtu.iron.idempotent.api.result.IdempotencySnapshotPolicyFactory.class);
+            assertThat(context).hasSingleBean(com.xjtu.iron.idempotent.api.spi.IdempotencyRequestHasher.class);
             var registry = context.getBean(DirectStorageResourceRegistry.class);
             assertThat(registry.dataSources()).containsOnlyKeys("db_00", "db_01");
         });
+    }
+
+    @Test
+    void optionalJacksonAndMicrometerAreNotRequiredToAssembleDirectStorage() {
+        runner.withBean("db_01", DriverManagerDataSource.class, DriverManagerDataSource::new)
+                .withClassLoader(new FilteredClassLoader("com.fasterxml.jackson", "io.micrometer"))
+                .run(context -> {
+                    assertThat(context).hasNotFailed().hasSingleBean(DirectStorageResourceRegistry.class);
+                    assertThat(context.getBean(IdempotencyExecutor.class)).isNotNull();
+                    assertThat(context).doesNotHaveBean(com.xjtu.iron.idempotent.api.result.IdempotencySnapshotPolicyFactory.class);
+                    assertThat(context).doesNotHaveBean(com.xjtu.iron.idempotent.api.spi.IdempotencyRequestHasher.class);
+                });
     }
 
     @Test
