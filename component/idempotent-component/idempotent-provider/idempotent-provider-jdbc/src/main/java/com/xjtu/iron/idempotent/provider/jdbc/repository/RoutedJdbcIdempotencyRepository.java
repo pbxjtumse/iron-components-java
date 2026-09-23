@@ -6,11 +6,7 @@ import com.xjtu.iron.idempotent.api.repository.IdempotencyRepository;
 import com.xjtu.iron.idempotent.api.repository.IdempotencyRepositoryCapabilities;
 import com.xjtu.iron.idempotent.api.repository.acquire.IdempotencyAcquireRequest;
 import com.xjtu.iron.idempotent.api.repository.acquire.IdempotencyAcquireResult;
-import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryAcquireRequest;
-import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryCandidate;
-import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryQuery;
-import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryRepository;
-import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryResult;
+import com.xjtu.iron.idempotent.api.repository.recovery.*;
 import com.xjtu.iron.idempotent.api.repository.write.IdempotencyDiscardRequest;
 import com.xjtu.iron.idempotent.api.repository.write.IdempotencyFailureRequest;
 import com.xjtu.iron.idempotent.api.repository.write.IdempotencySuccessRequest;
@@ -45,6 +41,14 @@ import java.util.concurrent.ConcurrentMap;
  *
  * <p>这样可以把“去哪”与“幂等正确性”分开：Storage Routing 可以独立演进，原有 JDBC 状态机无需知道
  * 10 库 100 表、ShardingSphere 或具体 DataSource 注册方式。</p>
+
+ * <p><b>流程阅读编号：I4：每次状态操作的路由门面。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. tryAcquire、markSuccess、markFailed 等操作先解析幂等 JDBC 路由。</li>
+ *     <li>2. 按 dataSourceKey 和 tableName 缓存单目标 JdbcIdempotencyRepository，再委托其 SQL 实现。</li>
+ *     <li>3. 每次解析物理目标不等于每次重新 hash；配合 I1 时复用同一 shardInfo，再映射幂等表。</li>
+ *     <li>4. 幂等 SQL 直接经 JdbcExecutionManager 执行，不经过业务使用的 RelationalTemplate。</li>
+ * </ul>
  */
 public final class RoutedJdbcIdempotencyRepository implements IdempotencyRepository, IdempotencyRecoveryRepository {
 

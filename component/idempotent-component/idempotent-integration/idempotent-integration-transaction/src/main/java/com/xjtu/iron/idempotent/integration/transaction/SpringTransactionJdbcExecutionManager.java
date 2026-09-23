@@ -23,6 +23,14 @@ import java.util.Objects;
  * Tx-A / Tx-C：TransactionExecutor(REQUIRES_NEW) -> 当前事务绑定 Connection -> Repository SQL
  * Tx-B       ：TransactionCoordinator(REQUIRED) -> Business SQL -> markSuccess -> 复用同一 transaction-bound Connection
  * </pre>
+
+ * <p><b>流程阅读编号：I6.2：幂等 SQL 的事务连接入口。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. Tx-A 抢占和 Tx-C 失败落库调用 inNewTransaction，使用 REQUIRES_NEW。</li>
+ *     <li>2. Tx-B 的 SUCCESS 更新调用 inCurrentTransaction，要求真实事务及对应 DataSource 已绑定。</li>
+ *     <li>3. DataSourceUtils 获取和释放连接；业务 D3 也使用相同资源时才能共享连接。</li>
+ *     <li>4. 连接复用不能仅凭数据库 URL 相同推断；配置两份独立连接池不等于同一本地事务资源。</li>
+ * </ul>
  */
 public final class SpringTransactionJdbcExecutionManager implements JdbcExecutionManager {
 

@@ -1,11 +1,6 @@
 package com.xjtu.iron.idempotent.integration.storage.routing;
 
-import com.xjtu.iron.idempotent.api.execution.IdempotencyCallback;
-import com.xjtu.iron.idempotent.api.execution.IdempotencyExecutor;
-import com.xjtu.iron.idempotent.api.execution.IdempotencyRequest;
-import com.xjtu.iron.idempotent.api.execution.IdempotencyResult;
-import com.xjtu.iron.idempotent.api.execution.IdempotencyResultStatus;
-import com.xjtu.iron.idempotent.api.execution.IdempotencyStage;
+import com.xjtu.iron.idempotent.api.execution.*;
 import com.xjtu.iron.idempotent.api.recovery.IdempotencyRecoveryRequest;
 import com.xjtu.iron.idempotent.api.result.IdempotencyResultPolicy;
 import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
@@ -13,6 +8,7 @@ import com.xjtu.iron.storage.routing.api.context.StorageRouteScope;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
 import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
+
 import java.util.Objects;
 
 /**
@@ -41,6 +37,13 @@ import java.util.Objects;
  *
  * <p>因此一次 execute/recover 最多只调用一次全局
  * StorageRouteResolver。</p>
+
+ * <p><b>流程阅读编号：I1：执行级路由入口。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. 先检查当前 StorageRouteContext；已有业务路由时直接复用，作用域仍由业务调用方关闭。</li>
+ *     <li>2. 未绑定时调用 Factory 和 R1 路由解析器，再打开作用域；作用域覆盖 I2 至 I7 的完整同步调用。</li>
+ *     <li>3. finally 式的 Scope 关闭负责恢复上下文，不提交事务；异步任务不会自动继承此路由。</li>
+ * </ul>
  */
 public final class StorageRouteAwareIdempotencyExecutor implements IdempotencyExecutor {
 

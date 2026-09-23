@@ -47,6 +47,15 @@ import java.util.*;
  *
  * <p>它不理解幂等、Outbox、订单等上层语义，也不负责事务 begin/commit/rollback、
  * shard 计算和自动 retry。</p>
+
+ * <p><b>流程阅读编号：D1：业务 SQL 的统一执行入口。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. 校验 SqlStatement，组装 SqlExecutionContext，向 ConnectionProvider 请求连接句柄。</li>
+ *     <li>2. 在取得的连接上准备 SQL、设置参数和选项、执行并映射结果。</li>
+ *     <li>3. 关闭 Statement/ResultSet 与连接句柄；物理连接如何释放由句柄实现决定。</li>
+ *     <li>4. 将 SQL 异常转换为数据访问异常并通知监听器；这里不计算分片，也不主动建立本地事务。</li>
+ *     <li>5. 幂等 Provider 自己使用 JDBC 执行管理器；两条 SQL 路径通过共同的 Spring 事务资源协作。</li>
+ * </ul>
  */
 public final class DefaultRelationalTemplate implements RelationalTemplate {
 
@@ -191,11 +200,13 @@ public final class DefaultRelationalTemplate implements RelationalTemplate {
 
         try {
             T result;
+            // D1-1：获取/借用连接；关闭句柄是否关闭物理连接取决于 Provider。
             try (ConnectionHandle handle = connectionProvider.acquire(context)) {
                 Connection connection = Objects.requireNonNull(
                         handle.connection(),
                         "ConnectionHandle.connection() must not return null"
                 );
+                // D1-2：在选定连接上执行 SQL；Template 不在这里自行 commit。
                 result = work.execute(connection);
             }
 

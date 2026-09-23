@@ -25,11 +25,11 @@ import com.xjtu.iron.idempotent.core.policy.IdempotencyPolicyRegistry;
 import com.xjtu.iron.idempotent.core.repository.DefaultIdempotencyRepositoryRegistry;
 import com.xjtu.iron.idempotent.core.repository.IdempotencyRepositoryRegistry;
 import com.xjtu.iron.idempotent.core.state.DefaultIdempotencyStateMachine;
-import org.junit.jupiter.api.Test;
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionCoordinator;
-import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionalWork;
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionException;
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionOutcome;
+import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionalWork;
+import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -164,6 +164,35 @@ class DefaultIdempotencyExecutorTest {
         });
         assertThat(result.getStatus()).isEqualTo(IdempotencyResultStatus.OWNERSHIP_LOST);
         assertThat(repository.trace).containsExactly("acquire", "begin", "business", "success", "rollback");
+    }
+
+    @Test
+    void rejectedCompletionWithoutTransactionReportsOwnershipLossWithoutWritingFailed() {
+        MemoryRepository repository = new MemoryRepository();
+        repository.completionStatus = IdempotencyWriteStatus.STALE_OWNER;
+        var result = executor(repository).execute(request("non-tx-stale"), ctx -> {
+            repository.trace.add("business");
+            return "ok";
+        });
+        assertThat(result.getStatus()).isEqualTo(IdempotencyResultStatus.OWNERSHIP_LOST);
+        assertThat(result.isTransactionApplied()).isFalse();
+        assertThat(repository.trace).containsExactly("acquire", "business", "success");
+    }
+
+    @Test
+    void businessFailurePreservesTransactionAndNonTransactionBoundaries() {
+        for (boolean transactional : List.of(false, true)) {
+            MemoryRepository repository = new MemoryRepository();
+            repository.transactionSupported = transactional;
+            IllegalStateException failure = new IllegalStateException("business failed");
+            var result = executor(repository, transactional ? recordingCoordinator(repository.trace) : null)
+                    .execute(request("business-failure"), ctx -> { repository.trace.add("business"); throw failure; });
+            assertThat(result.getStatus()).isEqualTo(IdempotencyResultStatus.EXECUTION_FAILED);
+            assertThat(result.getError()).isSameAs(failure);
+            assertThat(result.isTransactionApplied()).isEqualTo(transactional);
+            if (transactional) assertThat(repository.trace).containsExactly("acquire", "begin", "business", "rollback", "failed");
+            else assertThat(repository.trace).containsExactly("acquire", "business", "failed");
+        }
     }
 
     @Test

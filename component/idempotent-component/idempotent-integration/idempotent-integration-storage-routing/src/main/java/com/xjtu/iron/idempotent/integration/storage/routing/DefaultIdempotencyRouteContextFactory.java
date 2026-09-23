@@ -5,9 +5,17 @@ import com.xjtu.iron.idempotent.api.recovery.IdempotencyRecoveryRequest;
 import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
 import com.xjtu.iron.storage.routing.api.key.ShardKey;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
+
 import java.util.Objects;
 
-/** 默认按幂等 key 计算分片的 RouteContextFactory。 */
+/** 默认按幂等 key 计算分片的 RouteContextFactory。
+ * <p><b>流程阅读编号：I1.1：默认分片输入。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. 将幂等 key 包装成单字段 CompositeShardKey，再附上逻辑表及存储元数据。</li>
+ *     <li>2. businessRouteKey 在默认实现中只是属性，不替代幂等 key 参与分片；自定义业务分片应预绑定或替换 Factory。</li>
+ *     <li>3. 这里只构造 RouteContext，不计算 shardId，也不获取数据库连接。</li>
+ * </ul>
+ */
 public final class DefaultIdempotencyRouteContextFactory implements IdempotencyRouteContextFactory {
 
     public static final String IDEMPOTENCY_KEY_FIELD = "idempotency_key";

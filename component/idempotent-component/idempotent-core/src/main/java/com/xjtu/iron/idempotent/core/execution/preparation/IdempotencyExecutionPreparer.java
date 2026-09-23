@@ -1,6 +1,6 @@
 package com.xjtu.iron.idempotent.core.execution.preparation;
 
-import com.xjtu.iron.idempotent.api.execution.*;
+import com.xjtu.iron.idempotent.api.execution.IdempotencyRequest;
 import com.xjtu.iron.idempotent.api.policy.IdempotencyPolicy;
 import com.xjtu.iron.idempotent.api.recovery.IdempotencyRecoveryRequest;
 import com.xjtu.iron.idempotent.api.repository.IdempotencyRepository;
@@ -11,7 +11,14 @@ import com.xjtu.iron.idempotent.core.repository.IdempotencyRepositoryRegistry;
 
 import java.util.Objects;
 
-/** 校验请求，解析策略、Repository 与结果策略。没有状态写入，不计算物理路由。 */
+/** 校验请求，解析策略、Repository 与结果策略。没有状态写入，不计算物理路由。
+ * <p><b>流程阅读编号：I2.1：准备配置。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. 检查 key 和逻辑存储上下文，解析本次调用的 Policy 与 Repository。</li>
+ *     <li>2. 校验结果策略需要的 payload 能力，返回 ExecutionDefinition。</li>
+ *     <li>3. 此阶段没有抢占、事务和 SQL；成功返回不表示已经获得执行权。</li>
+ * </ul>
+ */
 public final class IdempotencyExecutionPreparer {
     private final IdempotencyRepositoryRegistry repositoryRegistry;
     private final IdempotencyPolicyRegistry policyRegistry;
