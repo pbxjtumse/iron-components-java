@@ -107,14 +107,16 @@ public final class IdempotencyBusinessExecutor {
     private <T> IdempotencyResult<T> completeSuccess(BusinessExecution<T> execution, BusinessCompletion<T> completion) {
         publish(execution, IdempotencyEventType.EXECUTION_SUCCESS, IdempotencyStage.COMPLETE_STATE, null);
         IdempotencyResultStatus status = execution.recoveryExecution() ? IdempotencyResultStatus.RECOVERED : IdempotencyResultStatus.EXECUTED;
-        return finish(execution, status, IdempotencyStage.COMPLETE_STATE, completion.value(), completion.write().getRecord(), null);
+        return finish(execution, IdempotencyResult.<T>builder().status(status).stage(IdempotencyStage.COMPLETE_STATE)
+                .value(completion.value()).record(completion.write().getRecord()));
     }
 
     private <T> IdempotencyResult<T> handleCompletionRejected(BusinessExecution<T> execution, IdempotencyWriteResult write) {
         boolean ownershipLost = write.getStatus() == IdempotencyWriteStatus.STALE_OWNER || write.getStatus() == IdempotencyWriteStatus.ALREADY_FINAL;
         if (ownershipLost) publish(execution, IdempotencyEventType.OWNERSHIP_LOST, IdempotencyStage.COMPLETE_STATE, null);
         IdempotencyResultStatus status = ownershipLost ? IdempotencyResultStatus.OWNERSHIP_LOST : IdempotencyResultStatus.REPOSITORY_ERROR;
-        return finish(execution, status, IdempotencyStage.COMPLETE_STATE, null, write.getRecord(), write.getError());
+        return finish(execution, IdempotencyResult.<T>builder().status(status).stage(IdempotencyStage.COMPLETE_STATE)
+                .record(write.getRecord()).error(write.getError()));
     }
 
     private <T> IdempotencyResult<T> handleResultCaptureFailure(BusinessExecution<T> execution, ResultCaptureException error) {
@@ -122,8 +124,8 @@ public final class IdempotencyBusinessExecutor {
         IdempotencyWriteResult write = persistFailure(execution, failure);
         // 保持既有异常语义；本轮仅整理流程，不改变无事务分支的错误附加行为。
         if (execution.transactionApplied()) attachProviderFailure(error, write);
-        return finish(execution, IdempotencyResultStatus.RESULT_POLICY_ERROR, IdempotencyStage.COMPLETE_STATE,
-                null, recordAfterFailure(execution, write), error.getCause());
+        return finish(execution, IdempotencyResult.<T>builder().status(IdempotencyResultStatus.RESULT_POLICY_ERROR).stage(IdempotencyStage.COMPLETE_STATE)
+                .record(recordAfterFailure(execution, write)).error(error.getCause()));
     }
 
     private <T> IdempotencyResult<T> handleBusinessFailure(BusinessExecution<T> execution, Throwable error) {
@@ -131,20 +133,23 @@ public final class IdempotencyBusinessExecutor {
         IdempotencyWriteResult write = persistFailure(execution, failureClassifier.classify(error, Instant.now(clock)));
         attachProviderFailure(error, write);
         publish(execution, IdempotencyEventType.EXECUTION_FAILED, IdempotencyStage.EXECUTE, error);
-        return finish(execution, IdempotencyResultStatus.EXECUTION_FAILED, IdempotencyStage.EXECUTE, null, recordAfterFailure(execution, write), error);
+        return finish(execution, IdempotencyResult.<T>builder().status(IdempotencyResultStatus.EXECUTION_FAILED).stage(IdempotencyStage.EXECUTE)
+                .record(recordAfterFailure(execution, write)).error(error));
     }
 
     private <T> IdempotencyResult<T> handleTransactionFailure(BusinessExecution<T> execution, IdempotencyTransactionException error) {
         if (error.outcome() == IdempotencyTransactionOutcome.COMMIT_UNKNOWN) {
             publish(execution, IdempotencyEventType.TRANSACTION_COMMIT_UNKNOWN, IdempotencyStage.TRANSACTION, error);
-            return finish(execution, IdempotencyResultStatus.TRANSACTION_COMMIT_UNKNOWN, IdempotencyStage.TRANSACTION, null, execution.record(), error);
+            return finish(execution, IdempotencyResult.<T>builder().status(IdempotencyResultStatus.TRANSACTION_COMMIT_UNKNOWN).stage(IdempotencyStage.TRANSACTION)
+                    .record(execution.record()).error(error));
         }
         // 已确认 Tx-B 失败/回滚，才由 Repository 的独立状态事务记录 FAILED。
         IdempotencyFailureInfo failure = new IdempotencyFailureInfo("TRANSACTION_" + error.outcome().name(), safeMessage(error), true, Instant.now(clock));
         IdempotencyWriteResult write = persistFailure(execution, failure);
         attachProviderFailure(error, write);
         publish(execution, IdempotencyEventType.TRANSACTION_FAILED, IdempotencyStage.TRANSACTION, error);
-        return finish(execution, IdempotencyResultStatus.TRANSACTION_FAILED, IdempotencyStage.TRANSACTION, null, recordAfterFailure(execution, write), error);
+        return finish(execution, IdempotencyResult.<T>builder().status(IdempotencyResultStatus.TRANSACTION_FAILED).stage(IdempotencyStage.TRANSACTION)
+                .record(recordAfterFailure(execution, write)).error(error));
     }
 
     private IdempotencySuccessRequest createSuccessRequest(BusinessExecution<?> execution, String payload) {
@@ -169,11 +174,12 @@ public final class IdempotencyBusinessExecutor {
         return write.getRecord() == null ? execution.record() : write.getRecord();
     }
 
-    private <T> IdempotencyResult<T> finish(BusinessExecution<T> execution, IdempotencyResultStatus status, IdempotencyStage stage,
-                                           T value, IdempotencyRecord record, Throwable error) {
-        metrics.recordExecution(execution.policy().getMode(), execution.repository().providerName(), status, Duration.between(execution.startedAt(), Instant.now(clock)));
-        return IdempotencyResult.<T>builder().status(status).stage(stage).value(value).record(record).error(error)
-                .lockFallback(execution.lockFallback()).transactionApplied(execution.transactionApplied()).build();
+    /** 调用方决定结果内容；此处统一补充执行标记并记录指标。Builder 仅用于本次调用。 */
+    private <T> IdempotencyResult<T> finish(BusinessExecution<T> execution, IdempotencyResult.Builder<T> resultBuilder) {
+        IdempotencyResult<T> result = resultBuilder.lockFallback(execution.lockFallback()).transactionApplied(execution.transactionApplied()).build();
+        metrics.recordExecution(execution.policy().getMode(), execution.repository().providerName(), result.getStatus(),
+                Duration.between(execution.startedAt(), Instant.now(clock)));
+        return result;
     }
 
     private <T> IdempotencyResult<T> missingAcquiredRecord(boolean lockFallback) {
