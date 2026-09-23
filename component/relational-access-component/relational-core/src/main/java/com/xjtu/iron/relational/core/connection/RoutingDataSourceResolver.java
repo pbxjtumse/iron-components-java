@@ -20,6 +20,13 @@ import java.util.Objects;
  *
  * <p>默认路由会返回 defaultDataSource；命名路由会从 routedDataSources 中查找。未知命名路由必须 fail-fast，
  * 避免写错 key 后悄悄落到默认库。</p>
+
+ * <p><b>流程阅读编号：D2：数据源键查找。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. 从 SqlExecutionContext 的 SqlRoute 取出命名键，查找预先注册的 DataSource。</li>
+ *     <li>2. 只有显式默认路由才走默认数据源；未知命名键直接报错，避免误写默认库。</li>
+ *     <li>3. 不根据业务 key 再次 hash，不决定物理表名，也不创建 Connection。</li>
+ * </ul>
  */
 public final class RoutingDataSourceResolver implements DataSourceResolver {
 

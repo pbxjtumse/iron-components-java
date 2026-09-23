@@ -31,6 +31,15 @@ import java.util.Optional;
  * <p>storeName / scanBucket 属于逻辑记录与恢复扫描模型；物理分片由外层 StorageRoute 决定，不在记录中重复持久化。</p>
  *
  * <p>正确性核心仍然是 UNIQUE + 行锁 + ownerToken/version 条件写；DistributedLock 只负责降低热点竞争。</p>
+
+ * <p><b>流程阅读编号：I4.2：单目标 JDBC 原子状态实现。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. tryAcquire 使用独立状态事务 Tx-A：INSERT 唯一键竞争，冲突后读取并锁定历史记录。</li>
+ *     <li>2. 状态事实返回 I5；该类不会调用业务 callback，也不会决定上层响应策略。</li>
+ *     <li>3. markSuccess 使用当前事务入口，按 PROCESSING、ownerToken、version 条件更新；零行更新需要继续分类。</li>
+ *     <li>4. markFailed 使用独立状态事务 Tx-C；失败状态也必须防止旧 owner 覆盖新 generation。</li>
+ *     <li>5. 上述 Spring 事务语义依赖 I6.2 执行管理器；仅传普通 DataSource 的构造方式不提供同业务事务参与保证。</li>
+ * </ul>
  */
 public final class JdbcIdempotencyRepository implements IdempotencyRepository, IdempotencyRecoveryRepository {
 
@@ -70,6 +79,7 @@ public final class JdbcIdempotencyRepository implements IdempotencyRepository, I
     public IdempotencyAcquireResult tryAcquire(IdempotencyAcquireRequest request) {
         try {
             requireStorage(request.getStorageContext());
+            // I4.2-1 / Tx-A：抢占事务结束后才将 acquire 结果返回 Core。
             return jdbc.inNewTransaction(connection -> tryAcquireInTransaction(connection, request));
         } catch (Exception error) {
             return IdempotencyAcquireResult.providerError(error);
@@ -191,6 +201,7 @@ public final class JdbcIdempotencyRepository implements IdempotencyRepository, I
 
     /** Tx-B：Business + SUCCESS 同事务完成。 */
     @Override
+    // I4.2-2 / Tx-B：成功更新不会重新获取执行权，必须携带本次 generation 身份。
     public IdempotencyWriteResult markSuccess(IdempotencySuccessRequest request) {
         try {
             IdempotencyStorageContext storage = requireStorage(request.getStorageContext());
@@ -225,6 +236,7 @@ public final class JdbcIdempotencyRepository implements IdempotencyRepository, I
 
     /** Tx-C：业务事务回滚以后独立记录 FAILED。 */
     @Override
+    // I4.2-3 / Tx-C：失败持久化也有 owner/version 约束，不允许旧执行覆盖新 owner。
     public IdempotencyWriteResult markFailed(IdempotencyFailureRequest request) {
         try {
             IdempotencyStorageContext storage = requireStorage(request.getStorageContext());

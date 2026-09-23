@@ -54,6 +54,14 @@ import java.util.Optional;
  *
  * <p>Recovery 扫描是二维问题：外部 Reliable Task 先枚举物理 shard 并打开 StorageRouteContext，
  * 幂等组件再在该物理 shard 内按 scanBucket 查询。scanBucket 从来不等于物理表号。</p>
+
+ * <p><b>流程阅读编号：I4.1：业务分片映射为幂等物理目标。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. 有绑定 shardInfo 时复用分片编号，但使用幂等表自己的 MappingStrategy。</li>
+ *     <li>2. 重新映射后校验 dataSourceKey 一致；同库不同表是预期结果，不能把业务表名用于幂等 SQL。</li>
+ *     <li>3. 无 shardInfo 的固定直连仅复用数据源键，使用 directTableName；完全无绑定时才调用全局 resolver。</li>
+ *     <li>4. 扫描恢复任务需先确定物理分片，再在该分片内使用 scanBucket；扫描桶不是物理表号。</li>
+ * </ul>
  */
 public final class StorageRoutingIdempotencyJdbcRouteResolver implements IdempotencyJdbcRouteResolver {
 
@@ -90,6 +98,7 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
                 .build();
 
         ShardRouteInfo boundShard = boundRoute.map(StorageRoute::shardInfo).orElse(null);
+        // I4.1-1：已知业务分片时重映射幂等表，保留同一分片编号。
         if (boundShard != null) {
             return toJdbcRoute(remapBound(context, boundRoute.orElseThrow()));
         }
@@ -98,6 +107,7 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
             return toJdbcRoute(directIdempotencyRoute(context, boundRoute.get().dataSourceKey()));
         }
 
+        // I4.1-2：仅在没有已绑定路由时使用全局解析；常规 I1 装饰路径不进入此分支。
         StorageRoute resolved = storageRouteResolver.resolve(context);
         return toJdbcRoute(normalizeResolvedRoute(context, resolved));
     }

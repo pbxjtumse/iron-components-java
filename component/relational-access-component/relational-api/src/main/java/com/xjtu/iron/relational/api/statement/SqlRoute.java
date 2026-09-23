@@ -11,6 +11,12 @@ import java.util.Objects;
  *
  * <p>Relational Access 不计算 shard，也不理解 userId、merchantId 等业务路由键。
  * 上层若启用分库分表，应先计算目标库表：目标库进入 {@code dataSourceKey}，目标表名进入最终 SQL。</p>
+
+ * <p><b>流程阅读编号：数据模型 D0：SQL 数据源选择。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. 上层通过 bridge 或显式配置构造路由，随 SqlStatement 传入 Template。</li>
+ *     <li>2. 命名路由的 dataSourceKey 由数据源 resolver 解释；它不是用户ID、幂等key或物理表名。</li>
+ * </ul>
  */
 public final class SqlRoute {
 

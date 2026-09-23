@@ -22,6 +22,13 @@ import java.util.Objects;
  * </pre>
  * <p>与调用方真实业务事务处于同一个本地事务边界。外层已有事务时加入外层；没有事务时才创建事务。
  * 如果这里强制 REQUIRES_NEW，可能出现幂等 SUCCESS 已提交，但调用方外层业务随后 rollback 的错误结果。</p>
+
+ * <p><b>流程阅读编号：I6.1.1：适配本地事务组件。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. 用 REQUIRED 执行 Core 提供的 work；外层已有兼容事务时参与，未建立时创建。</li>
+ *     <li>2. checked exception 仅在 callback 边界临时包装，返回 Core 前恢复原始异常。</li>
+ *     <li>3. 提交等基础设施故障映射为幂等事务异常；加入外层事务时最终提交仍由外层决定。</li>
+ * </ul>
  */
 public final class TransactionTemplateIdempotencyTransactionCoordinator implements IdempotencyTransactionCoordinator {
 

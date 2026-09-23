@@ -9,6 +9,13 @@ import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryStatu
  *
  * <p>这里故意不访问数据库、不执行 Lua、不加分布式锁。并发正确性已经在 Repository.tryAcquire /
  * tryRecover 中通过 UNIQUE、行锁、Lua 或 CAS 完成；StateMachine 只回答下一步是 EXECUTE、REPLAY 还是 RETURN。</p>
+
+ * <p><b>流程阅读编号：I5：将原子事实翻译成动作。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. 输入来自 Repository 的 acquire/recovery 状态，不重新查询数据库。</li>
+ *     <li>2. ACQUIRED 对应执行，SUCCESS 对应重放，其他状态按规则直接返回。</li>
+ *     <li>3. 状态机只做纯决策；数据库并发竞争在 I4.2 完成，业务副作用在 I6 完成。</li>
+ * </ul>
  */
 public final class DefaultIdempotencyStateMachine implements IdempotencyStateMachine {
 

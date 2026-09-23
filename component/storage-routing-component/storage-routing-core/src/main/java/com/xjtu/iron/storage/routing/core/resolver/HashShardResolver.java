@@ -15,6 +15,14 @@ import java.util.Objects;
  *
  * <p>字段数量、顺序、类型、编码规则、库表数量均属于路由规则；变更前需要规划数据迁移。
  * 该算法用于确定有限分片，并不承诺哈希无碰撞。</p>
+
+ * <p><b>流程阅读编号：R2：计算逻辑分片编号。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. 单字段使用值文本，多字段使用 canonicalForm，得到确定的 hashInput。</li>
+ *     <li>2. floorMod 将可能为负的 hash 映射到 0 至 totalShardCount-1。</li>
+ *     <li>3. 10 库各 10 表时，shardId=56 得到 databaseIndex=5、tableIndex=6；全局后缀56还是局部后缀06由映射策略决定。</li>
+ *     <li>4. 增加库表数量会改变取模结果；修改配置本身不会迁移历史数据。</li>
+ * </ul>
  */
 public final class HashShardResolver implements ShardResolver {
 

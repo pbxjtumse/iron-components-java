@@ -12,6 +12,13 @@ import java.util.Objects;
  * <p>主 API 不要求 {@code Class<T>}。
  * 默认只保证“历史成功不重复执行”，不保存业务返回值；需要结果回放时显式传入
  * {@link IdempotencyResultPolicy}。</p>
+
+ * <p><b>流程阅读编号：I0：业务调用契约。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. 业务构造 IdempotencyRequest 并传入 callback；接口并不要求业务直接操作 Repository。</li>
+ *     <li>2. execute 是普通请求入口，recover 是显式恢复入口；实际实现可由路由装饰器包裹 Core。</li>
+ *     <li>3. 返回值包含状态和错误，调用方应按状态处理，不能只判断 value 是否为空。</li>
+ * </ul>
  */
 public interface IdempotencyExecutor {
 

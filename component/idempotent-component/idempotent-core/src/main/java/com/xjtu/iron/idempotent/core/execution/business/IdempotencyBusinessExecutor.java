@@ -22,7 +22,16 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
-/** 获得执行权后的业务编排：创建本次执行信息，选择事务方式，处理完成或失败。 */
+/** 获得执行权后的业务编排：创建本次执行信息，选择事务方式，处理完成或失败。
+ * <p><b>流程阅读编号：I6：已获得执行权后的业务流程。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. createExecution 保存本次 owner/version、配置和计时信息；不会再次抢占。</li>
+ *     <li>2. 根据事务协调器及 Repository 能力选择事务分支或无事务分支。</li>
+ *     <li>3. 事务分支在 REQUIRED 工作中依次执行 callback、捕获结果、markSuccess；完成拒绝必须抛出以触发事务失败。</li>
+ *     <li>4. 退出事务调用后按异常类型处理：丢失执行权、结果捕获失败、事务失败、业务失败。</li>
+ *     <li>5. COMMIT_UNKNOWN 不写 FAILED；finish 只组装响应和指标，不提交连接、不清理路由。</li>
+ * </ul>
+ */
 public final class IdempotencyBusinessExecutor {
     private final IdempotencyFailureClassifier failureClassifier;
     private final IdempotencyTransactionCoordinator transactionCoordinator;
@@ -98,8 +107,11 @@ public final class IdempotencyBusinessExecutor {
 
     /** 两种执行方式共享业务顺序；事务的开启和关闭由调用方负责。 */
     private <T> BusinessCompletion<T> executeBusinessAndWriteSuccess(BusinessExecution<T> execution, IdempotencyCallback<T> callback) throws Exception {
+        // I6-3.1：业务回调产生业务结果；事务分支此时已经位于 Tx-B 工作块内。
         T value = callback.doWithIdempotency(execution.context());
+        // I6-3.2：先捕获结果，捕获失败不能继续写 SUCCESS。
         String payload = resultHandler.capture(value, execution.definition().resultPolicy());
+        // I6-3.3：使用原 owner/version 条件完成；事务分支由上层检查结果并在拒绝时抛异常。
         IdempotencyWriteResult write = execution.repository().markSuccess(createSuccessRequest(execution, payload));
         return new BusinessCompletion<>(value, write);
     }
@@ -138,6 +150,7 @@ public final class IdempotencyBusinessExecutor {
     }
 
     private <T> IdempotencyResult<T> handleTransactionFailure(BusinessExecution<T> execution, IdempotencyTransactionException error) {
+        // I6-4：提交状态未知时先返回明确结果，禁止假定回滚后覆盖成 FAILED。
         if (error.outcome() == IdempotencyTransactionOutcome.COMMIT_UNKNOWN) {
             publish(execution, IdempotencyEventType.TRANSACTION_COMMIT_UNKNOWN, IdempotencyStage.TRANSACTION, error);
             return finish(execution, IdempotencyResult.<T>builder().status(IdempotencyResultStatus.TRANSACTION_COMMIT_UNKNOWN).stage(IdempotencyStage.TRANSACTION)
@@ -176,6 +189,7 @@ public final class IdempotencyBusinessExecutor {
 
     /** 调用方决定结果内容；此处统一补充执行标记并记录指标。Builder 仅用于本次调用。 */
     private <T> IdempotencyResult<T> finish(BusinessExecution<T> execution, IdempotencyResult.Builder<T> resultBuilder) {
+        // I6-5：补充执行标记；Builder 仅属于当前调用，不保存在共享字段。
         IdempotencyResult<T> result = resultBuilder.lockFallback(execution.lockFallback()).transactionApplied(execution.transactionApplied()).build();
         metrics.recordExecution(execution.policy().getMode(), execution.repository().providerName(), result.getStatus(),
                 Duration.between(execution.startedAt(), Instant.now(clock)));

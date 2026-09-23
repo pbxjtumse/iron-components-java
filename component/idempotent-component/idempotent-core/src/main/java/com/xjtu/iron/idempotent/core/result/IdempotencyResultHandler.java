@@ -6,7 +6,14 @@ import com.xjtu.iron.idempotent.api.result.IdempotencyResultPolicies;
 import com.xjtu.iron.idempotent.api.result.IdempotencyResultPolicy;
 import com.xjtu.iron.idempotent.api.result.IdempotencyResultPolicyType;
 
-/** 结果策略处理：保存带类型的 payload、重放历史结果；不执行业务或访问 Repository。 */
+/** 结果策略处理：保存带类型的 payload、重放历史结果；不执行业务或访问 Repository。
+ * <p><b>流程阅读编号：I7：结果捕获与重放。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
+ * <ul>
+ *     <li>1. 首次执行成功后 capture 将业务返回值按策略转为可存储 payload，发生在 SUCCESS 更新之前。</li>
+ *     <li>2. 重复请求遇到历史 SUCCESS 时 replay 读取 payload 并按策略重建结果，不再调用业务 callback。</li>
+ *     <li>3. NONE 策略可以返回 REPLAYED 且 value 为空；它不代表再次执行业务。</li>
+ * </ul>
+ */
 public final class IdempotencyResultHandler {
     public <T> String capture(T value, IdempotencyResultPolicy<T> resultPolicy) throws ResultCaptureException {
         if (!resultPolicy.storesPayload()) return null;
