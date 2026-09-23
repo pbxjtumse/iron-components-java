@@ -64,6 +64,7 @@ public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
         this.events = events == null ? IdempotencyEventPublisher.noop() : events;
         this.metrics = metrics == null ? IdempotencyMetrics.noop() : metrics;
         this.clock = clock == null ? Clock.systemUTC() : clock;
+        // 固定的 Core 内部协作者在这里组合；Repository、事务等可替换依赖仍由外部传入。
         this.resultHandler = new IdempotencyResultHandler();
         this.stateOperations = new IdempotencyStateOperationExecutor(lockClient, this.events, this.clock);
         this.businessExecutor = new IdempotencyBusinessExecutor(failureClassifier, transactionCoordinator, resultHandler, this.events, this.metrics, this.clock);
@@ -90,12 +91,7 @@ public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
         IdempotencyStorageContext storage = request.storageContext();
 
         // Repository 入参携带完整策略快照，Provider 不再反向依赖 Starter 配置。
-        IdempotencyAcquireRequest acquireRequest = IdempotencyAcquireRequest.builder()
-                .storageContext(storage).namespace(policy.getNamespace()).key(request.getKey())
-                .requestHash(normalize(request.getRequestHash())).routeKey(normalize(request.getRouteKey())).ownerToken(ownerToken)
-                .mode(policy.getMode()).processingTimeout(policy.getProcessingTimeout()).idempotencyWindow(policy.getIdempotencyWindow())
-                .windowPolicy(policy.getWindowPolicy()).recordRetentionTtl(policy.getRecordRetentionTtl())
-                .recoveryMode(policy.getRecoveryPolicy().getMode()).now(Instant.now(clock)).build();
+        IdempotencyAcquireRequest acquireRequest = createAcquireRequest(request, policy, storage, ownerToken);
 
         publish(IdempotencyEventType.ACQUIRE_ATTEMPT, IdempotencyStage.ACQUIRE_STATE, policy, repository, null);
         StateOperationOutcome<IdempotencyAcquireResult> invocation = stateOperations.invoke(
@@ -136,11 +132,7 @@ public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
         // Recovery 会产生新的 owner；expectedOwner/expectedVersion 用来确认扫描 candidate 没有过期。
         String newOwner = ownerGenerator.generate(policy.getNamespace(), request.getKey());
         IdempotencyStorageContext storage = request.storageContext();
-        IdempotencyRecoveryAcquireRequest recoveryRequest = new IdempotencyRecoveryAcquireRequest(
-                storage, policy.getNamespace(), request.getKey(), normalize(request.getRequestHash()), normalize(request.getRouteKey()),
-                newOwner, normalize(request.getExpectedOwnerToken()), request.getExpectedVersion(), policy.getMode(),
-                policy.getProcessingTimeout(), recoveryPolicy.isRecoverProcessingTimeout(),
-                recoveryPolicy.isRecoverRetryableFailure(), Instant.now(clock));
+        IdempotencyRecoveryAcquireRequest recoveryRequest = createRecoveryRequest(request, policy, storage, newOwner);
 
         publish(IdempotencyEventType.RECOVERY_ATTEMPT, IdempotencyStage.RECOVER_STATE, policy, repository, null);
         StateOperationOutcome<IdempotencyRecoveryResult> invocation = stateOperations.invoke(
@@ -160,6 +152,27 @@ public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
         }
         Throwable error = recovery.getStatus() == IdempotencyRecoveryStatus.PROVIDER_ERROR ? recovery.getError() : null;
         return simple(decision.resultStatus(), IdempotencyStage.RECOVER_STATE, recovery.getRecord(), error, invocation.lockFallback());
+    }
+
+    /** 将策略快照组装为 Provider 入参，主流程只关注抢占与决策。 */
+    private IdempotencyAcquireRequest createAcquireRequest(IdempotencyRequest request, IdempotencyPolicy policy,
+                                                           IdempotencyStorageContext storage, String ownerToken) {
+        return IdempotencyAcquireRequest.builder()
+                .storageContext(storage).namespace(policy.getNamespace()).key(request.getKey())
+                .requestHash(normalize(request.getRequestHash())).routeKey(normalize(request.getRouteKey())).ownerToken(ownerToken)
+                .mode(policy.getMode()).processingTimeout(policy.getProcessingTimeout()).idempotencyWindow(policy.getIdempotencyWindow())
+                .windowPolicy(policy.getWindowPolicy()).recordRetentionTtl(policy.getRecordRetentionTtl())
+                .recoveryMode(policy.getRecoveryPolicy().getMode()).now(Instant.now(clock)).build();
+    }
+
+    private IdempotencyRecoveryAcquireRequest createRecoveryRequest(IdempotencyRecoveryRequest request, IdempotencyPolicy policy,
+                                                                     IdempotencyStorageContext storage, String newOwner) {
+        IdempotencyRecoveryPolicy recoveryPolicy = policy.getRecoveryPolicy();
+        return new IdempotencyRecoveryAcquireRequest(
+                storage, policy.getNamespace(), request.getKey(), normalize(request.getRequestHash()), normalize(request.getRouteKey()),
+                newOwner, normalize(request.getExpectedOwnerToken()), request.getExpectedVersion(), policy.getMode(),
+                policy.getProcessingTimeout(), recoveryPolicy.isRecoverProcessingTimeout(),
+                recoveryPolicy.isRecoverRetryableFailure(), Instant.now(clock));
     }
 
     private <T> IdempotencyResult<T> applyAcquireDecision(IdempotencyStateDecision decision, IdempotencyRequest request,

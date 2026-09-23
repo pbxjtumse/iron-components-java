@@ -32,7 +32,7 @@
 
 原来的 `executeOwned` 现在对应 `IdempotencyBusinessExecutor.executeAcquired`。它用已抢占记录的 ownerToken/version 构造业务上下文，再判断是否具备事务协调器以及 Repository 是否支持业务事务参与。
 
-启用事务时，`executeOwnedTransactionally` 保留一个完整的事务工作块：业务 callback → 捕获结果 → owner/version 条件更新 SUCCESS。SUCCESS 未更新成功时抛出完成拒绝异常，使事务协调器回滚该事务工作。不能将这三步拆成三个独立提交的阶段。
+启用事务时，`executeInTransaction` 与 `executeTransactionWork` 保留一个完整的事务工作块：业务 callback → 捕获结果 → owner/version 条件更新 SUCCESS。SUCCESS 未更新成功时抛出完成拒绝异常，使事务协调器回滚该事务工作。不能将这三步拆成三个独立提交的阶段。
 
 业务异常或结果捕获失败，需要在事务协调器处理异常后再记录失败。提交结果未知时返回 TRANSACTION_COMMIT_UNKNOWN，不贸然写 FAILED，因为数据库可能已经提交成功。没有业务事务参与时，业务执行与 SUCCESS 更新之间仍有崩溃窗口，重构没有消除这一限制。
 
@@ -51,3 +51,13 @@ Tx-A/Tx-C 的独立状态事务由具体 Repository 的 JDBC 执行层负责；C
 ## 回归验证
 
 新增核心测试覆盖事务工作中的执行顺序、完成被拒绝时的回滚路径、结果捕获失败先退出事务再记失败、提交未知不记失败、非 ACQUIRED 不进入业务，以及缺失锁客户端时允许/禁止降级的行为。核心测试使用记录调用顺序的协调器，不能替代真实数据库回滚验证；分支的 Direct E2E 工作流继续运行真实 MySQL 集成测试。
+
+## 可读性优化：先看流程，再看组装
+
+DefaultIdempotencyExecutor 中的 `createAcquireRequest` 和 `createRecoveryRequest` 集中组装 Provider 请求。第一次阅读 execute/recover 时可以跳过它们，先看原子抢占与状态决策。
+
+IdempotencyBusinessExecutor 的 `executeAcquired` 只负责检查、创建本次执行信息、选择事务方式。`executeInTransaction` 保留事务调用以及四类异常分支，具体工作放在 `executeTransactionWork`；共享的 `executeBusinessAndWriteSuccess` 依次调用业务、捕获结果、更新 SUCCESS。`completeSuccess`、`handleCompletionRejected` 和各类失败处理方法负责收尾。
+
+`BusinessExecution` 是包内可见的不可变 record，仅集中保存本次调用需要的配置、记录、上下文及标记，避免每个方法传八九个参数。它不拥有连接、不打开事务、不替代路由作用域，也不存入共享执行器字段。record 的不可变性指字段引用固定，不意味着 Repository 等被引用对象深度不可变。
+
+构造器里的 new 用于组装固定的 Core 内部协作者，不会绕过一个预期存在的 Spring 事务代理：它们本身不依靠 @Transactional 生效，事务来自外部传入的 transactionCoordinator。Repository、策略注册表、锁客户端、事务协调器仍由外部装配。如果未来确实需要替换某个内部协作者，再提供注入入口；当前不用为每个辅助类新增 Bean、接口和工厂。
