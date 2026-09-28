@@ -117,7 +117,7 @@ class ShardingSphereJdbcAdapterIntegrationTest {
     private static JdbcDataSource physicalDataSource(String suffix) {
         JdbcDataSource dataSource = new JdbcDataSource();
         dataSource.setURL("jdbc:h2:mem:ss_adapter_" + suffix + "_" + UUID.randomUUID().toString().replace("-", "")
-                + ";MODE=MySQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+                + ";MODE=MySQL;IGNORECASE=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
         dataSource.setUser("sa");
         dataSource.setPassword("");
         return dataSource;
