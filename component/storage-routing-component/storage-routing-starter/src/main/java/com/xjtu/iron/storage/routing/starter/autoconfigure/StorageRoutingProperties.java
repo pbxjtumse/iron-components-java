@@ -1,6 +1,7 @@
 package com.xjtu.iron.storage.routing.starter.autoconfigure;
 
 import com.xjtu.iron.storage.routing.api.mapping.TableIndexMode;
+import com.xjtu.iron.storage.routing.api.route.StorageRouteMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -12,10 +13,38 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "xjtu.iron.storage-routing")
 public class StorageRoutingProperties {
 
+    private StorageRouteMode mode = StorageRouteMode.DIRECT_DATASOURCE;
     private final Resolver resolver = new Resolver();
+    private final ShardingSphereJdbc shardingSphereJdbc = new ShardingSphereJdbc();
+
+    public StorageRouteMode getMode() {
+        return mode;
+    }
+
+    public void setMode(StorageRouteMode mode) {
+        this.mode = mode;
+    }
 
     public Resolver getResolver() {
         return resolver;
+    }
+
+    public ShardingSphereJdbc getShardingSphereJdbc() {
+        return shardingSphereJdbc;
+    }
+
+    public static final class ShardingSphereJdbc {
+
+        /** Relational Access 中 ShardingSphere 逻辑 DataSource 的键；空值表示默认 DataSource。 */
+        private String dataSourceKey;
+
+        public String getDataSourceKey() {
+            return dataSourceKey;
+        }
+
+        public void setDataSourceKey(String dataSourceKey) {
+            this.dataSourceKey = dataSourceKey;
+        }
     }
 
     public static final class Resolver {

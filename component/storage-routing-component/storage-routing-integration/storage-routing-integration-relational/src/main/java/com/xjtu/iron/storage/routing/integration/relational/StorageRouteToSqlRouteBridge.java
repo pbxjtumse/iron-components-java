@@ -8,9 +8,9 @@ import java.util.Objects;
 /**
  * Storage Routing 到 Relational Access 的桥接入口。
  *
- * <p>Relational Access 的 SqlRoute 只负责选择 DataSource，不保存物理表名。
- * 因此上层 JDBC Storage 需要同时使用 toSqlRoute(route) 和 requireTableName(route)：前者交给
- * RelationalTemplate 选择连接，后者用于拼装已经确定的最终 SQL。</p>
+ * <p>Relational Access 的 SqlRoute 只负责选择 DataSource，不保存表名。因此上层 JDBC Storage 需要同时使用
+ * toSqlRoute(route) 和 requireTableName(route)：前者交给 RelationalTemplate 选择连接，后者用于拼装最终 SQL。
+ * Direct Adapter 返回物理表名，ShardingSphere-JDBC / Proxy Adapter 返回逻辑表名。</p>
  */
 public interface StorageRouteToSqlRouteBridge {
 
@@ -20,7 +20,7 @@ public interface StorageRouteToSqlRouteBridge {
     SqlRoute toSqlRoute(StorageRoute route);
 
     /**
-     * 提取上层 Storage 拼 SQL 时使用的物理表名。
+     * 提取上层 Storage 拼 SQL 时使用的执行表名；它可能是直连物理表，也可能是中间件逻辑表。
      */
     String requireTableName(StorageRoute route);
 

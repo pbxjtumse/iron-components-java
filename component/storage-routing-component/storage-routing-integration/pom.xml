@@ -18,5 +18,6 @@
 
     <modules>
         <module>storage-routing-integration-relational</module>
+        <module>storage-routing-integration-shardingsphere-jdbc</module>
     </modules>
 </project>

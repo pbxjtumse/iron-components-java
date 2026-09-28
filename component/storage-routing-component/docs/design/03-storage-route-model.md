@@ -116,8 +116,9 @@ order_00 ~ order_99。若希望表名使用跨库全局编号，则使用 GLOBAL
 - StorageRoute.Builder 只接收完整 RouteContext，不提供平铺的 routeName/logicalTable/shardKey 字段设置入口，防止两份输入互相覆盖。
 - 扩展 attributes 不控制标准分片字段；即使存在同名属性，也不会覆盖显式模型。
 - 分片数量、索引范围、乘法溢出、空解析结果等仍在边界校验；物理编号使用 Locale.ROOT。
-- 默认 relational bridge 只接受 DIRECT_DATASOURCE，并要求完整物理位置。
-- SHARDINGSPHERE_JDBC / PROXY 仅保留描述字段，当前没有实现中间件 adapter 或分布式事务。
+- 默认 Direct bridge 只接受 DIRECT_DATASOURCE，并要求完整物理位置。
+- ShardingSphere-JDBC Adapter 接受 SHARDINGSPHERE_JDBC，返回逻辑 DataSource 与逻辑表；它不计算物理位置。
+- PROXY 仍只保留模式描述，当前没有 Proxy Adapter 或分布式事务实现。
 
 同分片不等于同表，也不自动等于同事务。后续仍要让各 Storage 映射自己的表，并让 SQL 复用事务管理器管理的同一资源和连接。
 

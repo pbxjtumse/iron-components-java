@@ -58,6 +58,10 @@ storage-routing-integration-relational
     StorageRouteToSqlRouteBridge
     DefaultStorageRouteToSqlRouteBridge
 
+storage-routing-integration-shardingsphere-jdbc
+    ShardingSphereJdbcStorageRouteResolver
+    ShardingSphereJdbcStorageRouteToSqlRouteBridge
+
 storage-routing-starter
     StorageRoutingAutoConfiguration
     StorageRoutingProperties
@@ -69,8 +73,8 @@ storage-routing-starter
 单字段与复合字段统一使用 `CompositeShardKey`。`ShardResolver` 只计算分片，`RouteMappingStrategy` 只映射物理位置，
 接口位于 API、实现位于 Core。路由输入统一为 `RouteContext`，分片输入统一为 `CompositeShardKey`。
 
-Relational bridge 负责把 `DIRECT_DATASOURCE` 的 `StorageRoute` 转成 `SqlRoute`，同时暴露 Storage 拼 SQL 所需的物理表名。
-Spring Boot starter 默认装配 `StorageRouteContext` 与 bridge；哈希 resolver 需要显式配置库表拓扑后启用。
+Relational bridge 负责把 `StorageRoute` 转成 `SqlRoute`，同时暴露 Storage 拼 SQL 所需的执行表名：Direct 模式返回物理表，
+ShardingSphere-JDBC 模式返回逻辑表。Spring Boot starter 默认使用 Direct；哈希 resolver 需要显式配置库表拓扑后启用。
 
 示例配置：
 
@@ -84,6 +88,17 @@ xjtu.iron.storage-routing.resolver.data-source-index-width=2
 xjtu.iron.storage-routing.resolver.table-index-width=2
 xjtu.iron.storage-routing.resolver.table-index-mode=GLOBAL_TABLE_INDEX
 ```
+
+ShardingSphere-JDBC 模式：
+
+```properties
+xjtu.iron.storage-routing.mode=SHARDINGSPHERE_JDBC
+# ShardingSphere DataSource 是默认 DataSource 时留空；多逻辑 DataSource 时填写 Relational Access 注册键。
+xjtu.iron.storage-routing.sharding-sphere-jdbc.data-source-key=orders-sharding
+```
+
+该模式要求 Repository SQL 使用逻辑表并携带 ShardingSphere 配置中的分片列。Adapter 不创建 ShardingSphere DataSource，
+不复制其规则，也不把 `CompositeShardKey` 自动注入 SQL；DataSource 与规则仍由应用按照 Apache ShardingSphere 官方方式配置。
 
 模型字段、API 边界与使用限制见 [StorageRoute 模型](docs/design/03-storage-route-model.md)。
 
@@ -138,12 +153,14 @@ docs/sequence/03-storage-route-resolution.puml
 Phase 2.1：先建立 StorageRoute API 与 ThreadLocal 上下文
 Phase 2.2：接 Relational Access，提供 StorageRoute -> SqlRoute 的桥接
 Phase 2.3：Idempotency JDBC Storage 接 StorageRoute
-Phase 2.4：第一优先级接入 ShardingSphere-JDBC
+Phase 2.4：接入 ShardingSphere-JDBC 逻辑路由 Adapter
+Phase 2.5：让 Idempotency / Outbox 等技术表 SQL 携带统一分片列并完成同片事务 E2E
+Phase 2.6：按需要增加 ShardingSphere-Proxy Adapter
 ```
 
-当前完成的是 Phase 2.1 的模型与解析链路，以及 Phase 2.2 的直连 Relational bridge / starter 基础。
-后续仍需让 Idempotency JDBC Storage、Outbox Storage 等组件读取路由并拼装自己的物理表 SQL。
-上下文传播本身不会改写 SQL、创建事务或替代中间件。
+当前 Direct DataSource 链路已经打穿，ShardingSphere-JDBC 第一版 Adapter 负责逻辑 DataSource / 逻辑表交付。
+下一步仍需让 Idempotency JDBC Storage、Outbox Storage 等技术表 SQL 显式携带统一分片列，验证与业务 SQL 同片同事务。
+上下文传播与 Adapter 本身不会改写 SQL、创建事务或替代中间件。
 
 验证命令（仓库根目录）：
 

@@ -7,9 +7,12 @@ import com.xjtu.iron.storage.routing.api.key.ShardKey;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
+import com.xjtu.iron.storage.routing.api.route.StorageRouteMode;
 import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.core.context.ThreadLocalStorageRouteContext;
 import com.xjtu.iron.storage.routing.integration.relational.StorageRouteToSqlRouteBridge;
+import com.xjtu.iron.storage.routing.integration.shardingsphere.jdbc.ShardingSphereJdbcStorageRouteResolver;
+import com.xjtu.iron.storage.routing.integration.shardingsphere.jdbc.ShardingSphereJdbcStorageRouteToSqlRouteBridge;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -50,6 +53,26 @@ class StorageRoutingAutoConfigurationTest {
                             .build());
 
                     assertThat(route.location()).isEqualTo(PhysicalStorageLocation.of("order-db-05", "business_order_56"));
+                });
+    }
+
+    @Test
+    void shouldAutoConfigureShardingSphereJdbcAdapter() {
+        contextRunner
+                .withPropertyValues(
+                        "xjtu.iron.storage-routing.mode=SHARDINGSPHERE_JDBC",
+                        "xjtu.iron.storage-routing.sharding-sphere-jdbc.data-source-key=orders-sharding")
+                .run(context -> {
+                    StorageRouteResolver resolver = context.getBean(StorageRouteResolver.class);
+                    StorageRouteToSqlRouteBridge bridge = context.getBean(StorageRouteToSqlRouteBridge.class);
+                    StorageRoute route = resolver.resolve(RouteContext.builder().logicalTable("business_order")
+                            .shardKey(CompositeShardKey.of(ShardKey.of("order_id", 1001L))).build());
+
+                    assertThat(resolver).isInstanceOf(ShardingSphereJdbcStorageRouteResolver.class);
+                    assertThat(bridge).isInstanceOf(ShardingSphereJdbcStorageRouteToSqlRouteBridge.class);
+                    assertThat(route.mode()).isEqualTo(StorageRouteMode.SHARDINGSPHERE_JDBC);
+                    assertThat(bridge.toSqlRoute(route).dataSourceKey()).isEqualTo("orders-sharding");
+                    assertThat(bridge.requireTableName(route)).isEqualTo("business_order");
                 });
     }
 

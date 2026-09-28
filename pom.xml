@@ -20,6 +20,7 @@
         <opentelemetry.version>1.39.0</opentelemetry.version>
         <caffeine.version>3.2.4</caffeine.version>
         <testcontainers.version>1.20.6</testcontainers.version>
+        <shardingsphere.version>5.5.3</shardingsphere.version>
         <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
         <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.4.0</maven-javadoc-plugin.version>
@@ -76,6 +77,11 @@
                 <version>${testcontainers.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.shardingsphere</groupId>
+                <artifactId>shardingsphere-jdbc</artifactId>
+                <version>${shardingsphere.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mybatis.spring.boot</groupId>

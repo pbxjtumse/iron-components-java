@@ -132,7 +132,24 @@ bridge 只做两件事：
 `RelationalTemplate` 不理解分片键，也不改写表名。每个 Storage 仍要基于自己的逻辑表族解析出对应的 `StorageRoute`，
 不能把业务订单表的 `tableName` 直接拿来写幂等表或 Outbox 表。
 
-当前默认 bridge 只支持 `DIRECT_DATASOURCE`。`SHARDINGSPHERE_JDBC` 和 `PROXY` 需要专门 adapter 决定如何接入中间件。
+默认 Direct bridge 只支持 `DIRECT_DATASOURCE`。ShardingSphere-JDBC 使用专用 Adapter：
+
+```java
+StorageRouteResolver resolver = new ShardingSphereJdbcStorageRouteResolver();
+StorageRouteToSqlRouteBridge bridge = new ShardingSphereJdbcStorageRouteToSqlRouteBridge();
+StorageRoute route = resolver.resolve(RouteContext.builder()
+        .logicalTable("business_order")
+        .shardKey(CompositeShardKey.of(ShardKey.of("order_id", orderId)))
+        .build());
+
+String logicalTable = bridge.requireTableName(route);
+SqlStatement statement = SqlStatement.of("order.insert",
+        "INSERT INTO " + logicalTable + "(order_id, amount) VALUES (?, ?)", orderId, amount);
+relationalTemplate.update(bridge.applyRoute(statement, route));
+```
+
+这里 `requireTableName` 返回逻辑表，SQL 必须显式携带 ShardingSphere 规则声明的分片列。Adapter 不计算或暴露物理库表。
+`PROXY` 仍需要后续专用 Adapter。
 
 ## 7. 固定直连
 
