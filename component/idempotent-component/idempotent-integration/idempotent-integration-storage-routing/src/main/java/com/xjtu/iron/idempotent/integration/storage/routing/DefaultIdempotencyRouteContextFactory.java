@@ -5,7 +5,6 @@ import com.xjtu.iron.idempotent.api.recovery.IdempotencyRecoveryRequest;
 import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
 import com.xjtu.iron.storage.routing.api.key.ShardKey;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
-
 import java.util.Objects;
 
 /** 默认按幂等 key 计算分片的 RouteContextFactory。

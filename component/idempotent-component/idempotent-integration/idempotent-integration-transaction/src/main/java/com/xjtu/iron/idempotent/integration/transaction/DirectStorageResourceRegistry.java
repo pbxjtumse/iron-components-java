@@ -6,9 +6,12 @@ import com.xjtu.iron.idempotent.provider.jdbc.execution.RoutingJdbcExecutionMana
 import com.xjtu.iron.transaction.api.execution.TransactionExecutor;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutorResolver;
 import com.xjtu.iron.transaction.core.executor.RoutingTransactionExecutorResolver;
-
 import javax.sql.DataSource;
-import java.util.*;
+import java.util.Collection;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /** Direct 模式唯一资源目录；不创建连接池，不关闭调用方拥有的 DataSource。
  * <p><b>流程阅读编号：装配 A1：直连资源目录。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>

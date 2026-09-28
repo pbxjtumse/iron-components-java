@@ -30,6 +30,10 @@ import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionException
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionOutcome;
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionalWork;
 import org.junit.jupiter.api.Test;
+import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionCoordinator;
+import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionalWork;
+import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionException;
+import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionOutcome;
 
 import java.time.Clock;
 import java.time.Instant;
