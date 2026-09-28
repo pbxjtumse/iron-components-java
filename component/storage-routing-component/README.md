@@ -165,7 +165,7 @@ Phase 2.6：按需要增加 ShardingSphere-Proxy Adapter
 验证命令（仓库根目录）：
 
 ```bash
-mvn -pl :storage-routing-starter -am test
+mvn -pl :storage-routing-integration-shardingsphere-jdbc,:storage-routing-starter -am test
 ```
 
 ## 从零阅读
