@@ -1,0 +1,18 @@
+@startuml
+title Cache - L0 Overview
+actor Caller
+participant CacheClient
+participant CacheProvider
+participant CacheLoader
+Caller -> CacheClient : get(key, type, loader)
+CacheClient -> CacheProvider : get
+alt hit
+  CacheProvider --> CacheClient : CacheValue
+  CacheClient --> Caller : HIT
+else miss
+  CacheClient -> CacheLoader : load source
+  CacheLoader --> CacheClient : value/null
+  CacheClient -> CacheProvider : put / putNullValue
+  CacheClient --> Caller : MISS_LOADED
+end
+@enduml

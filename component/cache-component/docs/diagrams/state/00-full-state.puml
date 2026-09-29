@@ -1,0 +1,32 @@
+@startuml
+title Cache - Read Result and Operation Lifecycle
+hide empty description
+[*] --> LOOKUP
+LOOKUP --> HIT : CacheValue.present
+LOOKUP --> MISS_DOC : cache miss
+LOOKUP --> DEGRADED : provider error + degrade policy
+LOOKUP --> ERROR_DECLARED : CacheResultStatus.ERROR [declared API]
+MISS_DOC --> RECHECK : mutexLoad=true
+MISS_DOC --> LOAD_SOURCE : mutexLoad=false
+RECHECK --> HIT : another caller filled cache
+RECHECK --> LOAD_SOURCE : still miss
+LOAD_SOURCE --> MISS_LOADED : loader returns and write attempted
+LOAD_SOURCE --> THROWN_DOC : loader failure
+HIT --> [*]
+MISS_LOADED --> [*]
+DEGRADED --> [*]
+ERROR_DECLARED --> [*]
+THROWN_DOC --> [*]
+
+state "MISS [DOC MODEL]" as MISS_DOC
+state "RECHECK [DOC MODEL]" as RECHECK
+state "LOAD_SOURCE [DOC MODEL]" as LOAD_SOURCE
+state "ERROR [CacheResultStatus declared]\ncurrent DefaultCacheClient does not construct it" as ERROR_DECLARED
+state "EXCEPTION [DOC MODEL]" as THROWN_DOC
+
+note right
+HIT / MISS_LOADED / DEGRADED 是当前 DefaultCacheClient
+实际返回的主要 CacheResultStatus。
+EMPTY / ERROR 在枚举中存在，但当前主执行器没有对应静态工厂路径。
+end note
+@enduml

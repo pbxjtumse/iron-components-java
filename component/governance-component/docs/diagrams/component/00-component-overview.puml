@@ -1,0 +1,19 @@
+@startuml
+title Governance Component - Component Overview
+skinparam componentStyle rectangle
+[governance-api] --> [governance-core]
+[governance-core] --> [governance-spi]
+[governance-core] --> [governance-model]
+[governance-configs] --> [governance-model]
+[governance-engine-resilience4j] --> [governance-spi]
+[governance-engine-resilience4j] --> [governance-model]
+[governance-integration-spring-aop] --> [governance-api]
+[governance-starters] --> [governance-core]
+rectangle "core" {
+ [DefaultGovernanceTemplate]
+ [DefaultGovernanceExecutor]
+ [EffectiveGovernancePolicyResolver]
+ [GovernanceExceptionMapperChain]
+ [GovernanceEventBus]
+}
+@enduml

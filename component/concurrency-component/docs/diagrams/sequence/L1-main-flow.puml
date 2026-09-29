@@ -1,0 +1,27 @@
+@startuml
+title Concurrency - L1 Submit Main Flow
+actor Caller
+participant DefaultTaskExecutionTemplate as T
+participant ThreadPoolRegistry as R
+participant ContextAwareTaskDecorator as D
+participant TaskLifecyclePublisher as L
+participant TaskResultPipeline as RP
+participant ThreadPoolExecutor as P
+participant TaskCommand as C
+
+Caller -> T : submitHandle(AsyncTask)
+T -> R : getRequired(executorName)
+R --> T : executor
+T -> D : decorate task
+T -> C : create TaskCommand
+T -> C : submitted()
+C -> L : SUBMITTED
+T -> RP : apply(context, command)
+RP --> T : final Future
+T -> P : execute(command)
+P -> C : run()
+C -> L : RUNNING
+C -> C : execute user task
+C -> L : SUCCESS
+T --> Caller : TaskHandle
+@enduml

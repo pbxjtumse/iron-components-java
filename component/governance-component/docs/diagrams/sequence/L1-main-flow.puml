@@ -1,0 +1,22 @@
+@startuml
+title Governance - L1 Main Call
+actor Caller
+participant DefaultGovernanceExecutor as E
+participant EffectiveGovernancePolicyResolver as P
+participant GovernanceEventBus as B
+participant GovernanceEngine as G
+participant GovernanceInvocation as I
+
+Caller -> E : execute(context, invocation)
+E -> E : GovernanceContextHolder.set
+E -> P : resolve(context)
+P --> E : GovernancePolicy
+E -> B : CALL_STARTED
+E -> G : execute(context, policy, invocation)
+G -> I : invoke(context)
+I --> G : result
+G --> E : result
+E -> B : CALL_SUCCEEDED
+E -> E : GovernanceContextHolder.clear
+E --> Caller : result
+@enduml

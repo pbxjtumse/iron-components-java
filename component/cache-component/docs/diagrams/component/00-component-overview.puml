@@ -1,0 +1,21 @@
+@startuml
+title Cache Component - Component Overview
+skinparam componentStyle rectangle
+[cache-api] --> [cache-core]
+[cache-config] --> [cache-api]
+[cache-provider-caffeine] --> [cache-core]
+[cache-provider-redis] --> [cache-core]
+[cache-provider-composite] --> [cache-core]
+[cache-integrations-governance] --> [cache-core]
+[cache-integrations-observability] --> [cache-core]
+[cache-starter] --> [cache-core]
+[cache-starter] --> [cache-config]
+[cache-demo] --> [cache-starter]
+rectangle "core" {
+ [DefaultCacheClient]
+ [CacheLoadGuard]
+ [CacheTtlResolver]
+ [CacheEventPublisher]
+ [CacheMetricsRecorder]
+}
+@enduml

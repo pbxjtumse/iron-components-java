@@ -1,0 +1,34 @@
+@startuml
+title Cache - L2 Multi-level / Degrade / Invalidation
+actor Caller
+participant DefaultCacheClient as C
+participant CompositeCacheProvider as CP
+participant "L1 Caffeine" as L1
+participant "L2 Redis" as L2
+participant CacheEventPublisher as EP
+participant RedisCacheEventSubscriber as ES
+participant LocalCacheInvalidator as LI
+
+Caller -> C : get
+C -> CP : get
+CP -> L1 : get
+alt L1 hit
+  L1 --> Caller : HIT L1
+else L1 miss
+  CP -> L2 : get
+  alt L2 hit
+    L2 --> CP : value
+    CP -> L1 : backfill
+    CP --> Caller : HIT L2
+  else cache provider error
+    C -> C : apply CacheDegradePolicy
+    C --> Caller : DEGRADED or throw
+  end
+end
+
+Caller -> C : evict(key)
+C -> CP : evict L1 + L2
+C -> EP : publish EVICT_KEY
+EP -> ES : Redis Pub/Sub
+ES -> LI : invalidate local L1
+@enduml

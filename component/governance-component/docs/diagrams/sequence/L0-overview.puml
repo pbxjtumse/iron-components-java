@@ -1,0 +1,15 @@
+@startuml
+title Governance - L0 Overview
+actor Caller
+participant GovernanceTemplate
+participant GovernanceExecutor
+participant GovernanceEngine
+participant "Downstream Invocation" as D
+Caller -> GovernanceTemplate : execute(resource, invocation)
+GovernanceTemplate -> GovernanceExecutor : execute(context,...)
+GovernanceExecutor -> GovernanceEngine : execute(context, policy, invocation)
+GovernanceEngine -> D : invoke
+D --> GovernanceEngine : result / failure
+GovernanceEngine --> GovernanceExecutor
+GovernanceExecutor --> Caller : result / mapped exception / fallback
+@enduml

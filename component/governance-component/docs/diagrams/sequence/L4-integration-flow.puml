@@ -1,0 +1,24 @@
+@startuml
+title Governance - L4 Resilience4j and Spring AOP
+actor App
+participant GovernedCallAspect as A
+participant DefaultGovernanceTemplate as T
+participant Resilience4jGovernanceEngine as R
+participant CallTimeoutExecutor as TO
+participant RateLimiter as RL
+participant Bulkhead as BH
+participant CircuitBreaker as CB
+participant Retry as RT
+participant Business as B
+
+App -> A : @GovernedCall method
+A -> T : execute(resource,...)
+T -> R : execute(policy)
+R -> TO : outer timeout
+TO -> RL : rate limit
+RL -> BH : bulkhead
+BH -> CB : circuit breaker
+CB -> RT : retry
+RT -> B : invocation
+B --> App : result / exception
+@enduml

@@ -1,0 +1,19 @@
+@startuml
+title Cache - L4 Provider and Framework Integration
+participant CacheClient
+participant CompositeCacheProvider as CP
+participant CaffeineCacheProvider as C
+participant RedisCacheProvider as R
+participant SpringDataRedisBinaryClient as RC
+participant CacheGovernanceExecutor as G
+participant MicrometerCacheMetricsRecorder as M
+participant MeterRegistry as MR
+
+CacheClient -> CP : cache operation
+CP -> C : L1
+CP -> R : L2
+R -> RC : Redis binary operation
+CacheClient ..> G : optional governance boundary
+CacheClient -> M : metrics
+M -> MR : counters/timers
+@enduml

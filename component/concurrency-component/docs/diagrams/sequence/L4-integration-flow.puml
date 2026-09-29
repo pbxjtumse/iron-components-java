@@ -1,0 +1,17 @@
+@startuml
+title Concurrency - L4 Spring / Observability Integration
+actor App
+participant XjtuIronConcurrencyAutoConfiguration as AC
+participant PropertiesThreadPoolSpecResolver as PR
+participant DefaultThreadPoolManager as PM
+participant MdcContextPropagator as MDC
+participant MicrometerConcurrencyMetricsRecorder as MM
+participant MeterRegistry as MR
+
+AC -> PR : bind xjtu.iron.concurrency.*
+AC -> PM : create/register pools
+AC -> MDC : configure context propagation
+AC -> MM : create metrics recorder
+MM -> MR : gauges / counters / timers
+App -> PM : submit via configured executor
+@enduml

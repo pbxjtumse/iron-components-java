@@ -1,0 +1,31 @@
+@startuml
+title Concurrency - L2 Timeout, Cancel and Fallback
+participant TaskCommand as C
+participant DefaultTaskResultPipeline as P
+participant ScheduledExecutorService as S
+participant "fallbackExecutor" as F
+participant TaskLifecyclePublisher as L
+participant "Final Future" as R
+
+P -> S : schedule result timeout
+alt original task fails/rejected/times out and fallback exists
+  C -> L : FAILED / REJECTED / TIMEOUT
+  P -> L : FALLBACK
+  P -> F : execute fallback
+  alt fallback success
+    F -> L : FALLBACK_SUCCESS
+    F -> R : complete(value)
+  else fallback failure
+    F -> L : FALLBACK_FAILED
+    F -> R : completeExceptionally
+  end
+else caller cancels
+  C -> L : CANCELLED
+  C -> C : interruptIfNecessary()
+  C -> R : cancel
+else result timeout wins
+  S -> C : completeTimeout(WAIT_RESULT)
+  C -> L : TIMEOUT
+  C -> C : optional interrupt
+end
+@enduml

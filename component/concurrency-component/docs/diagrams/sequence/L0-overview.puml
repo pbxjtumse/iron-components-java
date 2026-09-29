@@ -1,0 +1,14 @@
+@startuml
+title Concurrency - L0 Overview
+actor Caller
+participant AsyncExecutor
+participant "TaskExecutionTemplate" as T
+participant "ThreadPoolExecutor" as P
+participant "Business Task" as B
+Caller -> AsyncExecutor : submit / run / supply
+AsyncExecutor -> T : submit(AsyncTask)
+T -> P : execute(TaskCommand)
+P -> B : run()
+B --> P : result / failure
+T --> Caller : CompletableFuture / TaskHandle
+@enduml

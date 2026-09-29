@@ -1,0 +1,31 @@
+@startuml
+title Cache - L1 Default Get Main Flow
+actor Caller
+participant DefaultCacheClient as C
+participant CacheSpecResolver as S
+participant CacheProvider as P
+participant CacheLoadGuard as G
+participant CacheLoader as L
+participant CacheTtlResolver as T
+
+Caller -> C : get(key, type, loader)
+C -> S : resolve(key)
+S --> C : CacheSpec
+C -> P : get(key, type, spec)
+alt hit
+  P --> C : present CacheValue
+  C --> Caller : CacheResult.HIT
+else miss
+  P --> C : miss
+  alt mutexLoad
+    C -> G : execute(key)
+    G -> P : recheck
+  end
+  C -> L : load()
+  L --> C : value/null
+  C -> T : resolve TTL
+  T --> C : ttl
+  C -> P : put / putNullValue
+  C --> Caller : MISS_LOADED
+end
+@enduml

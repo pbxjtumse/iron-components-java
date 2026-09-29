@@ -1,0 +1,33 @@
+@startuml
+title Governance - Invocation Lifecycle
+hide empty description
+[*] --> CREATED_DOC
+CREATED_DOC --> STARTED : CALL_STARTED
+STARTED --> SUCCEEDED : CALL_SUCCEEDED
+STARTED --> FAILED : CALL_FAILED
+STARTED --> REJECTED : provider rejects
+STARTED --> TIMED_OUT : provider timeout
+STARTED --> RETRYING_DOC : provider retry event
+RETRYING_DOC --> STARTED : next attempt
+FAILED --> FALLBACK : fallback configured
+REJECTED --> FALLBACK : fallback configured
+TIMED_OUT --> FALLBACK : fallback configured
+FALLBACK --> FALLBACK_SUCCESS_DOC : fallback returns
+FALLBACK --> FALLBACK_FAILED : FALLBACK_FAILED
+SUCCEEDED --> [*]
+FAILED --> [*] : no fallback
+REJECTED --> [*] : no fallback
+TIMED_OUT --> [*] : no fallback
+FALLBACK_SUCCESS_DOC --> [*]
+FALLBACK_FAILED --> [*]
+
+state "CREATED [DOC MODEL]" as CREATED_DOC
+state "RETRYING [DOC MODEL]\nrelated event: CALL_RETRIED" as RETRYING_DOC
+state "FALLBACK_SUCCESS [DOC MODEL]\nno dedicated GovernanceEventType" as FALLBACK_SUCCESS_DOC
+
+note right
+GovernanceEventType 还包含规则加载与 CircuitBreaker 事件。
+CircuitBreaker CLOSED/OPEN/HALF_OPEN 由 Resilience4j 实例管理，
+不是 Governance Core 的持久状态。
+end note
+@enduml

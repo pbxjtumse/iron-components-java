@@ -1,0 +1,31 @@
+@startuml
+title Governance - L2 Failure and Fallback
+actor Caller
+participant DefaultGovernanceExecutor as E
+participant GovernanceEngine as G
+participant GovernanceExceptionMapperChain as M
+participant GovernanceEventBus as B
+participant FallbackHandler as F
+
+Caller -> E : execute(..., optional fallback)
+E -> G : execute
+G --> E : throwable
+E -> M : map(context, throwable)
+M --> E : RuntimeException
+E -> B : CALL_FAILED
+alt fallback exists
+  E -> B : FALLBACK_TRIGGERED
+  E -> F : fallback(context, mapped)
+  alt fallback success
+    F --> E : fallback value
+    E --> Caller : value
+  else fallback failure
+    F --> E : throwable
+    E -> B : FALLBACK_FAILED
+    E --> Caller : FallbackFailedException
+  end
+else no fallback
+  E --> Caller : mapped exception
+end
+E -> E : clear context
+@enduml

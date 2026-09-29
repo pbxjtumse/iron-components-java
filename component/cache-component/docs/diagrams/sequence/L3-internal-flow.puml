@@ -1,0 +1,27 @@
+@startuml
+title Cache - L3 DefaultCacheClient Internal Flow
+participant DefaultCacheClient as C
+participant CacheSpecResolver as S
+participant CacheProvider as P
+participant CacheMetricsRecorder as M
+participant CacheLoadGuard as G
+participant CacheTtlResolver as T
+participant CacheEventPublisher as E
+participant CacheTraceContext as Tr
+
+C -> S : resolve(key)
+C -> P : get
+alt hit
+  C -> M : recordHit
+else miss
+  C -> M : recordMiss
+  C -> G : optional execute mutex
+  C -> C : loader.load
+  C -> T : resolveNormalTtl / resolveNullValueTtl
+  C -> P : put
+  C -> M : recordLoad
+end
+C -> P : evict
+C -> Tr : current trace/span
+C -> E : publish invalidation event
+@enduml

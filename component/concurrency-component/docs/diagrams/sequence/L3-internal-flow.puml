@@ -1,0 +1,28 @@
+@startuml
+title Concurrency - L3 Core Internal Collaboration
+participant DefaultTaskExecutionTemplate as T
+participant TaskExecutionContext as Ctx
+participant TaskExecutionRuntime as Rt
+participant TaskCommand as Cmd
+participant DefaultTaskResultPipeline as Pipe
+participant DefaultTaskLifecyclePublisher as Pub
+participant TaskExecutionRegistry as Reg
+participant ConcurrencyMetricsRecorder as M
+participant TaskExecutionListener as L
+
+T -> Ctx : create immutable definition + runtime
+T -> Cmd : create(context)
+Cmd -> Rt : tryMarkSubmitted()
+Cmd -> Pub : SUBMITTED
+Pub -> M : recordSubmitted
+Pub -> Reg : update(snapshot)
+Pub -> L : onSubmitted
+T -> Pipe : apply(context, command)
+Cmd -> Rt : tryMarkRunning()
+Cmd -> Pub : RUNNING
+Cmd -> Rt : tryResolveBaseOutcome(...)
+Pipe -> Rt : mark FALLBACK / final outcome
+Pub -> M : terminal metrics
+Pub -> Reg : terminal snapshot
+Pub -> L : terminal callback
+@enduml

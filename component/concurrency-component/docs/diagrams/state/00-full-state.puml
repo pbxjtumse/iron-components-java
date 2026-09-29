@@ -1,0 +1,31 @@
+@startuml
+title Concurrency - AsyncTaskStatus Full State
+hide empty description
+[*] --> CREATED
+CREATED --> SUBMITTED : accepted for submission
+SUBMITTED --> RUNNING : worker/caller thread starts
+SUBMITTED --> REJECTED : executor rejects
+SUBMITTED --> TIMEOUT : queue/result timeout wins before run
+SUBMITTED --> CANCELLED : cancel
+RUNNING --> SUCCESS : task returns
+RUNNING --> FAILED : task throws
+RUNNING --> TIMEOUT : result timeout wins
+RUNNING --> CANCELLED : cancel
+FAILED --> FALLBACK : fallback configured
+REJECTED --> FALLBACK : fallback configured
+TIMEOUT --> FALLBACK : fallback configured
+FALLBACK --> FALLBACK_SUCCESS : fallback returns
+FALLBACK --> FALLBACK_FAILED : fallback throws / executor rejects
+SUCCESS --> [*]
+FAILED --> [*] : no fallback
+REJECTED --> [*] : no fallback
+TIMEOUT --> [*] : no fallback
+CANCELLED --> [*]
+FALLBACK_SUCCESS --> [*]
+FALLBACK_FAILED --> [*]
+note right
+状态名全部来自 AsyncTaskStatus。
+FALLBACK 是过渡状态；
+取消默认不进入 fallback。
+end note
+@enduml

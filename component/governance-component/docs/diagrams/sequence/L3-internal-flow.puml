@@ -1,0 +1,26 @@
+@startuml
+title Governance - L3 Core Collaboration
+participant DefaultGovernanceTemplate as T
+participant DefaultGovernanceExecutor as E
+participant EffectiveGovernancePolicyResolver as P
+participant GovernanceRuleRepository as R
+participant GovernanceEngine as G
+participant GovernanceExceptionMapperChain as M
+participant GovernanceEventBus as B
+
+T -> E : execute(context, invocation, fallback)
+E -> P : resolve(context)
+P -> R : load rules/policy
+R --> P : rule
+P --> E : effective policy
+E -> B : CALL_STARTED
+E -> G : execute
+alt failure
+  G --> E : throwable
+  E -> M : map
+  E -> B : CALL_FAILED
+else success
+  G --> E : value
+  E -> B : CALL_SUCCEEDED
+end
+@enduml
