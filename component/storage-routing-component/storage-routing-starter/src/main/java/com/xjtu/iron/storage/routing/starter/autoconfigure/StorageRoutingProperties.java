@@ -16,6 +16,7 @@ public class StorageRoutingProperties {
     private StorageRouteMode mode = StorageRouteMode.DIRECT_DATASOURCE;
     private final Resolver resolver = new Resolver();
     private final ShardingSphereJdbc shardingSphereJdbc = new ShardingSphereJdbc();
+    private final ShardingSphereProxy shardingSphereProxy = new ShardingSphereProxy();
 
     public StorageRouteMode getMode() {
         return mode;
@@ -33,9 +34,27 @@ public class StorageRoutingProperties {
         return shardingSphereJdbc;
     }
 
+    public ShardingSphereProxy getShardingSphereProxy() {
+        return shardingSphereProxy;
+    }
+
     public static final class ShardingSphereJdbc {
 
         /** Relational Access 中 ShardingSphere 逻辑 DataSource 的键；空值表示默认 DataSource。 */
+        private String dataSourceKey;
+
+        public String getDataSourceKey() {
+            return dataSourceKey;
+        }
+
+        public void setDataSourceKey(String dataSourceKey) {
+            this.dataSourceKey = dataSourceKey;
+        }
+    }
+
+    public static final class ShardingSphereProxy {
+
+        /** Relational Access 中连接 ShardingSphere-Proxy 的 DataSource 键；空值表示默认 DataSource。 */
         private String dataSourceKey;
 
         public String getDataSourceKey() {

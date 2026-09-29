@@ -1,7 +1,9 @@
-name: Storage routing ShardingSphere JDBC
+name: Storage routing ShardingSphere adapters
 on:
   push:
-    branches: [feature/storage-routing-shardingsphere-jdbc-v1]
+    branches:
+      - feature/storage-routing-shardingsphere-jdbc-v1
+      - feature/storage-routing-shardingsphere-proxy-v1
   pull_request:
     paths:
       - 'component/storage-routing-component/**'
@@ -13,7 +15,7 @@ on:
 permissions:
   contents: read
 jobs:
-  adapter-e2e:
+  adapter-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -23,11 +25,11 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-      - name: Unit tests and ShardingSphere-JDBC routing E2E
-        run: mvn -B -ntp -pl :storage-routing-integration-shardingsphere-jdbc,:storage-routing-starter -am test
+      - name: Unit tests and ShardingSphere adapter routing E2E
+        run: mvn -B -ntp -pl :storage-routing-integration-shardingsphere-jdbc,:storage-routing-integration-shardingsphere-proxy,:storage-routing-starter -am test
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: shardingsphere-jdbc-test-reports
+          name: shardingsphere-adapter-test-reports
           path: '**/target/surefire-reports/**'

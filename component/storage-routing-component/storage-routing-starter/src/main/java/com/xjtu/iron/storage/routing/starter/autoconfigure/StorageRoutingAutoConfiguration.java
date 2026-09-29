@@ -9,6 +9,8 @@ import com.xjtu.iron.storage.routing.integration.relational.DefaultStorageRouteT
 import com.xjtu.iron.storage.routing.integration.relational.StorageRouteToSqlRouteBridge;
 import com.xjtu.iron.storage.routing.integration.shardingsphere.jdbc.ShardingSphereJdbcStorageRouteResolver;
 import com.xjtu.iron.storage.routing.integration.shardingsphere.jdbc.ShardingSphereJdbcStorageRouteToSqlRouteBridge;
+import com.xjtu.iron.storage.routing.integration.shardingsphere.proxy.ShardingSphereProxyStorageRouteResolver;
+import com.xjtu.iron.storage.routing.integration.shardingsphere.proxy.ShardingSphereProxyStorageRouteToSqlRouteBridge;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -50,6 +52,13 @@ public class StorageRoutingAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "xjtu.iron.storage-routing", name = "mode", havingValue = "PROXY")
+    public StorageRouteToSqlRouteBridge shardingSphereProxyStorageRouteToSqlRouteBridge(StorageRoutingProperties properties) {
+        return new ShardingSphereProxyStorageRouteToSqlRouteBridge(properties.getShardingSphereProxy().getDataSourceKey());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "xjtu.iron.storage-routing.resolver", name = "enabled", havingValue = "true")
     @ConditionalOnProperty(prefix = "xjtu.iron.storage-routing", name = "mode", havingValue = "DIRECT_DATASOURCE", matchIfMissing = true)
     public StorageRouteResolver storageRouteResolver(StorageRoutingProperties properties) {
@@ -70,5 +79,12 @@ public class StorageRoutingAutoConfiguration {
     @ConditionalOnProperty(prefix = "xjtu.iron.storage-routing", name = "mode", havingValue = "SHARDINGSPHERE_JDBC")
     public StorageRouteResolver shardingSphereJdbcStorageRouteResolver() {
         return new ShardingSphereJdbcStorageRouteResolver();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "xjtu.iron.storage-routing", name = "mode", havingValue = "PROXY")
+    public StorageRouteResolver shardingSphereProxyStorageRouteResolver() {
+        return new ShardingSphereProxyStorageRouteResolver();
     }
 }

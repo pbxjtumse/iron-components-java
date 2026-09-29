@@ -13,6 +13,8 @@ import com.xjtu.iron.storage.routing.core.context.ThreadLocalStorageRouteContext
 import com.xjtu.iron.storage.routing.integration.relational.StorageRouteToSqlRouteBridge;
 import com.xjtu.iron.storage.routing.integration.shardingsphere.jdbc.ShardingSphereJdbcStorageRouteResolver;
 import com.xjtu.iron.storage.routing.integration.shardingsphere.jdbc.ShardingSphereJdbcStorageRouteToSqlRouteBridge;
+import com.xjtu.iron.storage.routing.integration.shardingsphere.proxy.ShardingSphereProxyStorageRouteResolver;
+import com.xjtu.iron.storage.routing.integration.shardingsphere.proxy.ShardingSphereProxyStorageRouteToSqlRouteBridge;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -72,6 +74,26 @@ class StorageRoutingAutoConfigurationTest {
                     assertThat(bridge).isInstanceOf(ShardingSphereJdbcStorageRouteToSqlRouteBridge.class);
                     assertThat(route.mode()).isEqualTo(StorageRouteMode.SHARDINGSPHERE_JDBC);
                     assertThat(bridge.toSqlRoute(route).dataSourceKey()).isEqualTo("orders-sharding");
+                    assertThat(bridge.requireTableName(route)).isEqualTo("business_order");
+                });
+    }
+
+    @Test
+    void shouldAutoConfigureShardingSphereProxyAdapter() {
+        contextRunner
+                .withPropertyValues(
+                        "xjtu.iron.storage-routing.mode=PROXY",
+                        "xjtu.iron.storage-routing.sharding-sphere-proxy.data-source-key=orders-proxy")
+                .run(context -> {
+                    StorageRouteResolver resolver = context.getBean(StorageRouteResolver.class);
+                    StorageRouteToSqlRouteBridge bridge = context.getBean(StorageRouteToSqlRouteBridge.class);
+                    StorageRoute route = resolver.resolve(RouteContext.builder().logicalTable("business_order")
+                            .shardKey(CompositeShardKey.of(ShardKey.of("order_id", 1001L))).build());
+
+                    assertThat(resolver).isInstanceOf(ShardingSphereProxyStorageRouteResolver.class);
+                    assertThat(bridge).isInstanceOf(ShardingSphereProxyStorageRouteToSqlRouteBridge.class);
+                    assertThat(route.mode()).isEqualTo(StorageRouteMode.PROXY);
+                    assertThat(bridge.toSqlRoute(route).dataSourceKey()).isEqualTo("orders-proxy");
                     assertThat(bridge.requireTableName(route)).isEqualTo("business_order");
                 });
     }

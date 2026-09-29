@@ -118,7 +118,7 @@ order_00 ~ order_99。若希望表名使用跨库全局编号，则使用 GLOBAL
 - 分片数量、索引范围、乘法溢出、空解析结果等仍在边界校验；物理编号使用 Locale.ROOT。
 - 默认 Direct bridge 只接受 DIRECT_DATASOURCE，并要求完整物理位置。
 - ShardingSphere-JDBC Adapter 接受 SHARDINGSPHERE_JDBC，返回逻辑 DataSource 与逻辑表；它不计算物理位置。
-- PROXY 仍只保留模式描述，当前没有 Proxy Adapter 或分布式事务实现。
+- ShardingSphere-Proxy Adapter 接受 PROXY，返回连接 Proxy 的 DataSource 路由与逻辑表；它不实现分布式事务。
 
 同分片不等于同表，也不自动等于同事务。后续仍要让各 Storage 映射自己的表，并让 SQL 复用事务管理器管理的同一资源和连接。
 

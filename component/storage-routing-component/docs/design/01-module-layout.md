@@ -1,6 +1,6 @@
 # 01. Module Layout
 
-> 结论：当前已经具备 api / core / integration-relational / integration-shardingsphere-jdbc / starter。后续再按真实扩展需求补 Proxy Adapter 与独立 SPI / Config。
+> 结论：当前已经具备 api / core / integration-relational / integration-shardingsphere-jdbc / integration-shardingsphere-proxy / starter。后续再按真实扩展需求补独立 SPI / Config。
 
 ## 1. 当前第一版模块
 
@@ -12,6 +12,7 @@ storage-routing-core
 storage-routing-integration
     storage-routing-integration-relational
     storage-routing-integration-shardingsphere-jdbc
+    storage-routing-integration-shardingsphere-proxy
 storage-routing-starter
 ```
 
@@ -114,7 +115,7 @@ Spring Boot starter 当前只提供一层轻量 properties，用于装配默认 
 
 ## 6. storage-routing-integration 是否需要
 
-已经创建，并落地了 Direct DataSource 与 ShardingSphere-JDBC 两种桥接。
+已经创建，并落地了 Direct DataSource、ShardingSphere-JDBC 与 ShardingSphere-Proxy 三种桥接。
 
 当前结构：
 
@@ -122,25 +123,27 @@ Spring Boot starter 当前只提供一层轻量 properties，用于装配默认 
 storage-routing-integration
     storage-routing-integration-relational
     storage-routing-integration-shardingsphere-jdbc
+    storage-routing-integration-shardingsphere-proxy
 ```
 
 说明：
 
 ```text
 relational 定义 StorageRoute -> SqlRoute 的公共 bridge，并提供 Direct DataSource 实现
-shardingsphere-jdbc 返回统一逻辑 DataSource 与逻辑表名，物理路由由 ShardingSphere 完成
+shardingsphere-jdbc 返回应用内逻辑 DataSource 与逻辑表名，物理路由由 ShardingSphere-JDBC 完成
+shardingsphere-proxy 返回连接 Proxy 的 DataSource 与逻辑表名，物理路由由外部 Proxy 完成
 ```
 
 后续结构建议：
 
 ```text
 storage-routing-integration
-    storage-routing-integration-shardingsphere-proxy
     storage-routing-integration-mybatis
 ```
 
 `DefaultStorageRouteToSqlRouteBridge` 只支持 `DIRECT_DATASOURCE`；`ShardingSphereJdbcStorageRouteToSqlRouteBridge`
-只支持 `SHARDINGSPHERE_JDBC`。`PROXY` 仍需要专门 Adapter 决定代理 DataSource 与逻辑表交付方式。
+只支持 `SHARDINGSPHERE_JDBC`；`ShardingSphereProxyStorageRouteToSqlRouteBridge` 只支持 `PROXY`。三种实现都遵循
+`StorageRouteToSqlRouteBridge`，不会在 bridge 内解析或改写 SQL。
 
 ## 7. storage-routing-starter 是否需要
 
@@ -150,8 +153,8 @@ storage-routing-integration
 
 ```text
 StorageRouteContext -> ThreadLocalStorageRouteContext
-StorageRouteToSqlRouteBridge -> 按 mode 选择 Direct 或 ShardingSphere-JDBC 实现
-StorageRouteResolver -> Direct 仅在 resolver.enabled=true 时创建；ShardingSphere-JDBC 按 mode 创建逻辑路由解析器
+StorageRouteToSqlRouteBridge -> 按 mode 选择 Direct、ShardingSphere-JDBC 或 ShardingSphere-Proxy 实现
+StorageRouteResolver -> Direct 仅在 resolver.enabled=true 时创建；JDBC / Proxy 按 mode 创建逻辑路由解析器
 ```
 
 默认 resolver 不自动启用，因为 databaseCount、tablesPerDatabase、dataSourcePrefix、tablePrefix
