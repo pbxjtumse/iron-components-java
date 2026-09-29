@@ -64,3 +64,8 @@ PlantUML
 2. Future/Optional 能力必须显式标注。
 3. 一张图只回答一个主要问题。
 4. State 图优先完整，Sequence 图优先分层。
+
+
+## 7. Build-only 模块豁免
+
+`component-bom`、纯 Maven aggregator 等没有运行时执行链路的模块不强制绘制 Sequence / State Diagram。它们应该维护依赖治理或 Maven 架构文档，而不是为了“图齐全”虚构运行时状态机。
