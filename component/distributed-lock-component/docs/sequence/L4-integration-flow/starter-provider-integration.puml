@@ -1,0 +1,31 @@
+@startuml
+title Distributed Lock - L4 Starter / Provider Integration
+actor App
+participant DistributedLockAutoConfiguration as AC
+participant DefaultDistributedLockClient as C
+participant LockProviderRegistry as R
+participant RedisLockProvider as Redis
+participant RedissonLockProvider as Redisson
+participant FencingTokenCoordinator as F
+participant JdbcSequenceFencingTokenProvider as JDBC
+participant MicrometerLockMetricsRecorder as M
+participant DistributedLockHealthIndicator as H
+
+App -> AC : Spring Boot startup
+AC -> R : register enabled providers
+AC -> C : create client/core services
+AC -> M : optional Micrometer recorder
+AC -> H : health indicator
+App -> C : tryLock / execute
+C -> R : resolve providerName
+alt redis
+  R --> C : RedisLockProvider
+  C -> Redis : Lua acquire/renew/release/check
+else redisson
+  R --> C : RedissonLockProvider
+  C -> Redisson : native wait/watchdog/fencing where configured
+end
+C -> F : optional fencing
+F -> JDBC : EXTERNAL token mode
+C -> M : metrics facade -> recorder
+@enduml

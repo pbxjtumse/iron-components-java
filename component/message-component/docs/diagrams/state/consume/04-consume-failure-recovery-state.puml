@@ -24,7 +24,7 @@ state "STORAGE_ERROR\nIdempotentAcquireStatus.STORAGE_ERROR" as A_STORAGE_ERROR
 state "PROCESSING\nIdempotencyStatus.PROCESSING" as DB_PROCESSING
 state "SUCCESS\nIdempotencyStatus.SUCCESS" as DB_SUCCESS
 state "FAILED\nIdempotencyStatus.FAILED" as DB_FAILED
-state "DISCARDED\nMESSAGE SEMANTIC\nnot in current IdempotencyStatus" as M_DISCARDED
+state "DISCARDED\nIdempotencyStatus.DISCARDED" as DB_DISCARDED
 
 state "PROCESSING_TIMEOUT\nLOGICAL\nPROCESSING + processing_expire_time < now" as L_PROCESSING_TIMEOUT
 state "FAILED_RETRYABLE\nLOGICAL\nFAILED + attempt_count < maxAttempts" as L_FAILED_RETRYABLE
@@ -107,8 +107,8 @@ W_STALE_OWNER --> R_ROLLBACK_RETRY
 W_PROVIDER_ERROR --> R_ROLLBACK_RETRY
 
 R_BUSINESS_DISCARD --> R_MARK_DISCARDED
-R_MARK_DISCARDED --> M_DISCARDED
-M_DISCARDED --> D_DISCARD
+R_MARK_DISCARDED --> DB_DISCARDED
+DB_DISCARDED --> D_DISCARD
 R_MARK_DISCARDED --> W_STALE_OWNER
 R_MARK_DISCARDED --> W_PROVIDER_ERROR
 
@@ -132,8 +132,9 @@ note right of L_PROCESSING_TIMEOUT
   不需要先落库为 EXPIRED，可以直接 CAS 抢占。
 end note
 
-note right of M_DISCARDED
-  message-component 存在 markDiscarded 和 ConsumeDecision.DISCARD。
-  但当前 idempotent-api 没有 IdempotencyStatus.DISCARDED。
+note right of DB_DISCARDED
+  当前 idempotent-component 已正式持久化 IdempotencyStatus.DISCARDED。
+  message-component 的 markDiscarded(...) 与 DUPLICATE_DISCARDED
+  对应该终态。
 end note
 @enduml

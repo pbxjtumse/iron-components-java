@@ -35,7 +35,7 @@ state "STORAGE_ERROR\nIdempotentAcquireStatus.STORAGE_ERROR" as A_STORAGE_ERROR
 state "PROCESSING\nIdempotencyStatus.PROCESSING" as DB_PROCESSING
 state "SUCCESS\nIdempotencyStatus.SUCCESS" as DB_SUCCESS
 state "FAILED\nIdempotencyStatus.FAILED" as DB_FAILED
-state "DISCARDED\nMESSAGE SEMANTIC\nmarkDiscarded(...) semantic\ncurrent idempotent-api has no DISCARDED status" as M_DISCARDED
+state "DISCARDED\nIdempotencyStatus.DISCARDED" as DB_DISCARDED
 
 state "TRANSACTION_RUNNING\nRUNTIME\nTransactionStrategy.execute(...)" as R_TX_RUNNING
 state "HANDLER_EXECUTING\nRUNTIME\nMessageHandler.handle(...)" as R_HANDLER_EXECUTING
@@ -109,8 +109,8 @@ DB_SUCCESS --> R_TX_COMMITTED
 R_MARK_SUCCESS --> R_TX_ROLLED_BACK : markSuccess failed / stale owner
 
 R_HANDLER_DISCARD --> R_MARK_DISCARDED
-R_MARK_DISCARDED --> M_DISCARDED : markDiscarded success semantic
-M_DISCARDED --> R_TX_COMMITTED
+R_MARK_DISCARDED --> DB_DISCARDED : markDiscarded success semantic
+DB_DISCARDED --> R_TX_COMMITTED
 R_MARK_DISCARDED --> R_TX_ROLLED_BACK : markDiscarded failed
 
 R_HANDLER_RETRY --> R_TX_ROLLED_BACK : internal retry exception
@@ -136,9 +136,9 @@ note right of P_PROVIDER_ACK
   Kafka commit next offset，Pulsar acknowledge，RocketMQ CONSUME_SUCCESS。
 end note
 
-note right of M_DISCARDED
-  这是消息消费语义：markDiscarded / DUPLICATE_DISCARDED。
-  但当前 idempotent-component 的 IdempotencyStatus 只有 PROCESSING、SUCCESS、FAILED。
-  如果落库仍使用 idempotent-api，应映射为 SUCCESS + resultCode=DISCARDED，或后续扩展 IdempotencyStatus.DISCARDED。
+note right of DB_DISCARDED
+  当前 idempotent-component 已正式持久化 IdempotencyStatus.DISCARDED。
+  message-component 的 markDiscarded(...) 与 DUPLICATE_DISCARDED
+  对应该终态。
 end note
 @enduml

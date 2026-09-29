@@ -1,87 +1,83 @@
 # 12 当前进度与下一步
 
-## 1. 当前完成度
+> 本文以当前 master 代码为准，不再沿用早期“发送可靠性约 75%~80%、消费可靠性尚未开始”的旧进度描述。
 
-```text
-message-component 一期普通收发：100%
-message-component 二期发送可靠性：约 75% ~ 80%
-```
+## 1. 当前已经存在的代码能力
 
-已经完成：
+### 普通发送 / 消费
 
-- 三 Provider 普通收发验证
-- API 分包
-- core 分包
-- 可靠发送设计
-- `MessageSendExecutor` 接入
-- `DefaultReliableMessageSender` 接入 retry-component
-- `UNKNOWN` 默认不重试
+Kafka、Pulsar、RocketMQ4 都已有 Provider 实现，消息组件拥有统一 API / SPI / Core / Starter 分层。
+
+### 可靠发送
+
+发送侧已经存在：
+
+- `MessageSendExecutor`
+- `DefaultReliableMessageSender`
+- retry-component 集成
 - `SendReliabilityInfo`
-- PlantUML L0-L4 图集
-- FakeProvider 可靠发送测试
-- Provider 映射第一轮精修
+- Provider failure mapping
+- Send L0-L4 时序与状态图
 
-待完成：
+Outbox / Local Message Table 不在当前 message-core 中，仍属于下一阶段最终一致性能力。
 
-- 本地 Maven 完整编译
-- 三 MQ 可靠发送链路重新联调
-- Provider 异常映射继续结合真实集群校验
-- 二期发送可靠性冻结
+### 消费 V4
 
-## 2. 当前路线
+消费侧当前已经存在：
 
-```text
-第 1 步：回到 message-component 二期可靠发送
-        ↓
-第 2 步：二期前置验收
-        ↓
-第 3 步：修复工程问题 / 编译问题 / 分包问题
-        ↓
-第 4 步：三 MQ 可靠发送联调
-        ↓
-第 5 步：FakeProvider 异常场景测试
-        ↓
-第 6 步：message-component 二期可靠发送冻结
-        ↓
-第 7 步：进入 message-component 消费可靠性 或 idempotency 接入
-```
+- `MessageConsumerAdapter`
+- `MessageConsumeExecutor`
+- `IdempotencyStrategy`
+- `DefaultMessageIdempotencyExecutor`
+- `TransactionStrategy`
+- `MessageHandlerInvoker`
+- `ConsumeDecision.ACK / RETRY / DISCARD / DEAD_LETTER`
+- Kafka / Pulsar / RocketMQ Provider 原生确认映射
 
-## 3. 立刻要做的验证
-
-```bash
-mvn -pl component/message-component/message-demo-springboot -am clean package -DskipTests
-```
-
-或者：
-
-```bash
-mvn -pl :message-demo-springboot -am clean package -DskipTests
-```
-
-然后执行：
-
-```http
-POST /demo/messages/send/all
-GET  /demo/messages/received-summary
-```
-
-期望：
+当前主流程：
 
 ```text
-Kafka     CONFIRMED retryStatus=SUCCESS attempts=1
-Pulsar    CONFIRMED retryStatus=SUCCESS attempts=1
-RocketMQ4 CONFIRMED retryStatus=SUCCESS attempts=1
+Provider inbound
+  -> resolve/decode
+  -> IdempotencyStrategy
+  -> TransactionStrategy
+  -> Handler
+  -> ConsumeDecision
+  -> Provider ACK/redelivery
 ```
 
-## 4. 下一阶段不要急着做什么
+## 2. 需要特别区分“框架插槽”和“真实组件 Adapter”
 
-在二期发送可靠性冻结前，不建议展开：
+当前 message-core 定义了两个窄集成契约：
 
-- 消费可靠性
-- Outbox
-- 事务消息
-- 死信队列
-- 幂等消费接入
-- 监控大盘
+```text
+MessageIdempotentOperations
+MessageConsumeTransactionExecutor
+```
 
-原因是发送可靠性还需要最后一轮编译与联调验收。
+`MessageConsumeAutoConfiguration` 会根据这些 Bean 决定启用真实幂等/事务还是 Noop/fail-fast。
+
+截至当前 master：
+
+- 消费幂等编排和状态管理代码已经存在；
+- 消费事务策略和 rollback decision 代码已经存在；
+- 但 message-component 内没有把 idempotent-component / transaction-component 的具体实现硬编码进 core；
+- 下一步若要宣布“Message + Idempotent + Transaction 完整打通”，需要补真实 Adapter Bean，并用集成测试证明共同提交/回滚和重复消息语义。
+
+## 3. 下一步
+
+1. 增加 message -> idempotent 的正式 integration Adapter，实现 `MessageIdempotentOperations`。
+2. 增加 message -> transaction 的正式 integration Adapter，实现 `MessageConsumeTransactionExecutor`。
+3. 真实验证 ACK、RETRY、DISCARD 与事务 commit/rollback 的组合。
+4. Kafka / Pulsar / RocketMQ4 对相同 `ConsumeDecision` 的 Provider 行为做一致性测试。
+5. 完成 DEAD_LETTER 的实际治理路径，而不只是保留枚举语义。
+6. 发送侧进入 Outbox / Local Message Table 设计，解决进程重启后的可靠恢复。
+7. 接入 Message Metrics / Trace。
+
+## 4. 当前不应该误解的事情
+
+- Retry 解决短周期失败重试，不等于 Outbox。
+- IdempotencyStrategy 存在，不等于真实 Idempotent Adapter 已经装配。
+- TransactionStrategy 存在，不等于所有 Handler 已经运行在真实 Spring Transaction 中。
+- DEAD_LETTER 枚举存在，不等于 DLQ 全链路已经实现。
+- Provider 能 ACK/NACK，不等于可靠消费已经完成生产级验证。

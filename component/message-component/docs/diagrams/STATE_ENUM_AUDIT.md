@@ -69,11 +69,10 @@ ACQUIRED, DUPLICATE_SUCCESS, DUPLICATE_DISCARDED, PROCESSING, REJECTED, STORAGE_
 
 ```text
 IdempotencyStatus:
-PROCESSING, SUCCESS, FAILED
+PROCESSING, SUCCESS, FAILED, DISCARDED
 ```
 
-注意：当前 `IdempotencyStatus` 没有 `DISCARDED`。因此消费状态图中的 `DISCARDED` 标记为 `MESSAGE SEMANTIC`，不是持久化数据库 status 枚举。
-如果后续希望数据库 status 字段真实支持 `DISCARDED`，需要同步扩展 idempotent-component 的 `IdempotencyStatus` 和 repository 状态机。
+注意：当前 `IdempotencyStatus` 已正式包含 `DISCARDED`。消息消费的 `markDiscarded(...)` 可映射为该持久终态，不再需要用 `SUCCESS + resultCode=DISCARDED` 模拟。
 
 ## retry-component 相关枚举
 

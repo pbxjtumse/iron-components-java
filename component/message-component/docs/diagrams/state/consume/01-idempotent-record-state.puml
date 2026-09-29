@@ -21,7 +21,7 @@ state "INSERT_PROCESSING\nACTION\ninsert row with ownerToken" as A_INSERT_PROCES
 state "PROCESSING\nIdempotencyStatus.PROCESSING" as DB_PROCESSING
 state "SUCCESS\nIdempotencyStatus.SUCCESS" as DB_SUCCESS
 state "FAILED\nIdempotencyStatus.FAILED" as DB_FAILED
-state "DISCARDED\nMESSAGE SEMANTIC\nnot in current IdempotencyStatus\nmarkDiscarded semantic" as M_DISCARDED
+state "DISCARDED\nIdempotencyStatus.DISCARDED" as DB_DISCARDED
 
 state "PROCESSING_ACTIVE\nLOGICAL\nPROCESSING + processing_expire_time >= now" as L_PROCESSING_ACTIVE
 state "PROCESSING_TIMEOUT\nLOGICAL\nPROCESSING + processing_expire_time < now" as L_PROCESSING_TIMEOUT
@@ -59,8 +59,8 @@ DB_PROCESSING --> ACQ_ACQUIRED : return acquire result
 A_LOOKUP --> DB_SUCCESS : row.status=SUCCESS
 DB_SUCCESS --> ACQ_DUP_SUCCESS : return acquire result
 
-A_LOOKUP --> M_DISCARDED : adapter identifies discarded semantic
-M_DISCARDED --> ACQ_DUP_DISCARDED : return acquire result
+A_LOOKUP --> DB_DISCARDED : adapter identifies discarded semantic
+DB_DISCARDED --> ACQ_DUP_DISCARDED : return acquire result
 
 A_LOOKUP --> DB_PROCESSING : row.status=PROCESSING
 DB_PROCESSING --> L_PROCESSING_ACTIVE : processing_expire_time >= now
@@ -98,13 +98,13 @@ A_MARK_FAILED --> W_STALE_OWNER
 A_MARK_FAILED --> W_PROVIDER_ERROR
 
 DB_PROCESSING --> A_MARK_DISCARDED : handler DISCARD / failurePolicy=DISCARD
-A_MARK_DISCARDED --> M_DISCARDED : message consume terminal semantic
+A_MARK_DISCARDED --> DB_DISCARDED : message consume terminal semantic
 A_MARK_DISCARDED --> W_STALE_OWNER
 A_MARK_DISCARDED --> W_PROVIDER_ERROR
 
 DB_SUCCESS --> L_RECORD_EXPIRED : expire_time < now
 DB_FAILED --> L_RECORD_EXPIRED : expire_time < now
-M_DISCARDED --> L_RECORD_EXPIRED : expire_time < now
+DB_DISCARDED --> L_RECORD_EXPIRED : expire_time < now
 L_RECORD_EXPIRED --> A_CLEANUP_DELETE
 A_CLEANUP_DELETE --> L_ABSENT
 
@@ -113,10 +113,10 @@ note right of DB_PROCESSING
   它应携带 ownerToken / version / processingExpireTime。
 end note
 
-note right of M_DISCARDED
-  当前代码中：message-component 有 markDiscarded(...)、DUPLICATE_DISCARDED、ConsumeDecision.DISCARD。
-  但 idempotent-component 当前 IdempotencyStatus 没有 DISCARDED。
-  因此图上标为 MESSAGE SEMANTIC，不是 IdempotencyStatus 持久状态枚举。
+note right of DB_DISCARDED
+  当前 idempotent-component 已正式持久化 IdempotencyStatus.DISCARDED。
+  message-component 的 markDiscarded(...) 与 DUPLICATE_DISCARDED
+  对应该终态。
 end note
 
 note right of L_PROCESSING_TIMEOUT
