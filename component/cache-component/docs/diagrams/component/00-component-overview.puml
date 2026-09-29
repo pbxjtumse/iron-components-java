@@ -1,7 +1,7 @@
 @startuml
 title Cache Component - Component Overview
 skinparam componentStyle rectangle
-[cache-api] --> [cache-core]
+[cache-core] --> [cache-api]
 [cache-config] --> [cache-api]
 [cache-provider-caffeine] --> [cache-core]
 [cache-provider-redis] --> [cache-core]
@@ -10,6 +10,9 @@ skinparam componentStyle rectangle
 [cache-integrations-observability] --> [cache-core]
 [cache-starter] --> [cache-core]
 [cache-starter] --> [cache-config]
+[cache-starter] --> [cache-provider-caffeine]
+[cache-starter] --> [cache-provider-redis]
+[cache-starter] --> [cache-provider-composite]
 [cache-demo] --> [cache-starter]
 rectangle "core" {
  [DefaultCacheClient]

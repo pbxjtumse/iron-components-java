@@ -1,17 +1,19 @@
 @startuml
 title Message Component - Component Overview
 skinparam componentStyle rectangle
-[message-api] --> [message-core]
+[message-core] --> [message-api]
 [message-core] --> [message-spi]
+[message-integration-kafka] --> [message-api]
 [message-integration-kafka] --> [message-spi]
+[message-integration-pulsar] --> [message-api]
 [message-integration-pulsar] --> [message-spi]
+[message-integration-rocketmq] --> [message-api]
 [message-integration-rocketmq] --> [message-spi]
 [message-starter] --> [message-core]
 [message-starter] --> [message-integration-kafka]
 [message-starter] --> [message-integration-pulsar]
 [message-starter] --> [message-integration-rocketmq]
 [message-demo-springboot] --> [message-starter]
-
 rectangle "Send Core" {
  [MessageTemplate]
  [MessageSendExecutor]

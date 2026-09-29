@@ -1,8 +1,9 @@
 @startuml
 title Transaction Component - Component Overview
 skinparam componentStyle rectangle
-[transaction-api] --> [transaction-core]
+[transaction-core] --> [transaction-api]
 [transaction-core] --> [transaction-spi]
+[transaction-provider-spring] --> [transaction-api]
 [transaction-provider-spring] --> [transaction-spi]
 [transaction-spring-boot-starter] --> [transaction-core]
 [transaction-spring-boot-starter] --> [transaction-provider-spring]

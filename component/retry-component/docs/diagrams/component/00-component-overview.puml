@@ -1,7 +1,7 @@
 @startuml
 title Retry Component - Component Overview
 skinparam componentStyle rectangle
-[retry-api] --> [retry-core]
+[retry-core] --> [retry-api]
 [retry-config] --> [retry-api]
 [retry-config] --> [retry-core]
 [retry-demo] --> [retry-config]

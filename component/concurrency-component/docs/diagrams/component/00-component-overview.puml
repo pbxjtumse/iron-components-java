@@ -1,12 +1,13 @@
 @startuml
 title Concurrency Component - Component Overview
 skinparam componentStyle rectangle
-[concurrency-api] --> [concurrency-core]
+[concurrency-core] --> [concurrency-api]
 [concurrency-config] --> [concurrency-api]
 [concurrency-provider] --> [concurrency-api]
 [concurrency-integrations] --> [concurrency-api]
 [concurrency-starter] --> [concurrency-core]
 [concurrency-starter] --> [concurrency-config]
+[concurrency-starter] --> [concurrency-provider]
 [concurrency-starter] --> [concurrency-integrations]
 [concurrency-demo] --> [concurrency-starter]
 rectangle "core" {

@@ -1,7 +1,7 @@
 @startuml
 title Storage Routing - Component Overview
 skinparam componentStyle rectangle
-[storage-routing-api] --> [storage-routing-core]
+[storage-routing-core] --> [storage-routing-api]
 [storage-routing-integration-relational] --> [storage-routing-api]
 [storage-routing-integration-shardingsphere-jdbc] --> [storage-routing-api]
 [storage-routing-integration-shardingsphere-proxy] --> [storage-routing-api]

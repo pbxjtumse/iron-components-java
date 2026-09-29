@@ -1,7 +1,7 @@
 @startuml
 title Observability Component - Component Overview
 skinparam componentStyle rectangle
-[observability-api] --> [observability-core]
+[observability-core] --> [observability-api]
 [observability-otel] --> [observability-api]
 [observability-starter] --> [observability-api]
 [observability-starter] --> [observability-core]
