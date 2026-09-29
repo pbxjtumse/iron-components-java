@@ -1,0 +1,22 @@
+@startuml
+title Observability - L3 OpenTelemetry Span Adapter
+participant OtelTraceServiceImpl as S
+participant Tracer as T
+participant Span as OSpan
+participant Scope as Scope
+participant OtelTraceSpanImpl as I
+participant TraceErrorResolver as R
+
+S -> T : spanBuilder(name).startSpan()
+T --> S : OTel Span
+S -> OSpan : makeCurrent()
+OSpan --> S : Scope
+S -> I : new(span, scope, resolvers)
+alt error(Throwable)
+  I -> OSpan : recordException
+  I -> OSpan : setStatus(ERROR)
+  I -> R : supports / resolve
+end
+I -> Scope : close()
+I -> OSpan : end()
+@enduml

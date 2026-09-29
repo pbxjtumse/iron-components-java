@@ -1,0 +1,23 @@
+@startuml
+title Observability - Trace Span Lifecycle
+hide empty description
+[*] --> STARTED_DOC : startSpan()
+STARTED_DOC --> ACTIVE_DOC : makeCurrent()
+ACTIVE_DOC --> ACTIVE_DOC : tag(...)
+ACTIVE_DOC --> ERROR_RECORDED_DOC : error(Throwable)
+ERROR_RECORDED_DOC --> ACTIVE_DOC : span remains closable
+ACTIVE_DOC --> CLOSED_DOC : close()
+CLOSED_DOC --> CLOSED_DOC : repeated close ignored by OtelTraceSpanImpl
+CLOSED_DOC --> [*]
+
+state "STARTED [DOC MODEL]" as STARTED_DOC
+state "ACTIVE [DOC MODEL]" as ACTIVE_DOC
+state "ERROR_RECORDED [DOC MODEL]" as ERROR_RECORDED_DOC
+state "CLOSED [DOC MODEL]" as CLOSED_DOC
+
+note right
+ITraceSpan 没有公开状态枚举。
+OtelTraceSpanImpl 使用 AtomicBoolean 保证 close 幂等，
+close 顺序是 Scope.close() -> Span.end()。
+end note
+@enduml

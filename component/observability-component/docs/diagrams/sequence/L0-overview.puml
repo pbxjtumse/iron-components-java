@@ -1,0 +1,17 @@
+@startuml
+title Observability - L0 Overview
+actor Business
+participant "Trace API" as A
+participant TraceTemplate as T
+participant "OTel Adapter" as O
+participant "OpenTelemetry API/SDK" as OT
+
+Business -> T : execute(spanName, callback)
+T -> A : startSpan
+A -> O : provider implementation
+O -> OT : spanBuilder/startSpan/makeCurrent
+OT --> O : active span
+T -> Business : execute callback
+T -> O : close
+O -> OT : scope.close + span.end
+@enduml

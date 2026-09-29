@@ -1,0 +1,20 @@
+@startuml
+title Storage Routing - L1 Direct Main Flow
+actor Caller
+participant DefaultStorageRouteResolver as R
+participant ShardResolver as S
+participant RouteMappingStrategy as M
+participant ThreadLocalStorageRouteContext as C
+participant DefaultStorageRouteToSqlRouteBridge as B
+
+Caller -> R : resolve(RouteContext)
+R -> S : resolve(context.requireShardKey())
+S --> R : ShardRouteInfo
+R -> M : map(shardInfo)
+M --> R : PhysicalStorageLocation
+R --> Caller : StorageRoute
+Caller -> C : open(route)
+Caller -> B : toSqlRoute(route)
+B --> Caller : physical dataSourceKey + physical table
+Caller -> C : close()
+@enduml

@@ -1,106 +1,75 @@
 # Storage Routing Component Docs
 
-> 文档定位：记录 Storage Routing Component 的边界、分包、演进路线、关键流程和最小使用样例。
+Storage Routing 统一“业务分片输入 -> 路由事实 -> Relational Access”的表达。它不是数据库中间件，也不重新实现 ShardingSphere。
 
-## 1. 当前阶段
+## 当前阶段（以 master 代码为准）
 
-当前处于：
-
-```text
-Phase 2.2：类型化单字段/复合字段 + 组合式 StorageRoute + 分片计算/物理映射编排
-           + ThreadLocal 上下文 + Relational Access 直连桥接 + Spring Boot starter
-```
-
-当前目标不是一次性完成完整分库分表中间件，而是先定住：
+当前已经具备：
 
 ```text
-业务路由结果如何表达？
-技术组件如何拿到同一个路由？
-Relational Access 如何根据路由选择 DataSource？
-ShardingSphere-JDBC / MyCAT / Direct Routing 如何作为底层实现替换？
+类型化 ShardKey / CompositeShardKey
++ ShardResolver
++ RouteMappingStrategy
++ StorageRoute
++ ThreadLocal StorageRouteContext
++ Relational Access bridge
++ DIRECT_DATASOURCE
++ SHARDINGSPHERE_JDBC Adapter
++ SHARDINGSPHERE_PROXY Adapter
++ Spring Boot starter
 ```
 
-## 2. 阅读顺序
+因此旧文档中“后续再增加 ShardingSphere-JDBC / Proxy Adapter”的描述已经过时。当前下一阶段重点是**在线扩容/迁移、路由版本和生产验证**，而不是再证明 Adapter 是否存在。
 
-```text
-00-component-boundary.md
-    先理解组件边界
-
-01-module-layout.md
-    再理解 api / core / spi / config / integration / starter 是否需要
-
-02-basic-usage-examples.md
-    再看 RouteContext、类型化分片键、逻辑表与上下文传播的代码样例
-
-03-storage-route-model.md
-    查看本轮模型调整、API 收敛和各字段的职责
-
-04-storage-expansion-development-plan.md
-    查看扩容的七类开发待办、三批实施顺序和 ShardingSphere 迁移边界
-
-01-storage-route-model.puml
-    查看输入、类型化分片键与组合式结果的类关系
-
-03-storage-route-resolution.puml
-    查看当前代码真实执行的解析流程
-
-01-storage-route-context.puml
-    看 StorageRouteContext 如何保证一次调用链内路由一致
-
-02-storage-route-to-relational-access.puml
-    看 StorageRoute 如何转成 Relational Access 可执行的 SqlRoute
-```
-
-扩容规划入口：[存储扩容开发计划：幂等存储、ShardingSphere 接入与迁移](design/04-storage-expansion-development-plan.md)。该文档是基于当前代码整理的开发待办，不表示中间件适配或迁移能力已经完成。
-
-## 3. 当前代码模块
+## 当前模块
 
 ```text
 storage-routing-api
 storage-routing-core
 storage-routing-integration
-    storage-routing-integration-relational
+  storage-routing-integration-relational
+  storage-routing-integration-shardingsphere-jdbc
+  storage-routing-integration-shardingsphere-proxy
 storage-routing-starter
 ```
 
-## 4. 当前最建议先看的代码
+## 三种模式
 
-```text
-storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/route/RouteContext.java
-    看调用方如何表达 routeName / logicalTable / CompositeShardKey
+| StorageRouteMode | Iron 输出 | 后续物理路由 |
+|---|---|---|
+| DIRECT_DATASOURCE | 物理 dataSourceKey + 物理表 | Iron/应用 DataSource |
+| SHARDINGSPHERE_JDBC | ShardingSphere 逻辑 DataSource + 逻辑表 | 进程内 ShardingSphere-JDBC |
+| PROXY | 指向 Proxy 的 JDBC DataSource + 逻辑表 | ShardingSphere-Proxy |
 
-storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/key/CompositeShardKey.java
-    看字段顺序、字段名、类型化值和稳定编码
+JDBC/Proxy Adapter 不创建规则、不改写业务 SQL、不部署 ShardingSphere。
 
-storage-routing-api/src/main/java/com/xjtu/iron/storage/routing/api/route/StorageRoute.java
-    看 Resolver 最终输出什么路由结果
+## 图形阅读顺序
 
-storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/resolver/HashShardResolver.java
-    看单字段历史落点规则和复合键如何得到 ShardRouteInfo
+1. [组件图](component/00-storage-routing-overview.puml)
+2. [模型图](component/01-storage-route-model.puml)
+3. [L0 总览](sequence/L0-overview.puml)
+4. [L1 Direct Resolver](sequence/L1-main-flow.puml)
+5. [L2 Scope](sequence/L2-scenario-flow.puml)
+6. [L3 Resolver 内部](sequence/L3-internal-flow.puml)
+7. [L4 Direct/JDBC/Proxy Integration](sequence/L4-integration-flow.puml)
+8. [Route Scope 状态](state/00-full-state.puml)
+9. [扩容开发计划](design/04-storage-expansion-development-plan.md)
 
-storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/resolver/DefaultStorageRouteResolver.java
-    看分片结果如何经过映射策略生成 StorageRoute
+## 当前最重要的代码
 
-storage-routing-core/src/main/java/com/xjtu/iron/storage/routing/core/context/ThreadLocalStorageRouteContext.java
-    看路由如何绑定到当前调用链
+- `DefaultStorageRouteResolver`
+- `HashShardResolver`
+- `DefaultRouteMappingStrategy`
+- `ThreadLocalStorageRouteContext`
+- `DefaultStorageRouteToSqlRouteBridge`
+- `ShardingSphereJdbcStorageRouteResolver / Bridge`
+- `ShardingSphereProxyStorageRouteResolver / Bridge`
+- `StorageRoutingAutoConfiguration`
 
-storage-routing-integration/storage-routing-integration-relational/src/main/java/com/xjtu/iron/storage/routing/integration/relational/DefaultStorageRouteToSqlRouteBridge.java
-    看 DIRECT_DATASOURCE 路由如何转换成 Relational Access 的 SqlRoute
+## 核心边界
 
-storage-routing-starter/src/main/java/com/xjtu/iron/storage/routing/starter/autoconfigure/StorageRoutingAutoConfiguration.java
-    看 Spring Boot 下默认 Context、bridge 和可选 hash resolver 如何装配
+`DefaultStorageRouteResolver` 只做两步：`ShardResolver.resolve(CompositeShardKey)` 得到 `ShardRouteInfo`；`RouteMappingStrategy.map(shardInfo)` 得到 `PhysicalStorageLocation`。它不持有线程状态。
 
-storage-routing-core/src/test/java/com/xjtu/iron/storage/routing/core/resolver/HashShardResolverTest.java
-    看类型化键的固定落点和同分片不同表
-```
+`StorageRouteContext` 只绑定已经算好的 route；Scope 的嵌套只表示上下文恢复，不代表跨库事务。
 
-## 5. 后续模块规划
-
-```text
-storage-routing-spi
-storage-routing-config
-storage-routing-integration-shardingsphere
-```
-
-`storage-routing-integration-relational` 与 `storage-routing-starter` 已具备真实职责。
-后续重点是让技术组件 Storage 接入当前路由，再基于同一模型增加 ShardingSphere-JDBC adapter。
+ShardingSphere Adapter 只改变“路由结果如何交给后续 SQL 层”，不改变业务 `RouteContext / CompositeShardKey` 协议。

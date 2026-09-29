@@ -1,0 +1,24 @@
+@startuml
+title Relational Access - L3 DefaultRelationalTemplate Lifecycle
+participant DefaultRelationalTemplate as T
+participant SqlStatementValidator as V
+participant SqlExecutionListener as L
+participant ConnectionProvider as CP
+participant ConnectionHandle as H
+participant PreparedStatement as PS
+
+T -> V : validate
+T -> T : build SqlExecutionContext
+T -> L : beforeExecute
+T -> CP : acquire
+CP --> T : H
+T -> H : connection()
+T -> PS : prepare/configure/bind/execute
+T -> PS : close
+T -> H : close
+alt success
+  T -> L : afterSuccess(elapsed)
+else failure
+  T -> L : afterFailure(elapsed, failure)
+end
+@enduml

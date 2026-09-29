@@ -1,0 +1,29 @@
+@startuml
+title Storage Routing - Route Scope Lifecycle
+hide empty description
+[*] --> INPUT_DOC
+INPUT_DOC --> RESOLVED_DOC : StorageRouteResolver.resolve
+RESOLVED_DOC --> BOUND_DOC : StorageRouteContext.open
+BOUND_DOC --> BRIDGED_DOC : bridge to SqlRoute/table
+BRIDGED_DOC --> BOUND_DOC : more SQL in same scope
+BOUND_DOC --> RESTORED_DOC : close nested scope
+RESTORED_DOC --> BOUND_DOC : previous scope exists
+BOUND_DOC --> CLEARED_DOC : close outermost scope
+CLEARED_DOC --> [*]
+
+state "ROUTE_INPUT [DOC MODEL]\nRouteContext + CompositeShardKey" as INPUT_DOC
+state "RESOLVED [DOC MODEL]\nStorageRoute" as RESOLVED_DOC
+state "BOUND [DOC MODEL]\ncurrent ThreadLocal route" as BOUND_DOC
+state "BRIDGED [DOC MODEL]\nSqlRoute + execution table" as BRIDGED_DOC
+state "RESTORED [DOC MODEL]" as RESTORED_DOC
+state "CLEARED [DOC MODEL]" as CLEARED_DOC
+
+note right
+StorageRouteMode 是真实枚举：
+DIRECT_DATASOURCE
+SHARDINGSPHERE_JDBC
+PROXY
+
+这些是路由模式，不是生命周期状态。
+end note
+@enduml

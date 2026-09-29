@@ -1,0 +1,30 @@
+@startuml
+title Storage Routing - Component Overview
+skinparam componentStyle rectangle
+[storage-routing-api] --> [storage-routing-core]
+[storage-routing-integration-relational] --> [storage-routing-api]
+[storage-routing-integration-shardingsphere-jdbc] --> [storage-routing-api]
+[storage-routing-integration-shardingsphere-proxy] --> [storage-routing-api]
+[storage-routing-starter] --> [storage-routing-core]
+[storage-routing-starter] --> [storage-routing-integration-relational]
+[storage-routing-starter] --> [storage-routing-integration-shardingsphere-jdbc]
+[storage-routing-starter] --> [storage-routing-integration-shardingsphere-proxy]
+rectangle "API" {
+ [CompositeShardKey]
+ [RouteContext]
+ [StorageRoute]
+ [StorageRouteResolver]
+ [StorageRouteContext]
+}
+rectangle "Core" {
+ [HashShardResolver]
+ [DefaultStorageRouteResolver]
+ [RouteMappingStrategy]
+ [ThreadLocalStorageRouteContext]
+}
+rectangle "Adapters" {
+ [Direct Relational Bridge]
+ [ShardingSphere-JDBC Adapter]
+ [ShardingSphere-Proxy Adapter]
+}
+@enduml

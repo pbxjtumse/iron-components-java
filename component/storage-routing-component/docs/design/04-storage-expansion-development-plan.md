@@ -1,5 +1,18 @@
 # 存储扩容开发计划：幂等存储、ShardingSphere 接入与迁移
 
+## 当前代码进展校正（2026-09-29）
+
+本文件最初包含“未来增加 ShardingSphere Adapter”的开发待办。当前 master 已经前进到：
+
+- `storage-routing-integration-shardingsphere-jdbc` 已存在，包含 Resolver、Relational bridge 和测试；
+- `storage-routing-integration-shardingsphere-proxy` 已存在，包含 Resolver、Relational bridge 和测试；
+- `StorageRouteMode` 当前为 `DIRECT_DATASOURCE / SHARDINGSPHERE_JDBC / PROXY`；
+- Starter 已能按 mode 装配 Direct、ShardingSphere-JDBC、ShardingSphere-Proxy 对应 Resolver/Bridge。
+
+因此，下文关于“新增 JDBC/Proxy Adapter”的旧待办只保留为历史规划背景，不再代表当前缺失能力。当前真正尚未完成的是**在线扩容/迁移闭环**：持久化可恢复的逻辑路由依据、CDC/迁移作业、切流、回退、跨版本兼容和生产级验收。
+
+---
+
 > 文档状态：开发规划，待实施；不代表中间件适配或在线迁移已经完成。  
 > 整理日期：2026-09-17。  
 > 代码基线：`master` 的 [3358ef6](https://github.com/pbxjtumse/iron-components-java/commit/3358ef602252963fd05eda957bbc7ae7709686e1)，已合入 route-aware 幂等存储。  

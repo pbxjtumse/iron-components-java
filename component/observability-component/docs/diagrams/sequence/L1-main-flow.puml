@@ -1,0 +1,20 @@
+@startuml
+title Observability - L1 TraceTemplate Main Flow
+actor Caller
+participant TraceTemplate as T
+participant ITraceService as S
+participant ITraceSpan as Span
+participant TraceMdc as M
+participant Callback as B
+
+Caller -> T : execute(spanName, callback)
+T -> S : startSpan(spanName)
+S --> T : span
+T -> M : put(traceService)
+M --> T : MdcScope
+T -> B : execute()
+B --> T : value
+T -> Span : close()
+T -> M : scope.close()
+T --> Caller : value
+@enduml

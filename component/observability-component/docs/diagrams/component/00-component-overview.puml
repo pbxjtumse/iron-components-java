@@ -1,0 +1,30 @@
+@startuml
+title Observability Component - Component Overview
+skinparam componentStyle rectangle
+[observability-api] --> [observability-core]
+[observability-otel] --> [observability-api]
+[observability-starter] --> [observability-api]
+[observability-starter] --> [observability-core]
+[observability-starter] --> [observability-otel]
+[observability-demo-app] --> [observability-starter]
+rectangle "API" {
+ [ITraceService]
+ [ITraceSpan]
+ [Trace]
+ [TraceErrorResolver]
+}
+rectangle "Core" {
+ [TraceTemplate]
+ [TraceMdc]
+ [NoopTraceService]
+}
+rectangle "OTel Adapter" {
+ [OtelTraceServiceImpl]
+ [OtelTraceSpanImpl]
+}
+rectangle "Starter" {
+ [TraceAspect]
+ [ObservabilityWebFilter]
+ [ObservabilityAutoConfiguration]
+}
+@enduml

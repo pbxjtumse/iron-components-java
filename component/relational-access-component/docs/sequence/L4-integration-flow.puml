@@ -1,0 +1,19 @@
+@startuml
+title Relational Access - L4 Routing and Transaction Integration
+actor "Business / Technical Storage" as B
+participant StorageRouteToSqlRouteBridge as Bridge
+participant RelationalTemplate as R
+participant ConnectionProvider as CP
+participant "Spring transaction-bound DataSource" as DS
+participant "ShardingSphere JDBC/Proxy or Direct DB" as DB
+
+B -> Bridge : StorageRoute
+Bridge --> B : SqlRoute + execution table
+B -> R : SqlStatement(route)
+R -> CP : acquire(context)
+CP -> DS : get/bind connection
+DS --> CP : ConnectionHandle
+OWNED or BORROWED
+R -> DB : SQL using selected route
+DB --> R : result
+@enduml

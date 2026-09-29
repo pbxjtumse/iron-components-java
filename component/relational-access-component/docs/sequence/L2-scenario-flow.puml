@@ -1,0 +1,26 @@
+@startuml
+title Relational Access - L2 Failure Scenarios
+participant DefaultRelationalTemplate as T
+participant RowMapper as RM
+participant SqlExceptionTranslator as X
+participant SqlExecutionListener as L
+database DB
+
+T -> DB : execute
+alt SQLException
+  DB --> T : SQLException
+  T -> X : translate(context, exception)
+  X --> T : RelationalAccessException
+  T -> L : afterFailure
+else RowMapper failure
+  T -> RM : map
+  RM --> T : Exception / null
+  T -> T : wrap RESULT_MAPPING_ERROR
+  T -> L : afterFailure
+else queryOne returns second row
+  T -> T : NON_UNIQUE_RESULT
+  T -> L : afterFailure
+else success
+  T -> L : afterSuccess
+end
+@enduml

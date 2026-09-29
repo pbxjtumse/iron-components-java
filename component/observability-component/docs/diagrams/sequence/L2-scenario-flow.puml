@@ -1,0 +1,28 @@
+@startuml
+title Observability - L2 Error Isolation and MDC Restore
+participant TraceTemplate as T
+participant ITraceService as S
+participant ITraceSpan as Span
+participant TraceMdc as M
+participant Business as B
+
+T -> S : safeStartSpan
+alt tracing provider fails
+  S --> T : throwable
+  T -> T : use NoopTraceSpan
+end
+T -> M : safePutMdc
+T -> B : callback
+alt business throws
+  B --> T : Throwable
+  T -> Span : error(Throwable)
+  note right: trace error is swallowed if observability itself fails
+  T -> Span : close()
+  T -> M : restore previous MDC
+  T --> B : rethrow original business error
+else success
+  B --> T : value
+  T -> Span : close()
+  T -> M : restore previous MDC
+end
+@enduml

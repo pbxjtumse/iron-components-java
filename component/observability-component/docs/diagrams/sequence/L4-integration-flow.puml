@@ -1,0 +1,24 @@
+@startuml
+title Observability - L4 HTTP / AOP / OTel Boundary
+actor Client
+participant ObservabilityWebFilter as F
+participant TraceAspect as A
+participant TraceTemplate as T
+participant "Application Method" as M
+participant "OpenTelemetry Agent/SDK" as O
+participant "OTel Collector / Backend" as C
+
+Client -> O : HTTP server instrumentation may create server span
+Client -> F : HTTP request
+F -> F : put request-level MDC
+F -> A : invoke @Trace method
+A -> O : create method span through ITraceService
+A -> M : proceed
+M -> T : optional code-block trace
+T -> O : create child span
+O --> C : export is external runtime concern
+T --> M
+A --> F
+F -> F : restore previous MDC
+F --> Client : HTTP response
+@enduml

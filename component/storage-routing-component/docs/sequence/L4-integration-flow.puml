@@ -1,0 +1,29 @@
+@startuml
+title Storage Routing - L4 Direct / ShardingSphere Adapters
+actor App
+participant StorageRoutingAutoConfiguration as AC
+participant StorageRouteResolver as R
+participant StorageRouteToSqlRouteBridge as B
+participant RelationalAccess as RA
+participant "Direct DB" as D
+participant "ShardingSphere-JDBC" as J
+participant "ShardingSphere-Proxy" as P
+
+App -> AC : xjtu.iron.storage-routing.mode
+alt DIRECT_DATASOURCE
+  AC -> R : DefaultStorageRouteResolver
+  AC -> B : DefaultStorageRouteToSqlRouteBridge
+  B -> RA : physical SqlRoute + physical table
+  RA -> D : JDBC
+else SHARDINGSPHERE_JDBC
+  AC -> R : ShardingSphereJdbcStorageRouteResolver
+  AC -> B : ShardingSphereJdbcStorageRouteToSqlRouteBridge
+  B -> RA : logical DataSource + logical table
+  RA -> J : JDBC
+else PROXY
+  AC -> R : ShardingSphereProxyStorageRouteResolver
+  AC -> B : ShardingSphereProxyStorageRouteToSqlRouteBridge
+  B -> RA : Proxy DataSource + logical table
+  RA -> P : JDBC
+end
+@enduml
