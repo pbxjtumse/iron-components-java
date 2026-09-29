@@ -62,6 +62,13 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- ShardingSphere 5.5.3 uses org.apache.commons.lang3.Strings, which is unavailable in Boot's managed version. -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.20.0</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
