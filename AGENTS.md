@@ -74,7 +74,7 @@ mvn -U -DskipTests compile
 mvn -U clean verify
 ```
 
-当前校验基线与已知问题见 `docs/project-handoff/CURRENT-STATE.md`。先读该文件，避免把校验脚本自身的过期规则误判成 161 个独立代码问题。
+当前校验基线与已知问题见 `docs/project-handoff/CURRENT-STATE.md`。POM 校验已经按 Parent / 内部 dependencyManagement / 对外 BOM 三层职责重写；先处理它报告的结构问题，再进入 Maven Reactor。
 
 ## 文档与图
 

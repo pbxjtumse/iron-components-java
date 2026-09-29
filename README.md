@@ -164,12 +164,14 @@ mvn -pl component/distributed-lock-component -am clean compile
 bash scripts/build-first.sh
 ~~~
 
+脚本职责与结果解释见 [scripts/README.md](scripts/README.md)。
+
 脚本会依次执行：
 
-1. 校验 POM 聚合、父链和 component-bom。
+1. 校验 POM 聚合、父链、内部 dependencyManagement 和对外 component-bom。
 2. 校验源码直接使用的第三方 API 是否在模块 POM 中声明。
-3. 编译全部生产代码。
-4. 执行全部测试并打包。
+3. 执行组件特定的静态架构规则。
+4. 执行完整 Maven Reactor 测试并打包。
 
 如果只是开发某个组件，建议优先使用局部构建：
 

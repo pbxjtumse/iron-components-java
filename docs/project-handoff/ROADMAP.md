@@ -4,30 +4,30 @@ Roadmap 按“先恢复可信构建，再扩展功能”排序。开始任务前
 
 ## P0：恢复可信验证基线
 
-### 1. 对齐 POM 校验器
+### 1. 清理 POM 校验剩余问题
 
-修改 `scripts/validate-poms.py`，使其符合当前 Maven 架构：
+`validate-poms.py` 已经与新 Maven 架构对齐。下一步处理它报告的真实结构问题：
 
-- 组件源码通过 `component/pom.xml` 继承内部 dependencyManagement；
-- 组件根不导入 `component-bom`；
-- 对外 BOM 只管理公开消费坐标，不要求覆盖所有内部实现模块；
-- Demo Boot Plugin、直接依赖和显式内部版本分别校验，不混为一类。
+- 让 `transaction-component` 继承 `component/pom.xml`，删除重复 Java、Spring Boot 和插件版本基线；
+- 删除 `distributed-lock-component` 对 `component-bom` 的源码内导入；
+- 在 `component/pom.xml` 补齐三个内部管理坐标；
+- 删除已经由内部 dependencyManagement 提供的冗余 `${project.version}`。
 
-验收：脚本只报告真实、可操作的问题。
+这些修改必须经过 Maven Reactor，不能只以脚本变绿作为完成标准。
 
-### 2. 修复直接测试依赖
+### 2. 明确 Demo 打包策略
 
-核验并补齐 `check-source-dependencies.py` 报告的四个测试依赖，然后执行受影响模块测试。
+决定九个组件 Demo 是否要求生成可直接 `java -jar` 的 Boot 包：
+
+- 如果要求，显式启用 `spring-boot-maven-plugin`；
+- 如果只用于 IDE、测试或 `spring-boot:run`，在统一 Demo 规范中说明并保留 warning。
 
 ### 3. 建立全仓构建证据
 
 在 JDK 17 + Maven 3.9.x 环境执行：
 
 ```bash
-python3 scripts/validate-poms.py
-python3 scripts/check-source-dependencies.py
-mvn -U -DskipTests compile
-mvn -U clean verify
+bash scripts/build-first.sh
 ```
 
 保留 Surefire/Failsafe 报告和失败模块清单。

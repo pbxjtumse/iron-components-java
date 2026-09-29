@@ -46,31 +46,39 @@ mvn -U clean verify
 
 ### `scripts/validate-poms.py`
 
-脚本当前退出码为 1，并报告 161 个错误。但其中大量结果来自校验规则与刚确立的 Maven 架构相冲突：
+脚本已经重写为纯 Python 标准库实现，并明确区分：根聚合、组件内部 Parent / dependencyManagement、对外 BOM、源码直接依赖和 Maven 实际构建。
 
-- 脚本仍要求组件根导入 `component-bom`；
-- `component/MAVEN-ARCHITECTURE.md` 和当前 POM 已明确组件源码不再导入 BOM；
-- 脚本要求所有内部组件依赖都出现在对外 BOM；
-- 当前设计是内部版本由 `component/pom.xml` 管理，对外 BOM 只列公开消费坐标。
+当前退出码为 1，剩余 **9 个可操作的结构问题**：
 
-因此不能把 161 条全部当成 161 个独立工程缺陷。应该先修正校验器的模型，再重新分析剩余真实错误。
+1. `transaction-component` 尚未继承 `component/pom.xml`。
+2. `transaction-component` 仍覆盖 compiler release。
+3. `distributed-lock-component` 仍反向导入 `component-bom`。
+4. `idempotent-storage-routing-e2e` 对两个已管理内部依赖保留冗余版本。
+5. `relational-spi` 对 `relational-api` 保留冗余版本。
+6. `component/pom.xml` 缺少 `idempotent-integration-storage-routing` 管理项。
+7. `component/pom.xml` 缺少 `relational-core` 管理项。
+8. `component/pom.xml` 缺少 `relational-integration-spring` 管理项。
 
-脚本同时暴露出可能需要单独核验的问题：
+其中第 4 条对应两个具体依赖声明，所以脚本输出总数为 9、上面归并为 8 组；第 1、2 条通常可以在 Transaction Parent 收口时一起解决。
 
-- 两个 Starter 测试依赖声明；
-- 一些内部依赖仍显式写 `${project.version}`；
-- Demo 的 Spring Boot Maven Plugin 判定规则可能过严，也可能存在真实缺失。
+脚本另报告 **9 个警告**：九个带 `@SpringBootApplication` 的组件 Demo 没有启用 `spring-boot-maven-plugin`。这不会阻止普通编译，但不会生成可直接 `java -jar` 的 Boot 可执行包；需要明确 Demo 是仅供 IDE / `spring-boot:run` 使用，还是要求发布可执行包。
 
 ### `scripts/check-source-dependencies.py`
 
-脚本退出码为 1，报告 4 个直接测试依赖缺失：
+脚本已经修正两类误判：
 
-1. `idempotent-storage-routing-e2e` 使用 AssertJ，但 POM 未显式声明。
-2. `idempotent-storage-routing-e2e` 使用 JUnit Jupiter，但 POM 未显式声明。
-3. `transaction-demo-jpa` 使用 JUnit Jupiter，但 POM 未显式声明。
-4. `transaction-demo-mybatis` 使用 JUnit Jupiter，但 POM 未显式声明。
+- `spring-boot-starter-test` 可以提供其标准测试依赖组合；
+- Lombok 的 `provided` scope 对主源码编译有效。
 
-这些结果应在 Maven Reactor 中验证后修复，不应通过放宽源码依赖检查来掩盖。
+当前检查 130 个模块，退出码为 0，缺失声明为 0。
+
+### 组件级脚本
+
+- Foundation POM XML：通过，11 个 POM 可解析。
+- Retry package layout：通过。
+- Retry comment style：通过，检查 58 个 Java 文件。
+
+完整脚本职责见 `scripts/README.md`。
 
 ## 3. 当前最重要的事实校正
 
@@ -94,12 +102,7 @@ git status --short --branch
 git log -1 --oneline
 java -version
 mvn -version
-python3 scripts/validate-poms.py
-python3 scripts/check-source-dependencies.py
-mvn -pl component/storage-routing-component -am test
-mvn -pl component/idempotent-component -am test
-mvn -pl component/message-component -am test
-mvn -U clean verify
+bash scripts/build-first.sh
 ```
 
-先保存原始失败日志，再决定是代码、POM、测试环境还是校验脚本的问题。
+POM 静态校验归零后，再执行局部 E2E 和真实中间件联调。先保存原始失败日志，再决定是代码、POM、测试环境还是基础设施的问题。

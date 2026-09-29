@@ -57,4 +57,4 @@ component/DOCUMENTATION-INDEX.md 和目标组件 docs/README.md。
 - ShardingSphere-JDBC 和 Proxy Adapter 是否已经存在？
 - Idempotency 三段事务分别承担什么职责？
 - Message Consume V4 的策略顺序是什么？
-- 当前校验脚本为什么会报告大量与 Maven 架构相冲突的错误？
+- 当前 POM 校验剩余哪些结构问题，哪些只是 Demo 可执行打包警告？
