@@ -568,6 +568,8 @@ storage-routing-starter
 
 | 目标 | 文档 |
 |---|---|
+| ChatGPT / Codex 项目迁移 | docs/project-handoff/README.md |
+| 代码 Agent 工程规则 | AGENTS.md |
 | Maven 架构 | component/MAVEN-ARCHITECTURE.md |
 | 并发组件 | component/concurrency-component/README.md |
 | 并发组件详细设计 | component/concurrency-component/docs/README.md |
