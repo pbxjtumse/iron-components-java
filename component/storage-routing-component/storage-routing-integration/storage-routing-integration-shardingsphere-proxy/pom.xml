@@ -6,43 +6,26 @@
 
     <parent>
         <groupId>com.xjtu.iron</groupId>
-        <artifactId>storage-routing-component</artifactId>
+        <artifactId>storage-routing-integration</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>storage-routing-starter</artifactId>
+    <artifactId>storage-routing-integration-shardingsphere-proxy</artifactId>
     <packaging>jar</packaging>
-    <name>storage-routing-starter</name>
-    <description>Storage Routing 的 Spring Boot 自动装配入口。</description>
+    <name>storage-routing-integration-shardingsphere-proxy</name>
+    <description>Storage Routing 到 ShardingSphere-Proxy JDBC DataSource 与逻辑表的适配。</description>
 
     <dependencies>
         <dependency>
             <groupId>com.xjtu.iron</groupId>
-            <artifactId>storage-routing-core</artifactId>
+            <artifactId>storage-routing-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.xjtu.iron</groupId>
             <artifactId>storage-routing-integration-relational</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.xjtu.iron</groupId>
-            <artifactId>storage-routing-integration-shardingsphere-jdbc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.xjtu.iron</groupId>
-            <artifactId>storage-routing-integration-shardingsphere-proxy</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
-        </dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-test</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

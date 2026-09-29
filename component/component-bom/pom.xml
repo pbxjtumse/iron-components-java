@@ -108,6 +108,11 @@
             </dependency>
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
+                <artifactId>storage-routing-integration-shardingsphere-proxy</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
                 <artifactId>storage-routing-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
