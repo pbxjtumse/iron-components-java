@@ -1,25 +1,15 @@
 @startuml
-actor Business
-participant TransactionExecutor
-participant SpringTransactionProvider
-participant PlatformTransactionManager
-participant Mapper
-participant Database
-
-Business -> TransactionExecutor: execute(options, callback)
-TransactionExecutor -> SpringTransactionProvider: execute(options, providerCallback)
-SpringTransactionProvider -> PlatformTransactionManager: getTransaction(definition)
-PlatformTransactionManager --> SpringTransactionProvider: TransactionStatus
-SpringTransactionProvider -> TransactionExecutor: providerCallback.execute(context)
-TransactionExecutor -> Business: TransactionCallback.execute(ctx)
-Business -> Mapper: insert/update
-Mapper -> Database: SQL
-Database --> Mapper: result
-Mapper --> Business: result
-Business --> TransactionExecutor: business result
-TransactionExecutor --> SpringTransactionProvider: business result
-SpringTransactionProvider -> PlatformTransactionManager: commit(status)
-PlatformTransactionManager --> SpringTransactionProvider: completed
-SpringTransactionProvider --> TransactionExecutor: business result
-TransactionExecutor --> Business: business result
+title Transaction - L1 REQUIRED Main Flow
+actor Caller
+participant DefaultTransactionExecutor as E
+participant TransactionOptionsValidator as V
+participant TransactionProvider as P
+participant "Business Callback" as B
+Caller -> E : execute(options, callback)
+E -> V : validate(options)
+E -> P : execute(options, providerCallback)
+P -> B : callback(context)
+B --> P : result
+P --> E : result
+E --> Caller : result
 @enduml

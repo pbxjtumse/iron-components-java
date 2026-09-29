@@ -1,0 +1,28 @@
+@startuml
+title Transaction - L2 REQUIRES_NEW and Failure
+actor Caller
+participant DefaultTransactionExecutor as E
+participant SpringTransactionProvider as P
+participant PlatformTransactionManager as TM
+participant Business as B
+Caller -> E : execute(REQUIRES_NEW)
+E -> P : execute
+P -> TM : getTransaction(definition)
+TM --> P : TransactionStatus
+P -> B : callback
+alt success
+  B --> P : result
+  P -> TM : commit(status)
+  alt commit throws
+    P --> E : ProviderTransactionException(COMMIT)
+    E --> Caller : TransactionExecutionException / COMMIT_UNKNOWN
+  else committed
+    P --> E : result
+  end
+else business exception
+  B --> P : exception
+  P -> TM : rollback(status)
+  P --> E : original business exception
+  E --> Caller : propagate
+end
+@enduml

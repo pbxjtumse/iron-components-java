@@ -1,0 +1,31 @@
+@startuml
+title Transaction - Full Lifecycle
+hide empty description
+[*] --> VALIDATE
+VALIDATE --> RESOLVE : valid
+VALIDATE --> FAILED : invalid options
+RESOLVE --> BEGIN
+RESOLVE --> FAILED : provider/resolve failure
+BEGIN --> EXECUTE : transaction ready
+BEGIN --> FAILED : begin failure
+EXECUTE --> COMMIT : callback success
+EXECUTE --> ROLLBACK : callback failure / rollbackOnly
+COMMIT --> SUCCESS_DOC : commit returns normally
+COMMIT --> COMMIT_UNKNOWN : commit infrastructure exception
+ROLLBACK --> ROLLED_BACK : rollback confirmed
+ROLLBACK --> FAILED : rollback infrastructure failure
+SUCCESS_DOC --> COMPLETION
+ROLLED_BACK --> COMPLETION
+COMMIT_UNKNOWN --> COMPLETION
+FAILED --> COMPLETION
+COMPLETION --> [*]
+
+state "SUCCESS [DOC MODEL]\nnormal return; not TransactionOutcome" as SUCCESS_DOC
+note right
+VALIDATE/RESOLVE/BEGIN/EXECUTE/COMMIT/ROLLBACK/COMPLETION
+与 TransactionStage 对齐。
+
+TransactionOutcome 只包含：
+ROLLED_BACK / COMMIT_UNKNOWN / FAILED。
+end note
+@enduml

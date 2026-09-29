@@ -1,47 +1,51 @@
 @startuml
 title Idempotent Component - L0
-
 skinparam componentStyle rectangle
-
 actor Caller
-
 rectangle "idempotent-api" {
   [IdempotencyExecutor]
+  [IdempotencyOperations]
   [IdempotencyRequest]
   [IdempotencyPolicy]
-  [ResultPolicy<T>]
-  [RecoveryPolicy]
+  [IdempotencyResultPolicy<T>]
+  [IdempotencyRecoveryPolicy]
 }
-
 rectangle "idempotent-core" {
-  [PolicyRegistry]
-  [RepositoryRegistry]
-  [StateMachine]
   [DefaultIdempotencyExecutor]
+  [IdempotencyExecutionPreparer]
+  [IdempotencyStateOperationExecutor]
+  [IdempotencyBusinessExecutor]
+  [DefaultIdempotencyStateMachine]
+  [RepositoryRegistry]
 }
-
 rectangle "providers" {
-  [Redis Repository\nWINDOWED]
-  [JDBC Repository\nWINDOWED / DURABLE]
+  [RedisIdempotencyRepository]
+  [JdbcIdempotencyRepository]
+  [RoutedJdbcIdempotencyRepository]
 }
-
-rectangle "optional integrations" {
-  [DistributedLockClient\ncontention reduction]
-  [transaction-component\nBusiness + SUCCESS]
+rectangle "integrations" {
+  [StorageRouteAwareIdempotencyExecutor]
+  [StorageRouteAwareIdempotencyTransactionCoordinator]
+  [TransactionTemplateIdempotencyTransactionCoordinator]
 }
-
-rectangle "external reliable task" {
-  [Recovery Scanner / Scheduler]
+rectangle "external infrastructure" {
+  [Storage Routing]
+  [Transaction Component]
+  [Distributed Lock optional]
+  [Reliable Recovery Task]
 }
-
 Caller --> [IdempotencyExecutor]
-[IdempotencyExecutor] --> [DefaultIdempotencyExecutor]
-[DefaultIdempotencyExecutor] --> [PolicyRegistry]
-[DefaultIdempotencyExecutor] --> [RepositoryRegistry]
-[DefaultIdempotencyExecutor] --> [StateMachine]
-[RepositoryRegistry] --> [Redis Repository\nWINDOWED]
-[RepositoryRegistry] --> [JDBC Repository\nWINDOWED / DURABLE]
-[DefaultIdempotencyExecutor] ..> [DistributedLockClient\ncontention reduction] : optional short lock
-[DefaultIdempotencyExecutor] ..> [transaction-component\nBusiness + SUCCESS] : optional local tx
-[Recovery Scanner / Scheduler] --> [IdempotencyExecutor] : recover()
+[IdempotencyExecutor] --> [StorageRouteAwareIdempotencyExecutor] : route-aware enabled
+[StorageRouteAwareIdempotencyExecutor] --> [DefaultIdempotencyExecutor]
+[DefaultIdempotencyExecutor] --> [IdempotencyExecutionPreparer]
+[DefaultIdempotencyExecutor] --> [IdempotencyStateOperationExecutor]
+[DefaultIdempotencyExecutor] --> [DefaultIdempotencyStateMachine]
+[DefaultIdempotencyExecutor] --> [IdempotencyBusinessExecutor]
+[RepositoryRegistry] --> [RedisIdempotencyRepository]
+[RepositoryRegistry] --> [JdbcIdempotencyRepository]
+[RepositoryRegistry] --> [RoutedJdbcIdempotencyRepository]
+[StorageRouteAwareIdempotencyExecutor] ..> [Storage Routing]
+[StorageRouteAwareIdempotencyTransactionCoordinator] ..> [Transaction Component]
+[DefaultIdempotencyExecutor] ..> [Distributed Lock optional]
+[Reliable Recovery Task] --> [IdempotencyExecutor] : recover()
 @enduml

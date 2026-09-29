@@ -1,0 +1,15 @@
+@startuml
+title Transaction - L3 Core Internal Flow
+participant DefaultTransactionExecutor as E
+participant TransactionOptionsValidator as V
+participant TransactionExecutionIdGenerator as ID
+participant TransactionProvider as P
+participant TransactionEventListener as L
+E -> V : validate(options)
+E -> ID : nextId()
+ID --> E : executionId
+E -> L : lifecycle event
+E -> P : execute(options, callback)
+P --> E : result / ProviderTransactionException
+E -> L : completion event
+@enduml

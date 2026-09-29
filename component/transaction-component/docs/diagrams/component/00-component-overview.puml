@@ -1,0 +1,11 @@
+@startuml
+title Transaction Component - Component Overview
+skinparam componentStyle rectangle
+[transaction-api] --> [transaction-core]
+[transaction-core] --> [transaction-spi]
+[transaction-provider-spring] --> [transaction-spi]
+[transaction-spring-boot-starter] --> [transaction-core]
+[transaction-spring-boot-starter] --> [transaction-provider-spring]
+[transaction-demo-mybatis] --> [transaction-spring-boot-starter]
+[transaction-demo-jpa] --> [transaction-spring-boot-starter]
+@enduml

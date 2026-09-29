@@ -1,0 +1,19 @@
+@startuml
+title Transaction - L4 Spring Provider Integration
+participant TransactionExecutor as E
+participant SpringTransactionProvider as P
+participant SpringTransactionDefinitionMapper as M
+participant PlatformTransactionManager as TM
+participant "MyBatis/JPA/JDBC" as DB
+E -> P : execute(options, callback)
+P -> M : map(options)
+M --> P : TransactionDefinition
+P -> TM : getTransaction(definition)
+TM --> P : TransactionStatus
+P -> DB : business SQL through callback
+alt success
+  P -> TM : commit(status)
+else failure
+  P -> TM : rollback(status)
+end
+@enduml

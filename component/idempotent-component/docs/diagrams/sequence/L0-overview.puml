@@ -1,0 +1,22 @@
+@startuml
+title Idempotent - L0 Overview
+actor Caller
+participant IdempotencyExecutor as E
+participant IdempotencyRepository as R
+participant IdempotencyStateMachine as S
+participant "Business Callback" as B
+Caller -> E : execute(request, resultPolicy, callback)
+E -> R : tryAcquire()
+R --> E : acquire result
+E -> S : decide(acquire result)
+alt EXECUTE
+  E -> B : callback
+  B --> E : result
+  E -> R : markSuccess(ownerToken, version)
+  E --> Caller : EXECUTED
+else REPLAY
+  E --> Caller : REPLAYED
+else RETURN
+  E --> Caller : PROCESSING / conflict / previous failure
+end
+@enduml

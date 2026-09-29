@@ -1,0 +1,13 @@
+@startuml
+title Transaction - L0 Overview
+actor Caller
+participant TransactionExecutor
+participant TransactionProvider
+participant "Business Callback" as B
+Caller -> TransactionExecutor : execute(options, callback)
+TransactionExecutor -> TransactionProvider : execute(provider callback)
+TransactionProvider -> B : callback(TransactionContext)
+B --> TransactionProvider : result / exception
+TransactionProvider --> TransactionExecutor : result / provider failure
+TransactionExecutor --> Caller : result / propagated failure
+@enduml
