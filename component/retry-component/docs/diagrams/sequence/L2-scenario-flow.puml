@@ -1,0 +1,30 @@
+@startuml
+title Retry - L2 Boundary Scenarios
+actor Caller
+participant DefaultRetryExecutor as E
+participant RetryOperation as O
+participant RetryCancellationToken as CT
+participant RetrySleeper as S
+Caller -> E : execute
+E -> CT : isCancelled()
+alt cancelled
+  E --> Caller : CANCELLED
+else interrupted
+  E --> Caller : INTERRUPTED
+else maxDuration reached
+  E --> Caller : TIMED_OUT
+else execute
+  E -> O : attempt
+  alt STOP
+    E --> Caller : NOT_RETRYABLE
+  else ABORT
+    E --> Caller : ABORTED
+  else RETRY + maxAttempts reached
+    E --> Caller : EXHAUSTED
+  else wait interrupted
+    E -> S : sleep()
+    S --> E : InterruptedException
+    E --> Caller : INTERRUPTED
+  end
+end
+@enduml

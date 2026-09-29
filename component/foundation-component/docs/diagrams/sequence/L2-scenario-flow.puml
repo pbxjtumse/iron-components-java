@@ -1,0 +1,15 @@
+@startuml
+title Foundation - L2 ExecutionContext Propagation
+actor Caller
+participant ExecutionContext
+participant StandardContextCodec
+participant ContextCarrier
+participant "Downstream Component" as D
+Caller -> ExecutionContext : build context
+Caller -> StandardContextCodec : write(context, carrier)
+StandardContextCodec -> ContextCarrier : set standard keys
+Caller -> D : pass carrier
+D -> StandardContextCodec : read(carrier)
+StandardContextCodec -> ContextCarrier : get standard keys
+StandardContextCodec --> D : ExecutionContext
+@enduml

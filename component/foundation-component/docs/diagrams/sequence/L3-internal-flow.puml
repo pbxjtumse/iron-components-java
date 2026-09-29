@@ -1,0 +1,11 @@
+@startuml
+title Foundation - L3 Serializer Registry
+actor Caller
+participant SerializerRegistry
+participant Serializer
+participant JacksonJsonSerializer
+Caller -> SerializerRegistry : resolve(format/name)
+SerializerRegistry --> Caller : Serializer
+Caller -> Serializer : serialize / deserialize
+Serializer -> JacksonJsonSerializer : JSON implementation
+@enduml

@@ -1,0 +1,18 @@
+@startuml
+title Retry - L4 Spring and Metrics Integration
+actor App
+participant RetryAutoConfiguration as AC
+participant DefaultRetryExecutor as E
+participant SpringApplicationRetryListener as SL
+participant MicrometerRetryListener as ML
+participant "Spring Events" as SE
+participant MeterRegistry as MR
+AC -> E : create RetryExecutor
+AC -> SL : optional listener
+AC -> ML : optional metrics listener
+App -> E : execute
+E -> SL : RetryEvent
+SL -> SE : publish
+E -> ML : RetryEvent
+ML -> MR : counter/timer
+@enduml

@@ -1,0 +1,14 @@
+@startuml
+title Foundation - L4 Upper Component Integration
+actor "Message / Cache / Retry / Lock" as C
+participant "Foundation Context" as FC
+participant "Foundation Serialization" as FS
+participant "Foundation Time / ID" as FT
+participant "JDK / Jackson / Commons" as OSS
+C -> FC : shared execution context
+C -> FS : payload encode/decode
+C -> FT : clock / deadline / id
+FC -> OSS
+FS -> OSS
+FT -> OSS
+@enduml

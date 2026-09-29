@@ -1,0 +1,10 @@
+@startuml
+title Foundation - L0 Overview
+actor "Upper Component" as U
+participant "Foundation API" as F
+participant "JDK / Mature OSS" as O
+U -> F : time / id / context / serialization / codec
+F -> O : delegate or thin adaptation
+O --> F : result
+F --> U : stable Iron abstraction
+@enduml

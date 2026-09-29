@@ -1,0 +1,21 @@
+@startuml
+title Foundation - Stateful Primitives
+hide empty description
+state "Deadline [VALUE OBJECT]" as D {
+  [*] --> ACTIVE
+  ACTIVE --> EXPIRED : now >= deadline
+}
+state "Expiration [VALUE OBJECT]" as E {
+  [*] --> VALID
+  VALID --> EXPIRED_E : now >= expireAt
+}
+state "ExecutionContext [IMMUTABLE MODEL]" as C {
+  [*] --> BUILT
+  BUILT --> ENCODED : StandardContextCodec.write()
+  ENCODED --> DECODED : StandardContextCodec.read()
+}
+note bottom
+IronStrings / IronCollections / codec helpers 等为无状态门面，
+不存在统一运行时状态机。
+end note
+@enduml

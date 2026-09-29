@@ -1,0 +1,25 @@
+@startuml
+title Retry - L3 DefaultRetryExecutor Internal Flow
+participant DefaultRetryExecutor as E
+participant RetryEventDispatcher as ED
+participant RetryClock as C
+participant RetryClassifier as CL
+participant BackoffStrategy as B
+participant RetrySleeper as S
+E -> C : now() / nanoTime()
+E -> ED : EXECUTION_STARTED
+loop attemptNumber = 1..maxAttempts
+  E -> ED : ATTEMPT_STARTED
+  E -> E : executeAttempt()
+  E -> ED : ATTEMPT_COMPLETED
+  E -> CL : classifyAttempt()
+  CL --> E : RetryDecision
+  E -> ED : DECISION_MADE
+  E -> E : handleTerminalDecision()
+  E -> E : checkRetryBoundaries()
+  E -> B : resolveDelay()
+  B --> E : RetryDelay
+  E -> ED : RETRY_SCHEDULED
+  E -> S : waitBeforeRetry()
+end
+@enduml

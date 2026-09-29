@@ -1,0 +1,18 @@
+@startuml
+title Foundation - L1 Serialization Main Flow
+actor Caller
+participant Serializer
+participant JacksonJsonSerializer
+participant ObjectMapper
+participant SerializedPayload
+Caller -> Serializer : serialize(value, options)
+Serializer -> JacksonJsonSerializer : implementation
+JacksonJsonSerializer -> ObjectMapper : writeValueAsBytes(value)
+ObjectMapper --> JacksonJsonSerializer : byte[]
+JacksonJsonSerializer -> SerializedPayload : create payload
+SerializedPayload --> Caller : payload
+Caller -> Serializer : deserialize(payload, type)
+Serializer -> JacksonJsonSerializer
+JacksonJsonSerializer -> ObjectMapper : readValue(body, type)
+ObjectMapper --> Caller : object
+@enduml

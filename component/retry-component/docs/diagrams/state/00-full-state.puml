@@ -1,0 +1,30 @@
+@startuml
+title Retry - Full Execution State
+hide empty description
+[*] --> STARTED
+STARTED --> ATTEMPTING
+ATTEMPTING --> SUCCESS : success
+ATTEMPTING --> NOT_RETRYABLE : STOP
+ATTEMPTING --> ABORTED : ABORT
+ATTEMPTING --> EXHAUSTED : RETRY + maxAttempts
+ATTEMPTING --> TIMED_OUT : maxDuration
+ATTEMPTING --> INTERRUPTED : interrupted
+ATTEMPTING --> CANCELLED : cancellation
+ATTEMPTING --> EXECUTION_FAILED : classifier/backoff failure
+ATTEMPTING --> WAITING : RETRY + budget remains
+WAITING --> ATTEMPTING : delay completed
+WAITING --> INTERRUPTED : sleep interrupted
+WAITING --> CANCELLED : cancellation observed
+SUCCESS --> [*]
+NOT_RETRYABLE --> [*]
+ABORTED --> [*]
+EXHAUSTED --> [*]
+TIMED_OUT --> [*]
+INTERRUPTED --> [*]
+CANCELLED --> [*]
+EXECUTION_FAILED --> [*]
+note right
+终态名称与 RetryStatus 一致。
+STARTED / ATTEMPTING / WAITING 为 [DOC MODEL]。
+end note
+@enduml

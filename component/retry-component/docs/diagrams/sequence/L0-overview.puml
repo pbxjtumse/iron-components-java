@@ -1,0 +1,12 @@
+@startuml
+title Retry - L0 Overview
+actor Caller
+participant RetryExecutor
+participant "Business Operation" as B
+Caller -> RetryExecutor : execute(...)
+loop maxAttempts / maxDuration
+  RetryExecutor -> B : attempt
+  B --> RetryExecutor : result or Exception
+end
+RetryExecutor --> Caller : RetryResult
+@enduml

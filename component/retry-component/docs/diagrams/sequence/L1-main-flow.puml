@@ -1,0 +1,22 @@
+@startuml
+title Retry - L1 Main Flow
+actor Caller
+participant DefaultRetryExecutor as E
+participant RetryClassifier as C
+participant BackoffStrategy as B
+participant RetrySleeper as S
+participant RetryOperation as O
+Caller -> E : execute(RetryExecution)
+E -> O : attempt
+O --> E : result / exception
+E -> C : classify(attempt)
+C --> E : RetryDecision
+alt SUCCESS / STOP / ABORT
+  E --> Caller : terminal RetryResult
+else RETRY
+  E -> B : next delay
+  B --> E : RetryDelay
+  E -> S : sleep(delay)
+  E -> O : next attempt
+end
+@enduml

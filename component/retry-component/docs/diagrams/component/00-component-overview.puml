@@ -1,0 +1,26 @@
+@startuml
+title Retry Component - Component Overview
+skinparam componentStyle rectangle
+[retry-api] --> [retry-core]
+[retry-config] --> [retry-api]
+[retry-config] --> [retry-core]
+[retry-demo] --> [retry-config]
+rectangle "retry-api" {
+  [RetryExecutor]
+  [RetryPolicy]
+  [RetryClassifier]
+  [BackoffStrategy]
+  [RetryEvent]
+}
+rectangle "retry-core" {
+  [DefaultRetryExecutor]
+  [RetryEventDispatcher]
+  [RetryClock]
+  [RetrySleeper]
+}
+rectangle "retry-config" {
+  [RetryAutoConfiguration]
+  [RetryMetricsAutoConfiguration]
+  [MicrometerRetryListener]
+}
+@enduml

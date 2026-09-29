@@ -1,0 +1,25 @@
+@startuml
+title Foundation Component - Component Overview
+skinparam componentStyle rectangle
+package "foundation-component" {
+  [foundation-core]
+  [foundation-time]
+  [foundation-id]
+  [foundation-codec]
+  [foundation-context]
+  [foundation-reflection]
+  [foundation-resource]
+  [foundation-serialization]
+  [foundation-test-support]
+  [foundation-architecture-tests]
+}
+[foundation-serialization] --> [foundation-core]
+[foundation-test-support] ..> [foundation-time]
+[foundation-test-support] ..> [foundation-id]
+[foundation-test-support] ..> [foundation-context]
+[foundation-architecture-tests] ..> [foundation-core]
+note right
+Foundation 只被上层组件依赖，
+不依赖 Message / Retry / Lock / Cache。
+end note
+@enduml
