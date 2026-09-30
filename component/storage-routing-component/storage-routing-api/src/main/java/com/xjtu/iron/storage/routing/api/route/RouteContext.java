@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * 一次路由的输入数据，不是 ThreadLocal 容器。
+ * 一次路由的输入数据，回答 【哪个业务场景、哪个逻辑表、使用什么分片键】
  *
  * <p>承载场景、分片键和扩展属性；logicalTable 也在此处表达，保持表族元数据的一份来源。
  * 分片计算只接收 CompositeShardKey，物理映射使用已配置的规则，均不从 attributes 偷读标准分片字段。</p>
@@ -23,8 +23,13 @@ import java.util.Objects;
  * </ul>
  */
 public final class RouteContext {
-
+    /**
+     * 例如 create-order 业务
+     */
     private final String routeName;
+    /**
+     * 例如 business_order 表
+     */
     private final String logicalTable;
     private final CompositeShardKey shardKey;
     private final Map<String, Object> attributes;
