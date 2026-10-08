@@ -12,13 +12,21 @@ import java.util.Objects;
  * 一次存储访问的组合式路由结果：输入上下文 + 分片结果 + 物理位置。
  *
  * <pre>{@code
+ *   1. Direct 模式：
  *     mode            = DIRECT_DATASOURCE
  *     shardInfo       = shardId 37
  *     dataSourceKey   = db_03
  *     tableName       = business_order_07
+ *   2.ShardingSphere-JDBC 模式：
+ *     mode            = SHARDINGSPHERE_JDBC
+ *     logicalTable    = business_order
+ *     CompositeShardKey 保留
+ *   3.Proxy 模式类似：
+ *     mode            = PROXY
+ *     logicalTable    = business_order
+ *     physicalLocation = null
+ *     physicalLocation = null
  * }</pre>
- * <p>业务场景、逻辑表、分片键和扩展属性只保存在 RouteContext 中。
- * 同分片的订单、幂等、Outbox 可共享 shardInfo，但需要分别映射各自的 location。</p>
  *
  */
 public final class StorageRoute {

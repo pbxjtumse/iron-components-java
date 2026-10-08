@@ -6,8 +6,15 @@ import java.util.Objects;
  * 【逻辑分片】计算结果。
  *
  * <p>ShardRouteInfo 专门描述“算出来的 shard 信息”，与最终物理位置解耦。
- * 例如：orderId -> shardId=56，再由不同 Adapter 决定映射到
- * db_05.order_56 或 db_05.order_06。</p>
+ * 例如：orderId -> shardId=56，再由不同 Adapter 决定映射到 db_05.order_56 或 db_05.order_06。</p>
+ *
+ * </p>
+ *   注意为什么这里不存在物理表明的原因如下：同一个 ShardRouteInfo 可以分别映射成：
+ *   db_05.business_order_56
+ *   db_05.iron_idempotency_record_56
+ *   db_05.outbox_event_56
+ *   若是包括物理表名称 那么那么它只能代表一张表  ，所以业务表、幂等表、Outbox 表就无法安全共享同一个逻辑分片结果。
+ * </p>
  */
 public final class ShardRouteInfo {
 

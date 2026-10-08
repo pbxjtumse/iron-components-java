@@ -3,19 +3,12 @@ package com.xjtu.iron.relational.api.statement;
 import java.util.Objects;
 
 /**
- * 已由上层 Storage / Sharding Adapter 确定的数据源路由结果。
+ * 已由上层 Storage / Sharding Adapter 确定的数据源路由结果{@code dataSourceKey}
  *
- * <p>{@code dataSourceKey} 表示逻辑数据源标识，通常对应一个 DataSource、一套连接池、
- * 一个数据库实例或一个数据库集群入口。它不是表名。表名属于最终 SQL，例如
- * {@code UPDATE iron_idempotency_record ...}。</p>
- *
- * <p>Relational Access 不计算 shard，也不理解 userId、merchantId 等业务路由键。
- * 上层若启用分库分表，应先计算目标库表：目标库进入 {@code dataSourceKey}，目标表名进入最终 SQL。</p>
-
  * <p><b>流程阅读编号：数据模型 D0：SQL 数据源选择。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
  * <ul>
  *     <li>1. 上层通过 bridge 或显式配置构造路由，随 SqlStatement 传入 Template。</li>
- *     <li>2. 命名路由的 dataSourceKey 由数据源 resolver 解释；它不是用户ID、幂等key或物理表名。</li>
+ *     <li>2. 命名路由的 dataSourceKey 由数据源 resolver 解释</li>
  * </ul>
  */
 public final class SqlRoute {
