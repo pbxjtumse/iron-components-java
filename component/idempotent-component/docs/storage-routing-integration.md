@@ -244,12 +244,14 @@ xjtu:
     storage-routing:
       resolver:
         enabled: true
-        data-source-prefix: db_
-        database-count: 10
-        tables-per-database: 10
-        data-source-index-width: 2
-        table-index-width: 2
-        table-index-mode: GLOBAL_TABLE_INDEX
+        type: HASH
+        hash:
+          data-source-prefix: db_
+          database-count: 10
+          tables-per-database: 10
+          data-source-index-width: 2
+          table-index-width: 2
+          table-index-mode: GLOBAL_TABLE_INDEX
     idempotent:
       jdbc:
         routing:
@@ -269,6 +271,10 @@ table-index-mode: LOCAL_TABLE_INDEX
 ```yaml
 xjtu.iron.idempotent.jdbc.table-name: iron_idempotency_record
 ```
+
+这种普通单库单表模式不要开启 `xjtu.iron.idempotent.jdbc.direct.enabled`。该开关专用于
+Storage Routing 驱动的 DataSource 资源目录、路由型 JDBC Repository 和 Tx-A/B/C 多资源选择；
+它不是 JDBC Provider 的通用启用开关。
 
 `logical-table` 是路由语义，`table-prefix` 是分片表前缀，`table-name` 是固定模式完整表名，三者不应混用。
 

@@ -38,10 +38,6 @@ public final class DefaultStorageRouteToSqlRouteBridge implements StorageRouteTo
         if (route.mode() != StorageRouteMode.DIRECT_DATASOURCE) {
             throw new StorageRoutingException("Only DIRECT_DATASOURCE route can be bridged to Relational Access: " + route.mode());
         }
-        PhysicalStorageLocation location = route.location();
-        if (location == null) {
-            throw new StorageRoutingException("DIRECT_DATASOURCE route must contain physical location");
-        }
-        return location;
+        return route.requirePhysicalLocation();
     }
 }

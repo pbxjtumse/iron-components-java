@@ -151,11 +151,11 @@ storage-routing-integration
 ```text
 StorageRouteContext -> ThreadLocalStorageRouteContext
 StorageRouteToSqlRouteBridge -> 按 mode 选择 Direct 或 ShardingSphere-JDBC 实现
-StorageRouteResolver -> Direct 仅在 resolver.enabled=true 时创建；ShardingSphere-JDBC 按 mode 创建逻辑路由解析器
+StorageRouteResolver -> Direct 在 resolver.enabled=true 时按 FIXED/HASH 创建；ShardingSphere-JDBC 按 mode 创建逻辑路由解析器
 ```
 
-默认 resolver 不自动启用，因为 databaseCount、tablesPerDatabase、dataSourcePrefix、tablePrefix
-都属于业务路由规则，框架不应该猜。
+默认 resolver 不自动启用。FIXED 的 dataSourceKey/tableName，以及 HASH 的 databaseCount、tablesPerDatabase、
+dataSourcePrefix、tablePrefix 都属于业务路由规则，框架不应该猜。
 
 ## 8. 推荐演进顺序
 

@@ -3,7 +3,9 @@ package com.xjtu.iron.storage.routing.starter.autoconfigure;
 import com.xjtu.iron.relational.api.statement.SqlRoute;
 import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
+import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
 import com.xjtu.iron.storage.routing.core.context.ThreadLocalStorageRouteContext;
+import com.xjtu.iron.storage.routing.core.resolver.FixedStorageRouteResolver;
 import com.xjtu.iron.storage.routing.core.resolver.ShardIdHashStorageRouteResolver;
 import com.xjtu.iron.storage.routing.integration.relational.DefaultStorageRouteToSqlRouteBridge;
 import com.xjtu.iron.storage.routing.integration.relational.StorageRouteToSqlRouteBridge;
@@ -54,14 +56,23 @@ public class StorageRoutingAutoConfiguration {
     @ConditionalOnProperty(prefix = "xjtu.iron.storage-routing", name = "mode", havingValue = "DIRECT_DATASOURCE", matchIfMissing = true)
     public StorageRouteResolver storageRouteResolver(StorageRoutingProperties properties) {
         StorageRoutingProperties.Resolver resolver = properties.getResolver();
+        if (resolver.getType() == null) {
+            throw new IllegalStateException("xjtu.iron.storage-routing.resolver.type must be FIXED or HASH");
+        }
+        if (resolver.getType() == StorageRoutingProperties.ResolverType.FIXED) {
+            StorageRoutingProperties.Fixed fixed = resolver.getFixed();
+            return new FixedStorageRouteResolver(
+                    PhysicalStorageLocation.of(fixed.getDataSourceKey(), fixed.getTableName()));
+        }
+        StorageRoutingProperties.Hash hash = resolver.getHash();
         return ShardIdHashStorageRouteResolver.builder()
-                .dataSourcePrefix(resolver.getDataSourcePrefix())
-                .tablePrefix(resolver.getTablePrefix())
-                .databaseCount(resolver.getDatabaseCount())
-                .tablesPerDatabase(resolver.getTablesPerDatabase())
-                .dataSourceIndexWidth(resolver.getDataSourceIndexWidth())
-                .tableIndexWidth(resolver.getTableIndexWidth())
-                .tableIndexMode(resolver.getTableIndexMode())
+                .dataSourcePrefix(hash.getDataSourcePrefix())
+                .tablePrefix(hash.getTablePrefix())
+                .databaseCount(hash.getDatabaseCount())
+                .tablesPerDatabase(hash.getTablesPerDatabase())
+                .dataSourceIndexWidth(hash.getDataSourceIndexWidth())
+                .tableIndexWidth(hash.getTableIndexWidth())
+                .tableIndexMode(hash.getTableIndexMode())
                 .build();
     }
 

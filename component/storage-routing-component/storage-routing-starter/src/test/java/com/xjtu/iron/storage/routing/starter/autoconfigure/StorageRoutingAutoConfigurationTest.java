@@ -38,13 +38,14 @@ class StorageRoutingAutoConfigurationTest {
         contextRunner
                 .withPropertyValues(
                         "xjtu.iron.storage-routing.resolver.enabled=true",
-                        "xjtu.iron.storage-routing.resolver.data-source-prefix=order-db-",
-                        "xjtu.iron.storage-routing.resolver.table-prefix=business_order",
-                        "xjtu.iron.storage-routing.resolver.database-count=10",
-                        "xjtu.iron.storage-routing.resolver.tables-per-database=10",
-                        "xjtu.iron.storage-routing.resolver.data-source-index-width=2",
-                        "xjtu.iron.storage-routing.resolver.table-index-width=2",
-                        "xjtu.iron.storage-routing.resolver.table-index-mode=GLOBAL_TABLE_INDEX")
+                        "xjtu.iron.storage-routing.resolver.type=HASH",
+                        "xjtu.iron.storage-routing.resolver.hash.data-source-prefix=order-db-",
+                        "xjtu.iron.storage-routing.resolver.hash.table-prefix=business_order",
+                        "xjtu.iron.storage-routing.resolver.hash.database-count=10",
+                        "xjtu.iron.storage-routing.resolver.hash.tables-per-database=10",
+                        "xjtu.iron.storage-routing.resolver.hash.data-source-index-width=2",
+                        "xjtu.iron.storage-routing.resolver.hash.table-index-width=2",
+                        "xjtu.iron.storage-routing.resolver.hash.table-index-mode=GLOBAL_TABLE_INDEX")
                 .run(context -> {
                     StorageRouteResolver resolver = context.getBean(StorageRouteResolver.class);
                     StorageRoute route = resolver.resolve(RouteContext.builder()
@@ -52,7 +53,43 @@ class StorageRoutingAutoConfigurationTest {
                             .shardKey(CompositeShardKey.of(ShardKey.of("order_id", "8")))
                             .build());
 
-                    assertThat(route.location()).isEqualTo(PhysicalStorageLocation.of("order-db-05", "business_order_56"));
+                    assertThat(route.physicalLocation()).isEqualTo(PhysicalStorageLocation.of("order-db-05", "business_order_56"));
+                });
+    }
+
+    @Test
+    void shouldAutoConfigureFixedResolverAndPreserveRequestContext() {
+        contextRunner
+                .withPropertyValues(
+                        "xjtu.iron.storage-routing.resolver.enabled=true",
+                        "xjtu.iron.storage-routing.resolver.type=FIXED",
+                        "xjtu.iron.storage-routing.resolver.fixed.data-source-key=primaryDataSource",
+                        "xjtu.iron.storage-routing.resolver.fixed.table-name=business_order")
+                .run(context -> {
+                    StorageRouteResolver resolver = context.getBean(StorageRouteResolver.class);
+                    RouteContext request = RouteContext.builder()
+                            .routeName("create-order")
+                            .logicalTable("business_order")
+                            .build();
+
+                    StorageRoute route = resolver.resolve(request);
+
+                    assertThat(route.context()).isSameAs(request);
+                    assertThat(route.shardInfo()).isNull();
+                    assertThat(route.requirePhysicalLocation())
+                            .isEqualTo(PhysicalStorageLocation.of("primaryDataSource", "business_order"));
+                });
+    }
+
+    @Test
+    void shouldRejectIncompleteFixedResolverConfiguration() {
+        contextRunner
+                .withPropertyValues(
+                        "xjtu.iron.storage-routing.resolver.enabled=true",
+                        "xjtu.iron.storage-routing.resolver.type=FIXED")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure()).hasStackTraceContaining("dataSourceKey must not be blank");
                 });
     }
 

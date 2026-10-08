@@ -295,8 +295,9 @@ class DirectStorageRoutingIT {
             for (int order = 0; order < 100000; order++) {
                 var key = CompositeShardKey.of(ShardKey.of("tenant", "t1"), ShardKey.of("order", order));
                 var info = hash.resolve(key);
-                if (info.shardId() == shard) return StorageRoute.builder().context(RouteContext.builder().logicalTable("business_order").shardKey(key).build())
-                        .shardInfo(info).location(businessMapping.map(info)).build();
+                if (info.shardId() == shard) return StorageRoute.shardedDirect(
+                        RouteContext.builder().logicalTable("business_order").shardKey(key).build(),
+                        info, businessMapping.map(info));
             }
             throw new AssertionError("cannot generate composite key for shard=" + shard);
         }
@@ -304,7 +305,8 @@ class DirectStorageRoutingIT {
         String insertOrder(String key) {
             StorageRoute bound = routes.requireCurrent();
             // 默认 key 路由的 location 也不能直接当业务表；业务表族必须按同一 shardInfo 映射。
-            StorageRoute business = StorageRoute.builder().context(bound.context()).shardInfo(bound.shardInfo()).location(businessMapping.map(bound.shardInfo())).build();
+            StorageRoute business = StorageRoute.shardedDirect(
+                    bound.context(), bound.requireShardInfo(), businessMapping.map(bound.requireShardInfo()));
             relational.update(bridge.applyRoute(SqlStatement.of("order.insert", "INSERT INTO " + bridge.requireTableName(business) + " (order_id, amount) VALUES (?, ?)", key, 100), business));
             return key;
         }

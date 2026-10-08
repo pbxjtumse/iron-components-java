@@ -42,13 +42,15 @@ xjtu:
     storage-routing:
       resolver:
         enabled: true
-        database-count: 10
-        tables-per-database: 10
-        data-source-prefix: db_
-        data-source-index-width: 2
-        table-prefix: business_order
-        table-index-width: 2
-        table-index-mode: LOCAL_TABLE_INDEX
+        type: HASH
+        hash:
+          database-count: 10
+          tables-per-database: 10
+          data-source-prefix: db_
+          data-source-index-width: 2
+          table-prefix: business_order
+          table-index-width: 2
+          table-index-mode: LOCAL_TABLE_INDEX
     idempotent:
       redis:
         enabled: false
@@ -77,7 +79,11 @@ DirectStorageResourceRegistry directStorageResourceRegistry(@Qualifier("orderDat
 
 `orderDataSources` 是业务自己定义的 Map Bean，不是组件自动创建的配置。选择显式目录后，只有这个目录中的资源参与 Direct 装配；业务持有的 DataSource 必须与目录中的是同一对象。
 
-此模式由目录统一提供 JDBC resolver、事务 resolver、幂等 coordinator。不要再注册另一份这些类型的 Bean，也不要用 @Primary 覆盖它们；启动检查会拒绝竞争装配。单库旧模式默认不启用 direct.enabled，不受这个约束影响。
+此模式由目录统一提供 JDBC resolver、事务 resolver、幂等 coordinator。不要再注册另一份这些类型的 Bean，也不要用 @Primary 覆盖它们；启动检查会拒绝竞争装配。
+
+普通单库单表幂等只需配置 `xjtu.iron.idempotent.jdbc.table-name`，不要开启
+`xjtu.iron.idempotent.jdbc.direct.enabled`。后者表示启用 Storage Routing 驱动的 DataSource 资源目录和
+Tx-A/B/C 多资源选择，不是“用了 JDBC 就必须开启”的总开关。
 
 默认 resolver 已启用时，启动会检查所有配置中的 database key 是否存在；自定义 resolver 无法静态枚举其全部输出，未知 key 在访问时失败。连接可用性、schema、表和索引由部署验证/数据库运维负责，本轮不在启动时扫描全部库表。
 
@@ -102,7 +108,7 @@ RelationalTemplate businessRelationalTemplate(DirectStorageResourceRegistry reso
 ```java
 StorageRoute bound = routes.requireCurrent();
 StorageRoute business = StorageRoute.builder().context(bound.context()).shardInfo(bound.shardInfo())
-        .location(businessMapping.map(bound.shardInfo())).build();
+        .physicalLocation(businessMapping.map(bound.shardInfo())).build();
 String sql = "INSERT INTO " + bridge.requireTableName(business) + " (order_id, amount) VALUES (?, ?)";
 relational.update(bridge.applyRoute(SqlStatement.of("order.insert", sql, orderId, amount), business));
 ```

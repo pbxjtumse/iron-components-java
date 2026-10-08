@@ -12,36 +12,75 @@ import java.util.Objects;
  * 一次存储访问的组合式路由结果：输入上下文 + 分片结果 + 物理位置。
  *
  * <p>业务场景、逻辑表、分片键和扩展属性只保存在 RouteContext 中。
- * 同分片的订单、幂等、Outbox 可共享 shardInfo，但需要分别映射各自的 location。</p>
+ * 同分片的订单、幂等、Outbox 可共享 shardInfo，但需要分别映射各自的 physicalLocation。</p>
  *
  * <p>固定直连可以没有分片键和 shardInfo；DIRECT_DATASOURCE 必须有完整物理位置。
- * mode 描述路由接入形态，不代表本轮已经实现 ShardingSphere / Proxy 适配。</p>
+ * mode 描述路由接入形态；具体执行仍由对应 Bridge / Adapter 负责。</p>
  */
 public final class StorageRoute {
 
     private final StorageRouteMode mode;
     private final RouteContext context;
     private final ShardRouteInfo shardInfo;
-    private final PhysicalStorageLocation location;
+    private final PhysicalStorageLocation physicalLocation;
 
     private StorageRoute(Builder builder) {
         this.mode = Objects.requireNonNull(builder.mode, "mode");
         this.context = builder.buildContext();
         this.shardInfo = builder.shardInfo;
-        this.location = builder.buildLocation();
-        if (mode == StorageRouteMode.DIRECT_DATASOURCE && location == null) {
+        this.physicalLocation = builder.buildPhysicalLocation();
+        if (mode == StorageRouteMode.DIRECT_DATASOURCE && physicalLocation == null) {
             throw new StorageRoutingException("physicalLocation is required for DIRECT_DATASOURCE");
         }
     }
 
     public static StorageRoute direct(String dataSourceKey, String tableName) {
-        return builder().location(PhysicalStorageLocation.of(dataSourceKey, tableName)).build();
+        return fixedDirect(RouteContext.builder().build(), PhysicalStorageLocation.of(dataSourceKey, tableName));
     }
 
     /** 固定直连同时保留逻辑表；不会从物理表名反推逻辑表。 */
     public static StorageRoute direct(String logicalTable, String dataSourceKey, String tableName) {
-        return builder().context(RouteContext.builder().logicalTable(logicalTable).build())
-                .location(PhysicalStorageLocation.of(dataSourceKey, tableName)).build();
+        return fixedDirect(
+                RouteContext.builder().logicalTable(logicalTable).build(),
+                PhysicalStorageLocation.of(dataSourceKey, tableName));
+    }
+
+    /** 固定直连：保留本次输入上下文，不计算也不伪造分片编号。 */
+    public static StorageRoute fixedDirect(RouteContext context, PhysicalStorageLocation physicalLocation) {
+        return builder()
+                .mode(StorageRouteMode.DIRECT_DATASOURCE)
+                .context(Objects.requireNonNull(context, "context must not be null"))
+                .physicalLocation(Objects.requireNonNull(physicalLocation, "physicalLocation must not be null"))
+                .build();
+    }
+
+    /** 分片直连：同时保存原始输入、逻辑分片编号和最终物理库表。 */
+    public static StorageRoute shardedDirect(RouteContext context, ShardRouteInfo shardInfo,
+            PhysicalStorageLocation physicalLocation) {
+        return builder()
+                .mode(StorageRouteMode.DIRECT_DATASOURCE)
+                .context(Objects.requireNonNull(context, "context must not be null"))
+                .shardInfo(Objects.requireNonNull(shardInfo, "shardInfo must not be null"))
+                .physicalLocation(Objects.requireNonNull(physicalLocation, "physicalLocation must not be null"))
+                .build();
+    }
+
+    /** 中间件路由：保存逻辑输入及可选的预计算分片编号，不伪造应用侧物理库表。 */
+    public static StorageRoute middleware(StorageRouteMode mode, RouteContext context) {
+        return middleware(mode, context, null);
+    }
+
+    /** 中间件路由：保存逻辑输入及可选的预计算分片编号，不伪造应用侧物理库表。 */
+    public static StorageRoute middleware(StorageRouteMode mode, RouteContext context, ShardRouteInfo shardInfo) {
+        StorageRouteMode requiredMode = Objects.requireNonNull(mode, "mode must not be null");
+        if (requiredMode == StorageRouteMode.DIRECT_DATASOURCE) {
+            throw new StorageRoutingException("middleware route mode must not be DIRECT_DATASOURCE");
+        }
+        return builder()
+                .mode(requiredMode)
+                .context(Objects.requireNonNull(context, "context must not be null"))
+                .shardInfo(shardInfo)
+                .build();
     }
 
     public static Builder builder() {
@@ -60,13 +99,22 @@ public final class StorageRoute {
         return shardInfo;
     }
 
-    public PhysicalStorageLocation location() {
-        return location;
+    public ShardRouteInfo requireShardInfo() {
+        if (shardInfo == null) {
+            throw new StorageRoutingException("shardInfo is not available for route mode " + mode);
+        }
+        return shardInfo;
     }
 
-    /** 与 location() 指向同一份状态的便捷读取入口。 */
     public PhysicalStorageLocation physicalLocation() {
-        return location;
+        return physicalLocation;
+    }
+
+    public PhysicalStorageLocation requirePhysicalLocation() {
+        if (physicalLocation == null) {
+            throw new StorageRoutingException("physicalLocation is not available for route mode " + mode);
+        }
+        return physicalLocation;
     }
 
     public String routeName() {
@@ -79,12 +127,12 @@ public final class StorageRoute {
 
     /** 物理位置未知时返回 null，不代表中间件逻辑数据源。 */
     public String dataSourceKey() {
-        return location == null ? null : location.dataSourceKey();
+        return physicalLocation == null ? null : physicalLocation.dataSourceKey();
     }
 
     /** 物理位置未知时返回 null，不会用逻辑表冒充物理表。 */
     public String tableName() {
-        return location == null ? null : location.tableName();
+        return physicalLocation == null ? null : physicalLocation.tableName();
     }
 
     public static final class Builder {
@@ -114,14 +162,10 @@ public final class StorageRoute {
             return this;
         }
 
-        public Builder location(PhysicalStorageLocation location) {
-            this.dataSourceKey = location == null ? null : location.dataSourceKey();
-            this.tableName = location == null ? null : location.tableName();
-            return this;
-        }
-
         public Builder physicalLocation(PhysicalStorageLocation physicalLocation) {
-            return location(physicalLocation);
+            this.dataSourceKey = physicalLocation == null ? null : physicalLocation.dataSourceKey();
+            this.tableName = physicalLocation == null ? null : physicalLocation.tableName();
+            return this;
         }
 
         public Builder dataSourceKey(String dataSourceKey) {
@@ -138,7 +182,7 @@ public final class StorageRoute {
             return context == null ? RouteContext.builder().build() : context;
         }
 
-        private PhysicalStorageLocation buildLocation() {
+        private PhysicalStorageLocation buildPhysicalLocation() {
             if ((dataSourceKey == null || dataSourceKey.isBlank()) && (tableName == null || tableName.isBlank())) {
                 return null;
             }
@@ -152,6 +196,7 @@ public final class StorageRoute {
 
     @Override
     public String toString() {
-        return "StorageRoute{mode=" + mode + ", context=" + context + ", shardInfo=" + shardInfo + ", location=" + location + '}';
+        return "StorageRoute{mode=" + mode + ", context=" + context + ", shardInfo=" + shardInfo
+                + ", physicalLocation=" + physicalLocation + '}';
     }
 }

@@ -74,7 +74,7 @@ class DefaultStorageRouteResolverTest {
     @Test
     void allBuiltInResolversShouldWorkWithTheUnifiedInterface() {
         List<StorageRouteResolver> resolvers = List.of(
-                new FixedStorageRouteResolver(StorageRoute.direct("db_05", "order_56")),
+                new FixedStorageRouteResolver(PhysicalStorageLocation.of("db_05", "order_56")),
                 new DefaultStorageRouteResolver(new HashShardResolver(10, 10),
                         shard -> PhysicalStorageLocation.of("db_05", "order_56")),
                 ShardIdHashStorageRouteResolver.builder().databaseCount(10).tablesPerDatabase(10).build());
@@ -83,6 +83,20 @@ class DefaultStorageRouteResolverTest {
             assertThat(resolver.resolve(request()).physicalLocation())
                     .isEqualTo(PhysicalStorageLocation.of("db_05", "order_56"));
         }
+    }
+
+    @Test
+    void fixedResolverShouldKeepEachRequestContextInsteadOfReturningAStoredRoute() {
+        FixedStorageRouteResolver resolver = new FixedStorageRouteResolver(
+                PhysicalStorageLocation.of("primaryDataSource", "business_order"));
+        RouteContext context = RouteContext.builder().routeName("create-order").logicalTable("business_order").build();
+
+        StorageRoute route = resolver.resolve(context);
+
+        assertThat(route.context()).isSameAs(context);
+        assertThat(route.shardInfo()).isNull();
+        assertThat(route.requirePhysicalLocation())
+                .isEqualTo(PhysicalStorageLocation.of("primaryDataSource", "business_order"));
     }
 
     private static RouteContext request() {

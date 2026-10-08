@@ -46,8 +46,8 @@ StorageRouteResolver 的完整包名是 com.xjtu.iron.storage.routing.api.resolv
 | route.shardInfo().shardId() | 42 |
 | route.shardInfo().databaseIndex() | 4 |
 | route.shardInfo().localTableIndex() | 2 |
-| route.location().dataSourceKey() | order-db-04 |
-| route.location().tableName() | business_order_42 |
+| route.physicalLocation().dataSourceKey() | order-db-04 |
+| route.physicalLocation().tableName() | business_order_42 |
 
 若改成 LOCAL_TABLE_INDEX，分片结果不变，物理表名变为 business_order_02。
 
@@ -161,6 +161,24 @@ StorageRoute fixed = StorageRoute.direct("business_order", "order-db", "business
 // fixed.context().shardKey() == null
 // fixed.shardInfo() == null
 ```
+
+需要保留完整输入上下文时，使用明确工厂或固定 Resolver：
+
+```java
+RouteContext input = RouteContext.builder()
+        .routeName("create-order")
+        .logicalTable("business_order")
+        .build();
+PhysicalStorageLocation target = PhysicalStorageLocation.of("order-db", "business_order");
+
+StorageRoute fixed = StorageRoute.fixedDirect(input, target);
+StorageRouteResolver fixedResolver = new FixedStorageRouteResolver(target);
+StorageRoute resolved = fixedResolver.resolve(input); // resolved.context() 与 input 是同一对象
+```
+
+分片直连使用 `StorageRoute.shardedDirect(context, shardInfo, physicalLocation)`；中间件形态使用
+`StorageRoute.middleware(mode, context, shardInfo)`。需要强制存在时调用 `requireShardInfo()` 或
+`requirePhysicalLocation()`，不要等到深层代码触发空指针。
 
 单字段与复合键都通过 route.context().shardKey().keys() 读取；StorageRoute 不提供单字段专用入口，避免丢失组合条件。
 

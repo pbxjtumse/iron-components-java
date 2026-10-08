@@ -25,6 +25,10 @@ import java.util.Optional;
  */
 public final class ThreadLocalStorageRouteContext implements StorageRouteContext {
 
+    /**
+     * ThreadLocal 对象随 singleton Context 被线程共享；RouteScope 值保存在各 Thread 自己的 ThreadLocalMap 中。
+     * 因此共享的是“槽位标识”，不是某个请求的当前路由。
+     */
     private final ThreadLocal<RouteScope> currentScope = new ThreadLocal<>();
 
     @Override
@@ -43,9 +47,13 @@ public final class ThreadLocalStorageRouteContext implements StorageRouteContext
 
     /** 每次 open 都创建独立句柄，即使绑定同一个 route，也能严格检查关闭顺序。 */
     private final class RouteScope implements StorageRouteScope {
+        /** 当前 Scope 的不可变路由结果，可被读取但不会在 Scope 内修改。 */
         private final StorageRoute route;
+        /** 同一线程中的上一层 Scope，构成单向链表，用于内层关闭后恢复外层。 */
         private final RouteScope previous;
+        /** Scope 只能由创建它的线程关闭，不能把句柄交给异步线程。 */
         private final Thread owner = Thread.currentThread();
+        /** 只由 owner 线程访问，因此无需 volatile；用于保证重复 close 幂等。 */
         private boolean closed;
 
         private RouteScope(StorageRoute route, RouteScope previous) {
