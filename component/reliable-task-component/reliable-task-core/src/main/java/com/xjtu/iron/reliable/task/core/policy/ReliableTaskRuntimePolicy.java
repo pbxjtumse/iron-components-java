@@ -6,9 +6,13 @@ import java.util.Objects;
 /** Reliable Task Core 的进程级默认策略。 */
 public final class ReliableTaskRuntimePolicy {
 
+    /** 提交任务未显式指定时采用的最大尝试次数。 */
     private final int defaultMaxAttempts;
+    /** 每个存储域划分的扫描桶总数。 */
     private final int scanBucketCount;
+    /** 每次成功抢占任务后授予执行者的租约时长。 */
     private final Duration leaseDuration;
+    /** 处理器抛出未处理异常后的默认重试等待时长。 */
     private final Duration failureRetryDelay;
 
     public ReliableTaskRuntimePolicy(

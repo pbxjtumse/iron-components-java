@@ -64,17 +64,17 @@ class ReliableTaskCoreFlowTest {
         ReliableTaskSubmitResult submitted = client.submit(
                 ReliableTaskSubmission.builder("demo", "{}").taskId("task-1").scanBucket(2).build()
         );
-        ReliableTaskRunResult first = client.runNow(submitted.task().getKey());
+        ReliableTaskRunResult first = client.runNow(submitted.getTask().getKey());
 
-        assertThat(first.status()).isEqualTo(ReliableTaskRunStatus.EXECUTED);
-        assertThat(first.finalTask().getStatus()).isEqualTo(ReliableTaskStatus.RETRY_WAIT);
-        assertThat(first.finalTask().getAttemptCount()).isEqualTo(1);
+        assertThat(first.getStatus()).isEqualTo(ReliableTaskRunStatus.EXECUTED);
+        assertThat(first.getFinalTask().getStatus()).isEqualTo(ReliableTaskStatus.RETRY_WAIT);
+        assertThat(first.getFinalTask().getAttemptCount()).isEqualTo(1);
 
         clock.advance(Duration.ofSeconds(31));
         ReliableTaskScanReport report = scanner.scan(new ReliableTaskScanRequest("default", 2, 10));
 
-        assertThat(report.executed()).isEqualTo(1);
-        assertThat(client.find(submitted.task().getKey()).orElseThrow().getStatus())
+        assertThat(report.getExecuted()).isEqualTo(1);
+        assertThat(client.find(submitted.getTask().getKey()).orElseThrow().getStatus())
                 .isEqualTo(ReliableTaskStatus.SUCCEEDED);
         assertThat(calls).hasValue(2);
     }
@@ -93,11 +93,11 @@ class ReliableTaskCoreFlowTest {
         );
         ReliableTaskClient client = new DefaultReliableTaskClient(repository, engine, policy, () -> "task-2", clock);
 
-        ReliableTask task = client.submit(ReliableTaskSubmission.builder("unknown", "{}").build()).task();
+        ReliableTask task = client.submit(ReliableTaskSubmission.builder("unknown", "{}").build()).getTask();
         ReliableTaskRunResult result = client.runNow(task.getKey());
 
-        assertThat(result.finalTask().getStatus()).isEqualTo(ReliableTaskStatus.MANUAL);
-        assertThat(result.finalTask().getLastErrorCode()).isEqualTo("MISSING_HANDLER");
+        assertThat(result.getFinalTask().getStatus()).isEqualTo(ReliableTaskStatus.MANUAL);
+        assertThat(result.getFinalTask().getLastErrorCode()).isEqualTo("MISSING_HANDLER");
     }
 
     @Test
@@ -114,20 +114,21 @@ class ReliableTaskCoreFlowTest {
         );
         ReliableTaskClient client = new DefaultReliableTaskClient(repository, engine, policy, () -> "task-3", clock);
         ReliableTask manual = client.runNow(
-                client.submit(ReliableTaskSubmission.builder("unknown", "{}").build()).task().getKey()
-        ).finalTask();
+                client.submit(ReliableTaskSubmission.builder("unknown", "{}").build()).getTask().getKey()
+        ).getFinalTask();
 
         DefaultReliableTaskAdminClient admin = new DefaultReliableTaskAdminClient(repository, clock);
         ReliableTaskAdminResult stale = admin.requeue(manual.getKey(), manual.getVersion() - 1, clock.instant());
         ReliableTaskAdminResult updated = admin.requeue(manual.getKey(), manual.getVersion(), clock.instant());
 
-        assertThat(stale.status()).isEqualTo(ReliableTaskAdminStatus.STALE_VERSION);
-        assertThat(updated.status()).isEqualTo(ReliableTaskAdminStatus.UPDATED);
-        assertThat(updated.task().getStatus()).isEqualTo(ReliableTaskStatus.READY);
-        assertThat(updated.task().getAttemptCount()).isZero();
+        assertThat(stale.getStatus()).isEqualTo(ReliableTaskAdminStatus.STALE_VERSION);
+        assertThat(updated.getStatus()).isEqualTo(ReliableTaskAdminStatus.UPDATED);
+        assertThat(updated.getTask().getStatus()).isEqualTo(ReliableTaskStatus.READY);
+        assertThat(updated.getTask().getAttemptCount()).isZero();
     }
 
     private static final class MutableClock extends Clock {
+        /** 测试用的可变当前时间。 */
         private Instant now;
         private MutableClock(Instant now) { this.now = now; }
         void advance(Duration duration) { now = now.plus(duration); }
@@ -137,6 +138,7 @@ class ReliableTaskCoreFlowTest {
     }
 
     private static final class InMemoryRepository implements ReliableTaskRepository {
+        /** 按任务键保存测试任务快照的内存映射。 */
         private final Map<ReliableTaskKey, ReliableTask> tasks = new HashMap<>();
 
         @Override
@@ -153,19 +155,19 @@ class ReliableTaskCoreFlowTest {
         @Override
         public synchronized List<ReliableTask> findDue(ReliableTaskScanQuery query) {
             return tasks.values().stream()
-                    .filter(task -> task.getStoreName().equals(query.storeName()))
-                    .filter(task -> task.getScanBucket() == query.scanBucket())
-                    .filter(task -> isDue(task, query.now()))
-                    .limit(query.limit())
+                    .filter(task -> task.getStoreName().equals(query.getStoreName()))
+                    .filter(task -> task.getScanBucket() == query.getScanBucket())
+                    .filter(task -> isDue(task, query.getNow()))
+                    .limit(query.getLimit())
                     .toList();
         }
 
         @Override
         public synchronized ReliableTaskClaimResult tryClaim(ReliableTaskClaimCommand command) {
-            ReliableTask candidate = command.candidate();
+            ReliableTask candidate = command.getCandidate();
             ReliableTask current = tasks.get(candidate.getKey());
             if (current == null || current.getVersion() != candidate.getVersion()
-                    || current.getStatus() != candidate.getStatus() || !isDue(current, command.now())) {
+                    || current.getStatus() != candidate.getStatus() || !isDue(current, command.getNow())) {
                 return ReliableTaskClaimResult.missed();
             }
             ReliableTask claimed = copy(
@@ -173,12 +175,12 @@ class ReliableTaskCoreFlowTest {
                     ReliableTaskStatus.RUNNING,
                     Math.min(current.getAttemptCount() + 1, current.getMaxAttempts()),
                     null,
-                    command.ownerId(),
-                    command.leaseUntil(),
+                    command.getOwnerId(),
+                    command.getLeaseUntil(),
                     current.getVersion() + 1,
                     current.getLastErrorCode(),
                     current.getLastErrorMessage(),
-                    command.now(),
+                    command.getNow(),
                     null
             );
             tasks.put(claimed.getKey(), claimed);
@@ -187,24 +189,24 @@ class ReliableTaskCoreFlowTest {
 
         @Override
         public synchronized boolean transition(ReliableTaskTransitionCommand command) {
-            ReliableTask current = tasks.get(command.key());
+            ReliableTask current = tasks.get(command.getKey());
             if (current == null || current.getStatus() != ReliableTaskStatus.RUNNING
-                    || !Objects.equals(current.getOwnerId(), command.ownerId())
-                    || current.getVersion() != command.expectedVersion()) {
+                    || !Objects.equals(current.getOwnerId(), command.getOwnerId())
+                    || current.getVersion() != command.getExpectedVersion()) {
                 return false;
             }
             ReliableTask next = copy(
                     current,
-                    command.targetStatus(),
+                    command.getTargetStatus(),
                     current.getAttemptCount(),
-                    command.nextExecuteAt(),
+                    command.getNextExecuteAt(),
                     null,
                     null,
                     current.getVersion() + 1,
-                    command.errorCode(),
-                    command.errorMessage(),
-                    command.now(),
-                    command.targetStatus().isTerminal() ? command.now() : null
+                    command.getErrorCode(),
+                    command.getErrorMessage(),
+                    command.getNow(),
+                    command.getTargetStatus().isTerminal() ? command.getNow() : null
             );
             tasks.put(next.getKey(), next);
             return true;
@@ -212,40 +214,40 @@ class ReliableTaskCoreFlowTest {
 
         @Override
         public synchronized boolean renewLease(ReliableTaskLeaseRenewCommand command) {
-            ReliableTask current = tasks.get(command.key());
+            ReliableTask current = tasks.get(command.getKey());
             if (current == null || current.getStatus() != ReliableTaskStatus.RUNNING
-                    || !Objects.equals(current.getOwnerId(), command.ownerId())
-                    || current.getVersion() != command.expectedVersion()
-                    || !current.getLeaseUntil().isAfter(command.now())
-                    || !command.leaseUntil().isAfter(current.getLeaseUntil())) {
+                    || !Objects.equals(current.getOwnerId(), command.getOwnerId())
+                    || current.getVersion() != command.getExpectedVersion()
+                    || !current.getLeaseUntil().isAfter(command.getNow())
+                    || !command.getLeaseUntil().isAfter(current.getLeaseUntil())) {
                 return false;
             }
             tasks.put(current.getKey(), copy(
                     current, current.getStatus(), current.getAttemptCount(), null,
-                    current.getOwnerId(), command.leaseUntil(), current.getVersion(),
-                    current.getLastErrorCode(), current.getLastErrorMessage(), command.now(), null));
+                    current.getOwnerId(), command.getLeaseUntil(), current.getVersion(),
+                    current.getLastErrorCode(), current.getLastErrorMessage(), command.getNow(), null));
             return true;
         }
 
         @Override
         public synchronized boolean adminTransition(ReliableTaskAdminTransitionCommand command) {
-            ReliableTask current = tasks.get(command.key());
-            if (current == null || current.getStatus() != command.expectedStatus()
-                    || current.getVersion() != command.expectedVersion()) {
+            ReliableTask current = tasks.get(command.getKey());
+            if (current == null || current.getStatus() != command.getExpectedStatus()
+                    || current.getVersion() != command.getExpectedVersion()) {
                 return false;
             }
             ReliableTask updated = copy(
                     current,
-                    command.targetStatus(),
-                    command.resetAttempts() ? 0 : current.getAttemptCount(),
-                    command.nextExecuteAt(),
+                    command.getTargetStatus(),
+                    command.isResetAttempts() ? 0 : current.getAttemptCount(),
+                    command.getNextExecuteAt(),
                     null,
                     null,
                     current.getVersion() + 1,
                     null,
                     null,
-                    command.now(),
-                    command.targetStatus().isTerminal() ? command.now() : null
+                    command.getNow(),
+                    command.getTargetStatus().isTerminal() ? command.getNow() : null
             );
             tasks.put(updated.getKey(), updated);
             return true;

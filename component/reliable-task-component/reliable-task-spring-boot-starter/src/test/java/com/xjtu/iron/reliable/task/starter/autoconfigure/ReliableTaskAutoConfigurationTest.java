@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ReliableTaskAutoConfigurationTest {
 
+    /** 用于验证 Starter 条件装配结果的 Spring 应用上下文运行器。 */
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
                     RelationalAccessAutoConfiguration.class,

@@ -18,8 +18,10 @@ import java.util.Set;
 /** version CAS 保护的最小人工操作实现。 */
 public final class DefaultReliableTaskAdminClient implements ReliableTaskAdminClient {
 
+    /** 允许通过人工操作重新入队的任务状态集合。 */
     private static final Set<ReliableTaskStatus> REQUEUEABLE =
             EnumSet.of(ReliableTaskStatus.MANUAL, ReliableTaskStatus.DEAD);
+    /** 允许通过人工操作取消的任务状态集合。 */
     private static final Set<ReliableTaskStatus> CANCELLABLE = EnumSet.of(
             ReliableTaskStatus.READY,
             ReliableTaskStatus.RETRY_WAIT,
@@ -27,7 +29,9 @@ public final class DefaultReliableTaskAdminClient implements ReliableTaskAdminCl
             ReliableTaskStatus.MANUAL
     );
 
+    /** 任务持久化仓储。 */
     private final ReliableTaskRepository repository;
+    /** 为人工状态迁移提供统一当前时间的时钟。 */
     private final Clock clock;
 
     public DefaultReliableTaskAdminClient(ReliableTaskRepository repository, Clock clock) {

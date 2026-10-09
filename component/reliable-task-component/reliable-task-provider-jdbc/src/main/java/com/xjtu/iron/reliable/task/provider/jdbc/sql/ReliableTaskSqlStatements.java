@@ -5,15 +5,19 @@ import java.util.regex.Pattern;
 /** 集中构造可靠任务 Repository 使用的固定表 SQL。 */
 public final class ReliableTaskSqlStatements {
 
+    /** 未显式配置时采用的可靠任务表名。 */
     public static final String DEFAULT_TABLE_NAME = "iron_reliable_task";
 
+    /** 表名白名单格式，限制为普通表名或单层 schema 限定表名。 */
     private static final Pattern SAFE_TABLE =
             Pattern.compile("[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)?");
+    /** 查询和写入任务快照时使用的固定列清单。 */
     private static final String COLUMNS =
             "store_name,namespace,task_id,task_type,business_key,payload,route_key,scan_bucket,status,"
                     + "attempt_count,max_attempts,next_execute_at,owner_id,lease_until,version,last_error_code,"
                     + "last_error_message,created_at,updated_at,completed_at";
 
+    /** 校验后的任务表名。 */
     private final String table;
 
     public ReliableTaskSqlStatements(String table) {

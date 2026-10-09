@@ -8,13 +8,21 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "xjtu.iron.reliable-task")
 public class ReliableTaskProperties {
 
+    /** 是否启用 Reliable Task 自动配置。 */
     private boolean enabled = true;
+    /** JDBC Provider 使用的可靠任务表名。 */
     private String tableName = "iron_reliable_task";
+    /** 当前应用实例的租约所有者标识；为空时由 Starter 自动生成。 */
     private String ownerId;
+    /** 提交任务未指定时采用的最大尝试次数。 */
     private int defaultMaxAttempts = 10;
+    /** 每个存储域划分的扫描桶总数。 */
     private int scanBucketCount = 64;
+    /** 每次成功抢占任务后授予执行者的租约时长。 */
     private Duration leaseDuration = Duration.ofMinutes(1);
+    /** 处理器抛出未处理异常后的默认重试等待时长。 */
     private Duration failureRetryDelay = Duration.ofMinutes(1);
+    /** 内置本地扫描触发器的配置。 */
     private final LocalScheduler localScheduler = new LocalScheduler();
 
     public boolean isEnabled() { return enabled; }
@@ -34,9 +42,13 @@ public class ReliableTaskProperties {
     public LocalScheduler getLocalScheduler() { return localScheduler; }
 
     public static class LocalScheduler {
+        /** 是否启用内置本地扫描触发器。 */
         private boolean enabled;
+        /** 两轮全桶扫描之间的固定延迟。 */
         private Duration fixedDelay = Duration.ofSeconds(5);
+        /** 本地触发器扫描的逻辑存储域。 */
         private String storeName = "default";
+        /** 单个扫描桶每轮最多读取的候选任务数。 */
         private int batchSize = 100;
 
         public boolean isEnabled() { return enabled; }

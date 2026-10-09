@@ -6,9 +6,13 @@ import java.util.Objects;
 /** Handler 返回给 Reliable Task 状态机的显式结果。 */
 public final class ReliableTaskExecutionResult {
 
+    /** 处理器对本轮执行给出的业务结果。 */
     private final ReliableTaskExecutionOutcome outcome;
+    /** RETRY 或 RECONCILE 场景下再次处理前的等待时长。 */
     private final Duration delay;
+    /** 供监控和排障使用的业务结果编码。 */
     private final String code;
+    /** 供监控和排障使用的业务结果说明。 */
     private final String message;
 
     private ReliableTaskExecutionResult(

@@ -18,8 +18,11 @@ import java.util.Objects;
 /** 单桶串行扫描实现；并发度由外层触发器决定。 */
 public final class DefaultReliableTaskScanner implements ReliableTaskScanner {
 
+    /** 用于读取到期候选任务的持久化仓储。 */
     private final ReliableTaskRepository repository;
+    /** 对候选任务执行抢占和状态迁移的执行引擎。 */
     private final ReliableTaskEngine engine;
+    /** 为到期查询提供统一当前时间的时钟。 */
     private final Clock clock;
 
     public DefaultReliableTaskScanner(
@@ -36,7 +39,7 @@ public final class DefaultReliableTaskScanner implements ReliableTaskScanner {
         Objects.requireNonNull(request, "request must not be null");
         Instant now = clock.instant();
         List<ReliableTask> candidates = repository.findDue(new ReliableTaskScanQuery(
-                request.storeName(), request.scanBucket(), now, request.batchSize()
+                request.getStoreName(), request.getScanBucket(), now, request.getBatchSize()
         ));
 
         int claimed = 0;
@@ -45,7 +48,7 @@ public final class DefaultReliableTaskScanner implements ReliableTaskScanner {
         int skipped = 0;
         for (ReliableTask candidate : candidates) {
             ReliableTaskRunResult result = engine.runCandidate(candidate);
-            switch (result.status()) {
+            switch (result.getStatus()) {
                 case EXECUTED -> {
                     claimed++;
                     executed++;

@@ -68,6 +68,13 @@ v1 明确不实现：
 执行契约，因此保留在同一个 `api.execution` 包；JDBC 的 SQL 和行映射已经是独立变化点，因此从 Repository
 中拆出。
 
+### 3.2 数据对象约定
+
+- 任务快照、操作结果和 Repository 命令使用普通不可变 `final class`，不使用 Java `record`。
+- 属性保持 `private final`，通过构造方法完成校验，并提供传统 `getXxx()` / `isXxx()` 访问器。
+- 值对象保留 `equals`、`hashCode` 和 `toString`，避免从 `record` 改为普通类后丢失值语义。
+- 每个类属性必须提供中文 Javadoc，明确空值、默认值、并发控制或路由语义。
+
 ## 4. 持久状态
 
 | 状态 | 含义 | 扫描是否可见 |

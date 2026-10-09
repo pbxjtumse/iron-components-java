@@ -10,6 +10,7 @@ import java.util.Optional;
 /** 启动时校验 taskType 唯一性的不可变注册表。 */
 public final class DefaultReliableTaskHandlerRegistry implements ReliableTaskHandlerRegistry {
 
+    /** 按任务类型索引的不可变处理器映射。 */
     private final Map<String, ReliableTaskHandler> handlers;
 
     public DefaultReliableTaskHandlerRegistry(Collection<? extends ReliableTaskHandler> handlers) {

@@ -74,6 +74,9 @@ reliable-task-spring-boot-starter
 
 当前仍处于 V1 收口阶段，本次直接迁移包名，不保留旧包下的 Deprecated 转发类，避免发布前就形成两套访问入口。
 
+API 中承载任务、命令和结果的数据对象统一使用普通不可变 `final class`，不使用 Java `record`。每个属性均有
+中文 Javadoc，并通过传统 `getXxx()` / `isXxx()` 方法暴露，便于 Spring、Jackson、MyBatis 等常见框架识别。
+
 完整设计见 [docs/design-v1.md](docs/design-v1.md)，建表脚本见
 [reliable-task-provider-jdbc/src/main/resources/schema-mysql.sql](reliable-task-provider-jdbc/src/main/resources/schema-mysql.sql)。
 
@@ -104,7 +107,7 @@ ReliableTaskSubmitResult result = client.submit(
 );
 
 // 快速路径仍然先 CAS 抢占，不直接绕过持久化任务。
-client.runNow(result.task().getKey());
+client.runNow(result.getTask().getKey());
 ```
 
 本地扫描器默认关闭：
