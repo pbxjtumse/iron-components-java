@@ -2,7 +2,9 @@ package com.xjtu.iron.reliable.task.api.client;
 
 import com.xjtu.iron.reliable.task.api.model.ReliableTask;
 import com.xjtu.iron.reliable.task.api.model.ReliableTaskKey;
-import com.xjtu.iron.reliable.task.api.model.ReliableTaskSubmission;
+import com.xjtu.iron.reliable.task.api.operation.run.ReliableTaskRunResult;
+import com.xjtu.iron.reliable.task.api.operation.submit.ReliableTaskSubmission;
+import com.xjtu.iron.reliable.task.api.operation.submit.ReliableTaskSubmitResult;
 
 import java.util.Optional;
 

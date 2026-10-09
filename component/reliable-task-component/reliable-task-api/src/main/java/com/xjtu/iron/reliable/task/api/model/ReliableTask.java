@@ -1,5 +1,7 @@
 package com.xjtu.iron.reliable.task.api.model;
 
+import com.xjtu.iron.reliable.task.api.state.ReliableTaskStatus;
+
 import java.time.Instant;
 import java.util.Objects;
 

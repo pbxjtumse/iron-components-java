@@ -44,6 +44,30 @@ v1 明确不实现：
 
 `Outbox`、`Remote Command` 和 `Idempotency Recovery` 是任务语义适配层，不进入通用 Core。
 
+### 3.1 包职责
+
+| 模块 | 包 | 职责 |
+|---|---|---|
+| API | `api.client` | 业务提交、查询、立即尝试执行和人工操作门面 |
+| API | `api.operation.submit/run/admin` | 各公开操作自己的输入、状态和结果 |
+| API | `api.execution` | Handler SPI、执行上下文、Lease 续租入口和执行结果 |
+| API | `api.model`、`api.state` | 任务快照、任务标识和持久化状态机 |
+| API | `api.repository.*` | Core 与 Provider 之间的 create/claim/lease/scan/transition 协议 |
+| API | `api.scan` | 本地或外部调度器使用的扫描入口 |
+| Core | `core.execution` | 唯一的 `claim -> handler -> transition` 执行模板 |
+| Core | `core.execution.handler` | Handler 注册和按 `taskType` 查找 |
+| Core | `core.client`、`core.scan` | 业务快速路径、人工操作和扫描路径的默认实现 |
+| Core | `core.policy` | 最大次数、扫描桶、Lease 与失败退避策略 |
+| JDBC | `provider.jdbc.repository` | Repository 端口实现和 SQL 参数编排 |
+| JDBC | `provider.jdbc.mapping` | `ResultSet` 到任务快照的映射 |
+| JDBC | `provider.jdbc.sql` | 固定表 SQL 与动态表名白名单校验 |
+| Starter | `starter.autoconfigure` | Spring Bean 与本地调度触发器装配 |
+| Starter | `starter.properties` | `xjtu.iron.reliable-task` 配置模型 |
+
+分包只表达稳定职责，不为每个类机械创建一层目录。例如 Handler、Context、Outcome 和 Result 共同构成一次
+执行契约，因此保留在同一个 `api.execution` 包；JDBC 的 SQL 和行映射已经是独立变化点，因此从 Repository
+中拆出。
+
 ## 4. 持久状态
 
 | 状态 | 含义 | 扫描是否可见 |

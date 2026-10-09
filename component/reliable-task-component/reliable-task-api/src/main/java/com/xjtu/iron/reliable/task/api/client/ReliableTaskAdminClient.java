@@ -1,6 +1,7 @@
 package com.xjtu.iron.reliable.task.api.client;
 
 import com.xjtu.iron.reliable.task.api.model.ReliableTaskKey;
+import com.xjtu.iron.reliable.task.api.operation.admin.ReliableTaskAdminResult;
 
 import java.time.Instant;
 

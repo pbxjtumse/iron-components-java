@@ -25,6 +25,55 @@ submit / runNow / local scan / future XXL-JOB
 - `reliable-task-provider-jdbc`：基于 Relational Access 的 JDBC 持久化实现。
 - `reliable-task-spring-boot-starter`：自动装配和默认关闭的本地扫描器。
 
+### 分包导航
+
+包结构按稳定能力划分，而不是把所有命令、状态和结果堆在模块根包：
+
+```text
+reliable-task-api
+└── api
+    ├── client                    # 业务门面，只保留 Client 接口
+    ├── execution                 # Handler、执行上下文和执行结果
+    ├── model                     # ReliableTask、ReliableTaskKey
+    ├── operation
+    │   ├── admin                 # 人工操作结果
+    │   ├── run                   # 单次尝试执行结果
+    │   └── submit                # 提交请求与结果
+    ├── repository
+    │   ├── claim                 # CAS 抢占命令与结果
+    │   ├── create                # 幂等创建结果
+    │   ├── lease                 # 续租命令
+    │   ├── scan                  # 到期候选查询
+    │   └── transition            # 执行与人工状态迁移命令
+    ├── scan                      # 调度器可调用的扫描门面
+    └── state                     # 持久化状态机
+
+reliable-task-core
+└── core
+    ├── client                    # Client 默认实现
+    ├── execution
+    │   └── handler               # 统一执行引擎与 Handler 注册表
+    ├── policy                    # Lease、次数和退避等运行策略
+    ├── scan                      # 扫描实现
+    └── exception
+
+reliable-task-provider-jdbc
+└── provider.jdbc
+    ├── repository                # Repository 实现
+    ├── mapping                   # ResultSet 映射
+    └── sql                       # SQL 构造与表名校验
+
+reliable-task-spring-boot-starter
+└── starter
+    ├── autoconfigure             # 自动装配和本地扫描触发器
+    └── properties                # 类型安全配置属性
+```
+
+`operation` 表示业务方直接发起的公开操作；`repository` 子包表示 Core 与存储实现之间的持久化协议。
+两者不能混放，否则提交语义、执行语义和数据库 CAS 细节会重新耦合到一起。
+
+当前仍处于 V1 收口阶段，本次直接迁移包名，不保留旧包下的 Deprecated 转发类，避免发布前就形成两套访问入口。
+
 完整设计见 [docs/design-v1.md](docs/design-v1.md)，建表脚本见
 [reliable-task-provider-jdbc/src/main/resources/schema-mysql.sql](reliable-task-provider-jdbc/src/main/resources/schema-mysql.sql)。
 

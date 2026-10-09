@@ -1,11 +1,13 @@
 package com.xjtu.iron.reliable.task.core.client;
 
-import com.xjtu.iron.reliable.task.api.client.*;
+import com.xjtu.iron.reliable.task.api.client.ReliableTaskAdminClient;
 import com.xjtu.iron.reliable.task.api.model.ReliableTask;
 import com.xjtu.iron.reliable.task.api.model.ReliableTaskKey;
-import com.xjtu.iron.reliable.task.api.model.ReliableTaskStatus;
-import com.xjtu.iron.reliable.task.api.repository.ReliableTaskAdminTransitionCommand;
+import com.xjtu.iron.reliable.task.api.operation.admin.ReliableTaskAdminResult;
+import com.xjtu.iron.reliable.task.api.operation.admin.ReliableTaskAdminStatus;
 import com.xjtu.iron.reliable.task.api.repository.ReliableTaskRepository;
+import com.xjtu.iron.reliable.task.api.repository.transition.ReliableTaskAdminTransitionCommand;
+import com.xjtu.iron.reliable.task.api.state.ReliableTaskStatus;
 
 import java.time.Clock;
 import java.time.Instant;

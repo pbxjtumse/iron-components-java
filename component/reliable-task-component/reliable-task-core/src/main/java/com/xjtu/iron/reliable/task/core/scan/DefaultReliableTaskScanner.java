@@ -1,10 +1,10 @@
 package com.xjtu.iron.reliable.task.core.scan;
 
-import com.xjtu.iron.reliable.task.api.client.ReliableTaskRunResult;
-import com.xjtu.iron.reliable.task.api.client.ReliableTaskRunStatus;
+import com.xjtu.iron.reliable.task.api.operation.run.ReliableTaskRunResult;
+import com.xjtu.iron.reliable.task.api.operation.run.ReliableTaskRunStatus;
 import com.xjtu.iron.reliable.task.api.model.ReliableTask;
 import com.xjtu.iron.reliable.task.api.repository.ReliableTaskRepository;
-import com.xjtu.iron.reliable.task.api.repository.ReliableTaskScanQuery;
+import com.xjtu.iron.reliable.task.api.repository.scan.ReliableTaskScanQuery;
 import com.xjtu.iron.reliable.task.api.scan.ReliableTaskScanReport;
 import com.xjtu.iron.reliable.task.api.scan.ReliableTaskScanRequest;
 import com.xjtu.iron.reliable.task.api.scan.ReliableTaskScanner;

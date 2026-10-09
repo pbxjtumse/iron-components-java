@@ -2,6 +2,13 @@ package com.xjtu.iron.reliable.task.api.repository;
 
 import com.xjtu.iron.reliable.task.api.model.ReliableTask;
 import com.xjtu.iron.reliable.task.api.model.ReliableTaskKey;
+import com.xjtu.iron.reliable.task.api.repository.claim.ReliableTaskClaimCommand;
+import com.xjtu.iron.reliable.task.api.repository.claim.ReliableTaskClaimResult;
+import com.xjtu.iron.reliable.task.api.repository.create.ReliableTaskCreateResult;
+import com.xjtu.iron.reliable.task.api.repository.lease.ReliableTaskLeaseRenewCommand;
+import com.xjtu.iron.reliable.task.api.repository.scan.ReliableTaskScanQuery;
+import com.xjtu.iron.reliable.task.api.repository.transition.ReliableTaskAdminTransitionCommand;
+import com.xjtu.iron.reliable.task.api.repository.transition.ReliableTaskTransitionCommand;
 
 import java.util.List;
 import java.util.Optional;
