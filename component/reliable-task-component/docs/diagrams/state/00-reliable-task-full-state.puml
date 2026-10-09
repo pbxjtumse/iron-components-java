@@ -1,0 +1,36 @@
+@startuml
+title Reliable Task v1 完整状态机
+
+[*] --> READY : submit
+
+READY --> RUNNING : due + CAS claim
+RETRY_WAIT --> RUNNING : due + CAS claim
+WAIT_RECONCILE --> RUNNING : due + CAS claim
+RUNNING --> RUNNING : lease expired + takeover
+
+RUNNING --> SUCCEEDED : SUCCESS
+RUNNING --> RETRY_WAIT : RETRY + attempts remain
+RUNNING --> WAIT_RECONCILE : RECONCILE + attempts remain
+RUNNING --> MANUAL : MANUAL / missing handler
+RUNNING --> DEAD : DEAD / max attempts
+MANUAL --> READY : admin requeue(version CAS)
+DEAD --> READY : admin requeue(version CAS)
+READY --> CANCELLED : admin cancel(version CAS)
+RETRY_WAIT --> CANCELLED : admin cancel(version CAS)
+WAIT_RECONCILE --> CANCELLED : admin cancel(version CAS)
+MANUAL --> CANCELLED : admin cancel(version CAS)
+
+SUCCEEDED --> [*]
+DEAD --> [*]
+CANCELLED --> [*]
+
+note right of RUNNING
+owner_id + lease_until + version
+所有完成更新都校验 owner/version
+end note
+
+note right of MANUAL
+v1 停止自动扫描；
+后续管理 API 可重新入队或取消
+end note
+@enduml

@@ -84,6 +84,17 @@
                 <artifactId>retry-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- reliable-task-component -->
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>reliable-task-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>reliable-task-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <!-- relational-access-component -->
             <dependency>
                 <groupId>com.xjtu.iron</groupId>

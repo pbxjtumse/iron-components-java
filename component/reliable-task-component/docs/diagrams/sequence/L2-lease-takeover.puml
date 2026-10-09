@@ -1,0 +1,29 @@
+@startuml
+title L2 - Lease 过期接管与旧 owner 隔离
+
+participant WorkerA
+participant WorkerB
+database Repository as Repo
+participant Downstream
+
+WorkerA -> Repo : claim(version=0, owner=A)
+Repo --> WorkerA : RUNNING, version=1, lease=t1
+WorkerA -> Downstream : invoke(idempotencyKey, fencingToken=1)
+note over WorkerA : timeout / pause / response lost
+
+... lease t1 expires ...
+WorkerB -> Repo : claim(version=1, owner=B)
+Repo --> WorkerB : RUNNING, version=2, lease=t2
+WorkerB -> Downstream : query or invoke safely
+Downstream --> WorkerB : result
+WorkerB -> Repo : transition(owner=B, version=2)
+Repo --> WorkerB : updated
+
+WorkerA -> Repo : transition(owner=A, version=1)
+Repo --> WorkerA : 0 rows / stale owner
+
+note bottom
+CAS 防止旧 owner 覆盖任务状态，
+但不能撤销已经发生的外部副作用。
+end note
+@enduml

@@ -19,6 +19,7 @@
         <module>concurrency-component</module>
         <module>distributed-lock-component</module>
         <module>retry-component</module>
+        <module>reliable-task-component</module>
         <module>foundation-component</module>
         <module>message-component</module>
         <module>idempotent-component</module>
@@ -394,6 +395,27 @@
                 <artifactId>retry-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- reliable-task-component -->
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>reliable-task-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>reliable-task-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>reliable-task-provider-jdbc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>reliable-task-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <!-- relational-access-component -->
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
@@ -403,6 +425,16 @@
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
                 <artifactId>relational-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>relational-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>relational-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- storage-routing-component -->
