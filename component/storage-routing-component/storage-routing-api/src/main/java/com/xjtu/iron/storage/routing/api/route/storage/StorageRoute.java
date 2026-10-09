@@ -13,10 +13,12 @@ import java.util.Objects;
  *
  * <pre>{@code
  *   1. Direct 模式：
- *     mode            = DIRECT_DATASOURCE
- *     shardInfo       = shardId 37
- *     dataSourceKey   = db_03
- *     tableName       = business_order_07
+ * mode             = DIRECT_DATASOURCE
+ * shardId          = 56
+ * databaseIndex    = 5
+ * localTableIndex  = 6
+ * dataSourceKey    = db_05
+ * tableName        = business_order_56
  *   2. ShardingSphere-JDBC 模式：
  *     mode            = SHARDINGSPHERE_JDBC
  *     logicalTable    = business_order

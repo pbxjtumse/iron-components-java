@@ -99,7 +99,7 @@ class StorageRoutingAutoConfigurationTest {
     void shouldAutoConfigureShardingSphereJdbcAdapter() {
         contextRunner
                 .withPropertyValues(
-                        "xjtu.iron.storage-routing.mode=SHARDINGSPHERE_JDBC",
+                        "xjtu.iron.storage-routing.mode=SHARDING_SPHERE_JDBC",
                         "xjtu.iron.storage-routing.sharding-sphere-jdbc.data-source-key=orders-sharding")
                 .run(context -> {
                     StorageRouteResolver resolver = context.getBean(StorageRouteResolver.class);
@@ -109,7 +109,7 @@ class StorageRoutingAutoConfigurationTest {
 
                     assertThat(resolver).isInstanceOf(ShardingSphereJdbcStorageRouteResolver.class);
                     assertThat(bridge).isInstanceOf(ShardingSphereJdbcStorageRouteToSqlRouteBridge.class);
-                    assertThat(route.mode()).isEqualTo(StorageRouteMode.SHARDINGSPHERE_JDBC);
+                    assertThat(route.mode()).isEqualTo(StorageRouteMode.SHARDING_SPHERE_JDBC);
                     assertThat(bridge.toSqlRoute(route).dataSourceKey()).isEqualTo("orders-sharding");
                     assertThat(bridge.requireTableName(route)).isEqualTo("business_order");
                 });

@@ -5,6 +5,7 @@ import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.route.StorageRouteMode;
 import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.integration.relational.StorageRouteToSqlRouteBridge;
+
 import java.util.Objects;
 
 /**
@@ -37,15 +38,15 @@ public final class ShardingSphereJdbcStorageRouteToSqlRouteBridge implements Sto
         StorageRoute required = requireShardingSphereRoute(route);
         String logicalTable = required.logicalTable();
         if (logicalTable == null) {
-            throw new StorageRoutingException("logicalTable is required for SHARDINGSPHERE_JDBC routing");
+            throw new StorageRoutingException("logicalTable is required for SHARDING_SPHERE_JDBC routing");
         }
         return logicalTable;
     }
 
     private StorageRoute requireShardingSphereRoute(StorageRoute route) {
         StorageRoute required = Objects.requireNonNull(route, "route must not be null");
-        if (required.mode() != StorageRouteMode.SHARDINGSPHERE_JDBC) {
-            throw new StorageRoutingException("Only SHARDINGSPHERE_JDBC route can be bridged by this adapter: " + required.mode());
+        if (required.mode() != StorageRouteMode.SHARDING_SPHERE_JDBC) {
+            throw new StorageRoutingException("Only SHARDING_SPHERE_JDBC route can be bridged by this adapter: " + required.mode());
         }
         return required;
     }

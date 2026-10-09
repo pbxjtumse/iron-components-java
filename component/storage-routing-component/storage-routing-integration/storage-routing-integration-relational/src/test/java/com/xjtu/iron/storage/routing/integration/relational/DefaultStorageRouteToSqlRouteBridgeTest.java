@@ -9,18 +9,19 @@ import com.xjtu.iron.relational.core.connection.RoutingDataSourceResolver;
 import com.xjtu.iron.relational.core.exception.StandardSqlExceptionTranslator;
 import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
-import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.api.route.StorageRouteMode;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
+import org.h2.jdbcx.JdbcDataSource;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.h2.jdbcx.JdbcDataSource;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -42,7 +43,7 @@ class DefaultStorageRouteToSqlRouteBridgeTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = StorageRouteMode.class, names = {"SHARDINGSPHERE_JDBC", "PROXY"})
+    @EnumSource(value = StorageRouteMode.class, names = {"SHARDING_SPHERE_JDBC", "PROXY"})
     void defaultBridgeShouldRejectModesThatNeedDedicatedAdapters(StorageRouteMode mode) {
         StorageRoute route = StorageRoute.builder().mode(mode)
                 .context(RouteContext.builder().logicalTable("iron_idempotency_record").build()).build();

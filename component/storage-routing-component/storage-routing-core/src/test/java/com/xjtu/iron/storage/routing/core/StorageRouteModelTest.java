@@ -4,13 +4,14 @@ import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
 import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
-import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.api.route.StorageRouteMode;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -81,7 +82,7 @@ class StorageRouteModelTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = StorageRouteMode.class, names = {"SHARDINGSPHERE_JDBC", "PROXY"})
+    @EnumSource(value = StorageRouteMode.class, names = {"SHARDING_SPHERE_JDBC", "PROXY"})
     void delegatedModesShouldNotPretendLogicalTableIsPhysical(StorageRouteMode mode) {
         StorageRoute route = StorageRoute.middleware(
                 mode, RouteContext.builder().logicalTable("business_order").build(), null);

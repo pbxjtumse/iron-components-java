@@ -2,6 +2,7 @@ package com.xjtu.iron.storage.routing.api.route;
 
 import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
+
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -9,6 +10,12 @@ import java.util.Objects;
 
 /**
  * 一次路由的输入数据，回答 【哪个业务场景、哪个逻辑表、使用什么分片键】
+ * 注意 此时还不知道
+ *  落在哪个库；
+ *  落在哪张表；
+ *  shardId 是多少；
+ *  是 Direct、JDBC 还是 Proxy 模式
+ *
  *
  * <p>承载场景、分片键和扩展属性；logicalTable 也在此处表达，保持表族元数据的一份来源。
  * 分片计算只接收 CompositeShardKey，物理映射使用已配置的规则，均不从 attributes 偷读标准分片字段。</p>
@@ -28,7 +35,7 @@ public final class RouteContext {
      */
     private final String routeName;
     /**
-     * 例如 business_order 表
+     * 例如 business_order 表 注意这里是逻辑表 但是具体哪一个分片还不知道
      */
     private final String logicalTable;
     private final CompositeShardKey shardKey;

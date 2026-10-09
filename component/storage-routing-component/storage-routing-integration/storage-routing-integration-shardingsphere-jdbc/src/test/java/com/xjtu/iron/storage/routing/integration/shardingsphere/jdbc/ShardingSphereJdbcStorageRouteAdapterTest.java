@@ -22,7 +22,7 @@ class ShardingSphereJdbcStorageRouteAdapterTest {
         StorageRoute route = resolver.resolve(context);
         ShardingSphereJdbcStorageRouteToSqlRouteBridge bridge = new ShardingSphereJdbcStorageRouteToSqlRouteBridge();
 
-        assertThat(route.mode()).isEqualTo(StorageRouteMode.SHARDINGSPHERE_JDBC);
+        assertThat(route.mode()).isEqualTo(StorageRouteMode.SHARDING_SPHERE_JDBC);
         assertThat(route.context()).isSameAs(context);
         assertThat(route.physicalLocation()).isNull();
         assertThat(bridge.toSqlRoute(route)).isEqualTo(SqlRoute.defaultRoute());
@@ -46,7 +46,7 @@ class ShardingSphereJdbcStorageRouteAdapterTest {
 
         ShardingSphereJdbcStorageRouteToSqlRouteBridge bridge = new ShardingSphereJdbcStorageRouteToSqlRouteBridge();
         assertThatThrownBy(() -> bridge.toSqlRoute(StorageRoute.direct("business_order", "db_00", "business_order_00")))
-                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("SHARDINGSPHERE_JDBC");
+                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("SHARDING_SPHERE_JDBC");
     }
 
     private static RouteContext routeContext(String logicalTable, long routeId) {

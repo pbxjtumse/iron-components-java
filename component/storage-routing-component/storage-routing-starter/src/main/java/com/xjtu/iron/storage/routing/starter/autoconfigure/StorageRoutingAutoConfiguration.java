@@ -47,7 +47,7 @@ public class StorageRoutingAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "xjtu.iron.storage-routing", name = "mode", havingValue = "SHARDINGSPHERE_JDBC")
+    @ConditionalOnProperty(prefix = "xjtu.iron.storage-routing", name = "mode", havingValue = "SHARDING_SPHERE_JDBC")
     public StorageRouteToSqlRouteBridge shardingSphereJdbcStorageRouteToSqlRouteBridge(StorageRoutingProperties properties) {
         return new ShardingSphereJdbcStorageRouteToSqlRouteBridge(properties.getShardingSphereJdbc().getDataSourceKey());
     }
@@ -87,7 +87,7 @@ public class StorageRoutingAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "xjtu.iron.storage-routing", name = "mode", havingValue = "SHARDINGSPHERE_JDBC")
+    @ConditionalOnProperty(prefix = "xjtu.iron.storage-routing", name = "mode", havingValue = "SHARDING_SPHERE_JDBC")
     public StorageRouteResolver shardingSphereJdbcStorageRouteResolver() {
         return new ShardingSphereJdbcStorageRouteResolver();
     }

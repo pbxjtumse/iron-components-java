@@ -1,11 +1,8 @@
 package com.xjtu.iron.storage.routing.api.key;
 
 import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+
+import java.util.*;
 
 /**
  * 有序、非空、字段名不重复的不可变分片键集合。单字段同样使用这个模型，无需另建输入类型。
@@ -56,7 +53,11 @@ public final class CompositeShardKey {
     }
 
     /**
-     * 复合键 v1 编码：版本、字段数以及按顺序排列的字段名、类型名、值文本。
+     * 复合键
+     * v1;字段数量;
+     * 字段名长度:字段名
+     * 类型长度:类型
+     * 值长度:值
      *
      * <p>每个字符串均使用“UTF-16 code unit 长度:文本”编码，与 Java String.length/hashCode 一致。
      * 长度前缀保护字段边界，因此 ab+c 与 a+bc、包含冒号的值、不同类型的同名文本都不会被误编码为同一个键。
