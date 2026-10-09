@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class JdbcReliableTaskRepositoryTest {
 
+    /** 每个测试用例使用的 JDBC 可靠任务仓储。 */
     private JdbcReliableTaskRepository repository;
 
     @BeforeEach
@@ -68,21 +69,21 @@ class JdbcReliableTaskRepositoryTest {
         ReliableTaskClaimResult duplicateClaim = repository.tryClaim(new ReliableTaskClaimCommand(
                 candidates.get(0), "owner-b", now, now.plusSeconds(10)));
 
-        assertThat(ownerA.claimed()).isTrue();
-        assertThat(duplicateClaim.claimed()).isFalse();
+        assertThat(ownerA.isClaimed()).isTrue();
+        assertThat(duplicateClaim.isClaimed()).isFalse();
 
         Instant takeoverTime = now.plusSeconds(11);
         ReliableTask expired = repository.findDue(new ReliableTaskScanQuery("default", 7, takeoverTime, 10)).get(0);
         ReliableTaskClaimResult ownerB = repository.tryClaim(new ReliableTaskClaimCommand(
                 expired, "owner-b", takeoverTime, takeoverTime.plusSeconds(10)));
 
-        assertThat(ownerB.claimed()).isTrue();
-        assertThat(ownerB.task().getVersion()).isEqualTo(ownerA.task().getVersion() + 1);
+        assertThat(ownerB.isClaimed()).isTrue();
+        assertThat(ownerB.getTask().getVersion()).isEqualTo(ownerA.getTask().getVersion() + 1);
 
         boolean staleWrite = repository.transition(new ReliableTaskTransitionCommand(
-                ownerA.task().getKey(),
-                ownerA.task().getOwnerId(),
-                ownerA.task().getVersion(),
+                ownerA.getTask().getKey(),
+                ownerA.getTask().getOwnerId(),
+                ownerA.getTask().getVersion(),
                 ReliableTaskStatus.SUCCEEDED,
                 null,
                 null,
@@ -90,9 +91,9 @@ class JdbcReliableTaskRepositoryTest {
                 takeoverTime
         ));
         boolean currentWrite = repository.transition(new ReliableTaskTransitionCommand(
-                ownerB.task().getKey(),
-                ownerB.task().getOwnerId(),
-                ownerB.task().getVersion(),
+                ownerB.getTask().getKey(),
+                ownerB.getTask().getOwnerId(),
+                ownerB.getTask().getVersion(),
                 ReliableTaskStatus.SUCCEEDED,
                 null,
                 null,
@@ -115,10 +116,10 @@ class JdbcReliableTaskRepositoryTest {
                 task, "owner-a", now, now.plusSeconds(10)));
 
         assertThat(repository.renewLease(new ReliableTaskLeaseRenewCommand(
-                task.getKey(), "owner-a", claim.task().getVersion(), now.plusSeconds(5), now.plusSeconds(30)
+                task.getKey(), "owner-a", claim.getTask().getVersion(), now.plusSeconds(5), now.plusSeconds(30)
         ))).isTrue();
         assertThat(repository.renewLease(new ReliableTaskLeaseRenewCommand(
-                task.getKey(), "wrong-owner", claim.task().getVersion(), now.plusSeconds(6), now.plusSeconds(40)
+                task.getKey(), "wrong-owner", claim.getTask().getVersion(), now.plusSeconds(6), now.plusSeconds(40)
         ))).isFalse();
     }
 

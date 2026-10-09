@@ -27,9 +27,12 @@ import java.util.Optional;
 /** 基于 Relational Access 的固定表 JDBC Repository。 */
 public final class JdbcReliableTaskRepository implements ReliableTaskRepository {
 
+    /** 未显式配置时采用的可靠任务表名。 */
     public static final String DEFAULT_TABLE_NAME = ReliableTaskSqlStatements.DEFAULT_TABLE_NAME;
 
+    /** 屏蔽底层 JDBC 方言和异常差异的关系型访问模板。 */
     private final RelationalTemplate relational;
+    /** 当前表名对应的可靠任务 SQL 集合。 */
     private final ReliableTaskSqlStatements sql;
 
     public JdbcReliableTaskRepository(RelationalTemplate relational) {
@@ -82,7 +85,7 @@ public final class JdbcReliableTaskRepository implements ReliableTaskRepository 
     public Optional<ReliableTask> find(ReliableTaskKey key) {
         Objects.requireNonNull(key, "key must not be null");
         return relational.queryOne(
-                SqlStatement.of("reliable-task.find", sql.find(), key.storeName(), key.namespace(), key.taskId()),
+                SqlStatement.of("reliable-task.find", sql.find(), key.getStoreName(), key.getNamespace(), key.getTaskId()),
                 ReliableTaskRowMapper.INSTANCE
         );
     }
@@ -90,16 +93,16 @@ public final class JdbcReliableTaskRepository implements ReliableTaskRepository 
     @Override
     public List<ReliableTask> findDue(ReliableTaskScanQuery query) {
         Objects.requireNonNull(query, "query must not be null");
-        Timestamp now = timestamp(query.now());
+        Timestamp now = timestamp(query.getNow());
         return relational.queryList(
                 SqlStatement.of(
                         "reliable-task.find-due",
                         sql.findDue(),
-                        query.storeName(),
-                        query.scanBucket(),
+                        query.getStoreName(),
+                        query.getScanBucket(),
                         now,
                         now,
-                        query.limit()
+                        query.getLimit()
                 ),
                 ReliableTaskRowMapper.INSTANCE
         );
@@ -108,20 +111,20 @@ public final class JdbcReliableTaskRepository implements ReliableTaskRepository 
     @Override
     public ReliableTaskClaimResult tryClaim(ReliableTaskClaimCommand command) {
         Objects.requireNonNull(command, "command must not be null");
-        ReliableTask candidate = command.candidate();
+        ReliableTask candidate = command.getCandidate();
         boolean expiredRunning = candidate.getStatus() == ReliableTaskStatus.RUNNING;
         long affected = relational.update(SqlStatement.of(
                 "reliable-task.try-claim",
                 sql.tryClaim(expiredRunning),
-                command.ownerId(),
-                timestamp(command.leaseUntil()),
-                timestamp(command.now()),
+                command.getOwnerId(),
+                timestamp(command.getLeaseUntil()),
+                timestamp(command.getNow()),
                 candidate.getStoreName(),
                 candidate.getNamespace(),
                 candidate.getTaskId(),
                 candidate.getStatus().name(),
                 candidate.getVersion(),
-                timestamp(command.now())
+                timestamp(command.getNow())
         )).affectedRows();
         if (affected != 1) {
             return ReliableTaskClaimResult.missed();
@@ -138,13 +141,13 @@ public final class JdbcReliableTaskRepository implements ReliableTaskRepository 
                 Math.min(candidate.getAttemptCount() + 1, candidate.getMaxAttempts()),
                 candidate.getMaxAttempts(),
                 null,
-                command.ownerId(),
-                command.leaseUntil(),
+                command.getOwnerId(),
+                command.getLeaseUntil(),
                 candidate.getVersion() + 1,
                 candidate.getLastErrorCode(),
                 candidate.getLastErrorMessage(),
                 candidate.getCreatedAt(),
-                command.now(),
+                command.getNow(),
                 null
         );
         return ReliableTaskClaimResult.claimed(claimed, candidate.getStatus());
@@ -153,21 +156,21 @@ public final class JdbcReliableTaskRepository implements ReliableTaskRepository 
     @Override
     public boolean transition(ReliableTaskTransitionCommand command) {
         Objects.requireNonNull(command, "command must not be null");
-        boolean terminal = command.targetStatus().isTerminal();
+        boolean terminal = command.getTargetStatus().isTerminal();
         return relational.update(SqlStatement.of(
                 "reliable-task.transition",
                 sql.transition(),
-                command.targetStatus().name(),
-                timestamp(command.nextExecuteAt()),
-                command.errorCode(),
-                command.errorMessage(),
-                timestamp(command.now()),
-                terminal ? timestamp(command.now()) : null,
-                command.key().storeName(),
-                command.key().namespace(),
-                command.key().taskId(),
-                command.ownerId(),
-                command.expectedVersion()
+                command.getTargetStatus().name(),
+                timestamp(command.getNextExecuteAt()),
+                command.getErrorCode(),
+                command.getErrorMessage(),
+                timestamp(command.getNow()),
+                terminal ? timestamp(command.getNow()) : null,
+                command.getKey().getStoreName(),
+                command.getKey().getNamespace(),
+                command.getKey().getTaskId(),
+                command.getOwnerId(),
+                command.getExpectedVersion()
         )).affectedRows() == 1;
     }
 
@@ -177,15 +180,15 @@ public final class JdbcReliableTaskRepository implements ReliableTaskRepository 
         return relational.update(SqlStatement.of(
                 "reliable-task.renew-lease",
                 sql.renewLease(),
-                timestamp(command.leaseUntil()),
-                timestamp(command.now()),
-                command.key().storeName(),
-                command.key().namespace(),
-                command.key().taskId(),
-                command.ownerId(),
-                command.expectedVersion(),
-                timestamp(command.now()),
-                timestamp(command.leaseUntil())
+                timestamp(command.getLeaseUntil()),
+                timestamp(command.getNow()),
+                command.getKey().getStoreName(),
+                command.getKey().getNamespace(),
+                command.getKey().getTaskId(),
+                command.getOwnerId(),
+                command.getExpectedVersion(),
+                timestamp(command.getNow()),
+                timestamp(command.getLeaseUntil())
         )).affectedRows() == 1;
     }
 
@@ -194,16 +197,16 @@ public final class JdbcReliableTaskRepository implements ReliableTaskRepository 
         Objects.requireNonNull(command, "command must not be null");
         return relational.update(SqlStatement.of(
                 "reliable-task.admin-transition",
-                sql.adminTransition(command.resetAttempts()),
-                command.targetStatus().name(),
-                timestamp(command.nextExecuteAt()),
-                timestamp(command.now()),
-                command.targetStatus().isTerminal() ? timestamp(command.now()) : null,
-                command.key().storeName(),
-                command.key().namespace(),
-                command.key().taskId(),
-                command.expectedStatus().name(),
-                command.expectedVersion()
+                sql.adminTransition(command.isResetAttempts()),
+                command.getTargetStatus().name(),
+                timestamp(command.getNextExecuteAt()),
+                timestamp(command.getNow()),
+                command.getTargetStatus().isTerminal() ? timestamp(command.getNow()) : null,
+                command.getKey().getStoreName(),
+                command.getKey().getNamespace(),
+                command.getKey().getTaskId(),
+                command.getExpectedStatus().name(),
+                command.getExpectedVersion()
         )).affectedRows() == 1;
     }
 

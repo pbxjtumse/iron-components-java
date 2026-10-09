@@ -25,14 +25,22 @@ import java.util.concurrent.atomic.AtomicReference;
 /** 所有执行入口共享的 claim -> handler -> transition 模板。 */
 public final class ReliableTaskEngine {
 
+    /** 未注册任务处理器时使用的错误编码。 */
     private static final String MISSING_HANDLER = "MISSING_HANDLER";
+    /** 处理器抛出未处理异常时使用的错误编码。 */
     private static final String UNHANDLED_EXCEPTION = "UNHANDLED_EXCEPTION";
+    /** 任务达到最大执行次数时使用的错误编码。 */
     private static final String MAX_ATTEMPTS = "MAX_ATTEMPTS";
 
+    /** 任务持久化仓储。 */
     private final ReliableTaskRepository repository;
+    /** 根据任务类型查找业务处理器的注册表。 */
     private final ReliableTaskHandlerRegistry handlerRegistry;
+    /** 租约时长和异常重试延迟等运行时策略。 */
     private final ReliableTaskRuntimePolicy policy;
+    /** 为抢占、续租和状态迁移提供统一当前时间的时钟。 */
     private final Clock clock;
+    /** 当前执行实例的所有者标识。 */
     private final String ownerId;
 
     public ReliableTaskEngine(
@@ -61,11 +69,11 @@ public final class ReliableTaskEngine {
                 claimTime,
                 claimTime.plus(policy.getLeaseDuration())
         ));
-        if (!claim.claimed()) {
+        if (!claim.isClaimed()) {
             return new ReliableTaskRunResult(ReliableTaskRunStatus.NOT_CLAIMED, null, null);
         }
 
-        ReliableTask task = claim.task();
+        ReliableTask task = claim.getTask();
         // 允许扫描器抢占“Lease 已过期且次数已经耗尽”的遗留 RUNNING 记录，
         // 但该次抢占只负责收口为 DEAD，不再调用业务 Handler。
         ReliableTaskExecutionResult executionResult = candidate.getAttemptCount() >= candidate.getMaxAttempts()
@@ -73,7 +81,7 @@ public final class ReliableTaskEngine {
                         MAX_ATTEMPTS,
                         "maximum durable execution attempts reached before claim"
                 )
-                : executeHandler(task, claim.claimedFromStatus());
+                : executeHandler(task, claim.getClaimedFromStatus());
         ReliableTaskTransitionCommand transition = transitionOf(task, executionResult, clock.instant());
         boolean updated = repository.transition(transition);
         ReliableTask finalTask = repository.find(task.getKey()).orElse(null);

@@ -13,6 +13,7 @@ import java.time.Instant;
 /** 将可靠任务表的一行数据映射为不可变任务快照。 */
 public final class ReliableTaskRowMapper implements RowMapper<ReliableTask> {
 
+    /** 无状态行映射器的共享实例。 */
     public static final ReliableTaskRowMapper INSTANCE = new ReliableTaskRowMapper();
 
     private ReliableTaskRowMapper() {

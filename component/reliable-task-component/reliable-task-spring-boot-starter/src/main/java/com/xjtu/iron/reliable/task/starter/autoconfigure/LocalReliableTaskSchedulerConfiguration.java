@@ -25,10 +25,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 )
 public class LocalReliableTaskSchedulerConfiguration {
 
+    /** 本地扫描失败时使用的系统日志记录器。 */
     private static final System.Logger LOG = System.getLogger(LocalReliableTaskSchedulerConfiguration.class.getName());
 
+    /** 执行单桶扫描的组件入口。 */
     private final ReliableTaskScanner scanner;
+    /** 提供扫描桶总数的运行时策略。 */
     private final ReliableTaskRuntimePolicy runtimePolicy;
+    /** 提供本地扫描范围和批量大小的外部配置。 */
     private final ReliableTaskProperties properties;
 
     public LocalReliableTaskSchedulerConfiguration(

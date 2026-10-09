@@ -41,6 +41,7 @@ import java.util.UUID;
 )
 public class ReliableTaskAutoConfiguration {
 
+    /** Starter 提供的默认任务 ID 生成器 Bean 名称。 */
     public static final String TASK_ID_GENERATOR_BEAN = "reliableTaskIdGenerator";
 
     @Bean

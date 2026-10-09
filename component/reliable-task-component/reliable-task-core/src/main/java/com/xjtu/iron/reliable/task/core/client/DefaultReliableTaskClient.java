@@ -24,10 +24,15 @@ import java.util.Optional;
 /** ReliableTaskClient 默认实现。 */
 public final class DefaultReliableTaskClient implements ReliableTaskClient {
 
+    /** 任务持久化仓储。 */
     private final ReliableTaskRepository repository;
+    /** 执行任务主链路的引擎。 */
     private final ReliableTaskEngine engine;
+    /** 任务创建和执行使用的运行时策略。 */
     private final ReliableTaskRuntimePolicy policy;
+    /** 未指定任务 ID 时使用的字符串 ID 生成器。 */
     private final StringIdGenerator idGenerator;
+    /** 为任务时间字段提供统一当前时间的时钟。 */
     private final Clock clock;
 
     public DefaultReliableTaskClient(
