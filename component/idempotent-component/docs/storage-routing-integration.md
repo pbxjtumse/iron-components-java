@@ -148,6 +148,7 @@ scanBucket query
 candidate
     ↓
 recover(expectedOwner, expectedVersion)
+    ↓
 IdempotencyRepository API
       ↓
 RoutedJdbcIdempotencyRepository
@@ -168,6 +169,8 @@ JdbcIdempotencyRepository
 3. `TransactionManager` 与 `JdbcExecutionManager` 使用该 key 对应的同一个 `DataSource`。
 
 组件不会把跨库操作伪装成单库原子事务。10 库模式下需要按 `dataSourceKey` 选择匹配的事务执行器。
+
+候选快照不是执行许可，真正执行前仍必须经过 Repository 的第二次原子检查。
 
 ## 9. 10 库 × 10 表配置
 
@@ -201,9 +204,8 @@ xjtu:
 table-index-mode: LOCAL_TABLE_INDEX
 ```
 
-候选快照不是执行许可，真正执行前仍必须经过 Repository 的第二次原子检查。
+## 10. 固定单库单表配置
 
-## 9. 验证清单
 ```yaml
 xjtu.iron.idempotent.jdbc.table-name: iron_idempotency_record
 ```
@@ -214,7 +216,7 @@ Storage Routing 驱动的 DataSource 资源目录、路由型 JDBC Repository �
 
 `logical-table` 是路由语义，`table-prefix` 是分片表前缀，`table-name` 是固定模式完整表名，三者不应混用。
 
-## 10. 数据结构变更
+## 11. 数据结构变更
 
 本轮是未上线阶段的破坏性清理：
 
@@ -227,7 +229,7 @@ Storage Routing 驱动的 DataSource 资源目录、路由型 JDBC Repository �
 
 如果本地已有旧测试库或 Redis 测试数据，应重新建表并清理旧 key；当前不提供旧 schema 的在线迁移兼容逻辑。
 
-## 11. 验证清单
+## 12. 验证清单
 
 1. 无业务 route 时，默认按幂等 key 计算一次 route。
 2. 有业务 route 时复用现有 `StorageRoute`，不重新 hash。

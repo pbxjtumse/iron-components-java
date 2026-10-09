@@ -24,7 +24,7 @@ class ShardingSphereProxyStorageRouteAdapterTest {
 
         assertThat(route.mode()).isEqualTo(StorageRouteMode.PROXY);
         assertThat(route.context()).isSameAs(context);
-        assertThat(route.location()).isNull();
+        assertThat(route.physicalLocation()).isNull();
         assertThat(bridge.toSqlRoute(route)).isEqualTo(SqlRoute.defaultRoute());
         assertThat(bridge.requireTableName(route)).isEqualTo("business_order");
     }

@@ -17,21 +17,21 @@ import java.util.Objects;
  *     shardInfo       = shardId 37
  *     dataSourceKey   = db_03
  *     tableName       = business_order_07
- *   2.ShardingSphere-JDBC 模式：
+ *   2. ShardingSphere-JDBC 模式：
  *     mode            = SHARDINGSPHERE_JDBC
  *     logicalTable    = business_order
  *     CompositeShardKey 保留
- *   3.Proxy 模式类似：
+ *     physicalLocation = null
+ *   3. ShardingSphere-Proxy 模式：
  *     mode            = PROXY
  *     logicalTable    = business_order
- *     physicalLocation = null
  *     physicalLocation = null
  * }</pre>
  * <p>业务场景、逻辑表、分片键和扩展属性只保存在 RouteContext 中。
  * 同分片的订单、幂等、Outbox 可共享 shardInfo，但需要分别映射各自的 physicalLocation。</p>
  *
  * <p>固定直连可以没有分片键和 shardInfo；DIRECT_DATASOURCE 必须有完整物理位置。
- * mode 描述路由接入形态，不代表本轮已经实现 ShardingSphere / Proxy 适配。</p>
+ * mode 只描述路由接入形态；JDBC 与 Proxy 模式的物理路由分别由对应 Bridge、Adapter 和中间件完成。</p>
  */
 public final class StorageRoute {
 

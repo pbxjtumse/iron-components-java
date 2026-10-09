@@ -153,8 +153,8 @@ storage-routing-integration
 
 ```text
 StorageRouteContext -> ThreadLocalStorageRouteContext
-StorageRouteToSqlRouteBridge -> 按 mode 选择 Direct 或 ShardingSphere-JDBC 实现
-StorageRouteResolver -> Direct 在 resolver.enabled=true 时按 FIXED/HASH 创建；ShardingSphere-JDBC 按 mode 创建逻辑路由解析器
+StorageRouteToSqlRouteBridge -> 按 mode 选择 Direct、ShardingSphere-JDBC 或 ShardingSphere-Proxy 实现
+StorageRouteResolver -> Direct 在 resolver.enabled=true 时按 FIXED/HASH 创建；JDBC / Proxy 按 mode 创建逻辑路由解析器
 ```
 
 默认 resolver 不自动启用。FIXED 的 dataSourceKey/tableName，以及 HASH 的 databaseCount、tablesPerDatabase、
@@ -178,5 +178,6 @@ Phase 2.4
     outbox / task / message storage 按同一模型接入
 
 Phase 2.5
-    integration-shardingsphere
+    integration-shardingsphere-jdbc / integration-shardingsphere-proxy
+    验证两种中间件模式只交付逻辑路由，不伪造物理位置
 ```
