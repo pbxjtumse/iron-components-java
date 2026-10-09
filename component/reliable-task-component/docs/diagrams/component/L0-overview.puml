@@ -1,0 +1,36 @@
+@startuml
+title Reliable Task v1 组件边界
+
+package "Business Integrations" {
+  [Message Outbox]
+  [Remote Command]
+  [Idempotency Recovery]
+}
+
+package "reliable-task-component" {
+  [ReliableTaskClient]
+  [ReliableTaskScanner]
+  [ReliableTaskEngine]
+  [HandlerRegistry]
+  [ReliableTaskRepository]
+}
+
+package "Infrastructure" {
+  [Relational Access]
+  database "iron_reliable_task" as DB
+  [Local Scheduler]
+  [Future XXL-JOB]
+}
+
+[Message Outbox] --> [ReliableTaskClient]
+[Remote Command] --> [ReliableTaskClient]
+[Idempotency Recovery] --> [ReliableTaskClient]
+[ReliableTaskClient] --> [ReliableTaskEngine]
+[ReliableTaskScanner] --> [ReliableTaskEngine]
+[ReliableTaskEngine] --> [HandlerRegistry]
+[ReliableTaskEngine] --> [ReliableTaskRepository]
+[ReliableTaskRepository] --> [Relational Access]
+[Relational Access] --> DB
+[Local Scheduler] --> [ReliableTaskScanner]
+[Future XXL-JOB] ..> [ReliableTaskScanner] : later adapter
+@enduml

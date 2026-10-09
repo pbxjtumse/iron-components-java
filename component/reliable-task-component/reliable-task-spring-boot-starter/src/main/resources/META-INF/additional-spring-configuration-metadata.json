@@ -1,0 +1,15 @@
+{
+  "properties": [
+    {"name": "xjtu.iron.reliable-task.enabled", "type": "java.lang.Boolean", "defaultValue": true},
+    {"name": "xjtu.iron.reliable-task.table-name", "type": "java.lang.String", "defaultValue": "iron_reliable_task"},
+    {"name": "xjtu.iron.reliable-task.owner-id", "type": "java.lang.String"},
+    {"name": "xjtu.iron.reliable-task.default-max-attempts", "type": "java.lang.Integer", "defaultValue": 10},
+    {"name": "xjtu.iron.reliable-task.scan-bucket-count", "type": "java.lang.Integer", "defaultValue": 64},
+    {"name": "xjtu.iron.reliable-task.lease-duration", "type": "java.time.Duration", "defaultValue": "1m"},
+    {"name": "xjtu.iron.reliable-task.failure-retry-delay", "type": "java.time.Duration", "defaultValue": "1m"},
+    {"name": "xjtu.iron.reliable-task.local-scheduler.enabled", "type": "java.lang.Boolean", "defaultValue": false},
+    {"name": "xjtu.iron.reliable-task.local-scheduler.fixed-delay", "type": "java.time.Duration", "defaultValue": "5s"},
+    {"name": "xjtu.iron.reliable-task.local-scheduler.store-name", "type": "java.lang.String", "defaultValue": "default"},
+    {"name": "xjtu.iron.reliable-task.local-scheduler.batch-size", "type": "java.lang.Integer", "defaultValue": 100}
+  ]
+}

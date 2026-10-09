@@ -150,7 +150,7 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
     void directResolverWithoutShardInfoShouldReuseOnlyDatasourceNotBusinessTable() {
         StorageRouteResolver directResolver = context -> StorageRoute.builder()
                 .context(context)
-                .location(PhysicalStorageLocation.of("single-db", "business_order"))
+                .physicalLocation(PhysicalStorageLocation.of("single-db", "business_order"))
                 .build();
 
         StorageRoutingIdempotencyJdbcRouteResolver resolver = resolver(
@@ -171,7 +171,7 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
         TestStorageRouteContext current = new TestStorageRouteContext();
         current.set(StorageRoute.builder()
                 .context(RouteContext.builder().routeName("order").logicalTable("business_order").build())
-                .location(PhysicalStorageLocation.of("order-db", "business_order"))
+                .physicalLocation(PhysicalStorageLocation.of("order-db", "business_order"))
                 .build());
 
         StorageRouteResolver routeResolver = context -> {
@@ -213,7 +213,7 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
         return StorageRoute.builder()
                 .context(context)
                 .shardInfo(shardInfo)
-                .location(PhysicalStorageLocation.of(dataSourceKey, tableName))
+                .physicalLocation(PhysicalStorageLocation.of(dataSourceKey, tableName))
                 .build();
     }
 

@@ -71,7 +71,7 @@ storage-routing-starter
     StorageRoutingProperties
 ```
 
-`StorageRoute` 组合 `context`、`shardInfo`、`location`。`RouteContext` 保存场景、逻辑表、类型化分片键和扩展属性；
+`StorageRoute` 组合 `context`、`shardInfo`、`physicalLocation`。`RouteContext` 保存场景、逻辑表、类型化分片键和扩展属性；
 `StorageRouteContext` 负责访问调用链中的路由结果，两者职责不同。
 
 单字段与复合字段统一使用 `CompositeShardKey`。`ShardResolver` 只计算分片，`RouteMappingStrategy` 只映射物理位置，
@@ -84,14 +84,28 @@ ShardingSphere-JDBC 与 ShardingSphere-Proxy 模式返回逻辑表。Spring Boot
 
 ```properties
 xjtu.iron.storage-routing.resolver.enabled=true
-xjtu.iron.storage-routing.resolver.data-source-prefix=order-db-
-xjtu.iron.storage-routing.resolver.table-prefix=business_order
-xjtu.iron.storage-routing.resolver.database-count=10
-xjtu.iron.storage-routing.resolver.tables-per-database=10
-xjtu.iron.storage-routing.resolver.data-source-index-width=2
-xjtu.iron.storage-routing.resolver.table-index-width=2
-xjtu.iron.storage-routing.resolver.table-index-mode=GLOBAL_TABLE_INDEX
+xjtu.iron.storage-routing.resolver.type=HASH
+xjtu.iron.storage-routing.resolver.hash.data-source-prefix=order-db-
+xjtu.iron.storage-routing.resolver.hash.table-prefix=business_order
+xjtu.iron.storage-routing.resolver.hash.database-count=10
+xjtu.iron.storage-routing.resolver.hash.tables-per-database=10
+xjtu.iron.storage-routing.resolver.hash.data-source-index-width=2
+xjtu.iron.storage-routing.resolver.hash.table-index-width=2
+xjtu.iron.storage-routing.resolver.hash.table-index-mode=GLOBAL_TABLE_INDEX
 ```
+
+固定直连同样属于 `DIRECT_DATASOURCE`，但不需要 shardKey：
+
+```properties
+xjtu.iron.storage-routing.resolver.enabled=true
+xjtu.iron.storage-routing.resolver.type=FIXED
+xjtu.iron.storage-routing.resolver.fixed.data-source-key=primaryDataSource
+xjtu.iron.storage-routing.resolver.fixed.table-name=business_order
+```
+
+`mode` 回答由应用直连还是交给中间件执行；`resolver.type` 回答 Direct 下是固定位置还是按 key 哈希。
+因此 HASH 分片直连是合法组合。当前 Starter 每个 ApplicationContext 只自动装配一套全局 mode 和一套默认 Resolver；
+若同一应用要同时服务固定表与分片表，应由业务提供一个按 routeName/logicalTable 委托的组合 Resolver，而不是注册多个无限定名的全局 Bean。
 
 ShardingSphere-JDBC 模式：
 

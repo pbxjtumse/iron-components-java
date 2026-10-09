@@ -38,6 +38,7 @@ iron-components-java
 │   ├── foundation-component
 │   ├── concurrency-component
 │   ├── retry-component
+│   ├── reliable-task-component
 │   ├── transaction-component
 │   ├── idempotent-component
 │   ├── distributed-lock-component
@@ -60,6 +61,7 @@ iron-components-java
 | Foundation | foundation-core / time / id / codec / context / reflection / resource / serialization / test-support | 可作为底层依赖使用 | 通用工具门面、时间、ID、序列化、上下文、测试支撑 |
 | Concurrency | api / config / core / provider / integrations / starter / demo | 一期能力较完整 | 线程池、异步任务、排队超时、执行超时、fallback、取消、任务状态、指标 |
 | Retry | api / core / config / demo | 核心能力已落地 | 显式、有限、可观测的进程内重试 |
+| Reliable Task | api / core / provider-jdbc / starter | v1 已生成，待完整环境回归 | 持久化任务、CAS 抢占、Lease、扫描兜底、跨进程恢复与对账状态 |
 | Transaction | api / spi / core / provider-spring / starter / demo | 本地事务抽象已落地 | 为幂等、消息、可靠任务提供统一事务执行边界 |
 | Idempotent | api / core / provider-redis / provider-jdbc / integration / starter / demo | 主链路已成型 | RPC、消息、任务等场景的幂等状态机、结果回放、恢复接管 |
 | Distributed Lock | api / spi / core / redis / redisson / jdbc-fencing / starter / demo | 收口完善中 | 分布式互斥、续租、Watchdog、Owner Token、Fencing Token |
@@ -590,18 +592,18 @@ storage-routing-starter
 
 短期重点：
 
-1. message-component 二期发送可靠性收口。
-2. message-component 消费可靠性接入幂等、事务、ACK / redelivery 映射。
-3. idempotent-provider-jdbc 与 storage-routing 协同。
-4. distributed-lock 继续收口文档、边界和 Provider 一致性。
-5. governance / observability 成为其他组件的统一接入点。
-6. cache 二期围绕多实例失效、互斥加载、动态策略和指标展开。
+1. reliable-task-component v1 完整 Maven/H2 回归和真实 MySQL 验证。
+2. message-component 二期发送可靠性通过 Message Outbox 接入 Reliable Task。
+3. message-component 消费可靠性接入幂等、事务、ACK / redelivery 映射。
+4. idempotent-provider-jdbc 与 storage-routing 协同，并接入 Reliable Task Recovery。
+5. distributed-lock 继续收口文档、边界和 Provider 一致性。
+6. governance / observability 成为其他组件的统一接入点。
 
 中期重点：
 
 1. Reliable Consume：Message + Idempotent + Transaction。
 2. Reliable Send：Message + Retry + Outbox。
-3. Persistent Retry / Task：长周期恢复、扫描、Claim / Lease。
+3. Reliable Task integrations：Storage Routing、Idempotency Recovery、Remote Command。
 4. Consistency：Outbox、补偿、死信、人工重放。
 5. Data Access Governance：Storage Routing + Relational Access + SQL 治理。
 

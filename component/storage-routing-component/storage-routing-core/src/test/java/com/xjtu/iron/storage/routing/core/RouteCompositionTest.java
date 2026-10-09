@@ -19,19 +19,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class RouteCompositionTest {
 
     @Test
-    void resolverShouldComposeContextShardAndLocationWithoutDroppingCompositeFields() {
+    void resolverShouldComposeContextShardAndPhysicalLocationWithoutDroppingCompositeFields() {
         CompositeShardKey key = CompositeShardKey.of(ShardKey.of("tenant_id", 42L), ShardKey.of("order_id", "8"));
         RouteContext context = RouteContext.builder().routeName("order-create").logicalTable("business_order")
                 .shardKey(key).attribute("traceId", "trace-1").build();
         ShardRouteInfo shard = new ShardRouteInfo(56, 5, 6, 100);
-        PhysicalStorageLocation location = PhysicalStorageLocation.of("db_05", "business_order_56");
+        PhysicalStorageLocation physicalLocation = PhysicalStorageLocation.of("db_05", "business_order_56");
         DefaultStorageRouteResolver resolver = new DefaultStorageRouteResolver(actual -> {
             // 计算器只能看到分片键，不能依赖场景、逻辑表或扩展元数据。
             assertThat(actual).isSameAs(key);
             return shard;
         }, actual -> {
             assertThat(actual).isSameAs(shard);
-            return location;
+            return physicalLocation;
         });
 
         StorageRoute route = resolver.resolve(context);
@@ -39,8 +39,8 @@ class RouteCompositionTest {
         assertThat(route.context()).isSameAs(context);
         assertThat(route.context().shardKey().keys()).containsExactlyElementsOf(key.keys());
         assertThat(route.shardInfo()).isSameAs(shard);
-        assertThat(route.location()).isEqualTo(location);
-        assertThat(route.physicalLocation()).isSameAs(route.location());
+        assertThat(route.physicalLocation()).isEqualTo(physicalLocation);
+        assertThat(route.requirePhysicalLocation()).isSameAs(route.physicalLocation());
         assertThat(route.context().routeName()).isEqualTo(context.routeName());
         assertThat(route.context().logicalTable()).isEqualTo(context.logicalTable());
         assertThat(route.context().attributes()).isSameAs(context.attributes());

@@ -66,12 +66,13 @@ public class IdempotencyStorageRoutingAutoConfiguration {
             StorageRoutingProperties storageRouting
     ) {
         StorageRoutingProperties.Resolver routing = storageRouting.getResolver();
+        StorageRoutingProperties.Hash hash = routing.getHash();
         return new RouteMappingStrategyFactory(
-                routing.getDataSourcePrefix(),
+                hash.getDataSourcePrefix(),
                 idempotencyRouting.getTablePrefix(),
-                routing.getDataSourceIndexWidth(),
-                routing.getTableIndexWidth())
-                .create(routing.getTableIndexMode());
+                hash.getDataSourceIndexWidth(),
+                hash.getTableIndexWidth())
+                .create(hash.getTableIndexMode());
     }
 
     @Bean

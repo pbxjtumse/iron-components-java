@@ -148,11 +148,86 @@ scanBucket query
 candidate
     ↓
 recover(expectedOwner, expectedVersion)
+IdempotencyRepository API
+      ↓
+RoutedJdbcIdempotencyRepository
+      ↓
+IdempotencyJdbcRouteResolver
+      ↓
+IdempotencyJdbcRoute(dataSourceKey, tableName)
+      ↓
+JdbcExecutionManagerResolver
+      ↓
+JdbcIdempotencyRepository
+```
+
+`SpringTransactionJdbcExecutionManager` 使用 `DataSourceUtils` 获取事务绑定连接。业务 SQL 与 `markSuccess` 要复用同一连接，必须同时满足：
+
+1. 两者位于同一个 Spring 本地事务。
+2. 两者的 `StorageRoute.dataSourceKey` 相同。
+3. `TransactionManager` 与 `JdbcExecutionManager` 使用该 key 对应的同一个 `DataSource`。
+
+组件不会把跨库操作伪装成单库原子事务。10 库模式下需要按 `dataSourceKey` 选择匹配的事务执行器。
+
+## 9. 10 库 × 10 表配置
+
+全局编号模式（`db_00` 为表 00-09，`db_01` 为表 10-19）：
+
+```yaml
+xjtu:
+  iron:
+    storage-routing:
+      resolver:
+        enabled: true
+        type: HASH
+        hash:
+          data-source-prefix: db_
+          database-count: 10
+          tables-per-database: 10
+          data-source-index-width: 2
+          table-index-width: 2
+          table-index-mode: GLOBAL_TABLE_INDEX
+    idempotent:
+      jdbc:
+        routing:
+          enabled: true
+          logical-table: iron_idempotency_record
+          table-prefix: iron_idempotency_record
+```
+
+库内编号模式（每个库都是表 00-09）只需切换：
+
+```yaml
+table-index-mode: LOCAL_TABLE_INDEX
 ```
 
 候选快照不是执行许可，真正执行前仍必须经过 Repository 的第二次原子检查。
 
 ## 9. 验证清单
+```yaml
+xjtu.iron.idempotent.jdbc.table-name: iron_idempotency_record
+```
+
+这种普通单库单表模式不要开启 `xjtu.iron.idempotent.jdbc.direct.enabled`。该开关专用于
+Storage Routing 驱动的 DataSource 资源目录、路由型 JDBC Repository 和 Tx-A/B/C 多资源选择；
+它不是 JDBC Provider 的通用启用开关。
+
+`logical-table` 是路由语义，`table-prefix` 是分片表前缀，`table-name` 是固定模式完整表名，三者不应混用。
+
+## 10. 数据结构变更
+
+本轮是未上线阶段的破坏性清理：
+
+- 删除 `IdempotencyRequest.shardKey` 和 Builder 方法。
+- 删除 `IdempotencyRecoveryRequest.shardKey`。
+- 删除 `IdempotencyStorageContext.shardKey`。
+- 删除 `IdempotencyRecord`、`IdempotencyRecoveryCandidate` 的 shardKey。
+- 删除 JDBC `shard_key` 列和索引。
+- 删除 Redis Hash 的 `shard_key` 字段并同步所有 Lua 参数及快照下标。
+
+如果本地已有旧测试库或 Redis 测试数据，应重新建表并清理旧 key；当前不提供旧 schema 的在线迁移兼容逻辑。
+
+## 11. 验证清单
 
 1. 无业务 route 时，默认按幂等 key 计算一次 route。
 2. 有业务 route 时复用现有 `StorageRoute`，不重新 hash。

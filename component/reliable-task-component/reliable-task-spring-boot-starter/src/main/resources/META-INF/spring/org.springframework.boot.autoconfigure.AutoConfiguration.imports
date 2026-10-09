@@ -1,0 +1,2 @@
+com.xjtu.iron.reliable.task.starter.ReliableTaskAutoConfiguration
+com.xjtu.iron.reliable.task.starter.LocalReliableTaskSchedulerConfiguration

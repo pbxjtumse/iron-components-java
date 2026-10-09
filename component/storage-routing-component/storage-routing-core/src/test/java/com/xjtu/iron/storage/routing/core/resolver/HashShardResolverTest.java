@@ -55,8 +55,8 @@ class HashShardResolverTest {
         assertThat(global.context()).isSameAs(context);
         assertThat(global.shardInfo()).isEqualTo(new ShardRouteInfo(42, 4, 2, 100));
         assertThat(local.shardInfo()).isEqualTo(global.shardInfo());
-        assertThat(global.location()).isEqualTo(PhysicalStorageLocation.of("db_04", "order_42"));
-        assertThat(local.location()).isEqualTo(PhysicalStorageLocation.of("db_04", "order_02"));
+        assertThat(global.physicalLocation()).isEqualTo(PhysicalStorageLocation.of("db_04", "order_42"));
+        assertThat(local.physicalLocation()).isEqualTo(PhysicalStorageLocation.of("db_04", "order_02"));
     }
 
     @Test
@@ -73,7 +73,7 @@ class HashShardResolverTest {
                 .shardKey(key).attribute("traceId", "different").build());
 
         assertThat(order.shardInfo()).isEqualTo(event.shardInfo());
-        assertThat(order.location()).isEqualTo(PhysicalStorageLocation.of("db_04", "order_42"));
-        assertThat(event.location()).isEqualTo(PhysicalStorageLocation.of("db_04", "outbox_42"));
+        assertThat(order.physicalLocation()).isEqualTo(PhysicalStorageLocation.of("db_04", "order_42"));
+        assertThat(event.physicalLocation()).isEqualTo(PhysicalStorageLocation.of("db_04", "outbox_42"));
     }
 }

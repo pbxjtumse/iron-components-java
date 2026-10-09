@@ -12,7 +12,7 @@
 | RouteContext | routeName、logicalTable、CompositeShardKey、attributes |
 | ShardRouteInfo | shardId、databaseIndex、localTableIndex、totalShardCount |
 | PhysicalStorageLocation | 完整物理 dataSourceKey 和 tableName |
-| StorageRoute | context、shardInfo、location、mode |
+| StorageRoute | context、shardInfo、physicalLocation、mode |
 
 StorageRoute 的核心结构：
 
@@ -21,7 +21,7 @@ public final class StorageRoute {
     private final StorageRouteMode mode;
     private final RouteContext context;
     private final ShardRouteInfo shardInfo;
-    private final PhysicalStorageLocation location;
+    private final PhysicalStorageLocation physicalLocation;
 }
 ```
 
@@ -112,7 +112,9 @@ order_00 ~ order_99。若希望表名使用跨库全局编号，则使用 GLOBAL
 - CompositeShardKey 必须非空，不允许 null 元素或重复字段名；单字段也用单元素集合表达。
 - RouteContext 可不带键，以容纳固定直连元数据；需要计算分片的解析器在计算前拒绝缺失的键。
 - DIRECT_DATASOURCE 必须有完整物理位置；固定直连可没有 shardInfo。
-- location 与 physicalLocation() 是同一份状态；物理位置未知时，dataSourceKey()/tableName() 返回 null，不以逻辑表替代。
+- 物理位置只通过 physicalLocation()/requirePhysicalLocation() 访问；不再保留 location() 重复入口。
+- requireShardInfo()/requirePhysicalLocation() 在当前形态不具备相应结果时给出明确异常，避免深层 NPE。
+- fixedDirect(...)、shardedDirect(...)、middleware(...) 分别表达三种合法形态；优先于通用 Builder。
 - StorageRoute.Builder 只接收完整 RouteContext，不提供平铺的 routeName/logicalTable/shardKey 字段设置入口，防止两份输入互相覆盖。
 - 扩展 attributes 不控制标准分片字段；即使存在同名属性，也不会覆盖显式模型。
 - 分片数量、索引范围、乘法溢出、空解析结果等仍在边界校验；物理编号使用 Locale.ROOT。
@@ -130,7 +132,7 @@ order_00 ~ order_99。若希望表名使用跨库全局编号，则使用 GLOBAL
 | 分片输入 | 统一为 CompositeShardKey |
 | 路由入口 | StorageRouteResolver.resolve(RouteContext) |
 | 分片入口 | ShardResolver.resolve(CompositeShardKey) |
-| StorageRoute.Builder | 只接收 context(...)、shardInfo(...)、location(...) 或物理库表字段 |
+| StorageRoute.Builder | 只接收 context(...)、shardInfo(...)、physicalLocation(...) 或物理库表字段 |
 | 分片编号放入 attributes | 不再注入；使用 route.shardInfo() |
 
 组件尚未上线，不保留额外入口；路由、分片、映射各自只有一套主契约。

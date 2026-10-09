@@ -7,8 +7,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Storage Routing 自动装配配置。
  *
- * <p>默认只装配上下文和 relational bridge。默认解析器需要显式启用，因为库表数量、
- * 数据源前缀和表前缀都属于业务路由规则，不应在没有配置时猜测。</p>
+ * <p>默认只装配上下文和 relational bridge。Direct Resolver 需要显式启用，并通过 type 区分
+ * 固定直连（FIXED）和按 key 分片直连（HASH），避免把执行模式与路由算法混为一谈。</p>
  */
 @ConfigurationProperties(prefix = "xjtu.iron.storage-routing")
 public class StorageRoutingProperties {
@@ -69,13 +69,25 @@ public class StorageRoutingProperties {
     public static final class Resolver {
 
         private boolean enabled;
-        private String dataSourcePrefix = "db_";
-        private String tablePrefix = "order";
-        private int databaseCount = 1;
-        private int tablesPerDatabase = 1;
-        private int dataSourceIndexWidth = 2;
-        private int tableIndexWidth = 2;
-        private TableIndexMode tableIndexMode = TableIndexMode.GLOBAL_TABLE_INDEX;
+        private ResolverType type = ResolverType.HASH;
+        private final Fixed fixed = new Fixed();
+        private final Hash hash = new Hash();
+
+        public ResolverType getType() {
+            return type;
+        }
+
+        public void setType(ResolverType type) {
+            this.type = type;
+        }
+
+        public Fixed getFixed() {
+            return fixed;
+        }
+
+        public Hash getHash() {
+            return hash;
+        }
 
         public boolean isEnabled() {
             return enabled;
@@ -84,6 +96,44 @@ public class StorageRoutingProperties {
         public void setEnabled(boolean enabled) {
             this.enabled = enabled;
         }
+    }
+
+    public enum ResolverType {
+        FIXED,
+        HASH
+    }
+
+    public static final class Fixed {
+
+        private String dataSourceKey;
+        private String tableName;
+
+        public String getDataSourceKey() {
+            return dataSourceKey;
+        }
+
+        public void setDataSourceKey(String dataSourceKey) {
+            this.dataSourceKey = dataSourceKey;
+        }
+
+        public String getTableName() {
+            return tableName;
+        }
+
+        public void setTableName(String tableName) {
+            this.tableName = tableName;
+        }
+    }
+
+    public static final class Hash {
+
+        private String dataSourcePrefix = "db_";
+        private String tablePrefix = "order";
+        private int databaseCount = 1;
+        private int tablesPerDatabase = 1;
+        private int dataSourceIndexWidth = 2;
+        private int tableIndexWidth = 2;
+        private TableIndexMode tableIndexMode = TableIndexMode.GLOBAL_TABLE_INDEX;
 
         public String getDataSourcePrefix() {
             return dataSourcePrefix;

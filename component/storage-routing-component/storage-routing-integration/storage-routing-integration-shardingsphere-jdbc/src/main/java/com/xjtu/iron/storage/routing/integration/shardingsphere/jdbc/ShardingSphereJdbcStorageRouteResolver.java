@@ -23,6 +23,6 @@ public final class ShardingSphereJdbcStorageRouteResolver implements StorageRout
             throw new StorageRoutingException("logicalTable is required for SHARDINGSPHERE_JDBC routing");
         }
         required.requireShardKey();
-        return StorageRoute.builder().mode(StorageRouteMode.SHARDINGSPHERE_JDBC).context(required).build();
+        return StorageRoute.middleware(StorageRouteMode.SHARDINGSPHERE_JDBC, required);
     }
 }

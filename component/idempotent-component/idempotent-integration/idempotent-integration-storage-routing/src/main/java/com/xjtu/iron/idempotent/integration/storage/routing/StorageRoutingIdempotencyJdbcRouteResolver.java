@@ -164,11 +164,7 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
     }
 
     private StorageRoute remap(RouteContext context, ShardRouteInfo shardInfo) {
-        return StorageRoute.builder()
-                .context(context)
-                .shardInfo(shardInfo)
-                .location(idempotencyMappingStrategy.map(shardInfo))
-                .build();
+        return StorageRoute.shardedDirect(context, shardInfo, idempotencyMappingStrategy.map(shardInfo));
     }
 
     /** 有 shardInfo 就重新映射幂等表；无 shardInfo 就只复用 dataSourceKey。 */
@@ -187,10 +183,7 @@ public final class StorageRoutingIdempotencyJdbcRouteResolver implements Idempot
     }
 
     private StorageRoute directIdempotencyRoute(RouteContext context, String dataSourceKey) {
-        return StorageRoute.builder()
-                .context(context)
-                .location(PhysicalStorageLocation.of(dataSourceKey, directTableName))
-                .build();
+        return StorageRoute.fixedDirect(context, PhysicalStorageLocation.of(dataSourceKey, directTableName));
     }
 
     private IdempotencyJdbcRoute toJdbcRoute(StorageRoute route) {

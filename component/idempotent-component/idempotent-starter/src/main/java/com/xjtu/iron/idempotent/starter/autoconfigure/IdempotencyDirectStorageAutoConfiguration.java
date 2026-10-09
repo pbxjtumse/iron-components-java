@@ -10,9 +10,11 @@ import com.xjtu.iron.idempotent.starter.properties.IdempotencyProperties;
 import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
+import com.xjtu.iron.storage.routing.api.route.StorageRouteMode;
 import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
 import com.xjtu.iron.storage.routing.starter.autoconfigure.StorageRoutingProperties;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutorResolver;
+import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.ObjectProvider;
@@ -41,22 +43,43 @@ public class IdempotencyDirectStorageAutoConfiguration {
 
     @Bean
     public JdbcExecutionManagerResolver directJdbcExecutionManagerResolver(DirectStorageResourceRegistry resources,
-            IdempotencyProperties properties, StorageRoutingProperties routingProperties, StorageRouteResolver routeResolver,
-            StorageRouteContext routeContext, IdempotencyJdbcRouteResolver jdbcRouteResolver) {
-        // 这些依赖缺失时启动失败，不能退回固定表/无路由事务。
+            IdempotencyProperties properties, StorageRoutingProperties routingProperties,
+            ObjectProvider<StorageRouteResolver> routeResolvers,
+            ObjectProvider<StorageRouteContext> routeContexts,
+            ObjectProvider<IdempotencyJdbcRouteResolver> jdbcRouteResolvers) {
+        // 显式说明不合法的配置组合，避免依赖缺失时只得到多层 UnsatisfiedDependencyException。
         if (!properties.isEnabled() || !properties.getJdbc().isEnabled() || !properties.getTransaction().isEnabled()) {
             throw new IllegalStateException("direct storage requires idempotency, JDBC and transaction to be enabled");
         }
+        if (routingProperties.getMode() != StorageRouteMode.DIRECT_DATASOURCE) {
+            throw new IllegalStateException("idempotent JDBC direct storage requires storage-routing mode DIRECT_DATASOURCE");
+        }
+        requireExactlyOne(routeResolvers, "StorageRouteResolver",
+                "enable xjtu.iron.storage-routing.resolver or define one custom StorageRouteResolver bean");
+        requireExactlyOne(routeContexts, "StorageRouteContext",
+                "enable storage-routing or define one custom StorageRouteContext bean");
+        List<IdempotencyJdbcRouteResolver> jdbcResolvers = jdbcRouteResolvers.orderedStream().toList();
+        if (jdbcResolvers.size() != 1) {
+            throw new IllegalStateException("direct storage requires exactly one IdempotencyJdbcRouteResolver, but found "
+                    + jdbcResolvers.size());
+        }
+        IdempotencyJdbcRouteResolver jdbcRouteResolver = jdbcResolvers.get(0);
         if (!(jdbcRouteResolver instanceof StorageRoutingIdempotencyJdbcRouteResolver)) {
             throw new IllegalStateException("direct storage requires the storage-routing JDBC route resolver");
         }
         StorageRoutingProperties.Resolver routing = routingProperties.getResolver();
         if (routing.isEnabled()) {
-            var mapping = new RouteMappingStrategyFactory(routing.getDataSourcePrefix(), "validation", routing.getDataSourceIndexWidth(), routing.getTableIndexWidth())
-                    .create(routing.getTableIndexMode());
-            int total = Math.multiplyExact(routing.getDatabaseCount(), routing.getTablesPerDatabase());
-            for (int db = 0; db < routing.getDatabaseCount(); db++) {
-                resources.require(mapping.map(new ShardRouteInfo(db * routing.getTablesPerDatabase(), db, 0, total)).dataSourceKey());
+            if (routing.getType() == StorageRoutingProperties.ResolverType.FIXED) {
+                resources.require(routing.getFixed().getDataSourceKey());
+            } else {
+                StorageRoutingProperties.Hash hash = routing.getHash();
+                var mapping = new RouteMappingStrategyFactory(hash.getDataSourcePrefix(), "validation",
+                        hash.getDataSourceIndexWidth(), hash.getTableIndexWidth()).create(hash.getTableIndexMode());
+                int total = Math.multiplyExact(hash.getDatabaseCount(), hash.getTablesPerDatabase());
+                for (int db = 0; db < hash.getDatabaseCount(); db++) {
+                    resources.require(mapping.map(new ShardRouteInfo(db * hash.getTablesPerDatabase(), db, 0, total))
+                            .dataSourceKey());
+                }
             }
         }
         return resources.jdbcExecutionManagerResolver();
@@ -76,5 +99,13 @@ public class IdempotencyDirectStorageAutoConfiguration {
                 throw new IllegalStateException("direct storage requires one registry-owned JDBC resolver, transaction resolver and coordinator; remove competing beans");
             }
         };
+    }
+
+    private static <T> void requireExactlyOne(ObjectProvider<T> provider, String type, String remedy) {
+        long count = provider.stream().count();
+        if (count != 1) {
+            throw new IllegalStateException("direct storage requires exactly one " + type + ", but found " + count
+                    + "; " + remedy);
+        }
     }
 }

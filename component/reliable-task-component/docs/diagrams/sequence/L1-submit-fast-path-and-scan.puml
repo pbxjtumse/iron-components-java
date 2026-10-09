@@ -1,0 +1,36 @@
+@startuml
+title L1 - 业务事务、快速路径与扫描兜底
+
+actor Business
+participant Transaction
+participant ReliableTaskClient as Client
+database Repository as Repo
+participant ReliableTaskEngine as Engine
+participant ReliableTaskHandler as Handler
+participant ReliableTaskScanner as Scanner
+
+Business -> Transaction : begin
+Business -> Business : INSERT business data
+Business -> Client : submit(task)
+Client -> Repo : INSERT READY
+Repo --> Client : CREATED
+Business -> Transaction : commit
+
+Business -> Client : runNow(taskKey)
+Client -> Repo : find(taskKey)
+Client -> Engine : runCandidate(snapshot)
+Engine -> Repo : tryClaim(version, owner, lease)
+Repo --> Engine : RUNNING / claimed
+Engine -> Handler : execute(context)
+Handler --> Engine : SUCCESS / RETRY / RECONCILE / MANUAL / DEAD
+Engine -> Repo : transition(owner, version)
+
+... process crashes before runNow ...
+Scanner -> Repo : findDue(store, bucket, now)
+Repo --> Scanner : candidate snapshots
+Scanner -> Engine : runCandidate(each)
+note right of Engine
+快速路径和扫描路径
+最终进入同一个 CAS 执行模板
+end note
+@enduml
