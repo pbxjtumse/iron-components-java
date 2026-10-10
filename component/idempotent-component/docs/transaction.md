@@ -40,15 +40,17 @@ Tx-B REQUIRED
 
 为什么是 REQUIRED：如果调用方已经存在外层事务，幂等业务必须加入外层事务，不能提前独立提交 SUCCESS 后再让外层业务回滚。
 
-## 4. transaction-bound Connection
+## 4. transaction-bound SqlSession
 
 只创建 `TransactionExecutor` 不够。
 
-如果 Business 使用 Connection-A，而 `markSuccess()` 再 `dataSource.getConnection()` 得到 Connection-B，仍然是两个提交点。
+如果 Business Mapper 使用 DataSource-A，而 `markSuccess()` 通过另一个 DataSource/SqlSessionFactory 执行，
+仍然是两个提交点。
 
-`SpringTransactionJdbcExecutionManager` 使用 Spring transaction-bound Connection，确保 Business SQL 与幂等 final state 真正位于同一本地事务资源。
+`SpringMyBatisAccess` 复用 Spring 管理的 `SqlSessionTemplate`，并校验当前事务绑定了
+同一 DataSource，确保 Business SQL 与幂等 final state 真正位于同一本地事务资源。
 
-如果当前事务没有绑定幂等 JDBC 使用的 DataSource，集成层应 fail-fast。
+如果当前事务没有绑定幂等 MyBatis Access 使用的 DataSource，集成层会 fail-fast。
 
 ## 5. owner/version CAS 为什么还必须保留
 
@@ -122,7 +124,7 @@ TRANSACTION_COMMIT_UNKNOWN
 本地事务只解决同一事务资源：
 
 ```text
-Business SQL + Idempotency JDBC Repository
+Business SQL + Idempotency MyBatis Repository
 ```
 
 不能自动解决跨库、Redis + DB、银行 HTTP、MQ 等外部副作用。此类仍需下游幂等、Outbox / 事务消息、补偿和对账。

@@ -41,10 +41,10 @@ class FencingTokenCoordinatorTest {
 
     @Test
     void explicitExternalProviderShouldOverrideNativeSupport() {
-        com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider external = provider("jdbc-sequence", 10L);
+        com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider external = provider("mybatis-sequence", 10L);
         FencingTokenCoordinator coordinator = new FencingTokenCoordinator(new DefaultFencingTokenProviderRegistry(List.of(external)));
         FencingTokenPlan plan = coordinator.plan(lockProvider(true),
-                LockOptions.builder().fencingRequired(true) .fencingTokenProviderName("jdbc-sequence").build());
+                LockOptions.builder().fencingRequired(true) .fencingTokenProviderName("mybatis-sequence").build());
         assertThat(plan.mode()).isEqualTo(FencingTokenMode.EXTERNAL);
         assertThat(plan.externalProvider()).contains(external);
     }
@@ -60,7 +60,7 @@ class FencingTokenCoordinatorTest {
 
     @Test
     void shouldNotGuessDefaultExternalProviderWhenProviderNameIsMissing() {
-        com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider external = provider("jdbc-sequence", 10L);
+        com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider external = provider("mybatis-sequence", 10L);
         FencingTokenCoordinator coordinator = new FencingTokenCoordinator(new DefaultFencingTokenProviderRegistry(List.of(external)));
 
         assertThatThrownBy(() -> coordinator.plan(lockProvider(false),

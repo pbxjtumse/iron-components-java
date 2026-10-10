@@ -12,19 +12,19 @@ class DefaultFencingTokenProviderRegistryTest {
 
     @Test
     void shouldFindProviderOnlyByExplicitName() {
-        com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider jdbc = provider("jdbc-sequence");
+        com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider jdbc = provider("mybatis-sequence");
         DefaultFencingTokenProviderRegistry registry =
                 new DefaultFencingTokenProviderRegistry(List.of(jdbc));
 
-        assertThat(registry.findProvider("jdbc-sequence")).contains(jdbc);
+        assertThat(registry.findProvider("mybatis-sequence")).contains(jdbc);
         assertThat(registry.findProvider("missing")).isEmpty();
-        assertThat(registry.providerNames()).containsExactly("jdbc-sequence");
+        assertThat(registry.providerNames()).containsExactly("mybatis-sequence");
     }
 
     @Test
     void blankProviderNameShouldNotImplicitlySelectSoleProvider() {
         DefaultFencingTokenProviderRegistry registry =
-                new DefaultFencingTokenProviderRegistry(List.of(provider("jdbc-sequence")));
+                new DefaultFencingTokenProviderRegistry(List.of(provider("mybatis-sequence")));
 
         assertThat(registry.findProvider(null)).isEmpty();
         assertThat(registry.findProvider("   ")).isEmpty();

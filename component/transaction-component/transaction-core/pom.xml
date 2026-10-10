@@ -12,12 +12,10 @@
         <dependency>
             <groupId>com.xjtu.iron</groupId>
             <artifactId>transaction-api</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.xjtu.iron</groupId>
             <artifactId>transaction-spi</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

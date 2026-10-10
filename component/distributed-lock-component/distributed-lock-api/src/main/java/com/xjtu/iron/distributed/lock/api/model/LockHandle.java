@@ -76,7 +76,7 @@ public interface LockHandle extends AutoCloseable {
      * fencing token 的来源 Provider。
      *
      * <p>Redis 原生 INCR 模式通常返回 {@code redis}；独立 DB sequence 模式通常返回
-     * {@code jdbc-sequence}。未启用 fencing 时为空。</p>
+     * {@code mybatis-sequence}。未启用 fencing 时为空。</p>
      */
     default Optional<String> fencingTokenProviderName() {
         return Optional.empty();

@@ -21,10 +21,6 @@
             <groupId>com.xjtu.iron</groupId>
             <artifactId>storage-routing-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.xjtu.iron</groupId>
-            <artifactId>storage-routing-integration-relational</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>

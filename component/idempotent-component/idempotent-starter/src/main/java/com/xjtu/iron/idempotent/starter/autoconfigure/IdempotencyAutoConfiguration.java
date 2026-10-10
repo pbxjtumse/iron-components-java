@@ -27,21 +27,17 @@ import com.xjtu.iron.idempotent.core.repository.IdempotencyRepositoryRegistry;
 import com.xjtu.iron.idempotent.core.state.DefaultIdempotencyStateMachine;
 import com.xjtu.iron.idempotent.core.state.IdempotencyStateMachine;
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionCoordinator;
-import com.xjtu.iron.idempotent.integration.transaction.SpringTransactionJdbcExecutionManager;
 import com.xjtu.iron.idempotent.integration.transaction.TransactionTemplateIdempotencyTransactionCoordinator;
-import com.xjtu.iron.idempotent.provider.jdbc.execution.DataSourceJdbcExecutionManager;
-import com.xjtu.iron.idempotent.provider.jdbc.execution.FixedJdbcExecutionManagerResolver;
-import com.xjtu.iron.idempotent.provider.jdbc.execution.JdbcExecutionManager;
-import com.xjtu.iron.idempotent.provider.jdbc.execution.JdbcExecutionManagerResolver;
-import com.xjtu.iron.idempotent.provider.jdbc.repository.RoutedJdbcIdempotencyRepository;
-import com.xjtu.iron.idempotent.provider.jdbc.routing.FixedIdempotencyJdbcRouteResolver;
-import com.xjtu.iron.idempotent.provider.jdbc.routing.IdempotencyJdbcRouteResolver;
+import com.xjtu.iron.idempotent.provider.mybatis.repository.RoutedMyBatisIdempotencyRepository;
+import com.xjtu.iron.idempotent.provider.mybatis.routing.FixedIdempotencyPhysicalRouteResolver;
+import com.xjtu.iron.idempotent.provider.mybatis.routing.IdempotencyPhysicalRouteResolver;
 import com.xjtu.iron.idempotent.provider.redis.repository.RedisIdempotencyRepository;
 import com.xjtu.iron.idempotent.starter.hash.JacksonSha256IdempotencyRequestHasher;
 import com.xjtu.iron.idempotent.starter.observation.JacksonIdempotencySnapshotPolicyFactory;
 import com.xjtu.iron.idempotent.starter.observation.MicrometerIdempotencyMetrics;
 import com.xjtu.iron.idempotent.starter.properties.IdempotencyProperties;
 import com.xjtu.iron.idempotent.starter.result.SpringIdempotencyEventPublisher;
+import com.xjtu.iron.relational.mybatis.MyBatisAccessResolver;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutor;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
@@ -56,7 +52,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import javax.sql.DataSource;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -69,15 +64,15 @@ import java.util.Map;
  * <p>Starter 只负责“把现有能力拼起来”，不承载幂等状态机。装配顺序可以理解为：</p>
  * <pre>
  * 基础 SPI（owner/failure/hash/result factory）
- *   -> Repository（Redis/JDBC）
- *   -> transaction-aware JdbcExecutionManager / TransactionCoordinator
+ *   -> Repository（Redis/MyBatis）
+ *   -> transaction-aware MyBatisAccess / TransactionCoordinator
  *   -> RepositoryRegistry
  *   -> PolicyRegistry
  *   -> DefaultIdempotencyExecutor
  *   -> RecoveryQueryService
  * </pre>
  *
- * <p>尤其注意：是否启用 Tx-B 不是单靠配置 boolean 决定，而是 TransactionExecutor 存在 + JDBC execution manager
+ * <p>尤其注意：是否启用 Tx-B 不是单靠配置 boolean 决定，而是 TransactionExecutor 存在 + MyBatis Access
  * 真正支持 current transaction participation 两个条件共同决定。</p>
  */
 @AutoConfiguration(afterName = "com.xjtu.iron.transaction.starter.autoconfigure.TransactionAutoConfiguration")
@@ -155,44 +150,6 @@ public class IdempotencyAutoConfiguration {
     }
 
     /**
-     * 为 JDBC Repository 选择 Connection/事务执行方式。
-     *
-     * <p>有 transaction-component 时使用 SpringTransactionJdbcExecutionManager，使 Tx-A/Tx-C 走 REQUIRES_NEW，
-     * markSuccess 能复用 Tx-B 当前 Connection；没有事务模板时退化为普通 DataSource 模式，但不会宣称业务与 SUCCESS 原子。</p>
-     */
-    @Bean
-    @ConditionalOnBean(DataSource.class)
-    @ConditionalOnMissingBean({JdbcExecutionManager.class, JdbcExecutionManagerResolver.class})
-    public JdbcExecutionManager idempotencyJdbcExecutionManager(
-            DataSource dataSource,
-            ObjectProvider<TransactionExecutor> transactionExecutor,
-            IdempotencyProperties properties) {
-
-        TransactionExecutor executor = transactionExecutor.getIfAvailable();
-        if (properties.getTransaction().isEnabled() && executor != null) {
-            return new SpringTransactionJdbcExecutionManager(dataSource, executor);
-        }
-
-        if (properties.getTransaction().isEnabled() && properties.getTransaction().isRequireTemplate() && executor == null) {
-            throw new IllegalStateException(
-                    "xjtu.iron.idempotent.transaction.require-template=true, "
-                            + "but no transaction-component TransactionExecutor bean is available");
-        }
-
-        return new DataSourceJdbcExecutionManager(dataSource);
-    }
-
-    /**
-     * 单 DataSource 的默认 manager resolver。真实多库场景可以提供 RoutingJdbcExecutionManagerResolver 或自定义实现覆盖。
-     */
-    @Bean
-    @ConditionalOnBean(JdbcExecutionManager.class)
-    @ConditionalOnMissingBean(JdbcExecutionManagerResolver.class)
-    public JdbcExecutionManagerResolver idempotencyJdbcExecutionManagerResolver(JdbcExecutionManager jdbc) {
-        return FixedJdbcExecutionManagerResolver.defaultDataSource(jdbc);
-    }
-
-    /**
      * Tx-B Coordinator：只负责 REQUIRED 业务事务边界，不负责 Tx-A/Tx-C 的 Connection 获取。
      */
     @Bean
@@ -208,20 +165,20 @@ public class IdempotencyAutoConfiguration {
      * 这里会自动让位，不存在两套路由同时生效。
      */
     @Bean
-    @ConditionalOnMissingBean(IdempotencyJdbcRouteResolver.class)
-    public IdempotencyJdbcRouteResolver fixedIdempotencyJdbcRouteResolver(IdempotencyProperties properties) {
-        return FixedIdempotencyJdbcRouteResolver.defaultDataSource(properties.getJdbc().getTableName());
+    @ConditionalOnMissingBean(IdempotencyPhysicalRouteResolver.class)
+    public IdempotencyPhysicalRouteResolver fixedIdempotencyPhysicalRouteResolver(IdempotencyProperties properties) {
+        return FixedIdempotencyPhysicalRouteResolver.defaultDataSource(properties.getMybatis().getTableName());
     }
 
-    @Bean(name = "jdbcIdempotencyRepository")
-    @ConditionalOnBean(JdbcExecutionManagerResolver.class)
-    @ConditionalOnProperty(prefix = "xjtu.iron.idempotent.jdbc", name = "enabled", havingValue = "true", matchIfMissing = true)
-    @ConditionalOnMissingBean(name = "jdbcIdempotencyRepository")
-    public IdempotencyRepository jdbcIdempotencyRepository(
-            IdempotencyJdbcRouteResolver routeResolver,
-            JdbcExecutionManagerResolver executionManagerResolver
+    @Bean(name = "mybatisIdempotencyRepository")
+    @ConditionalOnBean(MyBatisAccessResolver.class)
+    @ConditionalOnProperty(prefix = "xjtu.iron.idempotent.mybatis", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnMissingBean(name = "mybatisIdempotencyRepository")
+    public IdempotencyRepository mybatisIdempotencyRepository(
+            IdempotencyPhysicalRouteResolver routeResolver,
+            MyBatisAccessResolver accessResolver
     ) {
-        return new RoutedJdbcIdempotencyRepository(routeResolver, executionManagerResolver);
+        return new RoutedMyBatisIdempotencyRepository(routeResolver, accessResolver);
     }
 
     // -------------------- Registry / Policy --------------------

@@ -4,6 +4,7 @@ import com.xjtu.iron.reliable.task.api.repository.ReliableTaskRepository;
 import com.xjtu.iron.reliable.task.provider.mybatis.mapper.ReliableTaskMapper;
 import com.xjtu.iron.reliable.task.provider.mybatis.repository.MyBatisReliableTaskRepository;
 import com.xjtu.iron.reliable.task.starter.properties.ReliableTaskProperties;
+import com.xjtu.iron.relational.mybatis.MyBatisAccess;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -26,19 +27,14 @@ import org.springframework.context.annotation.Bean;
         havingValue = "true",
         matchIfMissing = true
 )
-@ConditionalOnProperty(
-        prefix = "xjtu.iron.reliable-task",
-        name = "provider",
-        havingValue = "mybatis"
-)
 @MapperScan(basePackageClasses = ReliableTaskMapper.class)
 public class ReliableTaskMyBatisProviderAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(ReliableTaskRepository.class)
     public ReliableTaskRepository myBatisReliableTaskRepository(
-            ReliableTaskMapper mapper,
+            MyBatisAccess access,
             ReliableTaskProperties properties) {
-        return new MyBatisReliableTaskRepository(mapper, properties.getTableName());
+        return new MyBatisReliableTaskRepository(access, properties.getTableName());
     }
 }

@@ -40,8 +40,8 @@ package "Lock Provider" {
 }
 
 package "External Fencing Provider" {
-  class JdbcSequenceFencingTokenProvider
-  class JdbcFencingTokenSchemaInitializer
+  class MyBatisSequenceFencingTokenProvider
+  class "MyBatis schema scripts" as MyBatisSchemaScripts
 }
 
 package "Business Resource" {
@@ -59,10 +59,10 @@ FencingTokenProviderRegistry o-- FencingTokenProvider
 
 RedisLockProvider ..|> LockProvider
 RedissonLockProvider ..|> LockProvider
-JdbcSequenceFencingTokenProvider ..|> FencingTokenProvider
+MyBatisSequenceFencingTokenProvider ..|> FencingTokenProvider
 
-JdbcFencingTokenSchemaInitializer --> BusinessDB : create token table
-JdbcSequenceFencingTokenProvider --> BusinessDB : increment token row
+MyBatisSchemaScripts --> BusinessDB : create token table
+MyBatisSequenceFencingTokenProvider --> BusinessDB : increment token row
 LockHandle --> FencingTokenGuard : token
 FencingTokenGuard --> FencedRepository : conditional write
 FencedRepository --> BusinessDB : last_fencing_token < token

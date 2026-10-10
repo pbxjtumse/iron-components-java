@@ -33,13 +33,20 @@ import java.util.Objects;
  * 同分片的订单、幂等、Outbox 可共享 shardInfo，但需要分别映射各自的 physicalLocation。</p>
  *
  * <p>固定直连可以没有分片键和 shardInfo；DIRECT_DATASOURCE 必须有完整物理位置。
- * mode 只描述路由接入形态；JDBC 与 Proxy 模式的物理路由分别由对应 Bridge、Adapter 和中间件完成。</p>
+ * mode 只描述路由接入形态；JDBC 与 Proxy 模式的物理路由由对应 Resolver、Storage Provider 和中间件完成。</p>
  */
 public final class StorageRoute {
 
+    /** 本次访问采用的路由接入模式。 */
     private final StorageRouteMode mode;
+
+    /** 原始逻辑路由输入。 */
     private final RouteContext context;
+
+    /** 可选的逻辑分片计算结果。 */
     private final ShardRouteInfo shardInfo;
+
+    /** Direct 模式必有的物理数据库与表位置。 */
     private final PhysicalStorageLocation physicalLocation;
 
     private StorageRoute(Builder builder) {
@@ -155,11 +162,20 @@ public final class StorageRoute {
 
     public static final class Builder {
 
+        /** 待构建路由的接入模式。 */
         private StorageRouteMode mode = StorageRouteMode.DIRECT_DATASOURCE;
+
+        /** 待保留的逻辑路由输入。 */
         private RouteContext context;
+
+        /** 可选的逻辑分片计算结果。 */
         private ShardRouteInfo shardInfo;
+
+        /** 待组装物理位置的数据源标识。 */
         // 暂存库表，build 时统一校验，允许 dataSourceKey/tableName 任意设置顺序。
         private String dataSourceKey;
+
+        /** 待组装物理位置的表名。 */
         private String tableName;
 
         private Builder() {

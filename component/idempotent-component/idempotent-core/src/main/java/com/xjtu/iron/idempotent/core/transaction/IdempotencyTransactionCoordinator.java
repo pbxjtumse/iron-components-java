@@ -14,7 +14,7 @@ package com.xjtu.iron.idempotent.core.transaction;
  * </pre>
  *
  * <p>Tx-A（tryAcquire/tryRecover）和 Tx-C（markFailed）的 REQUIRES_NEW 由 JDBC Provider 的
- * {@code JdbcExecutionManager} 负责，因此三段事务职责不会混在一个类里。</p>
+ * {@code MyBatisAccess} 负责，因此三段事务职责不会混在一个类里。</p>
  */
 public interface IdempotencyTransactionCoordinator {
 

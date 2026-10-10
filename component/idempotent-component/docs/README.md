@@ -24,7 +24,8 @@ Idempotent 是 Iron Components 中文档结构最完整的组件之一，也是�
 - `IdempotencyBusinessExecutor`
 - `DefaultIdempotencyStateMachine`
 - `IdempotencyRepository / IdempotencyRecoveryRepository`
-- `JdbcIdempotencyRepository / RoutedJdbcIdempotencyRepository`
+- `MyBatisIdempotencyRepository / RoutedMyBatisIdempotencyRepository`
+- `MyBatisAccess / MyBatisAccessResolver`
 - `RedisIdempotencyRepository`
 - `IdempotencyTransactionCoordinator`
 

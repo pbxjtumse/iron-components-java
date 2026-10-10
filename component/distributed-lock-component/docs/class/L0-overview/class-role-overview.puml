@@ -23,7 +23,7 @@ package "distributed-lock-core" {
 package "distributed-lock-provider" {
  class RedisLockProvider
  class RedissonLockProvider
- class JdbcSequenceFencingTokenProvider
+ class MyBatisSequenceFencingTokenProvider
 }
 
 DistributedLockClient --> LockExecutionTemplate
@@ -33,6 +33,6 @@ LockAcquisitionService --> FencingTokenCoordinator
 LockAcquisitionService --> LockHandle
 LockProvider <|.. RedisLockProvider
 LockProvider <|.. RedissonLockProvider
-FencingTokenProvider <|.. JdbcSequenceFencingTokenProvider
+FencingTokenProvider <|.. MyBatisSequenceFencingTokenProvider
 
 @enduml

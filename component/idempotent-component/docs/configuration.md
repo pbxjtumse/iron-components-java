@@ -10,7 +10,7 @@ xjtu:
 
       default-policy: durable-default
       default-windowed-repository: redis
-      default-durable-repository: jdbc
+      default-durable-repository: mybatis
       processing-timeout: 30s
 
       windowed:
@@ -40,7 +40,7 @@ xjtu:
         enabled: true
         key-prefix: iron:idempotency
 
-      jdbc:
+      mybatis:
         enabled: true
         table-name: iron_idempotency_record
 
@@ -61,7 +61,7 @@ xjtu:
         order-create:
           mode: DURABLE
           namespace: order-create
-          repository-name: jdbc
+          repository-name: mybatis
           processing-timeout: 30s
           recovery-mode: EXTERNAL_TASK
           recover-processing-timeout: true
@@ -115,7 +115,7 @@ IdempotencyRequest.builder()
 
 ## 4. DURABLE
 
-DURABLE 没有有限幂等语义 TTL。默认使用 JDBC，并推荐：
+DURABLE 没有有限幂等语义 TTL。默认使用 MyBatis，并推荐：
 
 ```text
 recovery-mode = EXTERNAL_TASK
@@ -151,7 +151,7 @@ transaction:
   require-template: true
 ```
 
-当 `TransactionExecutor` 存在且 JDBC Repository 使用 transaction-aware `JdbcExecutionManager` 时启用 Tx-A / Tx-B / Tx-C。
+当 `MyBatisAccess` 与 `TransactionExecutor` 使用同一 DataSource 时启用 Tx-A / Tx-B / Tx-C。
 
 支付、结算、订单等明确要求“Business + SUCCESS 同本地事务”的应用建议 `require-template=true`，避免 transaction-component 缺失时静默降级。
 

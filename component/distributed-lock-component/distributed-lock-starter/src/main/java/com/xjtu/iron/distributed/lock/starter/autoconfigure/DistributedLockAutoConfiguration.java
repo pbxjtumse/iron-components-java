@@ -23,7 +23,7 @@ import com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider;
 import com.xjtu.iron.distributed.lock.starter.observability.MicrometerLockMetricsRecorder;
 import com.xjtu.iron.distributed.lock.starter.observability.SpringLockEventPublisher;
 import com.xjtu.iron.distributed.lock.starter.properties.DistributedLockProperties;
-import com.xjtu.iron.distributed.lock.starter.properties.JdbcFencingTokenProperties;
+import com.xjtu.iron.distributed.lock.starter.properties.MyBatisFencingTokenProperties;
 import com.xjtu.iron.distributed.lock.starter.properties.RedissonDistributedLockProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
@@ -42,8 +42,8 @@ import java.util.List;
 
 /** 分布式锁核心自动配置。 */
 @AutoConfiguration(after = {RedisDistributedLockAutoConfiguration.class, RedissonDistributedLockAutoConfiguration.class,
-        JdbcFencingTokenAutoConfiguration.class})
-@EnableConfigurationProperties({DistributedLockProperties.class, JdbcFencingTokenProperties.class, RedissonDistributedLockProperties.class})
+        MyBatisFencingTokenAutoConfiguration.class})
+@EnableConfigurationProperties({DistributedLockProperties.class, MyBatisFencingTokenProperties.class, RedissonDistributedLockProperties.class})
 @ConditionalOnProperty(prefix = "xjtu.iron.distributed-lock", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class DistributedLockAutoConfiguration {
 

@@ -18,6 +18,7 @@ import java.util.Objects;
  */
 public final class FencingTokenCoordinator {
 
+    /** 可按名称选择的外部 fencing token Provider 注册表。 */
     private final FencingTokenProviderRegistry registry;
 
     public FencingTokenCoordinator(FencingTokenProviderRegistry registry) {
@@ -46,7 +47,7 @@ public final class FencingTokenCoordinator {
             return FencingTokenPlan.nativeProvider();
         }
 
-        throw new IllegalArgumentException("fencing token is required, but lock provider has no native support. Please configure fencingTokenProviderName explicitly, for example jdbc-sequence: " + lockProvider.providerName());
+        throw new IllegalArgumentException("fencing token is required, but lock provider has no native support. Please configure fencingTokenProviderName explicitly, for example mybatis-sequence: " + lockProvider.providerName());
     }
 
     /**

@@ -15,12 +15,12 @@ package "distributed-lock-provider-redisson" {
 class RedissonLockProvider
 }
 
-package "distributed-lock-fencing-provider-jdbc" {
-class JdbcSequenceFencingTokenProvider
+package "distributed-lock-fencing-provider-mybatis" {
+class MyBatisSequenceFencingTokenProvider
 }
 
 LockProvider <|.. RedisLockProvider
 LockProvider <|.. RedissonLockProvider
-FencingTokenProvider <|.. JdbcSequenceFencingTokenProvider
+FencingTokenProvider <|.. MyBatisSequenceFencingTokenProvider
 
 @enduml

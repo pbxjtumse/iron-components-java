@@ -54,17 +54,11 @@ storage-routing-core
     GlobalTableIndexRouteMappingStrategy / LocalTableIndexRouteMappingStrategy
     RouteMappingStrategyFactory
 
-storage-routing-integration-relational
-    StorageRouteToSqlRouteBridge
-    DefaultStorageRouteToSqlRouteBridge
-
 storage-routing-integration-shardingsphere-jdbc
     ShardingSphereJdbcStorageRouteResolver
-    ShardingSphereJdbcStorageRouteToSqlRouteBridge
 
 storage-routing-integration-shardingsphere-proxy
     ShardingSphereProxyStorageRouteResolver
-    ShardingSphereProxyStorageRouteToSqlRouteBridge
 
 storage-routing-starter
     StorageRoutingAutoConfiguration
@@ -77,8 +71,9 @@ storage-routing-starter
 单字段与复合字段统一使用 `CompositeShardKey`。`ShardResolver` 只计算分片，`RouteMappingStrategy` 只映射物理位置，
 接口位于 API、实现位于 Core。路由输入统一为 `RouteContext`，分片输入统一为 `CompositeShardKey`。
 
-Relational bridge 负责把 `StorageRoute` 转成 `SqlRoute`，同时暴露 Storage 拼 SQL 所需的执行表名：Direct 模式返回物理表，
-ShardingSphere-JDBC 与 ShardingSphere-Proxy 模式返回逻辑表。Spring Boot starter 默认使用 Direct；哈希 resolver 需要显式配置库表拓扑后启用。
+Storage Routing 不再转换成某一数据访问框架的 `SqlRoute`。每个 Storage Provider 直接消费
+`StorageRoute`：Direct 模式使用物理位置，ShardingSphere-JDBC/Proxy 使用逻辑表和分片键。
+Spring Boot starter 默认使用 Direct；哈希 resolver 需要显式配置库表拓扑后启用。
 
 示例配置：
 
@@ -111,7 +106,7 @@ ShardingSphere-JDBC 模式：
 
 ```properties
 xjtu.iron.storage-routing.mode=SHARDINGSPHERE_JDBC
-# ShardingSphere DataSource 是默认 DataSource 时留空；多逻辑 DataSource 时填写 Relational Access 注册键。
+# ShardingSphere DataSource 是默认 DataSource 时留空；多逻辑 DataSource 时填写 MyBatis Access 注册键。
 xjtu.iron.storage-routing.sharding-sphere-jdbc.data-source-key=orders-sharding
 ```
 
@@ -129,7 +124,7 @@ xjtu.iron.storage-routing.sharding-sphere-proxy.data-source-key=orders-proxy
 Proxy Adapter 返回 Proxy DataSource 路由与逻辑表。它不在应用内加载 ShardingSphere，不负责部署 Proxy、维护规则、
 改写 SQL 或创建分布式事务；Repository 仍必须在 SQL 中写入 Proxy 规则需要的分片列。
 
-模型字段、API 边界与使用限制见 [StorageRoute 模型](docs/design/03-storage-route-model.md)。
+模型字段、API 边界与使用限制见 [文档入口](docs/README.md)。
 
 ## 3. 当前第一版不做什么
 
@@ -148,7 +143,7 @@ Storage Routing
     -> 决定去哪：dataSourceKey / tableName / shardKey
 
 Relational Access
-    -> 决定怎么执行：Connection / PreparedStatement / SQLException / transaction-bound Connection
+    -> 决定怎么执行：MyBatis Mapper / SqlSessionTemplate / 本地事务资源
 ```
 
 ## 5. 文档阅读顺序
@@ -157,39 +152,24 @@ Relational Access
 docs/README.md
     -> 文档入口
 
-docs/design/00-component-boundary.md
-    -> 组件边界：Storage Routing 负责去哪，Relational Access 负责怎么执行
-
-docs/design/01-module-layout.md
-    -> 模块规划：什么时候需要 spi / config / integration / starter
-
-docs/sequence/01-storage-route-context.puml
-    -> StorageRouteContext 在线程内传播路由
-
-docs/sequence/02-storage-route-to-relational-access.puml
-    -> StorageRoute 如何桥接到 Relational Access
-
-docs/design/03-storage-route-model.md
-    -> 类型化分片键、组合模型与稳定编码说明
-
-docs/sequence/03-storage-route-resolution.puml
-    -> 当前已实现的分片计算、物理映射和结果组装流程
+docs/从零理解路由与作用域.md
+    -> ThreadLocal 嵌套、路由恢复、异步传播边界
 ```
 
 ## 6. 推进路线
 
 ```text
 Phase 2.1：先建立 StorageRoute API 与 ThreadLocal 上下文
-Phase 2.2：接 Relational Access，提供 StorageRoute -> SqlRoute 的桥接
-Phase 2.3：Idempotency JDBC Storage 接 StorageRoute
+Phase 2.2：组件 Provider 直接消费 StorageRoute
+Phase 2.3：Idempotency MyBatis Storage 接 StorageRoute
 Phase 2.4：接入 ShardingSphere-JDBC 逻辑路由 Adapter
 Phase 2.5：让 Idempotency / Outbox 等技术表 SQL 携带统一分片列并完成同片事务 E2E
 Phase 2.6：增加 ShardingSphere-Proxy 逻辑 DataSource / 逻辑表 Adapter
 ```
 
 当前 Direct DataSource 链路已经打穿，ShardingSphere-JDBC 与 ShardingSphere-Proxy 第一版 Adapter 均负责逻辑
-DataSource / 逻辑表交付。下一步仍需让 Idempotency JDBC Storage、Outbox Storage 等技术表 SQL 显式携带统一分片列，
-并在真实 Proxy 环境验证路由与事务行为。上下文传播与 Adapter 本身不会改写 SQL、创建事务或替代中间件。
+DataSource / 逻辑表交付。下一步仍需让 Idempotency MyBatis Storage、Outbox Storage 等技术表 SQL 显式携带统一分片列，
+并在真实 Proxy 环境验证路由与事务行为。上下文传播与 Resolver 本身不会改写 SQL、创建事务或替代中间件。
 
 验证命令（仓库根目录）：
 

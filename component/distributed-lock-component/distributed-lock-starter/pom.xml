@@ -33,7 +33,11 @@
         </dependency>
         <dependency>
             <groupId>com.xjtu.iron</groupId>
-            <artifactId>distributed-lock-fencing-provider-jdbc</artifactId>
+            <artifactId>distributed-lock-fencing-provider-mybatis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.xjtu.iron</groupId>
+            <artifactId>relational-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

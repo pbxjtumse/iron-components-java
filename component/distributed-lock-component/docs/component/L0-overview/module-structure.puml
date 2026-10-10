@@ -13,7 +13,7 @@ package "distributed-lock-component" {
   folder "distributed-lock-provider" as provider {
     folder "distributed-lock-provider-redis" as redis
     folder "distributed-lock-provider-redisson" as redisson
-    folder "distributed-lock-fencing-provider-jdbc" as jdbc
+    folder "distributed-lock-fencing-provider-mybatis" as jdbc
   }
   folder "distributed-lock-starter" as starter
   folder "distributed-lock-demo" as demo
@@ -32,7 +32,7 @@ jdbc --> spi : implements FencingTokenProvider
 starter --> core : assemble core beans
 starter --> redis : register Redis provider
 starter --> redisson : register Redisson provider
-starter --> jdbc : register JDBC fencing provider
+starter --> jdbc : register MyBatis fencing provider
 demo --> starter : use auto configuration
 
 note right of spi

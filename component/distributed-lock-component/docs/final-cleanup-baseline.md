@@ -8,9 +8,9 @@
 
 1. `distributed-lock-spi` 作为独立 Maven module 固化。
 2. `FencingTokenProvider` 及其 request/response/status 位于 SPI。
-3. `JdbcSequenceFencingTokenProvider` 位于 JDBC fencing provider，只实现 SPI。
+3. `MyBatisSequenceFencingTokenProvider` 位于 MyBatis fencing provider，只实现 SPI。
 4. Provider 不反向依赖 Core。
-5. JDBC fencing provider 删除对 `distributed-lock-core` 的不必要依赖。
+5. MyBatis fencing provider 删除对 `distributed-lock-core` 的不必要依赖。
 6. SPI 协议测试从 `distributed-lock-core` 移到 `distributed-lock-spi`。
 7. 删除尚未上线前保留的 `LockResult.notAcquired(lockName, lockKey, waitDuration)` deprecated overload。
 8. README、docs README、module structure、fencing component、class UML、sequence review 已同步当前模块边界。

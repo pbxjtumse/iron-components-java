@@ -6,10 +6,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-/** JDBC fencing 业务防旧写演示配置。 */
+/** MyBatis fencing 业务防旧写演示配置。 */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(JdbcTemplate.class)
-@ConditionalOnProperty(prefix = "xjtu.iron.distributed-lock.fencing.jdbc", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "xjtu.iron.distributed-lock.fencing.mybatis", name = "enabled", havingValue = "true")
 public class JdbcFencingDemoConfiguration {
 
     @Bean

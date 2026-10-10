@@ -10,9 +10,7 @@ public class ReliableTaskProperties {
 
     /** 是否启用 Reliable Task 自动配置。 */
     private boolean enabled = true;
-    /** 应用启动时选择的持久化 Provider。 */
-    private ReliableTaskProviderType provider = ReliableTaskProviderType.JDBC;
-    /** JDBC 和 MyBatis Provider 使用的可靠任务表名。 */
+    /** MyBatis Provider 使用的可靠任务表名。 */
     private String tableName = "iron_reliable_task";
     /** 当前应用实例的租约所有者标识；为空时由 Starter 自动生成。 */
     private String ownerId;
@@ -29,8 +27,6 @@ public class ReliableTaskProperties {
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public ReliableTaskProviderType getProvider() { return provider; }
-    public void setProvider(ReliableTaskProviderType provider) { this.provider = provider; }
     public String getTableName() { return tableName; }
     public void setTableName(String tableName) { this.tableName = tableName; }
     public String getOwnerId() { return ownerId; }

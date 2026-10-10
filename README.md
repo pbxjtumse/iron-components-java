@@ -61,16 +61,16 @@ iron-components-java
 | Foundation | foundation-core / time / id / codec / context / reflection / resource / serialization / test-support | 可作为底层依赖使用 | 通用工具门面、时间、ID、序列化、上下文、测试支撑 |
 | Concurrency | api / config / core / provider / integrations / starter / demo | 一期能力较完整 | 线程池、异步任务、排队超时、执行超时、fallback、取消、任务状态、指标 |
 | Retry | api / core / config / demo | 核心能力已落地 | 显式、有限、可观测的进程内重试 |
-| Reliable Task | api / core / provider-jdbc / starter | v1 已生成，待完整环境回归 | 持久化任务、CAS 抢占、Lease、扫描兜底、跨进程恢复与对账状态 |
+| Reliable Task | api / core / provider-mybatis / starter | v1 已生成，待完整环境回归 | 持久化任务、CAS 抢占、Lease、扫描兜底、跨进程恢复与对账状态 |
 | Transaction | api / spi / core / provider-spring / starter / demo | 本地事务抽象已落地 | 为幂等、消息、可靠任务提供统一事务执行边界 |
-| Idempotent | api / core / provider-redis / provider-jdbc / integration / starter / demo | 主链路已成型 | RPC、消息、任务等场景的幂等状态机、结果回放、恢复接管 |
-| Distributed Lock | api / spi / core / redis / redisson / jdbc-fencing / starter / demo | 收口完善中 | 分布式互斥、续租、Watchdog、Owner Token、Fencing Token |
+| Idempotent | api / core / provider-redis / provider-mybatis / integration / starter / demo | 主链路已成型 | RPC、消息、任务等场景的幂等状态机、结果回放、恢复接管 |
+| Distributed Lock | api / spi / core / redis / redisson / mybatis-fencing / starter / demo | 收口完善中 | 分布式互斥、续租、Watchdog、Owner Token、Fencing Token |
 | Message | api / spi / core / Kafka / Pulsar / RocketMQ4 / starter / demo | 一期普通收发完成，发送可靠性验证中 | 多 MQ 统一消息模型、Provider 适配、可靠发送、后续可靠消费 |
 | Cache | api / core / config / provider-caffeine / provider-redis / composite / integrations / starter / demo | 基础能力和二期设计并行 | Caffeine + Redis 多级缓存、缓存策略、击穿治理、失效事件 |
 | Governance | api / model / core / spi / configs / runtime / engine / integration / starter / demo | 建设中 | 限流、熔断、隔离、超时、治理策略、Resilience4j 适配 |
 | Observability | api / core / otel / starter / demo | 建设中 | Metrics、Trace、事件、OpenTelemetry 接入 |
-| Relational Access | api / spi / core / integration-spring / starter | 基础抽象已落地 | 关系型数据库访问统一抽象，给路由、幂等、事务等组件复用 |
-| Storage Routing | api / core / integration-relational / starter | v1 建设中 | 分库分表、读写分离、多租户、冷热数据等存储路由上下文 |
+| Relational Access | relational-mybatis / starter | MyBatis-first V1 已收口 | 技术表共用 Mapper 获取、Spring 事务、多数据源、异常与观测集成 |
+| Storage Routing | api / core / ShardingSphere integrations / starter | v1 建设中 | 分库分表、读写分离、多租户、冷热数据等存储路由上下文 |
 
 状态说明：
 
@@ -192,7 +192,7 @@ mvn -U -pl component/message-component/message-demo-springboot -am clean package
 ~~~text
 Idempotent
     + Transaction
-    + Redis / JDBC Provider
+    + Redis / MyBatis Provider
 ~~~
 
 适合创建订单、提交申请、支付请求、营销领取、人工操作等场景。
@@ -396,7 +396,7 @@ distributed-lock-spi
 distributed-lock-core
 distributed-lock-provider-redis
 distributed-lock-provider-redisson
-distributed-lock-fencing-provider-jdbc
+distributed-lock-fencing-provider-mybatis
 distributed-lock-starter
 distributed-lock-demo
 ~~~
@@ -532,19 +532,17 @@ observability-demo-app
 
 ### Relational Access Component
 
-定位：关系型数据库访问基础抽象。
+定位：关系型技术表的 MyBatis 公共接入层。
 
 当前模块：
 
 ~~~text
-relational-api
-relational-spi
-relational-core
-relational-integration
+relational-mybatis
 relational-starter
 ~~~
 
-它为 storage-routing、idempotent、transaction 等组件提供更统一的关系型访问语义，避免每个组件重复处理 DataSource、路由、SQL 执行上下文等问题。
+它统一 Mapper 获取、Spring 本地事务资源校验、多 DataSource 解析和观测；
+各技术组件仍拥有自己的 Repository SPI、Mapper 和 XML。
 
 ### Storage Routing Component
 
@@ -595,7 +593,7 @@ storage-routing-starter
 1. reliable-task-component v1 完整 Maven/H2 回归和真实 MySQL 验证。
 2. message-component 二期发送可靠性通过 Message Outbox 接入 Reliable Task。
 3. message-component 消费可靠性接入幂等、事务、ACK / redelivery 映射。
-4. idempotent-provider-jdbc 与 storage-routing 协同，并接入 Reliable Task Recovery。
+4. idempotent-provider-mybatis 与 storage-routing 协同，并接入 Reliable Task Recovery。
 5. distributed-lock 继续收口文档、边界和 Provider 一致性。
 6. governance / observability 成为其他组件的统一接入点。
 

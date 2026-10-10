@@ -4,7 +4,7 @@ import com.xjtu.iron.distributed.lock.core.fencing.registry.FencingTokenProvider
 import com.xjtu.iron.distributed.lock.spi.LockProviderRegistry;
 import com.xjtu.iron.distributed.lock.starter.observability.DistributedLockHealthIndicator;
 import com.xjtu.iron.distributed.lock.starter.properties.DistributedLockProperties;
-import com.xjtu.iron.distributed.lock.starter.properties.JdbcFencingTokenProperties;
+import com.xjtu.iron.distributed.lock.starter.properties.MyBatisFencingTokenProperties;
 import com.xjtu.iron.distributed.lock.starter.properties.RedisDistributedLockProperties;
 import com.xjtu.iron.distributed.lock.starter.properties.RedissonDistributedLockProperties;
 import org.springframework.beans.factory.ObjectProvider;
@@ -25,9 +25,10 @@ public class DistributedLockActuatorAutoConfiguration {
     @ConditionalOnMissingBean(name = "distributedLockHealthIndicator")
     public DistributedLockHealthIndicator distributedLockHealthIndicator(LockProviderRegistry providerRegistry,
             FencingTokenProviderRegistry fencingRegistry, DistributedLockProperties properties,
-            ObjectProvider<RedisDistributedLockProperties> redisPropertiesProvider, ObjectProvider<JdbcFencingTokenProperties> jdbcPropertiesProvider,
+            ObjectProvider<RedisDistributedLockProperties> redisPropertiesProvider,
+            ObjectProvider<MyBatisFencingTokenProperties> myBatisPropertiesProvider,
             ObjectProvider<RedissonDistributedLockProperties> redissonPropertiesProvider) {
         return new DistributedLockHealthIndicator(providerRegistry, fencingRegistry, properties, redisPropertiesProvider.getIfAvailable(),
-                jdbcPropertiesProvider.getIfAvailable(), redissonPropertiesProvider.getIfAvailable());
+                myBatisPropertiesProvider.getIfAvailable(), redissonPropertiesProvider.getIfAvailable());
     }
 }

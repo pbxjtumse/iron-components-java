@@ -11,6 +11,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>idempotent-provider-redis</module>
-        <module>idempotent-provider-jdbc</module>
+        <module>idempotent-provider-mybatis</module>
     </modules>
 </project>

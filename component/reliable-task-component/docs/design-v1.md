@@ -36,10 +36,9 @@ v1 明确不实现：
                          v
               ReliableTaskRepository
                          |
-              +----------+----------+
-              |                     |
-              v                     v
- provider-jdbc -> relational   provider-mybatis -> MyBatis
+                         |
+                         v
+       provider-mybatis -> MyBatisAccess -> MyBatis
 
 触发源：runNow / local scheduler / manual / future XXL-JOB
 ```
@@ -60,17 +59,14 @@ v1 明确不实现：
 | Core | `core.execution.handler` | Handler 注册和按 `taskType` 查找 |
 | Core | `core.client`、`core.scan` | 业务快速路径、人工操作和扫描路径的默认实现 |
 | Core | `core.policy` | 最大次数、扫描桶、Lease 与失败退避策略 |
-| JDBC | `provider.jdbc.repository` | Repository 端口实现和 SQL 参数编排 |
-| JDBC | `provider.jdbc.mapping` | `ResultSet` 到任务快照的映射 |
-| JDBC | `provider.jdbc.sql` | 固定表 SQL 与动态表名白名单校验 |
-| MyBatis | `provider.mybatis.repository` | 使用 Mapper 完成与 JDBC Provider 相同的 Repository 语义 |
+| MyBatis | `provider.mybatis.repository` | 通过公共 Access 使用 Mapper 完成 Repository 语义 |
 | MyBatis | `provider.mybatis.mapper/mapping` | Mapper XML、数据库行对象和领域快照转换 |
 | Starter | `starter.autoconfigure` | Spring Bean 与本地调度触发器装配 |
 | Starter | `starter.properties` | `xjtu.iron.reliable-task` 配置模型 |
 
 分包只表达稳定职责，不为每个类机械创建一层目录。例如 Handler、Context、Outcome 和 Result 共同构成一次
-执行契约，因此保留在同一个 `api.execution` 包；JDBC 的 SQL 和行映射已经是独立变化点，因此从 Repository
-中拆出。
+执行契约，因此保留在同一个 `api.execution` 包；MyBatis Mapper、行映射和 XML 是独立变化点，
+因此从 Repository 中拆出。
 
 ### 3.2 数据对象约定
 
@@ -81,7 +77,7 @@ v1 明确不实现：
 
 ### 3.3 Provider 选择
 
-`ReliableTaskRepository` 是 Core 唯一依赖的持久化端口。JDBC 与 MyBatis 是并列 Provider：
+`ReliableTaskRepository` 是 Core 唯一依赖的持久化端口。V1 只保留 MyBatis Provider：
 
 ```text
 ReliableTask Core
@@ -89,20 +85,19 @@ ReliableTask Core
         v
 ReliableTaskRepository
         |
-        +--> JdbcReliableTaskRepository --> RelationalTemplate --> JDBC
-        |
-        +--> MyBatisReliableTaskRepository --> ReliableTaskMapper --> MyBatis
+        +--> MyBatisReliableTaskRepository
+                 --> MyBatisAccess
+                 --> ReliableTaskMapper/XML
+                 --> MyBatis
 ```
 
-MyBatis Provider 不实现或包装 `RelationalTemplate`，避免把“最终 SQL + RowMapper”与
-“MappedStatement + ResultMap”两套执行模型强行叠加。应用通过
-`xjtu.iron.reliable-task.provider=jdbc|mybatis` 在启动时选择唯一实现。
+Mapper/XML 仍归 Reliable Task 所有；公共 `MyBatisAccess` 只负责 Mapper 获取、事务资源和观测。
+不再提供 `xjtu.iron.reliable-task.provider` 开关，避免两套数据访问实现长期分叉。
 
-两个 Provider 必须执行同一套 Repository 契约测试。业务表与技术表的原子性还必须通过真实组合测试验证：
+业务表与技术表的原子性通过真实组合测试验证：
 
 | 业务数据访问 | 技术表 Provider | V1 验证目标 |
 |---|---|---|
-| MyBatis | JDBC | 同库提交、任一方向失败时整体回滚 |
 | MyBatis | MyBatis | 同库提交、任一方向失败时整体回滚 |
 
 JPA 暂不引入；未来新增 JPA Provider 时仍复用同一 Repository 端口和契约测试。
@@ -211,7 +206,7 @@ Tx1：业务数据 + Reliable Task INSERT
 
 ## 8. 事务边界
 
-JDBC Provider 基于 `RelationalTemplate`。在 Spring 环境中，`relational-starter` 使用事务感知 Connection Provider：
+MyBatis Provider 通过 `relational-starter` 共用应用的 `SqlSessionTemplate` 和 DataSource：
 
 - 外层存在绑定同一 DataSource 的本地事务时，任务 INSERT 参与该事务。
 - 外层没有事务时，INSERT 按普通数据库调用提交。
@@ -231,7 +226,7 @@ JDBC Provider 基于 `RelationalTemplate`。在 Spring 环境中，`relational-s
 
 `scan_bucket` 不等于 ShardingSphere shardId，也不等于 XXL-JOB shardIndex。
 
-v1 JDBC Provider 使用一个固定表。后续 Storage Routing integration 要增加：
+v1 MyBatis Provider 使用一个固定表。后续 Storage Routing integration 要增加：
 
 1. 点访问：`route_key -> StorageRoute -> SqlRoute + physical table`；
 2. 离线扫描：枚举 physical scan target，再在每个 target 内扫描 `scan_bucket`；

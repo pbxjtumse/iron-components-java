@@ -1,5 +1,5 @@
 com.xjtu.iron.distributed.lock.starter.autoconfigure.RedisDistributedLockAutoConfiguration
 com.xjtu.iron.distributed.lock.starter.autoconfigure.RedissonDistributedLockAutoConfiguration
-com.xjtu.iron.distributed.lock.starter.autoconfigure.JdbcFencingTokenAutoConfiguration
+com.xjtu.iron.distributed.lock.starter.autoconfigure.MyBatisFencingTokenAutoConfiguration
 com.xjtu.iron.distributed.lock.starter.autoconfigure.DistributedLockAutoConfiguration
 com.xjtu.iron.distributed.lock.starter.autoconfigure.DistributedLockActuatorAutoConfiguration

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xjtu.iron.distributed.lock.provider.mybatis.fencing.FencingTokenMapper">
+    <update id="increment">
+        UPDATE ${table}
+        SET current_token = current_token + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE namespace = #{namespace}
+          AND lock_name = #{lockName}
+    </update>
+
+    <insert id="insertInitial">
+        INSERT INTO ${table} (namespace, lock_name, current_token, updated_at)
+        VALUES (#{namespace}, #{lockName}, 1, CURRENT_TIMESTAMP)
+    </insert>
+
+    <select id="selectCurrent" resultType="java.lang.Long">
+        SELECT current_token
+        FROM ${table}
+        WHERE namespace = #{namespace}
+          AND lock_name = #{lockName}
+    </select>
+</mapper>

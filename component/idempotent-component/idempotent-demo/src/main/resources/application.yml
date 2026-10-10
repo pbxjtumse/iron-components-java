@@ -22,7 +22,7 @@ xjtu:
 
       # Provider 只是默认映射；Core 最终仍通过 Repository capabilities 校验。
       default-windowed-repository: redis
-      default-durable-repository: jdbc
+      default-durable-repository: mybatis
 
       processing-timeout: 30s
 
@@ -54,7 +54,7 @@ xjtu:
         demo-durable:
           mode: DURABLE
           namespace: demo-durable
-          repository-name: jdbc
+          repository-name: mybatis
           processing-timeout: 30s
           recovery-mode: EXTERNAL_TASK
           recover-processing-timeout: true

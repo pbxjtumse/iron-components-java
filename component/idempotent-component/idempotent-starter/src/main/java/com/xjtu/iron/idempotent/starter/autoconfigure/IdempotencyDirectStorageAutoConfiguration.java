@@ -2,10 +2,10 @@ package com.xjtu.iron.idempotent.starter.autoconfigure;
 
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionCoordinator;
 import com.xjtu.iron.idempotent.integration.storage.routing.StorageRouteAwareIdempotencyTransactionCoordinator;
-import com.xjtu.iron.idempotent.integration.storage.routing.StorageRoutingIdempotencyJdbcRouteResolver;
-import com.xjtu.iron.idempotent.integration.transaction.DirectStorageResourceRegistry;
-import com.xjtu.iron.idempotent.provider.jdbc.execution.JdbcExecutionManagerResolver;
-import com.xjtu.iron.idempotent.provider.jdbc.routing.IdempotencyJdbcRouteResolver;
+import com.xjtu.iron.idempotent.integration.storage.routing.StorageRoutingIdempotencyPhysicalRouteResolver;
+import com.xjtu.iron.idempotent.provider.mybatis.routing.IdempotencyPhysicalRouteResolver;
+import com.xjtu.iron.relational.mybatis.DirectMyBatisResourceRegistry;
+import com.xjtu.iron.relational.mybatis.MyBatisAccessResolver;
 import com.xjtu.iron.idempotent.starter.properties.IdempotencyProperties;
 import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
@@ -19,53 +19,57 @@ import java.util.Map;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 
 /** 显式 opt-in 的 Direct 本地事务装配；资源注册表同时驱动 Tx-A/B/C。 */
 @AutoConfiguration(after = IdempotencyStorageRoutingAutoConfiguration.class, before = IdempotencyAutoConfiguration.class)
-@ConditionalOnProperty(prefix = "xjtu.iron.idempotent.jdbc.direct", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "xjtu.iron.idempotent.mybatis.direct", name = "enabled", havingValue = "true")
 public class IdempotencyDirectStorageAutoConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean(DirectStorageResourceRegistry.class)
-    public DirectStorageResourceRegistry directStorageResourceRegistry(Map<String, DataSource> dataSources) {
+    @ConditionalOnMissingBean(DirectMyBatisResourceRegistry.class)
+    public DirectMyBatisResourceRegistry directMyBatisResourceRegistry(Map<String, DataSource> dataSources) {
         // Bean 名就是 dataSourceKey；多库没有 primary/default 回退。
-        return DirectStorageResourceRegistry.fromDataSources(dataSources);
+        return DirectMyBatisResourceRegistry.fromDataSources(dataSources);
     }
 
     @Bean
-    public TransactionExecutorResolver directTransactionExecutorResolver(DirectStorageResourceRegistry resources) {
-        return resources.transactionExecutorResolver();
+    @Primary
+    public TransactionExecutorResolver directTransactionExecutorResolver(DirectMyBatisResourceRegistry resources) {
+        return resources.getTransactionExecutorResolver();
     }
 
     @Bean
-    public JdbcExecutionManagerResolver directJdbcExecutionManagerResolver(DirectStorageResourceRegistry resources,
+    @Primary
+    public MyBatisAccessResolver directMyBatisAccessResolver(DirectMyBatisResourceRegistry resources,
             IdempotencyProperties properties, StorageRoutingProperties routingProperties,
             ObjectProvider<StorageRouteResolver> routeResolvers,
             ObjectProvider<StorageRouteContext> routeContexts,
-            ObjectProvider<IdempotencyJdbcRouteResolver> jdbcRouteResolvers) {
+            ObjectProvider<IdempotencyPhysicalRouteResolver> physicalRouteResolvers) {
         // 显式说明不合法的配置组合，避免依赖缺失时只得到多层 UnsatisfiedDependencyException。
-        if (!properties.isEnabled() || !properties.getJdbc().isEnabled() || !properties.getTransaction().isEnabled()) {
-            throw new IllegalStateException("direct storage requires idempotency, JDBC and transaction to be enabled");
+        if (!properties.isEnabled() || !properties.getMybatis().isEnabled() || !properties.getTransaction().isEnabled()) {
+            throw new IllegalStateException("direct storage requires idempotency, MyBatis and transaction to be enabled");
         }
         if (routingProperties.getMode() != StorageRouteMode.DIRECT_DATASOURCE) {
-            throw new IllegalStateException("idempotent JDBC direct storage requires storage-routing mode DIRECT_DATASOURCE");
+            throw new IllegalStateException("idempotent MyBatis direct storage requires storage-routing mode DIRECT_DATASOURCE");
         }
         requireExactlyOne(routeResolvers, "StorageRouteResolver",
                 "enable xjtu.iron.storage-routing.resolver or define one custom StorageRouteResolver bean");
         requireExactlyOne(routeContexts, "StorageRouteContext",
                 "enable storage-routing or define one custom StorageRouteContext bean");
-        List<IdempotencyJdbcRouteResolver> jdbcResolvers = jdbcRouteResolvers.orderedStream().toList();
-        if (jdbcResolvers.size() != 1) {
-            throw new IllegalStateException("direct storage requires exactly one IdempotencyJdbcRouteResolver, but found "
-                    + jdbcResolvers.size());
+        List<IdempotencyPhysicalRouteResolver> routeResolversList = physicalRouteResolvers.orderedStream().toList();
+        if (routeResolversList.size() != 1) {
+            throw new IllegalStateException("direct storage requires exactly one IdempotencyPhysicalRouteResolver, but found "
+                    + routeResolversList.size());
         }
-        IdempotencyJdbcRouteResolver jdbcRouteResolver = jdbcResolvers.get(0);
-        if (!(jdbcRouteResolver instanceof StorageRoutingIdempotencyJdbcRouteResolver)) {
-            throw new IllegalStateException("direct storage requires the storage-routing JDBC route resolver");
+        IdempotencyPhysicalRouteResolver physicalRouteResolver = routeResolversList.get(0);
+        if (!(physicalRouteResolver instanceof StorageRoutingIdempotencyPhysicalRouteResolver)) {
+            throw new IllegalStateException("direct storage requires the storage-routing physical route resolver");
         }
         StorageRoutingProperties.Resolver routing = routingProperties.getResolver();
         if (routing.isEnabled()) {
@@ -82,21 +86,30 @@ public class IdempotencyDirectStorageAutoConfiguration {
                 }
             }
         }
-        return resources.jdbcExecutionManagerResolver();
+        return resources.getMyBatisAccessResolver();
     }
 
     @Bean
+    @Primary
     public IdempotencyTransactionCoordinator directIdempotencyTransactionCoordinator(StorageRouteContext routes, TransactionExecutorResolver executors) {
         return new StorageRouteAwareIdempotencyTransactionCoordinator(routes, executors);
     }
 
     @Bean
-    public SmartInitializingSingleton directResourceWiringValidator(ObjectProvider<JdbcExecutionManagerResolver> jdbcResolvers,
-            ObjectProvider<TransactionExecutorResolver> transactionResolvers, ObjectProvider<IdempotencyTransactionCoordinator> coordinators) {
+    public SmartInitializingSingleton directResourceWiringValidator(
+            DirectMyBatisResourceRegistry resources,
+            @Qualifier("directMyBatisAccessResolver") MyBatisAccessResolver accessResolver,
+            @Qualifier("directTransactionExecutorResolver") TransactionExecutorResolver transactionResolver,
+            @Qualifier("directIdempotencyTransactionCoordinator") IdempotencyTransactionCoordinator coordinator
+    ) {
         return () -> {
-            // managed-direct 模式不接受另一份 @Primary Map/Coordinator 抢走调用，避免表面启动成功却用错事务。
-            if (jdbcResolvers.stream().count() != 1 || transactionResolvers.stream().count() != 1 || coordinators.stream().count() != 1) {
-                throw new IllegalStateException("direct storage requires one registry-owned JDBC resolver, transaction resolver and coordinator; remove competing beans");
+            // 公共单库 Resolver 可以同时存在，但 Direct 主链的 Access/事务解析器必须由同一注册表产生。
+            if (accessResolver != resources.getMyBatisAccessResolver()
+                    || transactionResolver != resources.getTransactionExecutorResolver()
+                    || coordinator == null) {
+                throw new IllegalStateException(
+                        "direct storage requires registry-owned MyBatis and transaction resolvers"
+                );
             }
         };
     }

@@ -39,6 +39,11 @@
             </dependency>
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
+                <artifactId>distributed-lock-fencing-provider-mybatis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
                 <artifactId>distributed-lock-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -58,6 +63,21 @@
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
                 <artifactId>idempotent-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>idempotent-provider-mybatis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>idempotent-integration-storage-routing</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>idempotent-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- transaction-component -->
@@ -92,11 +112,6 @@
             </dependency>
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
-                <artifactId>reliable-task-provider-jdbc</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.xjtu.iron</groupId>
                 <artifactId>reliable-task-provider-mybatis</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -108,7 +123,7 @@
             <!-- relational-access-component -->
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
-                <artifactId>relational-api</artifactId>
+                <artifactId>relational-mybatis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

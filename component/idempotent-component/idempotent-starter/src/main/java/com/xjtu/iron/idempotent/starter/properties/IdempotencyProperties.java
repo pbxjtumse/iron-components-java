@@ -27,8 +27,8 @@ public class IdempotencyProperties {
     /** WINDOWED 默认 Repository，Starter 默认指向 Redis。 */
     private String defaultWindowedRepository = "redis";
 
-    /** DURABLE 默认 Repository，Starter 默认指向 JDBC。 */
-    private String defaultDurableRepository = "jdbc";
+    /** DURABLE 默认 Repository，Starter 默认指向 MyBatis。 */
+    private String defaultDurableRepository = "mybatis";
 
     /** 全局默认 PROCESSING 租约时长，命名 Policy 未覆盖时使用。 */
     private Duration processingTimeout = Duration.ofSeconds(30);
@@ -48,8 +48,8 @@ public class IdempotencyProperties {
     /** Redis Provider 配置。 */
     private final Redis redis = new Redis();
 
-    /** JDBC Provider 配置。 */
-    private final Jdbc jdbc = new Jdbc();
+    /** MyBatis Provider 配置。 */
+    private final MyBatis mybatis = new MyBatis();
 
     /** 用户自定义命名策略。 */
     private final Map<String, Policy> policies = new LinkedHashMap<>();
@@ -70,7 +70,7 @@ public class IdempotencyProperties {
     public Lock getLock() { return lock; }
     public Transaction getTransaction() { return transaction; }
     public Redis getRedis() { return redis; }
-    public Jdbc getJdbc() { return jdbc; }
+    public MyBatis getMybatis() { return mybatis; }
     public Map<String, Policy> getPolicies() { return policies; }
 
     public static class Windowed {
@@ -267,12 +267,14 @@ public class IdempotencyProperties {
         public void setKeyPrefix(String keyPrefix) { this.keyPrefix = keyPrefix; }
     }
 
-    public static class Jdbc {
-        /** 是否装配 JDBC Repository。 */
+    public static class MyBatis {
+        /** 是否装配 MyBatis Repository。 */
         private boolean enabled = true;
 
         /** 幂等记录表名，只允许字母、数字和下划线。 */
         private String tableName = "iron_idempotency_record";
+
+        /** Direct 多数据源接入配置。 */
         private final Direct direct = new Direct();
         public Direct getDirect() { return direct; }
         public boolean isEnabled() { return enabled; }

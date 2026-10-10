@@ -9,7 +9,7 @@ distributed-lock-core
 distributed-lock-provider
   ├── distributed-lock-provider-redis
   ├── distributed-lock-provider-redisson
-  └── distributed-lock-fencing-provider-jdbc
+  └── distributed-lock-fencing-provider-mybatis
 distributed-lock-starter
 distributed-lock-demo
 ```
@@ -33,7 +33,7 @@ distributed-lock-demo
 | L1 | acquire / execute / release / watchdog / fencing 正常流程 |
 | L2 | 失败、锁丢失、fencing 拒绝、provider error |
 | L3 | Core 内部与 Provider 协议 |
-| L4 | Spring Boot Starter、Redis/Redisson/JDBC fencing、Micrometer/Health |
+| L4 | Spring Boot Starter、Redis/Redisson/MyBatis fencing、Micrometer/Health |
 
 ## 当前真实能力
 

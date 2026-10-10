@@ -5,6 +5,8 @@ import com.xjtu.iron.reliable.task.api.model.ReliableTaskKey;
 import com.xjtu.iron.reliable.task.api.state.ReliableTaskStatus;
 import com.xjtu.iron.reliable.task.provider.mybatis.mapper.ReliableTaskMapper;
 import com.xjtu.iron.reliable.task.provider.testkit.ReliableTaskTestSchema;
+import com.xjtu.iron.relational.mybatis.MyBatisAccessListener;
+import com.xjtu.iron.relational.mybatis.SpringMyBatisAccess;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -56,9 +58,10 @@ class MyBatisProviderSharedTransactionIntegrationTest {
         SqlSessionTemplate sqlSessionTemplate = new SqlSessionTemplate(sqlSessionFactory);
 
         businessOrderMapper = sqlSessionTemplate.getMapper(BusinessOrderMapper.class);
-        ReliableTaskMapper taskMapper = sqlSessionTemplate.getMapper(ReliableTaskMapper.class);
-        repository = new MyBatisReliableTaskRepository(taskMapper);
-        missingTableRepository = new MyBatisReliableTaskRepository(taskMapper, "missing_reliable_task");
+        SpringMyBatisAccess access = new SpringMyBatisAccess(
+                dataSource, sqlSessionTemplate, null, MyBatisAccessListener.noop());
+        repository = new MyBatisReliableTaskRepository(access);
+        missingTableRepository = new MyBatisReliableTaskRepository(access, "missing_reliable_task");
         transactionTemplate = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
     }
 

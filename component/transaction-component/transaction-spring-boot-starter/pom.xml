@@ -12,12 +12,10 @@
         <dependency>
             <groupId>com.xjtu.iron</groupId>
             <artifactId>transaction-core</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.xjtu.iron</groupId>
             <artifactId>transaction-provider-spring</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

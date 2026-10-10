@@ -36,7 +36,7 @@ class RedisLockProviderTest {
 //        LockAcquireResponse response = provider.acquire(LockAcquireRequest.builder()
 //                .lockName("job:external-fencing")
 //                .ownerToken("token")
-//                .options(LockOptions.builder().fencingRequired(true) .fencingTokenProviderName("jdbc-sequence").build())
+//                .options(LockOptions.builder().fencingRequired(true) .fencingTokenProviderName("mybatis-sequence").build())
 //                .nativeFencingRequired(false)
 //                .build());
 //        assertTrue(response.isAcquired());

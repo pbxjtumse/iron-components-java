@@ -14,10 +14,9 @@
     <artifactId>storage-routing-integration</artifactId>
     <packaging>pom</packaging>
     <name>storage-routing-integration</name>
-    <description>Storage Routing 与 Relational Access、ShardingSphere 等基础设施的集成模块集合。</description>
+    <description>Storage Routing 与 ShardingSphere 等基础设施的集成模块集合。</description>
 
     <modules>
-        <module>storage-routing-integration-relational</module>
         <module>storage-routing-integration-shardingsphere-jdbc</module>
         <module>storage-routing-integration-shardingsphere-proxy</module>
     </modules>

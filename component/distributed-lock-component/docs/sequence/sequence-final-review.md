@@ -17,7 +17,7 @@ API -> Core -> SPI -> Provider -> Resource
 | `distributed-lock-spi` | `LockProvider`, `LockProviderRegistry`, `LockProviderCapabilities`, lock protocol request/response/status objects, `FencingTokenProvider`, `FencingTokenRequest`, `FencingTokenResponse`, `FencingTokenStatus` |
 | `distributed-lock-provider-redis` | `RedisLockProvider`, Redis key/script helpers |
 | `distributed-lock-provider-redisson` | `RedissonLockProvider`, Redisson ownership/watchdog integration |
-| `distributed-lock-fencing-provider-jdbc` | `JdbcSequenceFencingTokenProvider`, JDBC token storage/schema helpers |
+| `distributed-lock-fencing-provider-mybatis` | `MyBatisSequenceFencingTokenProvider`、Mapper/XML 与 schema 脚本 |
 | Resource | Redis, DB, business repository/resource |
 
 ## Boundary correction
@@ -25,11 +25,11 @@ API -> Core -> SPI -> Provider -> Resource
 `distributed-lock-spi` is now an independent Maven module.
 
 `FencingTokenProvider` and its request/response/status objects belong to `distributed-lock-spi`.
-`JdbcSequenceFencingTokenProvider` belongs to `distributed-lock-fencing-provider-jdbc`.
+`MyBatisSequenceFencingTokenProvider` belongs to `distributed-lock-fencing-provider-mybatis`.
 
 Therefore:
 - SPI diagrams may contain `FencingTokenProvider`.
-- Provider diagrams must contain concrete implementations such as `RedisLockProvider`, `RedissonLockProvider`, and `JdbcSequenceFencingTokenProvider`.
+- Provider diagrams must contain concrete implementations such as `RedisLockProvider`, `RedissonLockProvider`, and `MyBatisSequenceFencingTokenProvider`.
 - API must not call SPI directly.
 - Core is responsible for orchestration.
 

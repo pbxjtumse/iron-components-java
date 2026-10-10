@@ -20,8 +20,8 @@ rectangle "idempotent-core" {
 }
 rectangle "providers" {
   [RedisIdempotencyRepository]
-  [JdbcIdempotencyRepository]
-  [RoutedJdbcIdempotencyRepository]
+  [MyBatisIdempotencyRepository]
+  [RoutedMyBatisIdempotencyRepository]
 }
 rectangle "integrations" {
   [StorageRouteAwareIdempotencyExecutor]
@@ -42,8 +42,8 @@ Caller --> [IdempotencyExecutor]
 [DefaultIdempotencyExecutor] --> [DefaultIdempotencyStateMachine]
 [DefaultIdempotencyExecutor] --> [IdempotencyBusinessExecutor]
 [RepositoryRegistry] --> [RedisIdempotencyRepository]
-[RepositoryRegistry] --> [JdbcIdempotencyRepository]
-[RepositoryRegistry] --> [RoutedJdbcIdempotencyRepository]
+[RepositoryRegistry] --> [MyBatisIdempotencyRepository]
+[RepositoryRegistry] --> [RoutedMyBatisIdempotencyRepository]
 [StorageRouteAwareIdempotencyExecutor] ..> [Storage Routing]
 [StorageRouteAwareIdempotencyTransactionCoordinator] ..> [Transaction Component]
 [DefaultIdempotencyExecutor] ..> [Distributed Lock optional]

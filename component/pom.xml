@@ -135,7 +135,7 @@
             </dependency>
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
-                <artifactId>distributed-lock-fencing-provider-jdbc</artifactId>
+                <artifactId>distributed-lock-fencing-provider-mybatis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -278,12 +278,17 @@
             </dependency>
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
-                <artifactId>idempotent-provider-jdbc</artifactId>
+                <artifactId>idempotent-provider-mybatis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
                 <artifactId>idempotent-integration-transaction</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>idempotent-integration-storage-routing</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -408,11 +413,6 @@
             </dependency>
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
-                <artifactId>reliable-task-provider-jdbc</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.xjtu.iron</groupId>
                 <artifactId>reliable-task-provider-mybatis</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -429,17 +429,7 @@
             <!-- relational-access-component -->
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
-                <artifactId>relational-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.xjtu.iron</groupId>
-                <artifactId>relational-spi</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.xjtu.iron</groupId>
-                <artifactId>relational-core</artifactId>
+                <artifactId>relational-mybatis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -456,11 +446,6 @@
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
                 <artifactId>storage-routing-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.xjtu.iron</groupId>
-                <artifactId>storage-routing-integration-relational</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

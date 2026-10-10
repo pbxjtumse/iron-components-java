@@ -14,7 +14,7 @@ distributed-lock-component
 ├── distributed-lock-provider
 │   ├── distributed-lock-provider-redis
 │   ├── distributed-lock-provider-redisson
-│   └── distributed-lock-fencing-provider-jdbc
+│   └── distributed-lock-fencing-provider-mybatis
 ├── distributed-lock-starter
 ├── distributed-lock-demo
 └── docs
@@ -39,7 +39,7 @@ Redis / Redisson / JDBC / Business Resource
 - `distributed-lock-api`：业务入口与公共模型，例如 `DistributedLockClient`、`LockOptions`、`LockHandle`、`LockResult`。
 - `distributed-lock-core`：核心编排，例如加锁、等待、执行模板、watchdog、fencing 选择、事件和指标。
 - `distributed-lock-spi`：Provider 契约与协议对象，例如 `LockProvider`、`LockProviderRegistry`、`FencingTokenProvider`、acquire/release/renew/check request/response。
-- `distributed-lock-provider-*`：具体 Provider 实现，例如 Redis Lua、Redisson、JDBC fencing provider。
+- `distributed-lock-provider-*`：具体 Provider 实现，例如 Redis Lua、Redisson、MyBatis fencing provider。
 - `distributed-lock-starter`：Spring Boot 自动装配，当前是 all-in-one starter。
 - `distributed-lock-demo`：使用示例和装配验证。
 
@@ -63,7 +63,7 @@ Redis / Redisson / JDBC / Business Resource
 ### JDBC Fencing Provider
 
 - `FencingTokenProvider` 已位于 `distributed-lock-spi`。
-- `JdbcSequenceFencingTokenProvider` 位于 `distributed-lock-fencing-provider-jdbc`。
+- `MyBatisSequenceFencingTokenProvider` 位于 `distributed-lock-fencing-provider-mybatis`。
 - Core 通过 `FencingTokenCoordinator` 选择 NONE / NATIVE / EXTERNAL。
 - External fencing 发号后会重新校验持锁状态，避免发号期间锁过期后旧 owner 继续执行业务。
 
@@ -98,7 +98,7 @@ Redis Provider 和 Redisson Provider 是不同协调域，不建议无保护滚�
 - 独立 `distributed-lock-spi` Maven module。
 - `FencingTokenProvider` 迁入 SPI。
 - Provider 不再反向依赖 Core。
-- 清理 JDBC fencing provider 对 Core 的不必要依赖。
+- 清理 MyBatis fencing provider 对 Core 的不必要依赖。
 - SPI 协议测试迁入 `distributed-lock-spi`。
 - 删除尚未上线前保留的 deprecated overload。
 - 清理压缩包中的 `target/`、`__MACOSX/`、`.DS_Store`。

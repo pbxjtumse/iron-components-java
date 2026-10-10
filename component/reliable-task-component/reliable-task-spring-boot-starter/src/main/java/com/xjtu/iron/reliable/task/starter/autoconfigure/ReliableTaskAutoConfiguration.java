@@ -30,7 +30,6 @@ import java.util.UUID;
 
 /** Reliable Task 的 Spring Boot 自动装配。 */
 @AutoConfiguration(afterName = {
-        "com.xjtu.iron.reliable.task.starter.autoconfigure.ReliableTaskJdbcProviderAutoConfiguration",
         "com.xjtu.iron.reliable.task.starter.autoconfigure.ReliableTaskMyBatisProviderAutoConfiguration"
 })
 @EnableConfigurationProperties(ReliableTaskProperties.class)

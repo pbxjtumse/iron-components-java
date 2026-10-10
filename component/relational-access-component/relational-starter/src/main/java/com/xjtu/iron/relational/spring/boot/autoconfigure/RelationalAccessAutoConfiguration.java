@@ -1,15 +1,15 @@
 package com.xjtu.iron.relational.spring.boot.autoconfigure;
 
-import com.xjtu.iron.relational.api.RelationalTemplate;
-import com.xjtu.iron.relational.core.DefaultRelationalTemplate;
-import com.xjtu.iron.relational.core.connection.SingleDataSourceResolver;
-import com.xjtu.iron.relational.core.exception.StandardSqlExceptionTranslator;
-import com.xjtu.iron.relational.integration.spring.SpringTransactionAwareConnectionProvider;
-import com.xjtu.iron.relational.spi.connection.ConnectionProvider;
-import com.xjtu.iron.relational.spi.connection.DataSourceResolver;
-import com.xjtu.iron.relational.spi.exception.SqlExceptionTranslator;
-import com.xjtu.iron.relational.spi.execution.SqlExecutionContext;
-import com.xjtu.iron.relational.spi.execution.SqlExecutionListener;
+import com.xjtu.iron.relational.mybatis.FixedMyBatisAccessResolver;
+import com.xjtu.iron.relational.mybatis.MyBatisAccess;
+import com.xjtu.iron.relational.mybatis.MyBatisAccessInvocation;
+import com.xjtu.iron.relational.mybatis.MyBatisAccessListener;
+import com.xjtu.iron.relational.mybatis.MyBatisAccessResolver;
+import com.xjtu.iron.relational.mybatis.SpringMyBatisAccess;
+import com.xjtu.iron.transaction.api.execution.TransactionExecutor;
+import com.xjtu.iron.transaction.core.executor.DefaultTransactionExecutor;
+import com.xjtu.iron.transaction.provider.spring.transaction.SpringTransactionProvider;
+import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.context.annotation.Bean;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 import javax.sql.DataSource;
 import java.time.Duration;
@@ -24,90 +25,96 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Relational Access v1 的 Spring Boot 自动配置。
+ * 关系型技术表 MyBatis Access 的 Spring Boot 自动配置。
  *
- * <p>单 DataSource 或唯一 Primary DataSource 场景下，Starter 会自动创建
- * SingleDataSourceResolver -> SpringTransactionAwareConnectionProvider -> RelationalTemplate。</p>
- *
- * <p>多数据源场景下，Starter 不负责创建真实 DataSource，也不负责计算分片。调用方只需要提供
- * 自定义 {@link DataSourceResolver} 或 {@link ConnectionProvider} Bean，本配置仍会继续补齐后续
- * ConnectionProvider / SqlExceptionTranslator / RelationalTemplate。</p>
- *
- * <p>本配置不会创建事务。{@link SpringTransactionAwareConnectionProvider} 只会复用 Spring 已经绑定
- * 到当前线程的事务 Connection；事务的 begin/commit/rollback 和传播语义仍由 transaction-component
- * 或 Spring Transaction 在外层负责。</p>
+ * <p>本配置复用业务应用已经创建的 DataSource 和 SqlSessionTemplate，不额外创建连接池或
+ * SqlSessionFactory。存在 transaction-component 时，Access 同时提供当前事务资源校验和
+ * REQUIRES_NEW 能力。</p>
  */
-@AutoConfiguration
-@ConditionalOnClass({DataSource.class, RelationalTemplate.class})
+@AutoConfiguration(
+        afterName = {
+                "org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration",
+                "com.xjtu.iron.transaction.starter.autoconfigure.TransactionAutoConfiguration"
+        }
+)
+@ConditionalOnClass({SqlSessionTemplate.class, MyBatisAccess.class})
 public class RelationalAccessAutoConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(MyBatisAccessListener.class)
+    public MyBatisAccessListener myBatisAccessListener() {
+        return MyBatisAccessListener.noop();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(TransactionExecutor.class)
     @ConditionalOnSingleCandidate(DataSource.class)
-    public DataSourceResolver relationalDataSourceResolver(DataSource dataSource) {
-        return new SingleDataSourceResolver(dataSource);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnBean(DataSourceResolver.class)
-    public ConnectionProvider relationalConnectionProvider(DataSourceResolver dataSourceResolver) {
-        return new SpringTransactionAwareConnectionProvider(dataSourceResolver);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public SqlExceptionTranslator relationalSqlExceptionTranslator() {
-        return new StandardSqlExceptionTranslator();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(RelationalTemplate.class)
-    @ConditionalOnBean(ConnectionProvider.class)
-    public RelationalTemplate relationalTemplate(
-            ConnectionProvider connectionProvider,
-            SqlExceptionTranslator exceptionTranslator,
-            ObjectProvider<SqlExecutionListener> listenerProvider
-    ) {
-        List<SqlExecutionListener> listeners = listenerProvider.orderedStream().toList();
-        if (listeners.isEmpty()) {
-            return new DefaultRelationalTemplate(connectionProvider, exceptionTranslator);
-        }
-        return new DefaultRelationalTemplate(
-                connectionProvider,
-                exceptionTranslator,
-                compositeListener(listeners)
+    public TransactionExecutor myBatisTransactionExecutor(DataSource dataSource) {
+        return new DefaultTransactionExecutor(
+                new SpringTransactionProvider(new DataSourceTransactionManager(dataSource))
         );
     }
 
-    private SqlExecutionListener compositeListener(List<SqlExecutionListener> listeners) {
-        return new SqlExecutionListener() {
+    @Bean
+    @ConditionalOnMissingBean(MyBatisAccess.class)
+    @ConditionalOnBean(SqlSessionTemplate.class)
+    @ConditionalOnSingleCandidate(DataSource.class)
+    public MyBatisAccess myBatisAccess(
+            DataSource dataSource,
+            SqlSessionTemplate sqlSessionTemplate,
+            ObjectProvider<TransactionExecutor> transactionExecutorProvider,
+            ObjectProvider<MyBatisAccessListener> listenerProvider
+    ) {
+        return new SpringMyBatisAccess(
+                dataSource,
+                sqlSessionTemplate,
+                transactionExecutorProvider.getIfAvailable(),
+                compositeListener(listenerProvider.orderedStream().toList())
+        );
+    }
+
+    @Bean
+    @ConditionalOnBean(MyBatisAccess.class)
+    @ConditionalOnMissingBean(MyBatisAccessResolver.class)
+    public MyBatisAccessResolver myBatisAccessResolver(MyBatisAccess access) {
+        return FixedMyBatisAccessResolver.defaultDataSource(access);
+    }
+
+    private MyBatisAccessListener compositeListener(List<MyBatisAccessListener> listeners) {
+        if (listeners.isEmpty()) {
+            return MyBatisAccessListener.noop();
+        }
+        return new MyBatisAccessListener() {
             @Override
-            public void beforeExecute(SqlExecutionContext context) {
-                notifyEach(listeners, listener -> listener.beforeExecute(context));
+            public void before(MyBatisAccessInvocation invocation) {
+                notifyEach(listeners, listener -> listener.before(invocation));
             }
 
             @Override
-            public void afterSuccess(SqlExecutionContext context, Duration elapsed) {
-                notifyEach(listeners, listener -> listener.afterSuccess(context, elapsed));
+            public void afterSuccess(MyBatisAccessInvocation invocation, Duration elapsed) {
+                notifyEach(listeners, listener -> listener.afterSuccess(invocation, elapsed));
             }
 
             @Override
-            public void afterFailure(SqlExecutionContext context, Duration elapsed, Throwable failure) {
-                notifyEach(listeners, listener -> listener.afterFailure(context, elapsed, failure));
+            public void afterFailure(
+                    MyBatisAccessInvocation invocation,
+                    Duration elapsed,
+                    Throwable failure
+            ) {
+                notifyEach(listeners, listener -> listener.afterFailure(invocation, elapsed, failure));
             }
         };
     }
 
     private void notifyEach(
-            List<SqlExecutionListener> listeners,
-            Consumer<SqlExecutionListener> callback
+            List<MyBatisAccessListener> listeners,
+            Consumer<MyBatisAccessListener> callback
     ) {
-        for (SqlExecutionListener listener : listeners) {
+        for (MyBatisAccessListener listener : listeners) {
             try {
                 callback.accept(listener);
             } catch (RuntimeException ignored) {
-                // Observation is a side channel. One listener must not block SQL execution or other listeners.
+                // 观测是旁路能力，不能阻断数据库访问或其他监听器。
             }
         }
     }

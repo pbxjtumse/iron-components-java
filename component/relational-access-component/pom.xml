@@ -17,10 +17,7 @@
     <description>Iron Components 关系型数据库访问基础组件。</description>
 
     <modules>
-        <module>relational-api</module>
-        <module>relational-spi</module>
-        <module>relational-core</module>
-        <module>relational-integration</module>
+        <module>relational-mybatis</module>
         <module>relational-starter</module>
     </modules>
 </project>

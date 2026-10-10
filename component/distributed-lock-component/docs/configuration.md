@@ -5,11 +5,11 @@
 | 配置前缀 | 归属 | 说明 |
 |---|---|---|
 | `spring.data.redis.*` | 最终应用 | Redis 地址、端口、密码、database、连接与拓扑信息 |
-| `spring.datasource.*` | 最终应用 | JDBC fencing 与业务数据库连接 |
+| `spring.datasource.*` | 最终应用 | MyBatis fencing 与业务数据库连接 |
 | `xjtu.iron.distributed-lock.*` | 分布式锁 Starter | 默认锁选项、Provider、等待和 fencing 选择 |
 | `xjtu.iron.distributed-lock.redis.*` | 自研 Redis Lua Provider | key 前缀与 Lua Provider 语义 |
 | `xjtu.iron.distributed-lock.redisson.*` | Redisson Provider | Redisson Provider、watchdog、副本同步与 client 选择 |
-| `xjtu.iron.distributed-lock.fencing.jdbc.*` | JDBC fencing Provider | token 表、重试、建表策略 |
+| `xjtu.iron.distributed-lock.fencing.mybatis.*` | MyBatis fencing Provider | token 表、重试、建表策略 |
 
 Starter、Core、Provider 不携带业务 `application.yml`；独立 Demo 和最终 `start` 应用负责提供配置值。
 
@@ -63,7 +63,7 @@ xjtu:
 
       # redis：强制使用自研 Redis Provider 原生 INCR fencing
       # redisson：强制使用 Redisson RFencedLock 原生 fencing
-      # jdbc-sequence：强制使用独立 JDBC fencing Provider
+      # mybatis-sequence：强制使用独立 MyBatis fencing Provider
       fencing-token-provider-name:
 
       fail-on-lock-lost: true
@@ -137,7 +137,7 @@ xjtu:
 当 `fencing-required=true` 时，采用下面的确定性规则，不对 external provider 做隐式猜测：
 
 1. `fencingTokenProviderName` 显式指定并且等于当前 `LockProvider.providerName()`：要求当前 Lock Provider 支持 native fencing，否则参数非法。例如 `provider=redisson + fencingTokenProviderName=redisson` 使用 `RFencedLock`。
-2. `fencingTokenProviderName` 显式指定且不同于当前 Lock Provider：按名称从 `FencingTokenProviderRegistry` 精确选择 external provider。例如 `provider=redisson + fencingTokenProviderName=jdbc-sequence`。
+2. `fencingTokenProviderName` 显式指定且不同于当前 Lock Provider：按名称从 `FencingTokenProviderRegistry` 精确选择 external provider。例如 `provider=redisson + fencingTokenProviderName=mybatis-sequence`。
 3. 未显式指定，并且当前 Lock Provider 支持 native fencing：直接走 native fencing。当前 `redis` 和 `redisson` 都支持这一模式。
 4. 未显式指定，而当前 Lock Provider 不支持 native fencing：直接返回参数错误，要求调用方明确指定 external provider；组件不会因为注册表中“刚好只有一个 Provider”就自动猜测。
 

@@ -14,6 +14,8 @@ import com.xjtu.iron.reliable.task.api.state.ReliableTaskStatus;
 import com.xjtu.iron.reliable.task.provider.mybatis.mapper.ReliableTaskMapper;
 import com.xjtu.iron.reliable.task.provider.mybatis.mapping.ReliableTaskRow;
 import com.xjtu.iron.reliable.task.provider.mybatis.sql.MyBatisReliableTaskTable;
+import com.xjtu.iron.relational.mybatis.MyBatisAccess;
+import com.xjtu.iron.relational.mybatis.MyBatisConstraintViolationDetector;
 
 import java.time.Instant;
 import java.util.List;
@@ -23,17 +25,17 @@ import java.util.Optional;
 /** 基于 MyBatis Mapper 的 ReliableTaskRepository 实现。 */
 public final class MyBatisReliableTaskRepository implements ReliableTaskRepository {
 
-    /** 执行可靠任务固定 SQL 的 MyBatis Mapper。 */
-    private final ReliableTaskMapper mapper;
+    /** 统一获取 Mapper、校验事务资源并上报观测事件的公共 Access。 */
+    private final MyBatisAccess access;
     /** 经过白名单校验、允许安全展开到 Mapper XML 的表名。 */
     private final String tableName;
 
-    public MyBatisReliableTaskRepository(ReliableTaskMapper mapper) {
-        this(mapper, MyBatisReliableTaskTable.DEFAULT_TABLE_NAME);
+    public MyBatisReliableTaskRepository(MyBatisAccess access) {
+        this(access, MyBatisReliableTaskTable.DEFAULT_TABLE_NAME);
     }
 
-    public MyBatisReliableTaskRepository(ReliableTaskMapper mapper, String tableName) {
-        this.mapper = Objects.requireNonNull(mapper, "mapper must not be null");
+    public MyBatisReliableTaskRepository(MyBatisAccess access, String tableName) {
+        this.access = Objects.requireNonNull(access, "access must not be null");
         this.tableName = MyBatisReliableTaskTable.validate(tableName);
     }
 
@@ -41,7 +43,7 @@ public final class MyBatisReliableTaskRepository implements ReliableTaskReposito
     public ReliableTaskCreateResult create(ReliableTask task) {
         Objects.requireNonNull(task, "task must not be null");
         try {
-            mapper.insert(tableName, task);
+            execute("reliable-task.create", mapper -> mapper.insert(tableName, task));
             return ReliableTaskCreateResult.CREATED;
         } catch (RuntimeException failure) {
             if (MyBatisConstraintViolationDetector.isConstraintViolation(failure)
@@ -55,25 +57,25 @@ public final class MyBatisReliableTaskRepository implements ReliableTaskReposito
     @Override
     public Optional<ReliableTask> find(ReliableTaskKey key) {
         Objects.requireNonNull(key, "key must not be null");
-        ReliableTaskRow row = mapper.find(
+        ReliableTaskRow row = execute("reliable-task.find", mapper -> mapper.find(
                 tableName,
                 key.getStoreName(),
                 key.getNamespace(),
                 key.getTaskId()
-        );
+        ));
         return row == null ? Optional.empty() : Optional.of(row.toDomain());
     }
 
     @Override
     public List<ReliableTask> findDue(ReliableTaskScanQuery query) {
         Objects.requireNonNull(query, "query must not be null");
-        return mapper.findDue(
+        return execute("reliable-task.find-due", mapper -> mapper.findDue(
                         tableName,
                         query.getStoreName(),
                         query.getScanBucket(),
                         query.getNow(),
                         query.getLimit()
-                ).stream()
+                )).stream()
                 .map(ReliableTaskRow::toDomain)
                 .toList();
     }
@@ -83,14 +85,14 @@ public final class MyBatisReliableTaskRepository implements ReliableTaskReposito
         Objects.requireNonNull(command, "command must not be null");
         ReliableTask candidate = command.getCandidate();
         boolean expiredRunning = candidate.getStatus() == ReliableTaskStatus.RUNNING;
-        int affectedRows = mapper.tryClaim(
+        int affectedRows = execute("reliable-task.claim", mapper -> mapper.tryClaim(
                 tableName,
                 candidate,
                 command.getOwnerId(),
                 command.getNow(),
                 command.getLeaseUntil(),
                 expiredRunning
-        );
+        ));
         if (affectedRows != 1) {
             return ReliableTaskClaimResult.missed();
         }
@@ -103,7 +105,7 @@ public final class MyBatisReliableTaskRepository implements ReliableTaskReposito
     public boolean transition(ReliableTaskTransitionCommand command) {
         Objects.requireNonNull(command, "command must not be null");
         Instant completedAt = command.getTargetStatus().isTerminal() ? command.getNow() : null;
-        return mapper.transition(
+        return execute("reliable-task.transition", mapper -> mapper.transition(
                 tableName,
                 command.getKey().getStoreName(),
                 command.getKey().getNamespace(),
@@ -116,13 +118,13 @@ public final class MyBatisReliableTaskRepository implements ReliableTaskReposito
                 command.getErrorMessage(),
                 command.getNow(),
                 completedAt
-        ) == 1;
+        )) == 1;
     }
 
     @Override
     public boolean renewLease(ReliableTaskLeaseRenewCommand command) {
         Objects.requireNonNull(command, "command must not be null");
-        return mapper.renewLease(
+        return execute("reliable-task.renew-lease", mapper -> mapper.renewLease(
                 tableName,
                 command.getKey().getStoreName(),
                 command.getKey().getNamespace(),
@@ -131,14 +133,14 @@ public final class MyBatisReliableTaskRepository implements ReliableTaskReposito
                 command.getExpectedVersion(),
                 command.getNow(),
                 command.getLeaseUntil()
-        ) == 1;
+        )) == 1;
     }
 
     @Override
     public boolean adminTransition(ReliableTaskAdminTransitionCommand command) {
         Objects.requireNonNull(command, "command must not be null");
         Instant completedAt = command.getTargetStatus().isTerminal() ? command.getNow() : null;
-        return mapper.adminTransition(
+        return execute("reliable-task.admin-transition", mapper -> mapper.adminTransition(
                 tableName,
                 command.getKey().getStoreName(),
                 command.getKey().getNamespace(),
@@ -150,7 +152,20 @@ public final class MyBatisReliableTaskRepository implements ReliableTaskReposito
                 command.isResetAttempts(),
                 command.getNow(),
                 completedAt
-        ) == 1;
+        )) == 1;
+    }
+
+    private <T> T execute(
+            String operationName,
+            com.xjtu.iron.relational.mybatis.MyBatisMapperWork<ReliableTaskMapper, T> work
+    ) {
+        try {
+            return access.execute(operationName, ReliableTaskMapper.class, work);
+        } catch (RuntimeException failure) {
+            throw failure;
+        } catch (Exception failure) {
+            throw new IllegalStateException("MyBatis Reliable Task operation failed: " + operationName, failure);
+        }
     }
 
     private static ReliableTask claimedSnapshot(

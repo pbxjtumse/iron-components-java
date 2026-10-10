@@ -5,7 +5,6 @@ import com.xjtu.iron.reliable.task.api.client.ReliableTaskClient;
 import com.xjtu.iron.reliable.task.api.client.ReliableTaskAdminClient;
 import com.xjtu.iron.reliable.task.api.repository.ReliableTaskRepository;
 import com.xjtu.iron.reliable.task.api.scan.ReliableTaskScanner;
-import com.xjtu.iron.reliable.task.provider.jdbc.repository.JdbcReliableTaskRepository;
 import com.xjtu.iron.reliable.task.provider.mybatis.repository.MyBatisReliableTaskRepository;
 import com.xjtu.iron.reliable.task.starter.properties.ReliableTaskProperties;
 import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
@@ -24,7 +23,8 @@ class ReliableTaskAutoConfigurationTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
                     RelationalAccessAutoConfiguration.class,
-                    ReliableTaskJdbcProviderAutoConfiguration.class,
+                    MybatisAutoConfiguration.class,
+                    ReliableTaskMyBatisProviderAutoConfiguration.class,
                     ReliableTaskAutoConfiguration.class,
                     LocalReliableTaskSchedulerConfiguration.class
             ))
@@ -34,7 +34,7 @@ class ReliableTaskAutoConfigurationTest {
     void shouldCreateCoreRuntimeButKeepLocalSchedulerDisabledByDefault() {
         contextRunner.run(context -> {
             assertThat(context).hasSingleBean(ReliableTaskRepository.class);
-            assertThat(context).hasSingleBean(JdbcReliableTaskRepository.class);
+            assertThat(context).hasSingleBean(MyBatisReliableTaskRepository.class);
             assertThat(context).hasSingleBean(ReliableTaskClient.class);
             assertThat(context).hasSingleBean(ReliableTaskAdminClient.class);
             assertThat(context).hasSingleBean(ReliableTaskScanner.class);
@@ -50,19 +50,18 @@ class ReliableTaskAutoConfigurationTest {
     }
 
     @Test
-    void shouldSelectMyBatisProviderWhenExplicitlyConfigured() {
+    void shouldUseMyBatisProviderWithoutAProviderSwitch() {
         new ApplicationContextRunner()
                 .withConfiguration(AutoConfigurations.of(
                         MybatisAutoConfiguration.class,
+                        RelationalAccessAutoConfiguration.class,
                         ReliableTaskMyBatisProviderAutoConfiguration.class,
                         ReliableTaskAutoConfiguration.class
                 ))
                 .withBean(DataSource.class, ReliableTaskAutoConfigurationTest::dataSource)
-                .withPropertyValues("xjtu.iron.reliable-task.provider=mybatis")
                 .run(context -> {
                     assertThat(context).hasSingleBean(ReliableTaskRepository.class);
                     assertThat(context).hasSingleBean(MyBatisReliableTaskRepository.class);
-                    assertThat(context).doesNotHaveBean(JdbcReliableTaskRepository.class);
                     assertThat(context).hasSingleBean(ReliableTaskClient.class);
                 });
     }
@@ -71,7 +70,6 @@ class ReliableTaskAutoConfigurationTest {
     void shouldFailFastWhenSelectedProviderIsUnavailable() {
         new ApplicationContextRunner()
                 .withConfiguration(AutoConfigurations.of(ReliableTaskAutoConfiguration.class))
-                .withPropertyValues("xjtu.iron.reliable-task.provider=mybatis")
                 .run(context -> {
                     assertThat(context).hasFailed();
                     assertThat(context.getStartupFailure())

@@ -16,7 +16,7 @@ Spring Boot 环境存在 Micrometer 时，Starter 自动装配 `MicrometerLockMe
 | tag | 含义 |
 |---|---|
 | `lock.provider` | 互斥锁 Provider，例如 `redis` |
-| `fencing.provider` | token 来源，例如 `redis`、`jdbc-sequence` |
+| `fencing.provider` | token 来源，例如 `redis`、`mybatis-sequence` |
 | `namespace` | 锁命名空间 |
 | `success` | 发号是否成功 |
 

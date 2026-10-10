@@ -34,11 +34,11 @@ class DefaultDistributedLockClientFencingTest {
         DefaultDistributedLockClient client = client(lockProvider, issuedProvider(42L));
 
         LockResult<LockHandle> result = client.tryLock("order:1",
-                LockOptions.builder().fencingRequired(true) .fencingTokenProviderName("jdbc-sequence").build());
+                LockOptions.builder().fencingRequired(true) .fencingTokenProviderName("mybatis-sequence").build());
 
         assertThat(result.status()).isEqualTo(LockStatus.ACQUIRED);
         assertThat(result.fencingToken()).contains(42L);
-        assertThat(result.fencingTokenProviderName()).contains("jdbc-sequence");
+        assertThat(result.fencingTokenProviderName()).contains("mybatis-sequence");
         assertThat(lockProvider.lastRequest.isNativeFencingRequired()).isFalse();
     }
 
@@ -49,7 +49,7 @@ class DefaultDistributedLockClientFencingTest {
         DefaultDistributedLockClient client = client(lockProvider, issuedProvider(42L));
 
         LockResult<LockHandle> result = client.tryLock("order:lost",
-                LockOptions.builder().fencingRequired(true) .fencingTokenProviderName("jdbc-sequence").build());
+                LockOptions.builder().fencingRequired(true) .fencingTokenProviderName("mybatis-sequence").build());
 
         assertThat(result.status()).isEqualTo(LockStatus.LOCK_LOST);
         assertThat(result.stage()).isEqualTo(LockStage.CHECK);
@@ -65,7 +65,7 @@ class DefaultDistributedLockClientFencingTest {
 
         LockResult<String> result = client.execute("order:1",
                 LockOptions.builder().fencingRequired(true)
-                        .fencingTokenProviderName("jdbc-sequence").build(),
+                        .fencingTokenProviderName("mybatis-sequence").build(),
                 handle -> "must-not-run");
 
         assertThat(result.status()).isEqualTo(LockStatus.PROVIDER_ERROR);
@@ -81,7 +81,7 @@ class DefaultDistributedLockClientFencingTest {
 
     private FencingTokenProvider issuedProvider(long token) {
         return new FencingTokenProvider() {
-            @Override public String providerName() { return "jdbc-sequence"; }
+            @Override public String providerName() { return "mybatis-sequence"; }
             @Override public boolean supports(FencingTokenRequest request) { return true; }
             @Override public FencingTokenResponse nextToken(FencingTokenRequest request) {
                 return FencingTokenResponse.issued(token);
@@ -91,7 +91,7 @@ class DefaultDistributedLockClientFencingTest {
 
     private FencingTokenProvider failedProvider() {
         return new FencingTokenProvider() {
-            @Override public String providerName() { return "jdbc-sequence"; }
+            @Override public String providerName() { return "mybatis-sequence"; }
             @Override public boolean supports(FencingTokenRequest request) { return true; }
             @Override public FencingTokenResponse nextToken(FencingTokenRequest request) {
                 return FencingTokenResponse.failed(new IllegalStateException("db unavailable"));

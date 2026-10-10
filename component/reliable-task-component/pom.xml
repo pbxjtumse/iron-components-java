@@ -17,7 +17,6 @@
         <module>reliable-task-api</module>
         <module>reliable-task-core</module>
         <module>reliable-task-provider-testkit</module>
-        <module>reliable-task-provider-jdbc</module>
         <module>reliable-task-provider-mybatis</module>
         <module>reliable-task-spring-boot-starter</module>
     </modules>

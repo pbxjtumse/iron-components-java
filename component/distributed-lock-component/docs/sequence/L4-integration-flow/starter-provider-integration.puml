@@ -7,7 +7,7 @@ participant LockProviderRegistry as R
 participant RedisLockProvider as Redis
 participant RedissonLockProvider as Redisson
 participant FencingTokenCoordinator as F
-participant JdbcSequenceFencingTokenProvider as JDBC
+participant MyBatisSequenceFencingTokenProvider as JDBC
 participant MicrometerLockMetricsRecorder as M
 participant DistributedLockHealthIndicator as H
 

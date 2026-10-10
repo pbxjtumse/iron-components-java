@@ -1,4 +1,3 @@
-com.xjtu.iron.reliable.task.starter.autoconfigure.ReliableTaskJdbcProviderAutoConfiguration
 com.xjtu.iron.reliable.task.starter.autoconfigure.ReliableTaskMyBatisProviderAutoConfiguration
 com.xjtu.iron.reliable.task.starter.autoconfigure.ReliableTaskAutoConfiguration
 com.xjtu.iron.reliable.task.starter.autoconfigure.LocalReliableTaskSchedulerConfiguration

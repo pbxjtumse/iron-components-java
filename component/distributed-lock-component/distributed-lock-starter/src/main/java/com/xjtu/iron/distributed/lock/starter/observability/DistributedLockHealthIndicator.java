@@ -1,13 +1,13 @@
 package com.xjtu.iron.distributed.lock.starter.observability;
 
 import com.xjtu.iron.distributed.lock.core.fencing.registry.FencingTokenProviderRegistry;
-import com.xjtu.iron.distributed.lock.provider.jdbc.fencing.JdbcFencingTokenConstants;
+import com.xjtu.iron.distributed.lock.provider.mybatis.fencing.MyBatisFencingTokenConstants;
 import com.xjtu.iron.distributed.lock.provider.redisson.RedissonLockConstants;
 import com.xjtu.iron.distributed.lock.spi.LockProvider;
 import com.xjtu.iron.distributed.lock.spi.LockProviderCapabilities;
 import com.xjtu.iron.distributed.lock.spi.LockProviderRegistry;
 import com.xjtu.iron.distributed.lock.starter.properties.DistributedLockProperties;
-import com.xjtu.iron.distributed.lock.starter.properties.JdbcFencingTokenProperties;
+import com.xjtu.iron.distributed.lock.starter.properties.MyBatisFencingTokenProperties;
 import com.xjtu.iron.distributed.lock.starter.properties.RedisDistributedLockProperties;
 import com.xjtu.iron.distributed.lock.starter.properties.RedissonDistributedLockProperties;
 import org.springframework.boot.actuate.health.Health;
@@ -20,21 +20,33 @@ import org.springframework.boot.actuate.health.HealthIndicator;
  */
 public final class DistributedLockHealthIndicator implements HealthIndicator {
 
+    /** 已装配的锁 Provider 注册表。 */
     private final LockProviderRegistry providerRegistry;
+
+    /** 已装配的 fencing token Provider 注册表。 */
     private final FencingTokenProviderRegistry fencingRegistry;
+
+    /** 分布式锁全局配置。 */
     private final DistributedLockProperties properties;
+
+    /** Redis 锁 Provider 配置。 */
     private final RedisDistributedLockProperties redisProperties;
-    private final JdbcFencingTokenProperties jdbcFencingProperties;
+
+    /** MyBatis fencing token Provider 配置。 */
+    private final MyBatisFencingTokenProperties myBatisFencingProperties;
+
+    /** Redisson 锁 Provider 配置。 */
     private final RedissonDistributedLockProperties redissonProperties;
 
     public DistributedLockHealthIndicator(LockProviderRegistry providerRegistry, FencingTokenProviderRegistry fencingRegistry,
-            DistributedLockProperties properties, RedisDistributedLockProperties redisProperties, JdbcFencingTokenProperties jdbcFencingProperties,
+            DistributedLockProperties properties, RedisDistributedLockProperties redisProperties,
+            MyBatisFencingTokenProperties myBatisFencingProperties,
             RedissonDistributedLockProperties redissonProperties) {
         this.providerRegistry = providerRegistry;
         this.fencingRegistry = fencingRegistry;
         this.properties = properties;
         this.redisProperties = redisProperties;
-        this.jdbcFencingProperties = jdbcFencingProperties;
+        this.myBatisFencingProperties = myBatisFencingProperties;
         this.redissonProperties = redissonProperties;
     }
 
@@ -52,10 +64,13 @@ public final class DistributedLockHealthIndicator implements HealthIndicator {
             LockProvider lockProvider = providerRegistry.getDefaultProvider();
             LockProviderCapabilities capabilities = lockProvider.capabilities();
             String configuredFencingProvider = trimToNull(properties.getFencingTokenProviderName());
-            boolean jdbcEnabled = jdbcFencingProperties != null && jdbcFencingProperties.isEnabled();
-            boolean jdbcProviderRegistered = fencingRegistry.findProvider(JdbcFencingTokenConstants.PROVIDER_NAME).isPresent();
+            boolean myBatisEnabled = myBatisFencingProperties != null
+                    && myBatisFencingProperties.isEnabled();
+            boolean myBatisProviderRegistered = fencingRegistry.findProvider(
+                    MyBatisFencingTokenConstants.PROVIDER_NAME
+            ).isPresent();
             boolean fencingReady = isFencingReady(lockProvider, capabilities, configuredFencingProvider);
-            boolean jdbcConfigurationReady = !jdbcEnabled || jdbcProviderRegistered;
+            boolean myBatisConfigurationReady = !myBatisEnabled || myBatisProviderRegistered;
 
             // redisson.enabled 默认 false，因此一旦用户显式打开，就要求 Provider 真正完成装配。
             // 这样可以发现：开启了 Redisson，但 RedissonClient 缺失 / Bean 选择失败 / 自动创建条件不满足。
@@ -63,7 +78,7 @@ public final class DistributedLockHealthIndicator implements HealthIndicator {
             boolean redissonProviderRegistered = providerRegistry.containsProvider(RedissonLockConstants.PROVIDER_NAME);
             boolean redissonConfigurationReady = !redissonEnabled || redissonProviderRegistered;
 
-            Health.Builder builder = fencingReady && jdbcConfigurationReady && redissonConfigurationReady
+            Health.Builder builder = fencingReady && myBatisConfigurationReady && redissonConfigurationReady
                     ? Health.up()
                     : Health.down();
 
@@ -78,9 +93,10 @@ public final class DistributedLockHealthIndicator implements HealthIndicator {
                     .withDetail("nativeFencingSupported", capabilities.isFencingTokenSupported())
                     .withDetail("externalFencingProviders", fencingRegistry.providerNames())
                     .withDetail("fencingReady", fencingReady)
-                    .withDetail("jdbcFencingEnabled", jdbcEnabled)
-                    .withDetail("jdbcFencingProviderRegistered", jdbcProviderRegistered)
-                    .withDetail("jdbcFencingTable", jdbcFencingProperties == null ? null : jdbcFencingProperties.getTableName())
+                    .withDetail("mybatisFencingEnabled", myBatisEnabled)
+                    .withDetail("mybatisFencingProviderRegistered", myBatisProviderRegistered)
+                    .withDetail("mybatisFencingTable", myBatisFencingProperties == null
+                            ? null : myBatisFencingProperties.getTableName())
                     .withDetail("autoRenewSupported", capabilities.isAutoRenewSupported())
                     .withDetail("autoRenewMode", capabilities.getAutoRenewMode().name())
                     .withDetail("manualRenewSupported", capabilities.isManualRenewSupported())

@@ -10,11 +10,8 @@ import com.xjtu.iron.storage.routing.api.route.RouteContext;
 import com.xjtu.iron.storage.routing.api.route.StorageRouteMode;
 import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.core.context.ThreadLocalStorageRouteContext;
-import com.xjtu.iron.storage.routing.integration.relational.StorageRouteToSqlRouteBridge;
 import com.xjtu.iron.storage.routing.integration.shardingsphere.jdbc.ShardingSphereJdbcStorageRouteResolver;
-import com.xjtu.iron.storage.routing.integration.shardingsphere.jdbc.ShardingSphereJdbcStorageRouteToSqlRouteBridge;
 import com.xjtu.iron.storage.routing.integration.shardingsphere.proxy.ShardingSphereProxyStorageRouteResolver;
-import com.xjtu.iron.storage.routing.integration.shardingsphere.proxy.ShardingSphereProxyStorageRouteToSqlRouteBridge;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -27,10 +24,9 @@ class StorageRoutingAutoConfigurationTest {
             .withConfiguration(AutoConfigurations.of(StorageRoutingAutoConfiguration.class));
 
     @Test
-    void shouldAutoConfigureContextAndRelationalBridgeByDefault() {
+    void shouldAutoConfigureContextByDefault() {
         contextRunner.run(context -> {
             assertThat(context.getBean(StorageRouteContext.class)).isInstanceOf(ThreadLocalStorageRouteContext.class);
-            assertThat(context.getBeansOfType(StorageRouteToSqlRouteBridge.class)).hasSize(1);
             assertThat(context.getBeansOfType(StorageRouteResolver.class)).isEmpty();
         });
     }
@@ -103,15 +99,11 @@ class StorageRoutingAutoConfigurationTest {
                         "xjtu.iron.storage-routing.sharding-sphere-jdbc.data-source-key=orders-sharding")
                 .run(context -> {
                     StorageRouteResolver resolver = context.getBean(StorageRouteResolver.class);
-                    StorageRouteToSqlRouteBridge bridge = context.getBean(StorageRouteToSqlRouteBridge.class);
                     StorageRoute route = resolver.resolve(RouteContext.builder().logicalTable("business_order")
                             .shardKey(CompositeShardKey.of(ShardKey.of("order_id", 1001L))).build());
 
                     assertThat(resolver).isInstanceOf(ShardingSphereJdbcStorageRouteResolver.class);
-                    assertThat(bridge).isInstanceOf(ShardingSphereJdbcStorageRouteToSqlRouteBridge.class);
                     assertThat(route.mode()).isEqualTo(StorageRouteMode.SHARDING_SPHERE_JDBC);
-                    assertThat(bridge.toSqlRoute(route).dataSourceKey()).isEqualTo("orders-sharding");
-                    assertThat(bridge.requireTableName(route)).isEqualTo("business_order");
                 });
     }
 
@@ -123,39 +115,22 @@ class StorageRoutingAutoConfigurationTest {
                         "xjtu.iron.storage-routing.sharding-sphere-proxy.data-source-key=orders-proxy")
                 .run(context -> {
                     StorageRouteResolver resolver = context.getBean(StorageRouteResolver.class);
-                    StorageRouteToSqlRouteBridge bridge = context.getBean(StorageRouteToSqlRouteBridge.class);
                     StorageRoute route = resolver.resolve(RouteContext.builder().logicalTable("business_order")
                             .shardKey(CompositeShardKey.of(ShardKey.of("order_id", 1001L))).build());
 
                     assertThat(resolver).isInstanceOf(ShardingSphereProxyStorageRouteResolver.class);
-                    assertThat(bridge).isInstanceOf(ShardingSphereProxyStorageRouteToSqlRouteBridge.class);
                     assertThat(route.mode()).isEqualTo(StorageRouteMode.PROXY);
-                    assertThat(bridge.toSqlRoute(route).dataSourceKey()).isEqualTo("orders-proxy");
-                    assertThat(bridge.requireTableName(route)).isEqualTo("business_order");
                 });
     }
 
     @Test
-    void shouldBackOffWhenUserProvidesContextAndBridge() {
+    void shouldBackOffWhenUserProvidesContext() {
         StorageRouteContext customContext = new ThreadLocalStorageRouteContext();
-        StorageRouteToSqlRouteBridge customBridge = new StorageRouteToSqlRouteBridge() {
-            @Override
-            public com.xjtu.iron.relational.api.statement.SqlRoute toSqlRoute(StorageRoute route) {
-                return com.xjtu.iron.relational.api.statement.SqlRoute.of("custom-db");
-            }
-
-            @Override
-            public String requireTableName(StorageRoute route) {
-                return "custom_table";
-            }
-        };
 
         contextRunner
                 .withBean(StorageRouteContext.class, () -> customContext)
-                .withBean(StorageRouteToSqlRouteBridge.class, () -> customBridge)
                 .run(context -> {
                     assertThat(context.getBean(StorageRouteContext.class)).isSameAs(customContext);
-                    assertThat(context.getBean(StorageRouteToSqlRouteBridge.class)).isSameAs(customBridge);
                 });
     }
 

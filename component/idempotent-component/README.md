@@ -11,7 +11,7 @@
 当前支持两类生命周期：
 
 - `WINDOWED`：有限时间窗口内幂等，默认适合 Redis；
-- `DURABLE`：长期业务事实幂等，默认适合 JDBC。
+- `DURABLE`：长期业务事实幂等，默认使用 MyBatis 技术表。
 
 当前正确性主线：
 
@@ -92,7 +92,7 @@ RecoveryPolicy
 
 ## 4. 三段事务
 
-JDBC 且 transaction integration 可用时：
+MyBatis Access 与 transaction integration 可用时：
 
 ```text
 Tx-A REQUIRES_NEW

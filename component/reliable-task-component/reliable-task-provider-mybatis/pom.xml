@@ -18,9 +18,8 @@
             <artifactId>reliable-task-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.mybatis.spring.boot</groupId>
-            <artifactId>mybatis-spring-boot-starter</artifactId>
-            <optional>true</optional>
+            <groupId>com.xjtu.iron</groupId>
+            <artifactId>relational-mybatis</artifactId>
         </dependency>
         <dependency>
             <groupId>com.xjtu.iron</groupId>

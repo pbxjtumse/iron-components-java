@@ -22,7 +22,10 @@ import java.util.Map;
 @ConditionalOnBean(JdbcFencedDemoRepository.class)
 public class JdbcFencingDemoController {
 
+    /** 执行带 fencing token 的分布式锁操作。 */
     private final DistributedLockClient lockClient;
+
+    /** 演示旧 token 被业务数据库拒绝的订单仓储。 */
     private final JdbcFencedDemoRepository repository;
 
     public JdbcFencingDemoController(DistributedLockClient lockClient, JdbcFencedDemoRepository repository) {
@@ -64,7 +67,7 @@ public class JdbcFencingDemoController {
                 .leaseTime(Duration.ofSeconds(30))
                 .waitTime(Duration.ofSeconds(2))
                 .fencingRequired(true)
-                .fencingTokenProviderName("jdbc-sequence")
+                .fencingTokenProviderName("mybatis-sequence")
                 .build();
 
         return lockClient.execute("demo:jdbc-fencing:" + bizKey, options, handle -> {

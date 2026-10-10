@@ -199,7 +199,7 @@ public final class LockOptions {
      * <p>
      * 为空时优先使用锁 Provider 的原生 fencing；
      * 指定当前锁 Provider 名称（例如 redis）时强制使用原生 fencing；
-     * 指定独立 Provider 名称（例如 jdbc-sequence）时使用外部发号。
+     * 指定独立 Provider 名称（例如 mybatis-sequence）时使用外部发号。
      * </p>
      */
     private final String fencingTokenProviderName;
@@ -572,28 +572,40 @@ public final class LockOptions {
 
     public static final class Builder {
 
+        /** 锁命名空间。 */
         private String namespace = DEFAULT_NAMESPACE;
 
+        /** 获取锁最长等待时间。 */
         private Duration waitTime = DEFAULT_WAIT_TIME;
 
+        /** 锁租约时长。 */
         private Duration leaseTime = DEFAULT_LEASE_TIME;
 
+        /** 获取锁等待策略。 */
         private LockWaitStrategy waitStrategy;
 
+        /** 是否自动续租。 */
         private boolean autoRenew = DEFAULT_AUTO_RENEW;
 
+        /** 自动续租间隔。 */
         private Duration renewInterval;
 
+        /** 自动续租总时长上限。 */
         private Duration maxRenewTime = DEFAULT_MAX_RENEW_TIME;
 
+        /** 是否要求 fencing token。 */
         private boolean fencingRequired = DEFAULT_FENCING_REQUIRED;
 
+        /** 发现锁丢失时是否让业务失败。 */
         private boolean failOnLockLost = DEFAULT_FAIL_ON_LOCK_LOST;
 
+        /** 指定的锁 Provider 名称。 */
         private String providerName;
 
+        /** 指定的独立 fencing token Provider 名称。 */
         private String fencingTokenProviderName;
 
+        /** 非原生等待时使用的重试退避策略。 */
         private RetryBackoffSpec backoffSpec = RetryBackoffSpec.defaults();
 
         private Builder() {

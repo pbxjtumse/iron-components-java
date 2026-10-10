@@ -7,7 +7,7 @@ skinparam shadowing false
 actor Caller
 participant "IdempotencyExecutor" as EXEC
 participant "DistributedLockClient\n(optional)" as LOCK
-database "JdbcIdempotencyRepository" as IDEM
+database "MyBatisIdempotencyRepository" as IDEM
 participant "Business Callback" as BIZ
 
 Caller -> EXEC : execute(key, routeKey, hash)

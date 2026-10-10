@@ -1,241 +1,58 @@
-# Idempotency 与 Storage Routing 集成设计及使用指南
+# Idempotent 与 Storage Routing
 
-> 本文以当前 master 代码为准：`StorageRouteAwareIdempotencyExecutor`、`StorageRoutingIdempotencyJdbcRouteResolver`、Direct / ShardingSphere-JDBC / ShardingSphere-Proxy 三种 StorageRouteMode 已存在。
+## 分工
 
-## 1. 最终结论
-
-幂等请求只描述幂等业务语义，不重复携带 Storage Routing 的物理分片模型：
+Storage Routing 产出“本次访问落在哪里”；Idempotent Provider 拥有“如何读写幂等表”的 Mapper/XML。
 
 ```text
-IdempotencyRequest
-├── key
-├── requestHash
-├── routeKey            # 业务诊断/恢复元数据，不直接参与默认物理分片
-├── storeName
-├── scanBucket
-├── policyName
-└── policy
+IdempotencyStorageContext + key
+            |
+            v
+StorageRoutingIdempotencyPhysicalRouteResolver
+            |
+            v
+IdempotencyPhysicalRoute(dataSourceKey, tableName)
+            |
+            v
+MyBatisAccessResolver -> MyBatisIdempotencyRepository
 ```
 
-物理路由只有两条入口：
+该链路不再经过 `SqlRoute` 或 `StorageRouteToSqlRouteBridge`。
 
-1. **外层业务已经绑定 `StorageRouteScope`**：幂等组件直接复用当前 `StorageRoute`，不重新 hash。
-2. **当前没有业务路由**：`DefaultIdempotencyRouteContextFactory` 默认使用幂等 `key` 构造 `CompositeShardKey`，由 `StorageRouteResolver` 解析一次并绑定作用域。
+## Direct
 
-真正负责这一层装饰的是当前代码中的：
+Direct 模式可以是固定单库，也可以是 HASH 分库分表。存在外层业务路由时，幂等表：
 
-```text
-StorageRouteAwareIdempotencyExecutor
-```
-
-一次 `execute()/recover()` 最多调用一次全局 `StorageRouteResolver`。
-
-## 2. 模块边界
-
-```text
-idempotent-api / idempotent-core
-  幂等 key、状态机、owner/version、Recovery、结果策略
-
-idempotent-provider-jdbc
-  JDBC 状态持久化与 IdempotencyJdbcRoute
-
-idempotent-integration-storage-routing
-  StorageRouteAwareIdempotencyExecutor
-  DefaultIdempotencyRouteContextFactory
-  StorageRoutingIdempotencyJdbcRouteResolver
-  StorageRouteAwareIdempotencyTransactionCoordinator
-
-idempotent-integration-transaction
-  SpringTransactionJdbcExecutionManager
-  TransactionTemplateIdempotencyTransactionCoordinator
-
-idempotent-starter
-  自动装配 route-aware Executor、JDBC route resolver、事务协调器
-```
-
-API/Core 不依赖 Storage Routing 类型；Integration 模块负责组合两个组件。
-
-## 3. 三种 key / context
-
-| 名称 | 职责 | 是否决定物理分片 |
-|---|---|---|
-| `IdempotencyRequest.key` | 同一次逻辑请求身份 | 没有外层路由时，作为默认分片输入 |
-| `routeKey` | 业务路由/诊断元数据，Recovery 原样沿用 | 否 |
-| `scanBucket` | 已确定物理 shard 内的 Recovery 扫描分桶 | 否 |
-| `StorageRouteContext` | 当前同步执行链真实物理/逻辑路由事实 | 是 |
-
-`storeName` 是逻辑存储域，不是 Provider 名、数据库名或表名。
-
-## 4. 一次执行只解析一次路由
-
-```text
-IdempotencyRequest
-        │
-        ├─ StorageRouteContext 已有 route ───────────┐
-        │                                           │
-        └─ 当前无 route                             │
-             ↓                                      │
-   DefaultIdempotencyRouteContextFactory            │
-             ↓                                      │
-   StorageRouteResolver.resolve() 仅一次             │
-             ↓                                      │
-   StorageRouteContext.open(route) ◀────────────────┘
-             ↓
-   delegate.execute/recover
-      tryAcquire
-        ↓
-      business callback
-        ↓
-      markSuccess / markFailed
-             ↓
-        close scope
-```
-
-路由创建、解析或绑定失败会映射为 `REPOSITORY_ERROR`，并标记在当前 acquire/recover stage。
-
-## 5. 为什么复用 shardInfo，而不是复用业务表名
-
-同一 `ShardRouteInfo` 可以映射到不同表族：
-
-```text
-business mapping     -> db_05.business_order_56
-idempotency mapping  -> db_05.iron_idempotency_record_56
-outbox mapping       -> db_05.iron_outbox_56
-```
-
-因此幂等 JDBC 路由只复用 shard 事实，再用幂等自己的 `RouteMappingStrategy` 得到幂等表名。
-
-## 6. 同库事务
-
-要让 Business SQL 与 `markSuccess` 真正共享本地事务，必须同时满足：
-
-1. 同一个 Spring 本地事务。
-2. 两条路径解析到同一个目标 `dataSourceKey`。
-3. TransactionManager 和 JDBC execution manager 使用同一个目标 DataSource。
-4. 幂等状态 SQL 使用当前路由对应的幂等物理表。
-
-`SpringTransactionJdbcExecutionManager` 通过 Spring 的事务绑定连接参与该事务；组件不会把跨库操作伪装成单库原子事务。
-
-## 7. Direct / ShardingSphere-JDBC / Proxy
-
-当前 Storage Routing 已存在：
-
-```text
-DIRECT_DATASOURCE
-SHARDINGSPHERE_JDBC
-PROXY
-```
-
-幂等集成不应重新实现三套状态机。差异只应该体现在 StorageRoute / SqlRoute 如何解析：
-
-- Direct：Iron 负责解析 dataSourceKey + 物理表。
-- ShardingSphere-JDBC：Iron 交付逻辑 DataSource / 逻辑表，ShardingSphere-JDBC 在进程内继续路由。
-- Proxy：Iron 交付指向 ShardingSphere-Proxy 的普通 JDBC DataSource + 逻辑表，Proxy 在服务端继续路由。
-
-无论哪种模式，`IdempotencyRequest` 都不应该重新增加物理 shard 字段。
-
-## 8. Recovery
-
-`scanBucket` 只能缩小扫描任务，不能推导物理 shard。真实分片模式下，外部 Reliable Task 应先枚举/绑定物理路由，再执行候选扫描和 `recover()`。
-
-```text
-physical shard enumeration
-    ↓
-StorageRouteContext.open(shardRoute)
-    ↓
-scanBucket query
-    ↓
-candidate
-    ↓
-recover(expectedOwner, expectedVersion)
-    ↓
-IdempotencyRepository API
-      ↓
-RoutedJdbcIdempotencyRepository
-      ↓
-IdempotencyJdbcRouteResolver
-      ↓
-IdempotencyJdbcRoute(dataSourceKey, tableName)
-      ↓
-JdbcExecutionManagerResolver
-      ↓
-JdbcIdempotencyRepository
-```
-
-`SpringTransactionJdbcExecutionManager` 使用 `DataSourceUtils` 获取事务绑定连接。业务 SQL 与 `markSuccess` 要复用同一连接，必须同时满足：
-
-1. 两者位于同一个 Spring 本地事务。
-2. 两者的 `StorageRoute.dataSourceKey` 相同。
-3. `TransactionManager` 与 `JdbcExecutionManager` 使用该 key 对应的同一个 `DataSource`。
-
-组件不会把跨库操作伪装成单库原子事务。10 库模式下需要按 `dataSourceKey` 选择匹配的事务执行器。
-
-候选快照不是执行许可，真正执行前仍必须经过 Repository 的第二次原子检查。
-
-## 9. 10 库 × 10 表配置
-
-全局编号模式（`db_00` 为表 00-09，`db_01` 为表 10-19）：
+1. 复用外层 `shardInfo`，不重新 hash；
+2. 使用幂等表自己的 `table-prefix` 重新映射物理表；
+3. 校验映射后的 dataSourceKey 与外层路由相同；
+4. 通过 `DirectMyBatisResourceRegistry` 同时取得该库的 MyBatis Access 和事务执行器。
 
 ```yaml
 xjtu:
   iron:
-    storage-routing:
-      resolver:
-        enabled: true
-        type: HASH
-        hash:
-          data-source-prefix: db_
-          database-count: 10
-          tables-per-database: 10
-          data-source-index-width: 2
-          table-index-width: 2
-          table-index-mode: GLOBAL_TABLE_INDEX
     idempotent:
-      jdbc:
+      mybatis:
+        enabled: true
+        table-name: iron_idempotency_record
+        direct:
+          enabled: true
         routing:
           enabled: true
           logical-table: iron_idempotency_record
           table-prefix: iron_idempotency_record
 ```
 
-库内编号模式（每个库都是表 00-09）只需切换：
+普通单库单表只需 `mybatis.table-name`，不开启 `mybatis.direct.enabled`。Direct 开关表示启用
+Storage Routing 驱动的多物理 DataSource 资源目录，不是 MyBatis 的总开关。
 
-```yaml
-table-index-mode: LOCAL_TABLE_INDEX
-```
+## ShardingSphere-JDBC 与 Proxy
 
-## 10. 固定单库单表配置
+中间件模式不伪造物理库表。Resolver 保留逻辑表名和分片键，Idempotent 将幂等逻辑表名交给
+MyBatis，由 ShardingSphere 继续 route/rewrite/execute。`sharding-sphere-jdbc.data-source-key` 或
+`sharding-sphere-proxy.data-source-key` 只用于应用存在多个逻辑 DataSource 时选择 Access；为空时使用默认 Access。
 
-```yaml
-xjtu.iron.idempotent.jdbc.table-name: iron_idempotency_record
-```
+## Recovery 扫描
 
-这种普通单库单表模式不要开启 `xjtu.iron.idempotent.jdbc.direct.enabled`。该开关专用于
-Storage Routing 驱动的 DataSource 资源目录、路由型 JDBC Repository 和 Tx-A/B/C 多资源选择；
-它不是 JDBC Provider 的通用启用开关。
-
-`logical-table` 是路由语义，`table-prefix` 是分片表前缀，`table-name` 是固定模式完整表名，三者不应混用。
-
-## 11. 数据结构变更
-
-本轮是未上线阶段的破坏性清理：
-
-- 删除 `IdempotencyRequest.shardKey` 和 Builder 方法。
-- 删除 `IdempotencyRecoveryRequest.shardKey`。
-- 删除 `IdempotencyStorageContext.shardKey`。
-- 删除 `IdempotencyRecord`、`IdempotencyRecoveryCandidate` 的 shardKey。
-- 删除 JDBC `shard_key` 列和索引。
-- 删除 Redis Hash 的 `shard_key` 字段并同步所有 Lua 参数及快照下标。
-
-如果本地已有旧测试库或 Redis 测试数据，应重新建表并清理旧 key；当前不提供旧 schema 的在线迁移兼容逻辑。
-
-## 12. 验证清单
-
-1. 无业务 route 时，默认按幂等 key 计算一次 route。
-2. 有业务 route 时复用现有 `StorageRoute`，不重新 hash。
-3. Business 表名不会被幂等 SQL 直接复用。
-4. 一次 execute/recover 的状态操作共享同一个 route scope。
-5. Recovery 未绑定必要物理 shard 时 fail-fast。
-6. owner/version CAS 仍是幂等正确性核心，路由不替代并发控制。
-7. 同库事务时 Business SQL 与状态 SQL 使用同一 transaction-bound Connection。
-8. Direct / ShardingSphere-JDBC / Proxy 模式不改变 Idempotent Core 的状态机语义。
+分片场景不能在没有物理范围的情况下扫描全部分片。外部 Reliable Task 应枚举分片，
+在每个 `StorageRouteScope` 中调用候选扫描；真正接管仍由 owner/version CAS 决定。

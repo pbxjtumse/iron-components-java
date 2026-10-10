@@ -11,18 +11,6 @@
     <packaging>pom</packaging>
     <name>distributed-lock-component</name>
 
-    <!-- 组件内部 artifact 版本统一由 component-bom 管理，子模块 dependency 只声明 groupId/artifactId。 -->
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.xjtu.iron</groupId>
-                <artifactId>component-bom</artifactId>
-                <version>${project.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <modules>
         <module>distributed-lock-api</module>
         <module>distributed-lock-spi</module>

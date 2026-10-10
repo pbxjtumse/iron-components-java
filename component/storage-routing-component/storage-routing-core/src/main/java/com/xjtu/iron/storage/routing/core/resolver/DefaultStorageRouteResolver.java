@@ -22,12 +22,15 @@ import java.util.Objects;
  * <ul>
  *     <li>1. RouteContext.requireShardKey 提取输入，交给 R2 ShardResolver 得到 shardInfo。</li>
  *     <li>2. MappingStrategy 将编号转为数据源键、物理表名；logicalTable 不会自动替换构造器配置的策略。</li>
- *     <li>3. 返回 StorageRoute 后由调用方绑定 R3 作用域或传给 R4 bridge；解析器自身不保存线程状态。</li>
+ *     <li>3. 返回 StorageRoute 后由调用方绑定 R3 作用域或交给 Storage Provider；解析器自身不保存线程状态。</li>
  * </ul>
  */
 public final class DefaultStorageRouteResolver implements StorageRouteResolver {
 
+    /** 根据复合分片键计算稳定分片编号。 */
     private final ShardResolver shardResolver;
+
+    /** 将分片编号映射成 Direct 物理库表。 */
     private final RouteMappingStrategy routeMappingStrategy;
 
     public DefaultStorageRouteResolver(ShardResolver shardResolver, RouteMappingStrategy routeMappingStrategy) {

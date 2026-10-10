@@ -11,7 +11,7 @@ public interface FencingTokenProvider {
     /**
      * Provider 名称。
      *
-     * @return Provider 名称，例如 {@code redis}、{@code jdbc-sequence}。
+     * @return Provider 名称，例如 {@code redis}、{@code mybatis-sequence}。
      */
     String providerName();
 

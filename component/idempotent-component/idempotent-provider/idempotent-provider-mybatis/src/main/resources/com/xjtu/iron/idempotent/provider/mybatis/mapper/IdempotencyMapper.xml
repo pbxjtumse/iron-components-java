@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xjtu.iron.idempotent.provider.mybatis.mapper.IdempotencyMapper">
+
+    <resultMap id="idempotencyRow" type="com.xjtu.iron.idempotent.provider.mybatis.mapping.IdempotencyRow">
+        <result property="storeName" column="store_name"/>
+        <result property="scanBucket" column="scan_bucket"/>
+        <result property="namespace" column="namespace"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="routeKey" column="route_key"/>
+        <result property="requestHash" column="request_hash"/>
+        <result property="status" column="status" javaType="com.xjtu.iron.idempotent.api.state.IdempotencyStatus"/>
+        <result property="ownerToken" column="owner_token"/>
+        <result property="version" column="version"/>
+        <result property="resultPayload" column="result_payload"/>
+        <result property="failureCode" column="failure_code"/>
+        <result property="failureMessage" column="failure_message"/>
+        <result property="failureRetryable" column="failure_retryable"/>
+        <result property="recoveryMode" column="recovery_mode" javaType="com.xjtu.iron.idempotent.api.recovery.IdempotencyRecoveryMode"/>
+        <result property="windowPolicy" column="window_policy" javaType="com.xjtu.iron.idempotent.api.policy.IdempotencyWindowPolicy"/>
+        <result property="processingExpireAt" column="processing_expire_at"/>
+        <result property="windowExpireAt" column="window_expire_at"/>
+        <result property="retentionExpireAt" column="retention_expire_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="completedAt" column="completed_at"/>
+    </resultMap>
+
+    <sql id="allColumns">
+        store_name, scan_bucket, namespace, idempotency_key, route_key, request_hash,
+        status, owner_token, version, result_payload, failure_code, failure_message,
+        failure_retryable, recovery_mode, window_policy, processing_expire_at,
+        window_expire_at, retention_expire_at, created_at, updated_at, completed_at
+    </sql>
+
+    <insert id="insertProcessing">
+        INSERT INTO ${table} (
+            store_name, scan_bucket, namespace, idempotency_key, route_key, request_hash,
+            status, owner_token, version, result_payload, failure_code, failure_message,
+            failure_retryable, recovery_mode, window_policy, processing_expire_at,
+            window_expire_at, retention_expire_at, created_at, updated_at, completed_at
+        ) VALUES (
+            #{row.storeName}, #{row.scanBucket}, #{row.namespace}, #{row.idempotencyKey},
+            #{row.routeKey}, #{row.requestHash}, #{row.status}, #{row.ownerToken}, #{row.version},
+            #{row.resultPayload}, #{row.failureCode}, #{row.failureMessage}, #{row.failureRetryable},
+            #{row.recoveryMode}, #{row.windowPolicy}, #{row.processingExpireAt},
+            #{row.windowExpireAt}, #{row.retentionExpireAt}, #{row.createdAt}, #{row.updatedAt},
+            #{row.completedAt}
+        )
+    </insert>
+
+    <select id="select" resultMap="idempotencyRow">
+        SELECT <include refid="allColumns"/>
+        FROM ${table}
+        WHERE store_name = #{storeName}
+          AND namespace = #{namespace}
+          AND idempotency_key = #{key}
+    </select>
+
+    <select id="selectForUpdate" resultMap="idempotencyRow">
+        SELECT <include refid="allColumns"/>
+        FROM ${table}
+        WHERE store_name = #{storeName}
+          AND namespace = #{namespace}
+          AND idempotency_key = #{key}
+        FOR UPDATE
+    </select>
+
+    <update id="restartWindow">
+        UPDATE ${table}
+        SET route_key = #{row.routeKey},
+            request_hash = #{row.requestHash},
+            status = #{row.status},
+            owner_token = #{row.ownerToken},
+            version = #{row.version},
+            result_payload = NULL,
+            failure_code = NULL,
+            failure_message = NULL,
+            failure_retryable = FALSE,
+            recovery_mode = #{row.recoveryMode},
+            window_policy = #{row.windowPolicy},
+            processing_expire_at = #{row.processingExpireAt},
+            window_expire_at = #{row.windowExpireAt},
+            retention_expire_at = #{row.retentionExpireAt},
+            created_at = #{row.createdAt},
+            updated_at = #{row.updatedAt},
+            completed_at = NULL
+        WHERE store_name = #{row.storeName}
+          AND namespace = #{row.namespace}
+          AND idempotency_key = #{row.idempotencyKey}
+          AND version = #{expectedVersion}
+    </update>
+
+    <update id="reacquire">
+        UPDATE ${table}
+        SET status = #{row.status},
+            owner_token = #{row.ownerToken},
+            version = #{row.version},
+            processing_expire_at = #{row.processingExpireAt},
+            failure_code = NULL,
+            failure_message = NULL,
+            failure_retryable = FALSE,
+            result_payload = NULL,
+            completed_at = NULL,
+            updated_at = #{row.updatedAt}
+        WHERE store_name = #{row.storeName}
+          AND namespace = #{row.namespace}
+          AND idempotency_key = #{row.idempotencyKey}
+          AND version = #{expectedVersion}
+    </update>
+
+    <update id="touchWindow">
+        UPDATE ${table}
+        SET window_expire_at = #{row.windowExpireAt},
+            retention_expire_at = #{row.retentionExpireAt},
+            updated_at = #{row.updatedAt}
+        WHERE store_name = #{row.storeName}
+          AND namespace = #{row.namespace}
+          AND idempotency_key = #{row.idempotencyKey}
+          AND version = #{expectedVersion}
+    </update>
+
+    <update id="complete">
+        UPDATE ${table}
+        SET status = #{row.status},
+            result_payload = #{row.resultPayload},
+            failure_code = NULL,
+            failure_message = NULL,
+            failure_retryable = FALSE,
+            processing_expire_at = NULL,
+            completed_at = #{row.completedAt},
+            updated_at = #{row.updatedAt},
+            window_expire_at = #{row.windowExpireAt},
+            retention_expire_at = #{row.retentionExpireAt}
+        WHERE store_name = #{row.storeName}
+          AND namespace = #{row.namespace}
+          AND idempotency_key = #{row.idempotencyKey}
+          AND status = 'PROCESSING'
+          AND owner_token = #{expectedOwner}
+          AND version = #{expectedVersion}
+    </update>
+
+    <update id="fail">
+        UPDATE ${table}
+        SET status = 'FAILED',
+            failure_code = #{row.failureCode},
+            failure_message = #{row.failureMessage},
+            failure_retryable = #{row.failureRetryable},
+            processing_expire_at = NULL,
+            updated_at = #{row.updatedAt},
+            window_expire_at = #{row.windowExpireAt},
+            retention_expire_at = #{row.retentionExpireAt}
+        WHERE store_name = #{row.storeName}
+          AND namespace = #{row.namespace}
+          AND idempotency_key = #{row.idempotencyKey}
+          AND status = 'PROCESSING'
+          AND owner_token = #{expectedOwner}
+          AND version = #{expectedVersion}
+    </update>
+
+    <select id="findRecoveryCandidates" resultMap="idempotencyRow">
+        SELECT <include refid="allColumns"/>
+        FROM ${table}
+        WHERE store_name = #{storeName}
+          AND scan_bucket = #{scanBucket}
+          AND recovery_mode = 'EXTERNAL_TASK'
+          AND namespace = #{namespace}
+          AND (window_expire_at IS NULL OR window_expire_at &gt; #{now})
+          AND ((status = 'PROCESSING' AND processing_expire_at IS NOT NULL AND processing_expire_at &lt;= #{now})
+            OR (status = 'FAILED' AND failure_retryable = TRUE))
+        ORDER BY processing_expire_at ASC, id ASC
+        LIMIT #{limit}
+    </select>
+</mapper>

@@ -2,7 +2,7 @@ package com.xjtu.iron.idempotent.integration.storage.routing;
 
 import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryQuery;
 import com.xjtu.iron.idempotent.api.storage.IdempotencyStorageContext;
-import com.xjtu.iron.idempotent.provider.jdbc.routing.IdempotencyJdbcRoute;
+import com.xjtu.iron.idempotent.provider.mybatis.routing.IdempotencyPhysicalRoute;
 import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
 import com.xjtu.iron.storage.routing.api.context.StorageRouteScope;
 import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
@@ -13,8 +13,8 @@ import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
 import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
+import com.xjtu.iron.storage.routing.api.route.StorageRouteMode;
 import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
-import com.xjtu.iron.storage.routing.integration.relational.DefaultStorageRouteToSqlRouteBridge;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class StorageRoutingIdempotencyJdbcRouteResolverTest {
+class StorageRoutingIdempotencyPhysicalRouteResolverTest {
 
     @Test
     void boundRouteMustNotBeRemappedIntoAnotherDatabase() {
@@ -52,9 +52,9 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
             return PhysicalStorageLocation.of("idempotency-db-03", "iron_idempotency_record_017");
         };
 
-        StorageRoutingIdempotencyJdbcRouteResolver resolver = resolver(
+        StorageRoutingIdempotencyPhysicalRouteResolver resolver = resolver(
                 routeResolver, new TestStorageRouteContext(), idempotencyMapping);
-        IdempotencyJdbcRoute route = resolver.resolvePoint(
+        IdempotencyPhysicalRoute route = resolver.resolvePoint(
                 IdempotencyStorageContext.of("message-consume", 417), "message", "MSG-10001");
 
         assertThat(route.dataSourceKey()).isEqualTo("idempotency-db-03");
@@ -91,11 +91,11 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
             return PhysicalStorageLocation.of("order-db-02", "iron_idempotency_record_031");
         };
 
-        StorageRoutingIdempotencyJdbcRouteResolver resolver = resolver(routeResolver, current, idempotencyMapping);
-        IdempotencyJdbcRoute route = resolver.resolvePoint(
+        StorageRoutingIdempotencyPhysicalRouteResolver resolver = resolver(routeResolver, current, idempotencyMapping);
+        IdempotencyPhysicalRoute route = resolver.resolvePoint(
                 IdempotencyStorageContext.of("order-write", 18), "order", "CREATE-90001");
 
-        assertThat(route).isEqualTo(IdempotencyJdbcRoute.of("order-db-02", "iron_idempotency_record_031"));
+        assertThat(route).isEqualTo(IdempotencyPhysicalRoute.of("order-db-02", "iron_idempotency_record_031"));
         assertThat(unexpectedResolverCall.get()).isNull();
     }
 
@@ -105,7 +105,7 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
             context.requireShardKey();
             return sharded(context, new ShardRouteInfo(1, 0, 1, 10), "db-00", "business_01");
         };
-        StorageRoutingIdempotencyJdbcRouteResolver resolver = resolver(
+        StorageRoutingIdempotencyPhysicalRouteResolver resolver = resolver(
                 shardRequiredResolver,
                 new TestStorageRouteContext(),
                 shard -> PhysicalStorageLocation.of("db-00", "iron_idempotency_record_01"));
@@ -115,7 +115,7 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
 
         assertThatThrownBy(() -> resolver.resolveRecoveryRoutes(query))
                 .isInstanceOf(StorageRoutingException.class)
-                .hasMessageContaining("external Reliable Task must enumerate a physical shard")
+                .hasMessageContaining("Recovery scan requires a bound physical StorageRoute")
                 .hasMessageContaining("scanBucket=7");
     }
 
@@ -138,12 +138,12 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
             return PhysicalStorageLocation.of("payment-db-03", "iron_idempotency_record_005");
         };
 
-        StorageRoutingIdempotencyJdbcRouteResolver resolver = resolver(routeResolver, current, idempotencyMapping);
+        StorageRoutingIdempotencyPhysicalRouteResolver resolver = resolver(routeResolver, current, idempotencyMapping);
         IdempotencyRecoveryQuery query = new IdempotencyRecoveryQuery(
                 "payment", "payment", 9, Instant.parse("2026-09-13T00:00:00Z"), 100);
 
         assertThat(resolver.resolveRecoveryRoutes(query))
-                .containsExactly(IdempotencyJdbcRoute.of("payment-db-03", "iron_idempotency_record_005"));
+                .containsExactly(IdempotencyPhysicalRoute.of("payment-db-03", "iron_idempotency_record_005"));
     }
 
     @Test
@@ -153,17 +153,17 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
                 .physicalLocation(PhysicalStorageLocation.of("single-db", "business_order"))
                 .build();
 
-        StorageRoutingIdempotencyJdbcRouteResolver resolver = resolver(
+        StorageRoutingIdempotencyPhysicalRouteResolver resolver = resolver(
                 directResolver,
                 new TestStorageRouteContext(),
                 shard -> {
                     throw new AssertionError("direct route without shardInfo must not invoke sharded mapping");
                 });
 
-        IdempotencyJdbcRoute route = resolver.resolvePoint(
+        IdempotencyPhysicalRoute route = resolver.resolvePoint(
                 IdempotencyStorageContext.of("default", 0), "default", "IDEMP-1");
 
-        assertThat(route).isEqualTo(IdempotencyJdbcRoute.of("single-db", "iron_idempotency_record"));
+        assertThat(route).isEqualTo(IdempotencyPhysicalRoute.of("single-db", "iron_idempotency_record"));
     }
 
     @Test
@@ -177,31 +177,68 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
         StorageRouteResolver routeResolver = context -> {
             throw new AssertionError("bound direct route should not require another routing resolution");
         };
-        StorageRoutingIdempotencyJdbcRouteResolver resolver = resolver(
+        StorageRoutingIdempotencyPhysicalRouteResolver resolver = resolver(
                 routeResolver,
                 current,
                 shard -> {
                     throw new AssertionError("direct route without shardInfo must not invoke sharded mapping");
                 });
 
-        IdempotencyJdbcRoute route = resolver.resolvePoint(
+        IdempotencyPhysicalRoute route = resolver.resolvePoint(
                 IdempotencyStorageContext.of("order-write", 0), "order", "CREATE-1");
 
-        assertThat(route).isEqualTo(IdempotencyJdbcRoute.of("order-db", "iron_idempotency_record"));
+        assertThat(route).isEqualTo(IdempotencyPhysicalRoute.of("order-db", "iron_idempotency_record"));
     }
 
-    private StorageRoutingIdempotencyJdbcRouteResolver resolver(
+    @Test
+    void boundMiddlewareBusinessRouteShouldReuseModeButNotBusinessTable() {
+        TestStorageRouteContext current = new TestStorageRouteContext();
+        current.set(StorageRoute.middleware(
+                StorageRouteMode.SHARDING_SPHERE_JDBC,
+                RouteContext.builder()
+                        .routeName("order")
+                        .logicalTable("business_order")
+                        .shardKey(CompositeShardKey.of(ShardKey.of("order_id", 1001L)))
+                        .build()
+        ));
+
+        StorageRoutingIdempotencyPhysicalRouteResolver resolver =
+                new StorageRoutingIdempotencyPhysicalRouteResolver(
+                        "iron_idempotency_record",
+                        "iron_idempotency_record",
+                        context -> {
+                            throw new AssertionError("bound middleware route should not be resolved again");
+                        },
+                        current,
+                        shard -> {
+                            throw new AssertionError("middleware route must not use direct mapping");
+                        },
+                        "shardingsphere-data-source",
+                        "proxy-data-source"
+                );
+
+        IdempotencyPhysicalRoute route = resolver.resolvePoint(
+                IdempotencyStorageContext.of("order-write", 0), "order", "CREATE-1001");
+
+        assertThat(route).isEqualTo(IdempotencyPhysicalRoute.of(
+                "shardingsphere-data-source",
+                "iron_idempotency_record"
+        ));
+    }
+
+    private StorageRoutingIdempotencyPhysicalRouteResolver resolver(
             StorageRouteResolver routeResolver,
             StorageRouteContext routeContext,
             RouteMappingStrategy idempotencyMapping
     ) {
-        return new StorageRoutingIdempotencyJdbcRouteResolver(
+        return new StorageRoutingIdempotencyPhysicalRouteResolver(
                 "iron_idempotency_record",
                 "iron_idempotency_record",
                 routeResolver,
                 routeContext,
                 idempotencyMapping,
-                new DefaultStorageRouteToSqlRouteBridge());
+                null,
+                null);
     }
 
     private static StorageRoute sharded(
@@ -218,6 +255,7 @@ class StorageRoutingIdempotencyJdbcRouteResolverTest {
     }
 
     private static final class TestStorageRouteContext implements StorageRouteContext {
+        /** 当前测试线程绑定的路由。 */
         private StorageRoute current;
 
         @Override

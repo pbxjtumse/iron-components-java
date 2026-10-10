@@ -166,17 +166,17 @@ DB sequence / DB 表版本号
 模块：
 
 distributed-lock-provider
-└── distributed-lock-fencing-provider-jdbc
+└── distributed-lock-fencing-provider-mybatis
 
 包：
 
-com.xjtu.iron.distributed.lock.provider.jdbc.fencing
+com.xjtu.iron.distributed.lock.provider.mybatis.fencing
 
 核心类：
 
-JdbcSequenceFencingTokenProvider
-JdbcFencingTokenSchemaInitializer
-JdbcFencingTokenConstants
+MyBatisSequenceFencingTokenProvider
+MyBatis schema scripts
+MyBatisFencingTokenConstants
 
 注意，它不是 LockProvider。
 

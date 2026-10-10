@@ -22,9 +22,8 @@ submit / runNow / local scan / future XXL-JOB
 
 - `reliable-task-api`：稳定模型、Handler、Client、Scanner 和 Repository 协议。
 - `reliable-task-core`：状态机、抢占执行、快速路径、扫描和 Handler 注册表。
-- `reliable-task-provider-jdbc`：基于 Relational Access 的 JDBC 持久化实现。
 - `reliable-task-provider-mybatis`：基于 Mapper/XML 的 MyBatis 持久化实现。
-- `reliable-task-provider-testkit`：两个 Provider 共用的 Repository 契约测试，不作为业务依赖。
+- `reliable-task-provider-testkit`：MyBatis Provider 的 Repository 契约测试集，不作为业务依赖。
 - `reliable-task-spring-boot-starter`：自动装配和默认关闭的本地扫描器。
 
 ### 分包导航
@@ -59,12 +58,6 @@ reliable-task-core
     ├── scan                      # 扫描实现
     └── exception
 
-reliable-task-provider-jdbc
-└── provider.jdbc
-    ├── repository                # Repository 实现
-    ├── mapping                   # ResultSet 映射
-    └── sql                       # SQL 构造与表名校验
-
 reliable-task-provider-mybatis
 └── provider.mybatis
     ├── repository                # Repository 实现
@@ -87,7 +80,7 @@ API 中承载任务、命令和结果的数据对象统一使用普通不可变 
 中文 Javadoc，并通过传统 `getXxx()` / `isXxx()` 方法暴露，便于 Spring、Jackson、MyBatis 等常见框架识别。
 
 完整设计见 [docs/design-v1.md](docs/design-v1.md)，建表脚本见
-[reliable-task-provider-jdbc/src/main/resources/schema-mysql.sql](reliable-task-provider-jdbc/src/main/resources/schema-mysql.sql)。
+[schema-mysql.sql](reliable-task-provider-mybatis/src/main/resources/META-INF/iron-reliable-task/mybatis/schema-mysql.sql)。
 
 ## 最小用法
 
@@ -130,45 +123,19 @@ xjtu:
         fixed-delay: 5s
 ```
 
-### 选择持久化 Provider
+### 持久化 Provider
 
-默认继续使用 JDBC Provider：
-
-```yaml
-xjtu:
-  iron:
-    reliable-task:
-      provider: jdbc
-```
-
-业务系统已经统一使用 MyBatis 时，可以显式切换：
-
-```yaml
-xjtu:
-  iron:
-    reliable-task:
-      provider: mybatis
-```
-
-MyBatis 模式需要业务工程显式引入 `reliable-task-provider-mybatis` 和
-`mybatis-spring-boot-starter`。Provider 在应用启动时唯一确定，不支持按请求动态切换。
+V1 统一使用 MyBatis Provider，不再提供 JDBC/MyBatis 启动切换开关。Starter 已经传递引入
+`reliable-task-provider-mybatis`、`relational-starter` 和 MyBatis Spring Boot 集成。
 
 ```xml
 <dependency>
     <groupId>com.xjtu.iron</groupId>
     <artifactId>reliable-task-spring-boot-starter</artifactId>
 </dependency>
-<dependency>
-    <groupId>com.xjtu.iron</groupId>
-    <artifactId>reliable-task-provider-mybatis</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.mybatis.spring.boot</groupId>
-    <artifactId>mybatis-spring-boot-starter</artifactId>
-</dependency>
 ```
 
-JDBC 与 MyBatis 实现执行同一套 `ReliableTaskRepositoryContract`，共同验证创建幂等、到期扫描、
+MyBatis 实现执行完整 `ReliableTaskRepositoryContract`，验证创建幂等、到期扫描、
 owner/version CAS、Lease 续期、过期接管和人工状态迁移。
 
 生产环境后续接入 XXL-JOB 时，只需要由 JobHandler 调用 `ReliableTaskScanner.scan(...)`。

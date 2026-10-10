@@ -23,6 +23,6 @@
     <modules>
         <module>distributed-lock-provider-redis</module>
         <module>distributed-lock-provider-redisson</module>
-        <module>distributed-lock-fencing-provider-jdbc</module>
+        <module>distributed-lock-fencing-provider-mybatis</module>
     </modules>
 </project>

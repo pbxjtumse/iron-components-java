@@ -18,13 +18,7 @@
     <dependencies>
         <dependency>
             <groupId>com.xjtu.iron</groupId>
-            <artifactId>relational-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.xjtu.iron</groupId>
-            <artifactId>relational-integration-spring</artifactId>
-            <version>${project.version}</version>
+            <artifactId>relational-mybatis</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -49,6 +43,16 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.xjtu.iron</groupId>
+            <artifactId>transaction-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.xjtu.iron</groupId>
+            <artifactId>transaction-provider-spring</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

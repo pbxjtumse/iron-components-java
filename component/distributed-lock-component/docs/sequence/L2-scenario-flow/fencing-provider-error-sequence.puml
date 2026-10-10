@@ -29,8 +29,8 @@ box "distributed-lock-provider-redis" #FFE6CC
 participant "RedisLockProvider" as RedisProvider
 end box
 
-box "distributed-lock-fencing-provider-jdbc" #FFE6CC
-participant "JdbcSequenceFencingTokenProvider" as JdbcProvider
+box "distributed-lock-fencing-provider-mybatis" #FFE6CC
+participant "MyBatisSequenceFencingTokenProvider" as JdbcProvider
 database "FencingDB" as DB
 end box
 
