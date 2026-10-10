@@ -413,6 +413,16 @@
             </dependency>
             <dependency>
                 <groupId>com.xjtu.iron</groupId>
+                <artifactId>reliable-task-provider-mybatis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
+                <artifactId>reliable-task-provider-testkit</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xjtu.iron</groupId>
                 <artifactId>reliable-task-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>

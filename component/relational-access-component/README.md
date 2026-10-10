@@ -307,6 +307,10 @@ RelationalTemplate -> Spring Provider ┘
 
 当前 `relational-integration-spring` 已用真实 H2 测试验证：同一个 Spring 本地事务内，`JdbcTemplate` 与 `RelationalTemplate` 的写入会一起提交或一起回滚。
 
+同时提供真实 MyBatis `SqlSessionTemplate` 组合测试，验证业务 Mapper 与 `RelationalTemplate` 在使用同一个
+DataSource 和 Spring 本地事务时一起提交；任意一侧执行失败时，另一侧已经执行的 DML 一起回滚。
+这项集成只证明两种访问方式可以共享事务，不会把 MyBatis 包装成 `RelationalTemplate` 的底层实现。
+
 ## 9. v1 明确不做
 
 - ORM / Entity / Repository 自动实现

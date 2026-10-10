@@ -2,7 +2,6 @@ package com.xjtu.iron.reliable.task.starter.autoconfigure;
 
 import com.xjtu.iron.foundation.id.api.StringIdGenerator;
 import com.xjtu.iron.foundation.id.factory.IdGenerators;
-import com.xjtu.iron.relational.api.RelationalTemplate;
 import com.xjtu.iron.reliable.task.api.client.ReliableTaskAdminClient;
 import com.xjtu.iron.reliable.task.api.client.ReliableTaskClient;
 import com.xjtu.iron.reliable.task.api.execution.ReliableTaskHandler;
@@ -15,7 +14,6 @@ import com.xjtu.iron.reliable.task.core.execution.handler.DefaultReliableTaskHan
 import com.xjtu.iron.reliable.task.core.execution.handler.ReliableTaskHandlerRegistry;
 import com.xjtu.iron.reliable.task.core.policy.ReliableTaskRuntimePolicy;
 import com.xjtu.iron.reliable.task.core.scan.DefaultReliableTaskScanner;
-import com.xjtu.iron.reliable.task.provider.jdbc.repository.JdbcReliableTaskRepository;
 import com.xjtu.iron.reliable.task.starter.properties.ReliableTaskProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -31,7 +29,10 @@ import java.util.List;
 import java.util.UUID;
 
 /** Reliable Task 的 Spring Boot 自动装配。 */
-@AutoConfiguration(afterName = "com.xjtu.iron.relational.spring.boot.autoconfigure.RelationalAccessAutoConfiguration")
+@AutoConfiguration(afterName = {
+        "com.xjtu.iron.reliable.task.starter.autoconfigure.ReliableTaskJdbcProviderAutoConfiguration",
+        "com.xjtu.iron.reliable.task.starter.autoconfigure.ReliableTaskMyBatisProviderAutoConfiguration"
+})
 @EnableConfigurationProperties(ReliableTaskProperties.class)
 @ConditionalOnProperty(
         prefix = "xjtu.iron.reliable-task",
@@ -68,15 +69,6 @@ public class ReliableTaskAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean(RelationalTemplate.class)
-    @ConditionalOnMissingBean(ReliableTaskRepository.class)
-    public ReliableTaskRepository reliableTaskRepository(
-            RelationalTemplate relationalTemplate,
-            ReliableTaskProperties properties) {
-        return new JdbcReliableTaskRepository(relationalTemplate, properties.getTableName());
-    }
-
-    @Bean
     @ConditionalOnMissingBean
     public ReliableTaskHandlerRegistry reliableTaskHandlerRegistry(
             ObjectProvider<ReliableTaskHandler> handlers) {
@@ -85,7 +77,6 @@ public class ReliableTaskAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean(ReliableTaskRepository.class)
     @ConditionalOnMissingBean
     public ReliableTaskEngine reliableTaskEngine(
             ReliableTaskRepository repository,

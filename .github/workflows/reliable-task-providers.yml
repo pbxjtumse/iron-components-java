@@ -1,0 +1,38 @@
+name: Reliable Task Providers
+
+on:
+  push:
+    branches:
+      - feature/reliable-task-mybatis-provider-v1
+  pull_request:
+    paths:
+      - 'component/reliable-task-component/**'
+      - 'component/relational-access-component/**'
+      - 'component/pom.xml'
+      - 'component/component-bom/pom.xml'
+      - 'pom.xml'
+      - '.github/workflows/reliable-task-providers.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  provider-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: JDBC and MyBatis provider contracts
+        run: mvn -B -ntp -pl :reliable-task-provider-jdbc,:reliable-task-provider-mybatis,:reliable-task-spring-boot-starter,:relational-integration-spring -am test
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reliable-task-provider-test-reports
+          path: '**/target/surefire-reports/**'

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xjtu.iron.reliable.task.provider.mybatis.mapper.ReliableTaskMapper">
+
+    <resultMap id="reliableTaskRowMap"
+               type="com.xjtu.iron.reliable.task.provider.mybatis.mapping.ReliableTaskRow">
+        <id property="storeName" column="store_name"/>
+        <id property="namespace" column="namespace"/>
+        <id property="taskId" column="task_id"/>
+        <result property="taskType" column="task_type"/>
+        <result property="businessKey" column="business_key"/>
+        <result property="payload" column="payload"/>
+        <result property="routeKey" column="route_key"/>
+        <result property="scanBucket" column="scan_bucket"/>
+        <result property="status" column="status"
+                javaType="com.xjtu.iron.reliable.task.api.state.ReliableTaskStatus"/>
+        <result property="attemptCount" column="attempt_count"/>
+        <result property="maxAttempts" column="max_attempts"/>
+        <result property="nextExecuteAt" column="next_execute_at"/>
+        <result property="ownerId" column="owner_id"/>
+        <result property="leaseUntil" column="lease_until"/>
+        <result property="version" column="version"/>
+        <result property="lastErrorCode" column="last_error_code"/>
+        <result property="lastErrorMessage" column="last_error_message"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="completedAt" column="completed_at"/>
+    </resultMap>
+
+    <sql id="columns">
+        store_name, namespace, task_id, task_type, business_key, payload, route_key, scan_bucket,
+        status, attempt_count, max_attempts, next_execute_at, owner_id, lease_until, version,
+        last_error_code, last_error_message, created_at, updated_at, completed_at
+    </sql>
+
+    <insert id="insert">
+        INSERT INTO ${tableName} (
+            <include refid="columns"/>
+        ) VALUES (
+            #{task.storeName},
+            #{task.namespace},
+            #{task.taskId},
+            #{task.taskType},
+            #{task.businessKey,jdbcType=VARCHAR},
+            #{task.payload},
+            #{task.routeKey,jdbcType=VARCHAR},
+            #{task.scanBucket},
+            #{task.status},
+            #{task.attemptCount},
+            #{task.maxAttempts},
+            #{task.nextExecuteAt,jdbcType=TIMESTAMP},
+            #{task.ownerId,jdbcType=VARCHAR},
+            #{task.leaseUntil,jdbcType=TIMESTAMP},
+            #{task.version},
+            #{task.lastErrorCode,jdbcType=VARCHAR},
+            #{task.lastErrorMessage,jdbcType=VARCHAR},
+            #{task.createdAt},
+            #{task.updatedAt},
+            #{task.completedAt,jdbcType=TIMESTAMP}
+        )
+    </insert>
+
+    <select id="find" resultMap="reliableTaskRowMap">
+        SELECT <include refid="columns"/>
+        FROM ${tableName}
+        WHERE store_name = #{storeName}
+          AND namespace = #{namespace}
+          AND task_id = #{taskId}
+    </select>
+
+    <select id="findDue" resultMap="reliableTaskRowMap">
+        SELECT <include refid="columns"/>
+        FROM ${tableName}
+        WHERE store_name = #{storeName}
+          AND scan_bucket = #{scanBucket}
+          AND (
+                (status IN ('READY', 'RETRY_WAIT', 'WAIT_RECONCILE') AND next_execute_at &lt;= #{now})
+                OR (status = 'RUNNING' AND lease_until &lt;= #{now})
+          )
+        ORDER BY COALESCE(next_execute_at, lease_until), created_at
+        LIMIT #{limit}
+    </select>
+
+    <update id="tryClaim">
+        UPDATE ${tableName}
+        SET status = 'RUNNING',
+            owner_id = #{ownerId},
+            lease_until = #{leaseUntil},
+            next_execute_at = NULL,
+            attempt_count = CASE
+                WHEN attempt_count &lt; max_attempts THEN attempt_count + 1
+                ELSE attempt_count
+            END,
+            version = version + 1,
+            updated_at = #{now}
+        WHERE store_name = #{candidate.storeName}
+          AND namespace = #{candidate.namespace}
+          AND task_id = #{candidate.taskId}
+          AND status = #{candidate.status}
+          AND version = #{candidate.version}
+          <choose>
+              <when test="expiredRunning">
+                  AND lease_until &lt;= #{now}
+              </when>
+              <otherwise>
+                  AND next_execute_at &lt;= #{now}
+              </otherwise>
+          </choose>
+    </update>
+
+    <update id="transition">
+        UPDATE ${tableName}
+        SET status = #{targetStatus},
+            next_execute_at = #{nextExecuteAt,jdbcType=TIMESTAMP},
+            owner_id = NULL,
+            lease_until = NULL,
+            version = version + 1,
+            last_error_code = #{errorCode,jdbcType=VARCHAR},
+            last_error_message = #{errorMessage,jdbcType=VARCHAR},
+            updated_at = #{now},
+            completed_at = #{completedAt,jdbcType=TIMESTAMP}
+        WHERE store_name = #{storeName}
+          AND namespace = #{namespace}
+          AND task_id = #{taskId}
+          AND status = 'RUNNING'
+          AND owner_id = #{ownerId}
+          AND version = #{expectedVersion}
+    </update>
+
+    <update id="renewLease">
+        UPDATE ${tableName}
+        SET lease_until = #{leaseUntil},
+            updated_at = #{now}
+        WHERE store_name = #{storeName}
+          AND namespace = #{namespace}
+          AND task_id = #{taskId}
+          AND status = 'RUNNING'
+          AND owner_id = #{ownerId}
+          AND version = #{expectedVersion}
+          AND lease_until &gt; #{now}
+          AND lease_until &lt; #{leaseUntil}
+    </update>
+
+    <update id="adminTransition">
+        UPDATE ${tableName}
+        SET status = #{targetStatus},
+            next_execute_at = #{nextExecuteAt,jdbcType=TIMESTAMP},
+            owner_id = NULL,
+            lease_until = NULL,
+            attempt_count =
+            <choose>
+                <when test="resetAttempts">0</when>
+                <otherwise>attempt_count</otherwise>
+            </choose>,
+            version = version + 1,
+            last_error_code = NULL,
+            last_error_message = NULL,
+            updated_at = #{now},
+            completed_at = #{completedAt,jdbcType=TIMESTAMP}
+        WHERE store_name = #{storeName}
+          AND namespace = #{namespace}
+          AND task_id = #{taskId}
+          AND status = #{expectedStatus}
+          AND version = #{expectedVersion}
+    </update>
+</mapper>

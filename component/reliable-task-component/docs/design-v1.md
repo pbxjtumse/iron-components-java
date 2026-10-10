@@ -36,8 +36,10 @@ v1 明确不实现：
                          v
               ReliableTaskRepository
                          |
-                         v
-       reliable-task-provider-jdbc -> relational-access
+              +----------+----------+
+              |                     |
+              v                     v
+ provider-jdbc -> relational   provider-mybatis -> MyBatis
 
 触发源：runNow / local scheduler / manual / future XXL-JOB
 ```
@@ -61,6 +63,8 @@ v1 明确不实现：
 | JDBC | `provider.jdbc.repository` | Repository 端口实现和 SQL 参数编排 |
 | JDBC | `provider.jdbc.mapping` | `ResultSet` 到任务快照的映射 |
 | JDBC | `provider.jdbc.sql` | 固定表 SQL 与动态表名白名单校验 |
+| MyBatis | `provider.mybatis.repository` | 使用 Mapper 完成与 JDBC Provider 相同的 Repository 语义 |
+| MyBatis | `provider.mybatis.mapper/mapping` | Mapper XML、数据库行对象和领域快照转换 |
 | Starter | `starter.autoconfigure` | Spring Bean 与本地调度触发器装配 |
 | Starter | `starter.properties` | `xjtu.iron.reliable-task` 配置模型 |
 
@@ -74,6 +78,34 @@ v1 明确不实现：
 - 属性保持 `private final`，通过构造方法完成校验，并提供传统 `getXxx()` / `isXxx()` 访问器。
 - 值对象保留 `equals`、`hashCode` 和 `toString`，避免从 `record` 改为普通类后丢失值语义。
 - 每个类属性必须提供中文 Javadoc，明确空值、默认值、并发控制或路由语义。
+
+### 3.3 Provider 选择
+
+`ReliableTaskRepository` 是 Core 唯一依赖的持久化端口。JDBC 与 MyBatis 是并列 Provider：
+
+```text
+ReliableTask Core
+        |
+        v
+ReliableTaskRepository
+        |
+        +--> JdbcReliableTaskRepository --> RelationalTemplate --> JDBC
+        |
+        +--> MyBatisReliableTaskRepository --> ReliableTaskMapper --> MyBatis
+```
+
+MyBatis Provider 不实现或包装 `RelationalTemplate`，避免把“最终 SQL + RowMapper”与
+“MappedStatement + ResultMap”两套执行模型强行叠加。应用通过
+`xjtu.iron.reliable-task.provider=jdbc|mybatis` 在启动时选择唯一实现。
+
+两个 Provider 必须执行同一套 Repository 契约测试。业务表与技术表的原子性还必须通过真实组合测试验证：
+
+| 业务数据访问 | 技术表 Provider | V1 验证目标 |
+|---|---|---|
+| MyBatis | JDBC | 同库提交、任一方向失败时整体回滚 |
+| MyBatis | MyBatis | 同库提交、任一方向失败时整体回滚 |
+
+JPA 暂不引入；未来新增 JPA Provider 时仍复用同一 Repository 端口和契约测试。
 
 ## 4. 持久状态
 
