@@ -105,11 +105,17 @@ class StorageRouteModelTest {
 
         StorageRoute fixed = StorageRoute.fixedDirect(context, physicalLocation);
         StorageRoute sharded = StorageRoute.shardedDirect(context, shardInfo, physicalLocation);
+        StorageRoute overridden = StorageRoute.builder()
+                .physicalLocation(physicalLocation)
+                .tableName("business_order_57")
+                .build();
 
         assertThat(fixed.shardInfo()).isNull();
         assertThat(fixed.requirePhysicalLocation()).isSameAs(physicalLocation);
         assertThat(sharded.requireShardInfo()).isSameAs(shardInfo);
         assertThat(sharded.requirePhysicalLocation()).isSameAs(physicalLocation);
+        assertThat(overridden.dataSourceKey()).isEqualTo("db_05");
+        assertThat(overridden.tableName()).isEqualTo("business_order_57");
         assertThatThrownBy(() -> StorageRoute.middleware(StorageRouteMode.DIRECT_DATASOURCE, context, shardInfo))
                 .isInstanceOf(StorageRoutingException.class).hasMessageContaining("must not be DIRECT_DATASOURCE");
     }

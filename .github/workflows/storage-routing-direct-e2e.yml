@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -27,7 +27,7 @@ jobs:
         run: mvn -B -ntp -pl :idempotent-storage-routing-e2e -am -Pdirect-e2e verify
       - name: Upload test reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: direct-e2e-test-reports
           path: |

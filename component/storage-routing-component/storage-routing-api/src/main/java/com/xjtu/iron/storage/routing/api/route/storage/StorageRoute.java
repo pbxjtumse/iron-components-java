@@ -171,6 +171,9 @@ public final class StorageRoute {
         /** 可选的逻辑分片计算结果。 */
         private ShardRouteInfo shardInfo;
 
+        /** 调用方显式传入的不可变物理位置。 */
+        private PhysicalStorageLocation physicalLocation;
+
         /** 待组装物理位置的数据源标识。 */
         // 暂存库表，build 时统一校验，允许 dataSourceKey/tableName 任意设置顺序。
         private String dataSourceKey;
@@ -197,17 +200,20 @@ public final class StorageRoute {
         }
 
         public Builder physicalLocation(PhysicalStorageLocation physicalLocation) {
-            this.dataSourceKey = physicalLocation == null ? null : physicalLocation.dataSourceKey();
-            this.tableName = physicalLocation == null ? null : physicalLocation.tableName();
+            this.physicalLocation = physicalLocation;
+            this.dataSourceKey = null;
+            this.tableName = null;
             return this;
         }
 
         public Builder dataSourceKey(String dataSourceKey) {
+            materializeExplicitPhysicalLocation();
             this.dataSourceKey = dataSourceKey;
             return this;
         }
 
         public Builder tableName(String tableName) {
+            materializeExplicitPhysicalLocation();
             this.tableName = tableName;
             return this;
         }
@@ -217,10 +223,23 @@ public final class StorageRoute {
         }
 
         private PhysicalStorageLocation buildPhysicalLocation() {
+            if (physicalLocation != null) {
+                return physicalLocation;
+            }
             if ((dataSourceKey == null || dataSourceKey.isBlank()) && (tableName == null || tableName.isBlank())) {
                 return null;
             }
             return PhysicalStorageLocation.of(dataSourceKey, tableName);
+        }
+
+        /** 单字段覆盖前，将显式位置展开为可修改的 Builder 状态。 */
+        private void materializeExplicitPhysicalLocation() {
+            if (physicalLocation == null) {
+                return;
+            }
+            this.dataSourceKey = physicalLocation.dataSourceKey();
+            this.tableName = physicalLocation.tableName();
+            this.physicalLocation = null;
         }
 
         public StorageRoute build() {
