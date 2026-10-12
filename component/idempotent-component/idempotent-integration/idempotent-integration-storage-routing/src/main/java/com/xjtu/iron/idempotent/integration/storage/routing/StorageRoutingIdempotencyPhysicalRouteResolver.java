@@ -139,7 +139,7 @@ public final class StorageRoutingIdempotencyPhysicalRouteResolver
             return List.of(toAccessRoute(normalizeResolvedRoute(context, resolved)));
         } catch (StorageRoutingException failure) {
             throw new StorageRoutingException(
-                    "Recovery scan requires a bound physical StorageRoute before scanning bucket="
+                    "Recovery scan requires a bound physical StorageRoute before scanning scanBucket="
                             + query.getScanBucket(),
                     failure
             );
