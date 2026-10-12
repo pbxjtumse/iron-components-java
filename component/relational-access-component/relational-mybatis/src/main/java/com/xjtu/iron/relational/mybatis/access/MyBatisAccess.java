@@ -1,4 +1,4 @@
-package com.xjtu.iron.relational.mybatis;
+package com.xjtu.iron.relational.mybatis.access;
 
 /**
  * 关系型技术表共用的 MyBatis Mapper 执行入口。

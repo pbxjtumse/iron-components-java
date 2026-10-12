@@ -4,7 +4,7 @@ import com.xjtu.iron.reliable.task.api.repository.ReliableTaskRepository;
 import com.xjtu.iron.reliable.task.provider.mybatis.mapper.ReliableTaskMapper;
 import com.xjtu.iron.reliable.task.provider.mybatis.repository.MyBatisReliableTaskRepository;
 import com.xjtu.iron.reliable.task.starter.properties.ReliableTaskProperties;
-import com.xjtu.iron.relational.mybatis.MyBatisAccess;
+import com.xjtu.iron.relational.mybatis.access.MyBatisAccess;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

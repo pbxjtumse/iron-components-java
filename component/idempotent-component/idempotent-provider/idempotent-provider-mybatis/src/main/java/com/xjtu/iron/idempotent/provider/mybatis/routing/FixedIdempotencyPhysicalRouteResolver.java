@@ -2,7 +2,7 @@ package com.xjtu.iron.idempotent.provider.mybatis.routing;
 
 import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryQuery;
 import com.xjtu.iron.idempotent.api.storage.IdempotencyStorageContext;
-import com.xjtu.iron.relational.mybatis.MyBatisTableNameValidator;
+import com.xjtu.iron.relational.mybatis.support.MyBatisTableNameValidator;
 
 import java.util.List;
 

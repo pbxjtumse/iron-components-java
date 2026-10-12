@@ -1,4 +1,6 @@
-package com.xjtu.iron.relational.mybatis;
+package com.xjtu.iron.relational.mybatis.routing;
+
+import com.xjtu.iron.relational.mybatis.access.MyBatisAccess;
 
 /** 根据物理 dataSourceKey 选择 MyBatis Access。 */
 public interface MyBatisAccessResolver {

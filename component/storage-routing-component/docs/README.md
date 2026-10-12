@@ -18,7 +18,7 @@ storage-routing-starter
 | 模式 | StorageRoute 保留的事实 | 后续执行 |
 | --- | --- | --- |
 | `DIRECT_DATASOURCE` | 物理 dataSourceKey、物理表、可选 shardInfo | 组件 Provider 选择物理 Access |
-| `SHARDINGSPHERE_JDBC` | 逻辑表、分片键 | 进程内 ShardingSphere route/rewrite/execute |
+| `SHARDING_SPHERE_JDBC` | 逻辑表、分片键 | 进程内 ShardingSphere route/rewrite/execute |
 | `PROXY` | 逻辑表、分片键 | Proxy 服务端 route/rewrite/execute |
 
 Storage Provider 直接消费 `StorageRoute`，不再经过公共 `SqlRoute` bridge。这样 Storage Routing 只决定

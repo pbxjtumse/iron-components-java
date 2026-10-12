@@ -5,12 +5,15 @@
 旧 `RelationalTemplate` 设计文档已随原生 JDBC 执行链一同删除，避免将已下线 API 当成现行用法。
 
 各组件仍然保留自己的业务持久化代码：
+
 - Repository SPI
 - MyBatis Mapper
 - Mapper XML
 - 表结构脚本
 - 状态机和 CAS 语义
-  但不再分别处理这些通用问题：
+
+但不再分别处理这些通用问题：
+
 - 获取和管理 JDBC Connection
 - PreparedStatement 参数绑定
 - ResultSet 映射基础设施
@@ -22,10 +25,16 @@
 - 重复键异常识别
 - 访问监听与可观测性
 
+Repository 的稳定扩展关系如下：
 
+```text
 reliable-task-core
-↓
-ReliableTaskRepository
-├── MyBatisReliableTaskRepository
-├── JdbcReliableTaskRepository       未来可重新实现
-└── JpaReliableTaskRepository        未来可实现
+  -> ReliableTaskRepository
+       -> MyBatisReliableTaskRepository (V1)
+       -> JdbcReliableTaskRepository    (未来可重新实现)
+       -> JpaReliableTaskRepository     (未来可实现)
+```
+
+因此 V1 统一 MyBatis 并不等于永久锁死 MyBatis。Core 依赖 Repository SPI；未来增加
+JDBC 或 JPA Provider 时，应新增 Provider 实现，而不是改变 Core 或复活一套与 MyBatis
+并行的公共 SQL 模板。

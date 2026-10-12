@@ -14,8 +14,9 @@ import com.xjtu.iron.reliable.task.api.state.ReliableTaskStatus;
 import com.xjtu.iron.reliable.task.provider.mybatis.mapper.ReliableTaskMapper;
 import com.xjtu.iron.reliable.task.provider.mybatis.mapping.ReliableTaskRow;
 import com.xjtu.iron.reliable.task.provider.mybatis.sql.MyBatisReliableTaskTable;
-import com.xjtu.iron.relational.mybatis.MyBatisAccess;
-import com.xjtu.iron.relational.mybatis.MyBatisConstraintViolationDetector;
+import com.xjtu.iron.relational.mybatis.access.MyBatisAccess;
+import com.xjtu.iron.relational.mybatis.access.MyBatisMapperWork;
+import com.xjtu.iron.relational.mybatis.support.MyBatisConstraintViolationDetector;
 
 import java.time.Instant;
 import java.util.List;
@@ -157,7 +158,7 @@ public final class MyBatisReliableTaskRepository implements ReliableTaskReposito
 
     private <T> T execute(
             String operationName,
-            com.xjtu.iron.relational.mybatis.MyBatisMapperWork<ReliableTaskMapper, T> work
+            MyBatisMapperWork<ReliableTaskMapper, T> work
     ) {
         try {
             return access.execute(operationName, ReliableTaskMapper.class, work);

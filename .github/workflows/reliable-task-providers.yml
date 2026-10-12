@@ -26,13 +26,13 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
           cache: maven
       - name: MyBatis access and technical-table contracts
-        run: mvn -B -ntp -pl :relational-mybatis,:relational-starter,:idempotent-provider-mybatis,:idempotent-integration-storage-routing,:idempotent-starter,:idempotent-storage-routing-e2e,:reliable-task-provider-mybatis,:reliable-task-spring-boot-starter,:distributed-lock-fencing-provider-mybatis,:distributed-lock-starter,:storage-routing-starter -am test
+        run: mvn -B -ntp -pl :relational-mybatis,:relational-starter,:idempotent-provider-mybatis,:idempotent-integration-storage-routing,:idempotent-starter,:idempotent-storage-routing-e2e,:reliable-task-provider-mybatis,:reliable-task-spring-boot-starter,:distributed-lock-fencing-provider-mybatis,:distributed-lock-starter,:storage-routing-starter,:transaction-demo-mybatis -am test
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4

@@ -78,6 +78,7 @@ public class DistributedLockAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(MeterRegistry.class)
+    @ConditionalOnBean(MeterRegistry.class)
     public LockMetricsRecorder micrometerLockMetricsRecorder(MeterRegistry meterRegistry) {
         return new MicrometerLockMetricsRecorder(meterRegistry);
     }

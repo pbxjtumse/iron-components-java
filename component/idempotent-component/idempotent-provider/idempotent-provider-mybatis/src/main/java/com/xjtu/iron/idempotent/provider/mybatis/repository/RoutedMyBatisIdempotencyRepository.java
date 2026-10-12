@@ -18,7 +18,7 @@ import com.xjtu.iron.idempotent.api.repository.write.IdempotencyWriteResult;
 import com.xjtu.iron.idempotent.api.storage.IdempotencyStorageContext;
 import com.xjtu.iron.idempotent.provider.mybatis.routing.IdempotencyPhysicalRoute;
 import com.xjtu.iron.idempotent.provider.mybatis.routing.IdempotencyPhysicalRouteResolver;
-import com.xjtu.iron.relational.mybatis.MyBatisAccessResolver;
+import com.xjtu.iron.relational.mybatis.routing.MyBatisAccessResolver;
 
 import java.util.ArrayList;
 import java.util.List;

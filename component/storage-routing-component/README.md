@@ -105,7 +105,7 @@ xjtu.iron.storage-routing.resolver.fixed.table-name=business_order
 ShardingSphere-JDBC 模式：
 
 ```properties
-xjtu.iron.storage-routing.mode=SHARDINGSPHERE_JDBC
+xjtu.iron.storage-routing.mode=SHARDING_SPHERE_JDBC
 # ShardingSphere DataSource 是默认 DataSource 时留空；多逻辑 DataSource 时填写 MyBatis Access 注册键。
 xjtu.iron.storage-routing.sharding-sphere-jdbc.data-source-key=orders-sharding
 ```

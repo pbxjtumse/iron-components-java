@@ -1,8 +1,8 @@
 package com.xjtu.iron.relational.spring.boot.autoconfigure;
 
-import com.xjtu.iron.relational.mybatis.MyBatisAccess;
-import com.xjtu.iron.relational.mybatis.MyBatisAccessResolver;
-import com.xjtu.iron.relational.mybatis.MyBatisMapperWork;
+import com.xjtu.iron.relational.mybatis.access.MyBatisAccess;
+import com.xjtu.iron.relational.mybatis.routing.MyBatisAccessResolver;
+import com.xjtu.iron.relational.mybatis.access.MyBatisMapperWork;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;

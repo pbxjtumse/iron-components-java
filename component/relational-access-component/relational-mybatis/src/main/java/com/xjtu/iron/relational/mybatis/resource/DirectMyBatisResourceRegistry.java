@@ -1,5 +1,8 @@
-package com.xjtu.iron.relational.mybatis;
+package com.xjtu.iron.relational.mybatis.resource;
 
+import com.xjtu.iron.relational.mybatis.access.MyBatisAccess;
+import com.xjtu.iron.relational.mybatis.routing.MyBatisAccessResolver;
+import com.xjtu.iron.relational.mybatis.routing.RoutingMyBatisAccessResolver;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutor;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutorResolver;
 import com.xjtu.iron.transaction.core.executor.RoutingTransactionExecutorResolver;

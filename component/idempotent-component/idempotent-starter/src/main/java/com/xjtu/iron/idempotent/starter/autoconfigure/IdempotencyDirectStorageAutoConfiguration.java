@@ -4,8 +4,8 @@ import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionCoordinat
 import com.xjtu.iron.idempotent.integration.storage.routing.StorageRouteAwareIdempotencyTransactionCoordinator;
 import com.xjtu.iron.idempotent.integration.storage.routing.StorageRoutingIdempotencyPhysicalRouteResolver;
 import com.xjtu.iron.idempotent.provider.mybatis.routing.IdempotencyPhysicalRouteResolver;
-import com.xjtu.iron.relational.mybatis.DirectMyBatisResourceRegistry;
-import com.xjtu.iron.relational.mybatis.MyBatisAccessResolver;
+import com.xjtu.iron.relational.mybatis.resource.DirectMyBatisResourceRegistry;
+import com.xjtu.iron.relational.mybatis.routing.MyBatisAccessResolver;
 import com.xjtu.iron.idempotent.starter.properties.IdempotencyProperties;
 import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;

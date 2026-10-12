@@ -1,5 +1,8 @@
-package com.xjtu.iron.relational.mybatis;
+package com.xjtu.iron.relational.mybatis.resource;
 
+import com.xjtu.iron.relational.mybatis.access.MyBatisAccess;
+import com.xjtu.iron.relational.mybatis.access.SpringMyBatisAccess;
+import com.xjtu.iron.relational.mybatis.observation.MyBatisAccessListener;
 import com.xjtu.iron.transaction.api.definition.TransactionOptions;
 import com.xjtu.iron.transaction.api.execution.TransactionCallback;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutor;
@@ -22,6 +25,10 @@ import java.util.Objects;
  * MyBatisAccess，防止“路由选中数据库 A，事务却由数据库 B 管理”的装配错误。</p>
  */
 public final class DirectMyBatisResource {
+
+    /** Iron 技术组件拥有的全部 MyBatis XML；兼容 mapper 与领域子目录。 */
+    private static final String MAPPER_LOCATION_PATTERN =
+            "classpath*:com/xjtu/iron/**/mybatis/**/*.xml";
 
     /** 物理数据源标识。 */
     private final String dataSourceKey;
@@ -96,7 +103,7 @@ public final class DirectMyBatisResource {
             factoryBean.setDataSource(dataSource);
             factoryBean.setMapperLocations(
                     new PathMatchingResourcePatternResolver().getResources(
-                            "classpath*:com/xjtu/iron/**/mapper/*.xml"
+                            MAPPER_LOCATION_PATTERN
                     )
             );
             factoryBean.afterPropertiesSet();

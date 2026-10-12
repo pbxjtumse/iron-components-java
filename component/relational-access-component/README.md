@@ -17,6 +17,16 @@ Relational Access V1 是所有关系型技术表的 MyBatis 公共接入层。�
 | `relational-mybatis` | `MyBatisAccess`、Access Resolver、Direct 多数据源资源目录、事务校验、表名/唯一键公共工具 |
 | `relational-starter` | 单 DataSource 下自动复用 MyBatis/Spring 资源，并为缺失的 `TransactionExecutor` 创建本地事务适配 |
 
+`relational-mybatis` 按职责分包，避免公共入口继续平铺：
+
+| 包 | 职责 |
+| --- | --- |
+| `access` | Mapper 执行入口与 Spring MyBatis 实现 |
+| `routing` | 单库和多库 Access 解析 |
+| `resource` | Direct DataSource、事务执行器和 MyBatis 运行时注册表 |
+| `observation` | 访问调用模型与监听器 |
+| `support` | 动态表名与约束冲突等公共校验 |
+
 已删除旧 `relational-api` / `relational-spi` / `relational-core` / `relational-integration-spring`。因此不再存在 `RelationalTemplate`、`JdbcStatementConfigurer`、`JdbcParameterBinder` 等自研 JDBC 执行链。
 
 ## 单库调用链
@@ -41,6 +51,10 @@ Component Repository
 - 一个 `MyBatisAccess`。
 
 这三者来自同一份资源目录，防止“路由选中库 A，事务却由库 B 管理”。当前线程已有其他 DataSource 的事务时，目录会拒绝跨库冒充本地事务。
+
+Direct 运行时扫描 `classpath*:com/xjtu/iron/**/mybatis/**/*.xml`，因此组件 Mapper XML
+必须位于 `com/xjtu/iron` 命名空间下包含 `mybatis` 的目录。该规则同时覆盖普通
+`mapper` 子目录和 fencing 等领域子目录。
 
 ## 组件接入约束
 

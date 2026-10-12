@@ -20,7 +20,7 @@ import java.util.Objects;
  * dataSourceKey    = db_05
  * tableName        = business_order_56
  *   2. ShardingSphere-JDBC 模式：
- *     mode            = SHARDINGSPHERE_JDBC
+ *     mode            = SHARDING_SPHERE_JDBC
  *     logicalTable    = business_order
  *     CompositeShardKey 保留
  *     physicalLocation = null

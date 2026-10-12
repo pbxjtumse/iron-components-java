@@ -20,7 +20,7 @@ public final class ShardingSphereJdbcStorageRouteResolver implements StorageRout
     public StorageRoute resolve(RouteContext context) {
         RouteContext required = Objects.requireNonNull(context, "context must not be null");
         if (required.logicalTable() == null) {
-            throw new StorageRoutingException("logicalTable is required for SHARDINGSPHERE_JDBC routing");
+            throw new StorageRoutingException("logicalTable is required for SHARDING_SPHERE_JDBC routing");
         }
         required.requireShardKey();
         return StorageRoute.middleware(StorageRouteMode.SHARDING_SPHERE_JDBC, required);

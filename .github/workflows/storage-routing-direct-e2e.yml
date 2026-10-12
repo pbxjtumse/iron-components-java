@@ -1,7 +1,7 @@
 name: Storage routing Direct E2E
 on:
   push:
-    branches: [storage-routing-direct-e2e-hardening]
+    branches: [storage-routing-direct-e2e-hardening, feature/mybatis-persistence-unification-v1]
   pull_request:
     paths:
       - 'component/idempotent-component/**'
@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'

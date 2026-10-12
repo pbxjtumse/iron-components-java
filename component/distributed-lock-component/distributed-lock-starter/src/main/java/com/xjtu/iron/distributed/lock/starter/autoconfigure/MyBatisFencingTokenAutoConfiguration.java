@@ -4,7 +4,7 @@ import com.xjtu.iron.distributed.lock.provider.mybatis.fencing.FencingTokenMappe
 import com.xjtu.iron.distributed.lock.provider.mybatis.fencing.MyBatisSequenceFencingTokenProvider;
 import com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider;
 import com.xjtu.iron.distributed.lock.starter.properties.MyBatisFencingTokenProperties;
-import com.xjtu.iron.relational.mybatis.MyBatisAccess;
+import com.xjtu.iron.relational.mybatis.access.MyBatisAccess;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

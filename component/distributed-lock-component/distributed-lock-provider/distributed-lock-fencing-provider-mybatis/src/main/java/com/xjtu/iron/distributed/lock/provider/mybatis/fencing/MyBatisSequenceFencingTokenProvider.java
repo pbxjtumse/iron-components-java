@@ -3,9 +3,9 @@ package com.xjtu.iron.distributed.lock.provider.mybatis.fencing;
 import com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider;
 import com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenRequest;
 import com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenResponse;
-import com.xjtu.iron.relational.mybatis.MyBatisAccess;
-import com.xjtu.iron.relational.mybatis.MyBatisConstraintViolationDetector;
-import com.xjtu.iron.relational.mybatis.MyBatisTableNameValidator;
+import com.xjtu.iron.relational.mybatis.access.MyBatisAccess;
+import com.xjtu.iron.relational.mybatis.support.MyBatisConstraintViolationDetector;
+import com.xjtu.iron.relational.mybatis.support.MyBatisTableNameValidator;
 
 import java.util.Objects;
 

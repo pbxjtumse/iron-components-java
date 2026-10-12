@@ -1,4 +1,6 @@
-package com.xjtu.iron.relational.mybatis;
+package com.xjtu.iron.relational.mybatis.routing;
+
+import com.xjtu.iron.relational.mybatis.access.MyBatisAccess;
 
 import java.util.Objects;
 

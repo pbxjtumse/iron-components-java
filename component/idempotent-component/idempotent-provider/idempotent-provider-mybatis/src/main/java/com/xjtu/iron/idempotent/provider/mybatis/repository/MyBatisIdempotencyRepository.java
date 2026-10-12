@@ -24,9 +24,9 @@ import com.xjtu.iron.idempotent.api.state.IdempotencyStatus;
 import com.xjtu.iron.idempotent.api.storage.IdempotencyStorageContext;
 import com.xjtu.iron.idempotent.provider.mybatis.mapper.IdempotencyMapper;
 import com.xjtu.iron.idempotent.provider.mybatis.mapping.IdempotencyRow;
-import com.xjtu.iron.relational.mybatis.MyBatisAccess;
-import com.xjtu.iron.relational.mybatis.MyBatisConstraintViolationDetector;
-import com.xjtu.iron.relational.mybatis.MyBatisTableNameValidator;
+import com.xjtu.iron.relational.mybatis.access.MyBatisAccess;
+import com.xjtu.iron.relational.mybatis.support.MyBatisConstraintViolationDetector;
+import com.xjtu.iron.relational.mybatis.support.MyBatisTableNameValidator;
 
 import java.time.Duration;
 import java.time.Instant;

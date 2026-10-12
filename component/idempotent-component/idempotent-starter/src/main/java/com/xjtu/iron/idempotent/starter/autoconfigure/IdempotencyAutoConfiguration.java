@@ -37,7 +37,7 @@ import com.xjtu.iron.idempotent.starter.observation.JacksonIdempotencySnapshotPo
 import com.xjtu.iron.idempotent.starter.observation.MicrometerIdempotencyMetrics;
 import com.xjtu.iron.idempotent.starter.properties.IdempotencyProperties;
 import com.xjtu.iron.idempotent.starter.result.SpringIdempotencyEventPublisher;
-import com.xjtu.iron.relational.mybatis.MyBatisAccessResolver;
+import com.xjtu.iron.relational.mybatis.routing.MyBatisAccessResolver;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutor;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;

@@ -1,4 +1,4 @@
-package com.xjtu.iron.relational.mybatis;
+package com.xjtu.iron.relational.mybatis.access;
 
 /**
  * 使用一个类型安全 MyBatis Mapper 完成一次技术表访问。
