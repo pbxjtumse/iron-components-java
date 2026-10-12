@@ -27,7 +27,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 
 /** 显式 opt-in 的 Direct 本地事务装配；资源注册表同时驱动 Tx-A/B/C。 */
-@AutoConfiguration(after = IdempotencyStorageRoutingAutoConfiguration.class, before = IdempotencyAutoConfiguration.class)
+@AutoConfiguration(
+        after = IdempotencyStorageRoutingAutoConfiguration.class,
+        afterName = "com.xjtu.iron.relational.spring.boot.autoconfigure.RelationalAccessAutoConfiguration",
+        before = IdempotencyAutoConfiguration.class
+)
 @ConditionalOnProperty(prefix = "xjtu.iron.idempotent.mybatis.direct", name = "enabled", havingValue = "true")
 public class IdempotencyDirectStorageAutoConfiguration {
 

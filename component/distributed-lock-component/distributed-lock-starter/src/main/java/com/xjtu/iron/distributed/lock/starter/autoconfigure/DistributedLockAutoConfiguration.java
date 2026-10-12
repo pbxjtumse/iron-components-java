@@ -209,6 +209,7 @@ public class DistributedLockAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(LockAcquisitionService.class)
     @ConditionalOnMissingBean
     public LockExecutionTemplate lockExecutionTemplate(LockAcquisitionService acquisitionService, LockEventPublisher eventPublisher,
             LockEventFactory eventFactory, LockMetricsFacade metricsFacade, LockResultResolver resultResolver, ObjectProvider<Clock> clockProvider) {
