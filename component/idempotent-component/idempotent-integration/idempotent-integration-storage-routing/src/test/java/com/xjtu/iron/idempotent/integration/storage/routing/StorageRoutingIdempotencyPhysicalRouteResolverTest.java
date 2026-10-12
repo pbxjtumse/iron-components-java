@@ -57,8 +57,8 @@ class StorageRoutingIdempotencyPhysicalRouteResolverTest {
         IdempotencyPhysicalRoute route = resolver.resolvePoint(
                 IdempotencyStorageContext.of("message-consume", 417), "message", "MSG-10001");
 
-        assertThat(route.dataSourceKey()).isEqualTo("idempotency-db-03");
-        assertThat(route.tableName()).isEqualTo("iron_idempotency_record_017");
+        assertThat(route.getDataSourceKey()).isEqualTo("idempotency-db-03");
+        assertThat(route.getTableName()).isEqualTo("iron_idempotency_record_017");
         assertThat(captured.get().routeName()).isEqualTo("message-consume");
         assertThat(captured.get().logicalTable()).isEqualTo("iron_idempotency_record");
         assertThat(captured.get().requireShardKey().singleKey().name()).isEqualTo(DefaultIdempotencyRouteContextFactory.IDEMPOTENCY_KEY_FIELD);
