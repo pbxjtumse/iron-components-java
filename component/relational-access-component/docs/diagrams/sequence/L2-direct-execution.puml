@@ -19,7 +19,7 @@ Access -> Session : getMapper(ComponentMapper)
 Session -> DB : physical SQL
 DB --> Repo : result
 
-note bottom
+note over Access,DB
 DirectMyBatisResourceRegistry creates the Access,
 SqlSessionTemplate and TransactionExecutor from the same DataSource.
 end note

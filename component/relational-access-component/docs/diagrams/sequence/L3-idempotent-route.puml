@@ -27,7 +27,7 @@ Repo -> Delegate : create/cache(access, tableName)
 Repo -> Delegate : tryAcquire / markSuccess / find
 Delegate -> Mapper : mapped SQL
 
-note bottom of Route
+note right of Route
 Middleware Access key chooses an application runtime.
 It does not select a ShardingSphere physical shard.
 end note

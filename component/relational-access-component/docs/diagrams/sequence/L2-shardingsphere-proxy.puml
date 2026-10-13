@@ -18,7 +18,7 @@ Proxy -> Proxy : parse / route / rewrite
 Proxy -> DB : physical SQL
 DB --> Repo : result
 
-note bottom of DS
+note over DS,Proxy
 The application DataSource is a normal pool whose JDBC URL points to Proxy.
 There is no ShardingSphereDataSource in the application process.
 end note

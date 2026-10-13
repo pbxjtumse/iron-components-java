@@ -23,7 +23,7 @@ orders-sharding selects the application Access.
 It is not ShardingSphere's ds_0 or ds_1.
 end note
 
-note bottom of SS
+note right of SS
 Created and configured by the application / ShardingSphere integration,
 not by Relational Access.
 end note
