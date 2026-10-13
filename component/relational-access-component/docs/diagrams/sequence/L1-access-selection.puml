@@ -1,0 +1,28 @@
+@startuml
+title Relational Access V1 - L1 Access Selection
+autonumber
+
+participant "Component Repository" as Repo
+participant "Physical Route Resolver" as Route
+participant "MyBatisAccessResolver" as Resolver
+participant "MyBatisAccess" as Access
+
+Repo -> Route : resolve(operation context)
+Route --> Repo : dataSourceKey + tableName
+Repo -> Resolver : resolve(dataSourceKey)
+
+alt key is null
+  Resolver --> Repo : default logical Access
+else Direct physical key
+  Resolver --> Repo : Access bound to physical DataSource
+else middleware logical key
+  Resolver --> Repo : Access bound to ShardingSphere or Proxy entry
+end
+
+Repo -> Access : execute*(Mapper, tableName)
+
+note over Route,Resolver
+The same String selects an application-side Access.
+Only in Direct mode does it normally identify a physical DB.
+end note
+@enduml

@@ -52,7 +52,28 @@ Storage Routing 驱动的多物理 DataSource 资源目录，不是 MyBatis 的�
 MyBatis，由 ShardingSphere 继续 route/rewrite/execute。`sharding-sphere-jdbc.data-source-key` 或
 `sharding-sphere-proxy.data-source-key` 只用于应用存在多个逻辑 DataSource 时选择 Access；为空时使用默认 Access。
 
+这里的 key 不是 ShardingSphere 内部的物理 `ds_0` / `ds_1`。以 JDBC 模式为例：
+
+```text
+StorageRoutingIdempotencyPhysicalRouteResolver
+  -> shardingSphereJdbcAccessKey
+  -> IdempotencyPhysicalRoute.dataSourceKey
+  -> MyBatisAccessResolver.resolve(key)
+  -> SpringMyBatisAccess bound to logical ShardingSphere DataSource
+  -> ShardingSphere selects physical shard
+```
+
+因此 `ShardingSphereDataSource` 由应用或 ShardingSphere 集成创建，不属于 Relational Access。Access 只复用
+Spring 容器中的 DataSource 与 `SqlSessionTemplate`。一个逻辑 Access 后面可以是多个物理数据库。
+
+当前 Adapter 也不会把 `StorageRouteContext` 自动转换成 ShardingSphere Hint。点查 SQL 必须携带中间件规则需要的
+分片列；Recovery SQL 如果不能由查询条件确定目标分片，可能产生广播路由。详细架构、L0-L4 图和当前限制见
+[Relational Access V1 文档](../../relational-access-component/docs/README.md)。
+
 ## Recovery 扫描
 
 分片场景不能在没有物理范围的情况下扫描全部分片。外部 Reliable Task 应枚举分片，
 在每个 `StorageRouteScope` 中调用候选扫描；真正接管仍由 owner/version CAS 决定。
+
+上述定向扫描在 Direct 模式已经具有明确物理含义；在 ShardingSphere-JDBC/Proxy 模式，是否定向到单一物理分片
+仍取决于 SQL 分片条件或未来的 Hint 集成，不能只依赖 `StorageRouteScope` 推断。

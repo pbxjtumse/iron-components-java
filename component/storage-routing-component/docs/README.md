@@ -25,3 +25,19 @@ Storage Provider 直接消费 `StorageRoute`，不再经过公共 `SqlRoute` bri
 “去哪里”，Relational Access 只管理“如何使用 MyBatis 和事务访问”。
 
 ThreadLocal 嵌套作用域、异步不会自动传播等概念，见 [从零理解路由与作用域](从零理解路由与作用域.md)。
+
+## 与 Relational Access、ShardingSphere 的边界
+
+Storage Routing 的 `dataSourceKey` 需要结合模式理解：
+
+| 模式 | `dataSourceKey` 的含义 | Access 数与物理库数的关系 |
+| --- | --- | --- |
+| `DIRECT_DATASOURCE` | 应用直连的物理 DataSource key | 通常一个物理库一个 Access |
+| `SHARDING_SPHERE_JDBC` | 可选的应用侧逻辑 Access key | 一个逻辑 Access 可代理多个物理库 |
+| `PROXY` | 可选的 Proxy 连接 Access key | 一个 Proxy Access 可通向多个后端库 |
+
+`ShardingSphereJdbcStorageRouteResolver` 不创建 `ShardingSphereDataSource`。它只返回 middleware route，
+真正的 ShardingSphere DataSource 由应用或 ShardingSphere 集成创建，再被 Relational Access 复用。
+
+完整的 L0-L4 图、单库/Direct/JDBC/Proxy 执行流程和源码阅读路线见
+[Relational Access V1 文档](../../relational-access-component/docs/README.md)。

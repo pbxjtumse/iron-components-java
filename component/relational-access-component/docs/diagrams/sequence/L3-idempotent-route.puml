@@ -1,0 +1,34 @@
+@startuml
+title Relational Access V1 - L3 Idempotent Route
+autonumber
+
+participant "RoutedMyBatisIdempotencyRepository" as Repo
+participant "StorageRoutingIdempotencyPhysicalRouteResolver" as Route
+participant "StorageRouteContext" as Context
+participant "MyBatisAccessResolver" as AccessResolver
+participant "MyBatisIdempotencyRepository" as Delegate
+participant "IdempotencyMapper" as Mapper
+
+Repo -> Route : resolvePoint(storageContext, namespace, key)
+Route -> Context : current()
+
+alt Direct route
+  Route -> Route : reuse shardInfo
+  Route -> Route : remap idempotency physical table
+  Route --> Repo : physical DB key + physical table
+else ShardingSphere-JDBC / Proxy
+  Route -> Route : keep middleware mode
+  Route --> Repo : logical Access key + idempotency logical table
+end
+
+Repo -> AccessResolver : resolve(dataSourceKey)
+AccessResolver --> Repo : MyBatisAccess
+Repo -> Delegate : create/cache(access, tableName)
+Repo -> Delegate : tryAcquire / markSuccess / find
+Delegate -> Mapper : mapped SQL
+
+note bottom of Route
+Middleware Access key chooses an application runtime.
+It does not select a ShardingSphere physical shard.
+end note
+@enduml

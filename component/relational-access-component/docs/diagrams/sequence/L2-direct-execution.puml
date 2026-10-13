@@ -1,0 +1,26 @@
+@startuml
+title Relational Access V1 - L2 Direct Multi-DataSource
+autonumber
+
+participant "Component Repository" as Repo
+participant "StorageRouteResolver" as Route
+participant "RoutingMyBatisAccessResolver" as Resolver
+participant "SpringMyBatisAccess(db-01)" as Access
+participant "SqlSessionTemplate(db-01)" as Session
+database "Physical DB db-01" as DB
+
+Repo -> Route : resolve(shardKey)
+Route --> Repo : db-01 + physical_table_03
+Repo -> Resolver : resolve("db-01")
+Resolver --> Repo : Access(db-01)
+Repo -> Access : execute*(Mapper, physical_table_03)
+Access -> Access : verify current tx uses db-01
+Access -> Session : getMapper(ComponentMapper)
+Session -> DB : physical SQL
+DB --> Repo : result
+
+note bottom
+DirectMyBatisResourceRegistry creates the Access,
+SqlSessionTemplate and TransactionExecutor from the same DataSource.
+end note
+@enduml

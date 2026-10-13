@@ -1,6 +1,21 @@
 # Relational Access V1 文档
 
-当前版本已收口为 MyBatis-first 技术表接入层。详细边界、调用链、Direct 多库资源目录和接入约束见 [组件 README](../README.md)。
+当前版本已收口为 MyBatis-first 技术表接入层。它统一技术组件使用 MyBatis、Spring
+本地事务、多 DataSource 选择与访问观测的方式，但不拥有业务 SQL，也不创建应用的连接池。
+
+## 推荐阅读顺序
+
+1. [architecture.md](architecture.md)：组件边界、三种部署模式，以及 `ShardingSphereDataSource` 到底归谁管理。
+2. [execution-flow.md](execution-flow.md)：单库、Direct 多库、ShardingSphere-JDBC、Proxy 和幂等接入的完整流程。
+3. [code-reading-guide.md](code-reading-guide.md)：从 Starter、Resolver、Access 到具体 Mapper/XML 的源码路线。
+4. [L0 系统上下文图](diagrams/component/L0-system-context.puml)：先看组件之间的责任边界。
+5. [L1 Access 选择](diagrams/sequence/L1-access-selection.puml)：理解 `dataSourceKey` 选择的是 Access，不一定是物理库。
+6. L2 执行图：[Direct](diagrams/sequence/L2-direct-execution.puml)、[ShardingSphere-JDBC](diagrams/sequence/L2-shardingsphere-jdbc.puml)、[Proxy](diagrams/sequence/L2-shardingsphere-proxy.puml)。
+7. [L3 Idempotent 集成](diagrams/sequence/L3-idempotent-route.puml)：理解 `StorageRoutingIdempotencyPhysicalRouteResolver`。
+8. [L4 事务与分片边界](diagrams/sequence/L4-transaction-boundary.puml)：理解同库事务成立的条件和当前限制。
+
+组件概览、模块清单与接入约束见 [组件 README](../README.md)。Storage Routing 的路由模型与作用域见
+[Storage Routing 文档](../../storage-routing-component/docs/README.md)。
 
 旧 `RelationalTemplate` 设计文档已随原生 JDBC 执行链一同删除，避免将已下线 API 当成现行用法。
 

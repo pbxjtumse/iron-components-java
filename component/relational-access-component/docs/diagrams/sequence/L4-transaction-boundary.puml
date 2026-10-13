@@ -1,0 +1,34 @@
+@startuml
+title Relational Access V1 - L4 Transaction and Shard Boundary
+autonumber
+
+participant "Idempotency Executor" as Exec
+participant "Transaction Coordinator" as Tx
+participant "Business Mapper" as Biz
+participant "SpringMyBatisAccess" as Access
+participant "Idempotency Mapper" as Idem
+database "Same physical DB" as DB
+
+Exec -> Tx : REQUIRED(routeKey)
+Tx -> DB : begin / join local transaction
+Tx -> Biz : business write
+Biz -> DB : SQL using shardKey
+Tx -> Access : executeInCurrentTransaction(markSuccess)
+Access -> Access : require bound DataSource
+Access -> Idem : SUCCESS CAS(owner, version)
+Idem -> DB : same transaction resource
+
+alt CAS updated
+  Tx -> DB : commit business + SUCCESS
+  Tx --> Exec : EXECUTED
+else stale owner / provider error
+  Tx -> DB : rollback all local writes
+  Tx --> Exec : completion rejected
+end
+
+note bottom
+Same MyBatis framework is not sufficient.
+Both mappers must resolve to the same local transaction resource.
+Cross-shard atomicity needs middleware distributed transactions or a different design.
+end note
+@enduml

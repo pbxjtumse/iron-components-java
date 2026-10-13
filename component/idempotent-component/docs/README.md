@@ -6,10 +6,11 @@ Idempotent 是 Iron Components 中文档结构最完整的组件之一，也是�
 
 1. [architecture.md](architecture.md)：ownerToken + version、Repository、StateMachine、Transaction、Recovery。
 2. [core-flow.md](core-flow.md)：execute/recover 主链路。
-3. [storage-routing-integration.md](storage-routing-integration.md)：Route-Aware Storage。
+3. [storage-routing-integration.md](storage-routing-integration.md)：Route-Aware Storage；Access、多 DataSource 与
+   ShardingSphere 的 L0-L4 图见 [Relational Access 文档](../../relational-access-component/docs/README.md)。
 4. [transaction.md](transaction.md)：Tx-A / Tx-B / Tx-C。
 5. [recovery.md](recovery.md)：显式 Recovery。
-6. [code-reading-guide.md](code-reading-guide.md) 与 [executor-reading-guide.md](executor-reading-guide.md)。
+6. [code-reading-guide.md](code-reading-guide.md)：从 Executor 到 Provider SQL 的源码阅读路线。
 7. [组件图](diagrams/component/L0-overview.puml)。
 8. [L0 总览时序](diagrams/sequence/L0-overview.puml)。
 9. L1-L4 场景时序。

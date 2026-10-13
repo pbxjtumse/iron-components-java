@@ -1,0 +1,25 @@
+@startuml
+title Relational Access V1 - L2 ShardingSphere-Proxy
+autonumber
+
+participant "Component Repository" as Repo
+participant "MyBatisAccessResolver" as Resolver
+participant "SpringMyBatisAccess" as Access
+participant "Ordinary JDBC DataSource" as DS
+participant "ShardingSphere-Proxy" as Proxy
+database "Physical shards" as DB
+
+Repo -> Resolver : resolve("orders-proxy")
+Resolver --> Repo : Proxy-facing Access
+Repo -> Access : execute*(Mapper, logical_table)
+Access -> DS : logical SQL
+DS -> Proxy : JDBC protocol
+Proxy -> Proxy : parse / route / rewrite
+Proxy -> DB : physical SQL
+DB --> Repo : result
+
+note bottom of DS
+The application DataSource is a normal pool whose JDBC URL points to Proxy.
+There is no ShardingSphereDataSource in the application process.
+end note
+@enduml

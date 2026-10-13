@@ -1,0 +1,30 @@
+@startuml
+title Relational Access V1 - L2 ShardingSphere-JDBC
+autonumber
+
+participant "Component Repository" as Repo
+participant "MyBatisAccessResolver" as Resolver
+participant "SpringMyBatisAccess" as Access
+participant "SqlSessionTemplate" as Session
+participant "ShardingSphere logical DataSource" as SS
+database "Physical shards" as DB
+
+Repo -> Resolver : resolve("orders-sharding")
+Resolver --> Repo : logical Access
+Repo -> Access : execute*(Mapper, logical_table)
+Access -> Session : getMapper(ComponentMapper)
+Session -> SS : logical SQL + sharding column
+SS -> SS : parse / route / rewrite
+SS -> DB : physical SQL
+DB --> Repo : result
+
+note over Resolver,Access
+orders-sharding selects the application Access.
+It is not ShardingSphere's ds_0 or ds_1.
+end note
+
+note bottom of SS
+Created and configured by the application / ShardingSphere integration,
+not by Relational Access.
+end note
+@enduml

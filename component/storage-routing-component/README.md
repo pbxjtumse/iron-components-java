@@ -146,6 +146,14 @@ Relational Access
     -> 决定怎么执行：MyBatis Mapper / SqlSessionTemplate / 本地事务资源
 ```
 
+这里的“一个 Access”不等于“一个物理数据库”。Direct 模式中 Access 通常直接绑定一个物理 DataSource；
+ShardingSphere-JDBC 模式中一个 Access 可以绑定一个逻辑 `ShardingSphereDataSource`，由它继续路由到多个物理库；
+Proxy 模式中一个 Access 绑定的是指向 Proxy 的普通连接池。
+
+`sharding-sphere-jdbc.data-source-key` 选择的是应用侧 `MyBatisAccessResolver` 中的逻辑 Access，不是
+ShardingSphere 内部的 `ds_0` / `ds_1`。完整说明与 L0-L4 图见
+[Relational Access V1 文档](../relational-access-component/docs/README.md)。
+
 ## 5. 文档阅读顺序
 
 ```text
@@ -154,6 +162,9 @@ docs/README.md
 
 docs/从零理解路由与作用域.md
     -> ThreadLocal 嵌套、路由恢复、异步传播边界
+
+../relational-access-component/docs/README.md
+    -> Access、多 DataSource、ShardingSphere 与 L0-L4 执行图
 ```
 
 ## 6. 推进路线

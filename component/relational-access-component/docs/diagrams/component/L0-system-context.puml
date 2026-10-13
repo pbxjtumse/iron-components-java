@@ -1,0 +1,47 @@
+@startuml
+title Relational Access V1 - L0 System Context
+skinparam componentStyle rectangle
+
+actor "Business / Scheduler" as Caller
+
+rectangle "Technical Components" {
+  [Idempotent Provider] as Idem
+  [Reliable Task Provider] as Task
+  [Fencing Provider] as Fence
+}
+
+rectangle "Iron Infrastructure" {
+  [Storage Routing] as Routing
+  [Relational Access] as Access
+  [Transaction Component] as Tx
+}
+
+rectangle "Application Runtime" {
+  [MyBatis Mapper + XML] as Mapper
+  [DataSource / SqlSessionTemplate] as Runtime
+}
+
+rectangle "Optional Middleware" {
+  [ShardingSphere-JDBC] as SSJ
+  [ShardingSphere-Proxy] as SSP
+}
+
+Caller --> Idem
+Caller --> Task
+Caller --> Fence
+Idem ..> Routing : resolve where
+Task ..> Routing : resolve where
+Idem --> Access : execute mapper
+Task --> Access : execute mapper
+Fence --> Access : execute mapper
+Access ..> Tx : local transaction
+Access --> Mapper
+Mapper --> Runtime
+Runtime ..> SSJ : logical DataSource mode
+Runtime ..> SSP : proxy JDBC mode
+
+note bottom of Access
+Does not create pools,
+sharding rules, or component SQL.
+end note
+@enduml

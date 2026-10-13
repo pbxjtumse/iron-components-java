@@ -2,6 +2,8 @@
 
 Relational Access V1 是所有关系型技术表的 MyBatis 公共接入层。它不是 ORM，也不再提供通用 SQL/RowMapper 模板。
 
+完整的架构边界、四种拓扑、L0-L4 图、执行流程与源码路线见 [docs/README.md](docs/README.md)。
+
 ## 设计边界
 
 - 每个业务技术组件保留自己的 Repository SPI、Mapper 接口和 Mapper XML。
@@ -55,6 +57,18 @@ Component Repository
 Direct 运行时扫描 `classpath*:com/xjtu/iron/**/mybatis/**/*.xml`，因此组件 Mapper XML
 必须位于 `com/xjtu/iron` 命名空间下包含 `mybatis` 的目录。该规则同时覆盖普通
 `mapper` 子目录和 fencing 等领域子目录。
+
+## ShardingSphere-JDBC / Proxy
+
+Relational Access 不创建 `ShardingSphereDataSource`，也不管理分片规则。
+
+- ShardingSphere-JDBC：应用或 ShardingSphere 集成创建一个逻辑 DataSource；Access 复用它。一个逻辑
+  Access 可以在 ShardingSphere 内部对应多个物理数据库。
+- ShardingSphere-Proxy：应用使用普通 DataSource 连接 Proxy；物理路由发生在 Proxy 服务端。
+- `sharding-sphere-jdbc.data-source-key` 与 `sharding-sphere-proxy.data-source-key` 都是应用侧
+  `MyBatisAccessResolver` 的选择键，不是中间件内部的物理分片名。
+
+详细说明见 [Relational Access 架构](docs/architecture.md#2-shardingspheredatasource-归谁管理)。
 
 ## 组件接入约束
 

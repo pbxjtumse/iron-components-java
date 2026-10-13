@@ -39,11 +39,19 @@ public final class StorageRoutingIdempotencyPhysicalRouteResolver
     /** 幂等表独立的物理表映射策略。 */
     private final RouteMappingStrategy idempotencyMappingStrategy;
 
-    /** ShardingSphere-JDBC 逻辑 DataSource 标识；默认数据源允许为空。 */
-    private final String shardingSphereJdbcDataSourceKey;
+    /**
+     * 承载 ShardingSphere-JDBC 逻辑 DataSource 的 MyBatis Access 选择键。
+     *
+     * <p>它不是 ShardingSphere 内部物理分片名；默认逻辑 Access 允许为空。</p>
+     */
+    private final String shardingSphereJdbcAccessKey;
 
-    /** ShardingSphere-Proxy 连接 DataSource 标识；默认数据源允许为空。 */
-    private final String proxyDataSourceKey;
+    /**
+     * 连接 ShardingSphere-Proxy 的 MyBatis Access 选择键。
+     *
+     * <p>它不是 Proxy 后端物理分片名；默认逻辑 Access 允许为空。</p>
+     */
+    private final String proxyAccessKey;
 
     public StorageRoutingIdempotencyPhysicalRouteResolver(
             String logicalTable,
@@ -51,8 +59,8 @@ public final class StorageRoutingIdempotencyPhysicalRouteResolver
             StorageRouteResolver storageRouteResolver,
             StorageRouteContext storageRouteContext,
             RouteMappingStrategy idempotencyMappingStrategy,
-            String shardingSphereJdbcDataSourceKey,
-            String proxyDataSourceKey
+            String shardingSphereJdbcAccessKey,
+            String proxyAccessKey
     ) {
         this.logicalTable = requireText(logicalTable, "logicalTable");
         this.directTableName = requireText(directTableName, "directTableName");
@@ -68,8 +76,8 @@ public final class StorageRoutingIdempotencyPhysicalRouteResolver
                 idempotencyMappingStrategy,
                 "idempotencyMappingStrategy must not be null"
         );
-        this.shardingSphereJdbcDataSourceKey = normalize(shardingSphereJdbcDataSourceKey);
-        this.proxyDataSourceKey = normalize(proxyDataSourceKey);
+        this.shardingSphereJdbcAccessKey = normalize(shardingSphereJdbcAccessKey);
+        this.proxyAccessKey = normalize(proxyAccessKey);
     }
 
     @Override
@@ -209,8 +217,8 @@ public final class StorageRoutingIdempotencyPhysicalRouteResolver
             return toPhysicalRoute(route);
         }
         String dataSourceKey = route.mode() == StorageRouteMode.SHARDING_SPHERE_JDBC
-                ? shardingSphereJdbcDataSourceKey
-                : proxyDataSourceKey;
+                ? shardingSphereJdbcAccessKey
+                : proxyAccessKey;
         // 外层绑定的 middleware route 可能属于业务表。这里只继承中间件模式，
         // 幂等技术表必须始终使用自己的 logicalTable，不能泄漏业务表名。
         return IdempotencyPhysicalRoute.of(dataSourceKey, logicalTable);
