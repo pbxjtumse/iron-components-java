@@ -1,60 +1,42 @@
-# ChatGPT / Codex 项目迁移入口
+# ChatGPT / Codex 项目接续入口
 
-这组文件用于把 `iron-components-java` 的项目上下文迁移到另一个 ChatGPT 账号或新的 ChatGPT Project。
+此目录保留跨组件设计决策与有价值的历史背景，不重复维护项目概况、通用工作规则或当前完成度。
 
-## 快照基线
+## 阅读入口
 
-- 仓库：`pbxjtumse/iron-components-java`
-- 基线分支：`master`
-- 基线提交：`0ae78d402e68a34e4c4ac41f8a2a7c51c11a687d`
-- 提交主题：`docs: correct component dependency directions`
-- 快照日期：2026-09-29
-
-这些文件是交接快照，不替代源码。迁移后，目标账号必须优先检查当前分支和最新提交。
-
-## 文件说明
-
-| 文件 | 用途 |
+| 目的 | 入口 |
 |---|---|
-| [`PROJECT-CONTEXT.md`](PROJECT-CONTEXT.md) | 项目目标、结构、组件全景和组合关系 |
-| [`ARCHITECTURE-DECISIONS.md`](ARCHITECTURE-DECISIONS.md) | 已确认的架构决定和禁止回退的边界 |
-| [`CURRENT-STATE.md`](CURRENT-STATE.md) | master 快照、验证结果和当前风险 |
-| [`HISTORICAL-CONTEXT.md`](HISTORICAL-CONTEXT.md) | 从历史会话保留的设计意图、分支演进和未决事项 |
-| [`ROADMAP.md`](ROADMAP.md) | 按优先级整理的后续工作 |
-| [`PROJECT-INSTRUCTIONS.md`](PROJECT-INSTRUCTIONS.md) | 可直接粘贴到 ChatGPT Project Instructions 的内容 |
-| [`../../AGENTS.md`](../../AGENTS.md) | 仓库内代码 Agent 的长期执行规则 |
+| 通用工程规则与设计冲突处理 | [AGENTS.md](../../AGENTS.md) |
+| 项目概况与建设重点 | [项目 README](../../README.md) |
+| 组件文档导航 | [文档索引](../../component/DOCUMENTATION-INDEX.md) |
+| 跨组件设计约束与理由 | [架构决策](ARCHITECTURE-DECISIONS.md) |
+| 历史设计意图与候选方向 | [历史背景](HISTORICAL-CONTEXT.md) |
 
-## 导入到另一个 Pro 账号
+具体功能设计保存在所属组件文档中。重要设计决策应写明理由和适用范围；新决策或被替代的决策注明状态，避免只记录最终结论而丢失关键语义。
 
-1. 在 Pro 账号中创建 ChatGPT Project：`iron-components-java`。
-2. 连接或上传当前 GitHub 仓库，确认默认分支为 `master`。
-3. 将本目录中的 Markdown 文件加入 Project Sources。
-4. 将 `PROJECT-INSTRUCTIONS.md` 内容粘贴到 Project Instructions。
-5. 如果使用 ChatGPT 桌面端或 Codex，把仓库根目录设为项目主目录，使根 `AGENTS.md` 自动生效。
-6. 在新项目的第一个会话中发送下面的启动提示词。
+## 从讨论转入本地实施
+
+1. 把已确定的需求、行为、边界和验收标准写入对应组件文档；重要取舍写入架构决策。
+2. 确认文档已保存到本地工作树，或提交后拉取到本地同一任务分支。远端尚未拉取的改动不会自动成为本地上下文。
+3. 向本地 Agent 指明任务和设计入口，由它读取适用的 AGENTS、组件文档和当前代码，检查设计缺口后实施。
+4. 按任务验证，更新相关文档并提交；未验证内容和仍待确认的关键语义明确保留。
+
+AGENTS 提供稳定工程约束，不保证自动恢复其他会话的全部聊天内容，也不要求每次任务阅读所有历史资料。
+
+任务指令可以简写为：
 
 ```text
-请先读取仓库根 AGENTS.md、docs/project-handoff/ 下的全部文件、根 README.md、
-component/DOCUMENTATION-INDEX.md 和目标组件 docs/README.md。
-
-先不要修改代码。请核对当前分支和 HEAD，然后输出：
-1. 当前组件全景；
-2. 已实现、验证中、规划中的能力；
-3. 交接快照与当前代码的差异；
-4. 已确认的架构边界；
-5. 构建与测试风险；
-6. 最适合继续推进的三个任务。
-
-所有结论都要区分：代码事实、文档事实、历史背景、待验证推断。
+本次目标：<行为或问题>
+范围：<组件 / 模块>
+设计入口：<文档路径与相关章节>
+按仓库 AGENTS 执行；先核对设计与当前实现。
+区分已确定要求与假设；关键语义缺口指出依据，继续推进独立工作。
+完成代码、相关文档与必要验证，报告未验证项。
 ```
 
-## 迁移验收
+## 资料维护
 
-目标账号能正确回答以下问题，说明主要上下文已恢复：
-
-- `component/pom.xml` 和 `component-bom` 分别负责什么？
-- Storage Routing 与 Relational Access 的依赖方向是什么？
-- ShardingSphere-JDBC 和 Proxy Adapter 是否已经存在？
-- Idempotency 三段事务分别承担什么职责？
-- Message Consume V4 的策略顺序是什么？
-- 当前 POM 校验剩余哪些结构问题，哪些只是 Demo 可执行打包警告？
+- 通用规则以根 AGENTS 为入口，不另保留重复的项目指令文件。
+- 项目概况以根 README 和组件文档为入口，不另维护重复的技术基线与目录清单。
+- 已清理基于 2026-09-29 旧快照的状态报告及迁移清单；其中独特的设计意图和候选方向保存在历史背景中，不作为当前待办或验收结果。
+- 后续确需状态快照时，必须注明日期、分支、提交、环境和实际验证范围。
