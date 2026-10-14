@@ -13,7 +13,17 @@ import javax.sql.DataSource;
 import java.time.Duration;
 import java.util.Objects;
 
-/** 基于 SqlSessionTemplate 和 transaction-component 的 MyBatis Access。 */
+/** 基于 SqlSessionTemplate 和 transaction-component 的 MyBatis Access。
+ * 1 SpringMyBatisAccess
+ *     =
+ * 1 DataSource
+ *     +
+ * 1 SqlSessionTemplate
+ *     +
+ * 0/1 TransactionExecutor
+ *     +
+ * 1 Listener
+ */
 public final class SpringMyBatisAccess implements MyBatisAccess {
 
     /** 当前 MyBatis 运行时使用的数据源。 */
@@ -93,6 +103,18 @@ public final class SpringMyBatisAccess implements MyBatisAccess {
         return true;
     }
 
+    /**
+     *
+     * 创建调用信息
+     *     ↓
+     * 发送 before 观测
+     *     ↓
+     * 从 SqlSessionTemplate 获取 Mapper
+     *     ↓
+     * 执行 Repository 传入的回调
+     *     ↓
+     * 发送 success/failure 观测
+     */
     private <M, T> T invoke(String operationName, Class<M> mapperType, MyBatisMapperWork<M, T> work) throws Exception {
         Objects.requireNonNull(mapperType, "mapperType must not be null");
         Objects.requireNonNull(work, "work must not be null");
