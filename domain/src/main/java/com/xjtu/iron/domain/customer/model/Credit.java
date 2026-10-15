@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 @Entity
-public class Credit{
-    
+public class Credit {
+
 }

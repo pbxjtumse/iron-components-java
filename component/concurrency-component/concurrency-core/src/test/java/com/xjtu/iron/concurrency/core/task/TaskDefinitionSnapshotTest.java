@@ -17,17 +17,10 @@ class TaskDefinitionSnapshotTest {
         Supplier<String> originalOperation = () -> "operation-A";
         Function<Throwable, String> originalFallback = error -> "fallback-A";
 
-        AsyncTask<String> task = AsyncTask.of("pool-A", "task-A", originalOperation)
-                .taskId("task-1")
-                .bizKey("biz-A")
-                .description("desc-A")
-                .tag("scene", "A")
-                .timeout(Duration.ofSeconds(1))
-                .queueTimeout(Duration.ofMillis(100))
-                .cancelOnTimeout(true)
-                .interruptOnCancel(true)
-                .fallback(originalFallback)
-                .contextPropagation(false);
+        AsyncTask<String> task =
+            AsyncTask.of("pool-A", "task-A", originalOperation).taskId("task-1").bizKey("biz-A").description("desc-A").tag("scene", "A")
+                .timeout(Duration.ofSeconds(1)).queueTimeout(Duration.ofMillis(100)).cancelOnTimeout(true).interruptOnCancel(true)
+                .fallback(originalFallback).contextPropagation(false);
 
         task.validate();
         TaskDefinition<String> definition = TaskDefinition.from(task);

@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+
 /**
  * Provider 层发送结果，承接原生中间件结果到 message-core 统一语义的第一次映射。
  *
@@ -34,11 +35,7 @@ public final class ProviderSendResult {
     /**
      * 统一校验结果一致性并复制元数据。
      */
-    public ProviderSendResult(
-        SendStatus status,
-        SendFailureType failureType,
-        String providerMessageId,
-        String description,
+    public ProviderSendResult(SendStatus status, SendFailureType failureType, String providerMessageId, String description,
         Map<String, String> metadata) {
         // status 不能为空。
         status = Objects.requireNonNull(status, "status must not be null");
@@ -55,10 +52,8 @@ public final class ProviderSendResult {
             throw new IllegalArgumentException("non-confirmed result must provide failureType");
         }
         // 元数据执行防御性复制。
-        metadata = metadata == null || metadata.isEmpty()
-                ? Map.of()
-                : Collections.unmodifiableMap(new LinkedHashMap<>(metadata));
-    
+        metadata = metadata == null || metadata.isEmpty() ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(metadata));
+
         // 保存完成校验和标准化后的 status。
         this.status = status;
         // 保存完成校验和标准化后的 failureType。
@@ -78,16 +73,9 @@ public final class ProviderSendResult {
      * @param metadata 原生元数据
      * @return 成功结果
      */
-    public static ProviderSendResult confirmed(
-            String providerMessageId,
-            Map<String, String> metadata) {
+    public static ProviderSendResult confirmed(String providerMessageId, Map<String, String> metadata) {
         // 成功结果统一使用 NONE 失败类型。
-        return new ProviderSendResult(
-                SendStatus.CONFIRMED,
-                SendFailureType.NONE,
-                providerMessageId,
-                null,
-                metadata);
+        return new ProviderSendResult(SendStatus.CONFIRMED, SendFailureType.NONE, providerMessageId, null, metadata);
     }
 
     /**
@@ -109,10 +97,7 @@ public final class ProviderSendResult {
      * @param description 诊断描述
      * @return 非成功结果
      */
-    public static ProviderSendResult failed(
-            SendStatus status,
-            SendFailureType failureType,
-            String description) {
+    public static ProviderSendResult failed(SendStatus status, SendFailureType failureType, String description) {
         // 非成功工厂默认不设置原生消息 ID 和额外元数据。
         return failed(status, failureType, description, Map.of());
     }
@@ -132,19 +117,12 @@ public final class ProviderSendResult {
      * @param metadata Provider 原生诊断元数据
      * @return 非成功结果
      */
-    public static ProviderSendResult failed(
-            SendStatus status,
-            SendFailureType failureType,
-            String description,
-            Map<String, String> metadata) {
+    public static ProviderSendResult failed(SendStatus status, SendFailureType failureType, String description,
+        Map<String, String> metadata) {
         // 非成功工厂不设置原生消息 ID。
-        return new ProviderSendResult(
-                status,
-                failureType,
-                null,
-                description,
-                metadata);
+        return new ProviderSendResult(status, failureType, null, description, metadata);
     }
+
     /**
      * 返回Provider 能够确认的发送状态。
      *
@@ -213,11 +191,9 @@ public final class ProviderSendResult {
         }
         // 转换为当前类型后逐字段比较。
         ProviderSendResult other = (ProviderSendResult) object;
-        return Objects.equals(status, other.status)
-                && Objects.equals(failureType, other.failureType)
-                && Objects.equals(providerMessageId, other.providerMessageId)
-                && Objects.equals(description, other.description)
-                && Objects.equals(metadata, other.metadata);
+        return Objects.equals(status, other.status) && Objects.equals(failureType, other.failureType) &&
+            Objects.equals(providerMessageId, other.providerMessageId) && Objects.equals(description, other.description) &&
+            Objects.equals(metadata, other.metadata);
     }
 
     /**
@@ -239,13 +215,8 @@ public final class ProviderSendResult {
     @Override
     public String toString() {
         // 拼接全部字段，保持值对象可诊断。
-        return "ProviderSendResult{" +
-                "status=" + status +
-                ", failureType=" + failureType +
-                ", providerMessageId=" + providerMessageId +
-                ", description=" + description +
-                ", metadata=" + metadata +
-                '}';
+        return "ProviderSendResult{" + "status=" + status + ", failureType=" + failureType + ", providerMessageId=" + providerMessageId +
+            ", description=" + description + ", metadata=" + metadata + '}';
     }
 
 }

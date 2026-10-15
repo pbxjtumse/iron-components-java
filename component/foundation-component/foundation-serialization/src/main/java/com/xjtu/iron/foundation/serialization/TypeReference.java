@@ -20,5 +20,7 @@ public abstract class TypeReference<T> {
         this.type = parameterizedType.getActualTypeArguments()[0];
     }
 
-    public Type getType() { return type; }
+    public Type getType() {
+        return type;
+    }
 }

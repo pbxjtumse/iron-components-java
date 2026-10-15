@@ -20,10 +20,7 @@ public class DefaultCacheEventHandler implements CacheEventHandler {
 
     private final String currentInstanceId;
 
-    public DefaultCacheEventHandler(
-            LocalCacheInvalidator localCacheInvalidator,
-            String currentInstanceId
-    ) {
+    public DefaultCacheEventHandler(LocalCacheInvalidator localCacheInvalidator, String currentInstanceId) {
         this.localCacheInvalidator = localCacheInvalidator;
         this.currentInstanceId = currentInstanceId;
     }
@@ -34,25 +31,18 @@ public class DefaultCacheEventHandler implements CacheEventHandler {
             return;
         }
 
-        log.info("[CACHE-EVENT-HANDLE] eventVersion={}, eventType={}, fullKey={}, sourceInstanceId={}, currentInstanceId={}, traceId={}, spanId={}",
-                event.getEventVersion(),
-                event.getEventType(),
-                event.getFullKey(),
-                event.getSourceInstanceId(),
-                currentInstanceId,
-                event.getTraceId(),
-                event.getSpanId());
+        log.info(
+            "[CACHE-EVENT-HANDLE] eventVersion={}, eventType={}, fullKey={}, sourceInstanceId={}, currentInstanceId={}, traceId={}, spanId={}",
+            event.getEventVersion(), event.getEventType(), event.getFullKey(), event.getSourceInstanceId(), currentInstanceId,
+            event.getTraceId(), event.getSpanId());
 
-        if (currentInstanceId != null
-                && currentInstanceId.equals(event.getSourceInstanceId())) {
+        if (currentInstanceId != null && currentInstanceId.equals(event.getSourceInstanceId())) {
             log.info("[CACHE-EVENT-HANDLE] ignore self event, fullKey={}", event.getFullKey());
             return;
         }
 
         if (event.getEventType() == CacheEventType.UNKNOWN) {
-            log.warn("[CACHE-EVENT-HANDLE] ignore unknown eventType, fullKey={}, eventId={}",
-                    event.getFullKey(),
-                    event.getEventId());
+            log.warn("[CACHE-EVENT-HANDLE] ignore unknown eventType, fullKey={}, eventId={}", event.getFullKey(), event.getEventId());
             return;
         }
 

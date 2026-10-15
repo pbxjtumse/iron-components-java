@@ -49,17 +49,45 @@ public final class IdempotencyRequest {
         this.policy = builder.policy;
     }
 
-    public static Builder builder() { return new Builder(); }
-    public static IdempotencyRequest of(String key) { return builder().key(key).build(); }
-    public static IdempotencyRequest of(String key, String policyName) { return builder().key(key).policyName(policyName).build(); }
+    public static Builder builder() {
+        return new Builder();
+    }
 
-    public String getKey() { return key; }
-    public String getRequestHash() { return requestHash; }
-    public String getRouteKey() { return routeKey; }
-    public String getStoreName() { return storeName; }
-    public int getScanBucket() { return scanBucket; }
-    public String getPolicyName() { return policyName; }
-    public IdempotencyPolicy getPolicy() { return policy; }
+    public static IdempotencyRequest of(String key) {
+        return builder().key(key).build();
+    }
+
+    public static IdempotencyRequest of(String key, String policyName) {
+        return builder().key(key).policyName(policyName).build();
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public String getRequestHash() {
+        return requestHash;
+    }
+
+    public String getRouteKey() {
+        return routeKey;
+    }
+
+    public String getStoreName() {
+        return storeName;
+    }
+
+    public int getScanBucket() {
+        return scanBucket;
+    }
+
+    public String getPolicyName() {
+        return policyName;
+    }
+
+    public IdempotencyPolicy getPolicy() {
+        return policy;
+    }
 
     public IdempotencyStorageContext storageContext() {
         return IdempotencyStorageContext.of(storeName, scanBucket);
@@ -91,13 +119,40 @@ public final class IdempotencyRequest {
         /** 内联策略，适合测试或少量调用级覆盖。 */
         private IdempotencyPolicy policy;
 
-        public Builder key(String value) { this.key = value; return this; }
-        public Builder requestHash(String value) { this.requestHash = value; return this; }
-        public Builder routeKey(String value) { this.routeKey = value; return this; }
-        public Builder storeName(String value) { this.storeName = value; return this; }
-        public Builder scanBucket(int value) { this.scanBucket = value; return this; }
-        public Builder policyName(String value) { this.policyName = value; return this; }
-        public Builder policy(IdempotencyPolicy value) { this.policy = value; return this; }
+        public Builder key(String value) {
+            this.key = value;
+            return this;
+        }
+
+        public Builder requestHash(String value) {
+            this.requestHash = value;
+            return this;
+        }
+
+        public Builder routeKey(String value) {
+            this.routeKey = value;
+            return this;
+        }
+
+        public Builder storeName(String value) {
+            this.storeName = value;
+            return this;
+        }
+
+        public Builder scanBucket(int value) {
+            this.scanBucket = value;
+            return this;
+        }
+
+        public Builder policyName(String value) {
+            this.policyName = value;
+            return this;
+        }
+
+        public Builder policy(IdempotencyPolicy value) {
+            this.policy = value;
+            return this;
+        }
 
         public IdempotencyRequest build() {
             if (scanBucket < 0) {

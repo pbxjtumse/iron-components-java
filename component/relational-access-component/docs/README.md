@@ -57,7 +57,7 @@ JDBC 或 JPA Provider 时，应新增 Provider 实现，而不是改变 Core 或
 
 可以。先把核心结论说死：
 
-> Relational Access 不是 Repository、不是分片组件、也不是 ORM。  
+> Relational Access 不是 Repository、不是分片组件、也不是 ORM。
 > 它是“技术组件使用 MyBatis 访问关系型数据库时，共用的运行时执行层”。
 
 它主要解决四件事：

@@ -30,12 +30,8 @@ public class Phase1EnhancedDemoController {
     private final ThreadPoolManager threadPoolManager;
     private final TaskExecutionRegistry taskExecutionRegistry;
 
-    public Phase1EnhancedDemoController(
-            AsyncExecutor asyncExecutor,
-            AsyncTemplate asyncTemplate,
-            ThreadPoolManager threadPoolManager,
-            TaskExecutionRegistry taskExecutionRegistry
-    ) {
+    public Phase1EnhancedDemoController(AsyncExecutor asyncExecutor, AsyncTemplate asyncTemplate, ThreadPoolManager threadPoolManager,
+        TaskExecutionRegistry taskExecutionRegistry) {
         this.asyncExecutor = asyncExecutor;
         this.asyncTemplate = asyncTemplate;
         this.threadPoolManager = threadPoolManager;
@@ -49,17 +45,10 @@ public class Phase1EnhancedDemoController {
     public String metadata() {
         String taskId = "task-" + UUID.randomUUID();
         return asyncExecutor.submit(
-                AsyncTask.of("biz-query-pool", "queryUserProfile", () -> "profile-result")
-                        .taskId(taskId)
-                        .bizKey("userId=10001")
-                        .description("查询用户画像信息")
-                        .tag("scene", "profile")
-                        .tag("source", "demo")
-                        .timeout(Duration.ofSeconds(2))
-                        .queueTimeout(Duration.ofMillis(500))
-                        .retryPolicy(RetryPolicy.fast(2, Duration.ofMillis(50)))
-                        .fallback(ex -> "fallback-result")
-        ).join();
+            AsyncTask.of("biz-query-pool", "queryUserProfile", () -> "profile-result").taskId(taskId).bizKey("userId=10001")
+                .description("查询用户画像信息").tag("scene", "profile").tag("source", "demo").timeout(Duration.ofSeconds(2))
+                .queueTimeout(Duration.ofMillis(500)).retryPolicy(RetryPolicy.fast(2, Duration.ofMillis(50)))
+                .fallback(ex -> "fallback-result")).join();
     }
 
     /**

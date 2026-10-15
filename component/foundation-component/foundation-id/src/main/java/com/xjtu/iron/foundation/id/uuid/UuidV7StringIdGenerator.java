@@ -41,10 +41,7 @@ public final class UuidV7StringIdGenerator implements StringIdGenerator {
 
     public UuidV7StringIdGenerator(Clock clock, SecureRandom secureRandom) {
         this.clock = Objects.requireNonNull(clock, "clock must not be null");
-        this.secureRandom = Objects.requireNonNull(
-                secureRandom,
-                "secureRandom must not be null"
-        );
+        this.secureRandom = Objects.requireNonNull(secureRandom, "secureRandom must not be null");
     }
 
     @Override
@@ -71,11 +68,8 @@ public final class UuidV7StringIdGenerator implements StringIdGenerator {
         }
 
         lastTimestamp = timestamp;
-        long mostSignificantBits = (timestamp << 16)
-                | 0x7000L
-                | (randomA & MAX_RANDOM_A);
-        long leastSignificantBits = 0x8000000000000000L
-                | (randomB & MAX_RANDOM_B);
+        long mostSignificantBits = (timestamp << 16) | 0x7000L | (randomA & MAX_RANDOM_A);
+        long leastSignificantBits = 0x8000000000000000L | (randomB & MAX_RANDOM_B);
         return new UUID(mostSignificantBits, leastSignificantBits);
     }
 

@@ -8,10 +8,7 @@ import com.xjtu.iron.distributed.lock.spi.protocol.release.LockReleaseStatus;
 public final class LockReleaseOutcome {
 
     public enum Type {
-        RELEASED,
-        LOCK_LOST,
-        RELEASE_FAILED,
-        ALREADY_ATTEMPTED
+        RELEASED, LOCK_LOST, RELEASE_FAILED, ALREADY_ATTEMPTED
     }
 
     private final Type type;
@@ -59,13 +56,39 @@ public final class LockReleaseOutcome {
         }
     }
 
-    public Type getType() { return type; }
-    public LockStage getStage() { return stage; }
-    public Throwable getError() { return error; }
-    public LockReleaseResponse getProviderResponse() { return providerResponse; }
-    public boolean isReleased() { return type == Type.RELEASED; }
-    public boolean isAlreadyAttempted() { return type == Type.ALREADY_ATTEMPTED; }
-    public boolean isLockLost() { return type == Type.LOCK_LOST; }
-    public boolean isReleaseFailed() { return type == Type.RELEASE_FAILED; }
-    public boolean isSafeNoop() { return isReleased() || isAlreadyAttempted(); }
+    public Type getType() {
+        return type;
+    }
+
+    public LockStage getStage() {
+        return stage;
+    }
+
+    public Throwable getError() {
+        return error;
+    }
+
+    public LockReleaseResponse getProviderResponse() {
+        return providerResponse;
+    }
+
+    public boolean isReleased() {
+        return type == Type.RELEASED;
+    }
+
+    public boolean isAlreadyAttempted() {
+        return type == Type.ALREADY_ATTEMPTED;
+    }
+
+    public boolean isLockLost() {
+        return type == Type.LOCK_LOST;
+    }
+
+    public boolean isReleaseFailed() {
+        return type == Type.RELEASE_FAILED;
+    }
+
+    public boolean isSafeNoop() {
+        return isReleased() || isAlreadyAttempted();
+    }
 }

@@ -8,7 +8,8 @@ import java.util.Optional;
  */
 public final class IronMethods {
 
-    private IronMethods() {}
+    private IronMethods() {
+    }
 
     public static Optional<Method> findAccessibleMethod(Class<?> type, String name, Class<?>... parameterTypes) {
         try {

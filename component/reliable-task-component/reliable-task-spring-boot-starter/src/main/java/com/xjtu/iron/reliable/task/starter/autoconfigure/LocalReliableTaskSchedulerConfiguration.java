@@ -18,11 +18,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 @AutoConfiguration(after = ReliableTaskAutoConfiguration.class)
 @EnableScheduling
 @ConditionalOnBean(ReliableTaskScanner.class)
-@ConditionalOnProperty(
-        prefix = "xjtu.iron.reliable-task.local-scheduler",
-        name = "enabled",
-        havingValue = "true"
-)
+@ConditionalOnProperty(prefix = "xjtu.iron.reliable-task.local-scheduler", name = "enabled", havingValue = "true")
 public class LocalReliableTaskSchedulerConfiguration {
 
     /** 本地扫描失败时使用的系统日志记录器。 */
@@ -35,10 +31,8 @@ public class LocalReliableTaskSchedulerConfiguration {
     /** 提供本地扫描范围和批量大小的外部配置。 */
     private final ReliableTaskProperties properties;
 
-    public LocalReliableTaskSchedulerConfiguration(
-            ReliableTaskScanner scanner,
-            ReliableTaskRuntimePolicy runtimePolicy,
-            ReliableTaskProperties properties) {
+    public LocalReliableTaskSchedulerConfiguration(ReliableTaskScanner scanner, ReliableTaskRuntimePolicy runtimePolicy,
+        ReliableTaskProperties properties) {
         this.scanner = scanner;
         this.runtimePolicy = runtimePolicy;
         this.properties = properties;

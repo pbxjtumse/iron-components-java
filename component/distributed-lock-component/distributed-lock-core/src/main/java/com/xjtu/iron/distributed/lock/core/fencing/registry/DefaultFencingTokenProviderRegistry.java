@@ -15,7 +15,8 @@ public final class DefaultFencingTokenProviderRegistry implements FencingTokenPr
 
     private final Map<String, com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider> providers;
 
-    public DefaultFencingTokenProviderRegistry(Collection<? extends com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider> providers) {
+    public DefaultFencingTokenProviderRegistry(
+        Collection<? extends com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider> providers) {
         Map<String, com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider> mapped = new LinkedHashMap<>();
         if (providers != null) {
             for (com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider provider : providers) {

@@ -45,8 +45,7 @@ public final class IdempotencyContext {
     private final Instant processingExpireAt;
 
     public IdempotencyContext(IdempotencyStorageContext storageContext, String namespace, String key, String routeKey, String ownerToken,
-                              long version, IdempotencyMode mode, boolean recoveryExecution, Instant acquiredAt,
-                              Instant processingExpireAt) {
+        long version, IdempotencyMode mode, boolean recoveryExecution, Instant acquiredAt, Instant processingExpireAt) {
         this.storageContext = Objects.requireNonNull(storageContext, "storageContext must not be null");
         this.namespace = namespace;
         this.key = key;
@@ -59,22 +58,58 @@ public final class IdempotencyContext {
         this.processingExpireAt = processingExpireAt;
     }
 
-    public IdempotencyStorageContext getStorageContext() { return storageContext; }
-    public String getStoreName() { return storageContext.getStoreName(); }
-    public int getScanBucket() { return storageContext.getScanBucket(); }
-    public String getNamespace() { return namespace; }
-    public String getKey() { return key; }
-    public String getRouteKey() { return routeKey; }
-    public String getOwnerToken() { return ownerToken; }
-    public long getVersion() { return version; }
+    public IdempotencyStorageContext getStorageContext() {
+        return storageContext;
+    }
+
+    public String getStoreName() {
+        return storageContext.getStoreName();
+    }
+
+    public int getScanBucket() {
+        return storageContext.getScanBucket();
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public String getRouteKey() {
+        return routeKey;
+    }
+
+    public String getOwnerToken() {
+        return ownerToken;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 
     /**
      * 当前幂等 generation 的版本号。它用于幂等记录自身的 owner/version CAS，不能默认等同于 distributed-lock fencingToken。
      */
-    public long getGenerationVersion() { return version; }
+    public long getGenerationVersion() {
+        return version;
+    }
 
-    public IdempotencyMode getMode() { return mode; }
-    public boolean isRecoveryExecution() { return recoveryExecution; }
-    public Instant getAcquiredAt() { return acquiredAt; }
-    public Instant getProcessingExpireAt() { return processingExpireAt; }
+    public IdempotencyMode getMode() {
+        return mode;
+    }
+
+    public boolean isRecoveryExecution() {
+        return recoveryExecution;
+    }
+
+    public Instant getAcquiredAt() {
+        return acquiredAt;
+    }
+
+    public Instant getProcessingExpireAt() {
+        return processingExpireAt;
+    }
 }

@@ -38,12 +38,8 @@ public final class SpringMyBatisAccess implements MyBatisAccess {
     /** 统一访问观测监听器。 */
     private final MyBatisAccessListener listener;
 
-    public SpringMyBatisAccess(
-            DataSource dataSource,
-            SqlSessionTemplate sqlSessionTemplate,
-            TransactionExecutor transactionExecutor,
-            MyBatisAccessListener listener
-    ) {
+    public SpringMyBatisAccess(DataSource dataSource, SqlSessionTemplate sqlSessionTemplate, TransactionExecutor transactionExecutor,
+        MyBatisAccessListener listener) {
         this.dataSource = Objects.requireNonNull(dataSource, "dataSource must not be null");
         this.sqlSessionTemplate = Objects.requireNonNull(sqlSessionTemplate, "sqlSessionTemplate must not be null");
         this.transactionExecutor = transactionExecutor;
@@ -56,30 +52,18 @@ public final class SpringMyBatisAccess implements MyBatisAccess {
     }
 
     @Override
-    public <M, T> T executeInCurrentTransaction(
-            String operationName,
-            Class<M> mapperType,
-            MyBatisMapperWork<M, T> work
-    ) throws Exception {
+    public <M, T> T executeInCurrentTransaction(String operationName, Class<M> mapperType, MyBatisMapperWork<M, T> work) throws Exception {
         requireCompatibleCurrentTransaction();
         return invoke(operationName, mapperType, work);
     }
 
     @Override
-    public <M, T> T executeInNewTransaction(
-            String operationName,
-            Class<M> mapperType,
-            MyBatisMapperWork<M, T> work
-    ) throws Exception {
+    public <M, T> T executeInNewTransaction(String operationName, Class<M> mapperType, MyBatisMapperWork<M, T> work) throws Exception {
         if (transactionExecutor == null) {
-            throw new IllegalStateException(
-                    "REQUIRES_NEW MyBatis access requires transaction-component TransactionExecutor"
-            );
+            throw new IllegalStateException("REQUIRES_NEW MyBatis access requires transaction-component TransactionExecutor");
         }
-        TransactionOptions options = TransactionOptions.builder()
-                .name(operationName)
-                .propagation(TransactionPropagation.REQUIRES_NEW)
-                .build();
+        TransactionOptions options =
+            TransactionOptions.builder().name(operationName).propagation(TransactionPropagation.REQUIRES_NEW).build();
         try {
             return transactionExecutor.execute(options, context -> {
                 try {

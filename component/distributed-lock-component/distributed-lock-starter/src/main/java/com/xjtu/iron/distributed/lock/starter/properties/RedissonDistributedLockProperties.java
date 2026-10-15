@@ -35,18 +35,59 @@ public class RedissonDistributedLockProperties {
     /** 没有 RedissonClient Bean 时，是否允许根据 spring.data.redis.* 自动创建 RedissonClient（standalone/sentinel/cluster）。 */
     private boolean createClientIfMissing = true;
 
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public String getKeyPrefix() { return keyPrefix; }
-    public void setKeyPrefix(String keyPrefix) { this.keyPrefix = keyPrefix; }
-    public String getClientBeanName() { return clientBeanName; }
-    public void setClientBeanName(String clientBeanName) { this.clientBeanName = clientBeanName; }
-    public Duration getWatchdogTimeout() { return watchdogTimeout; }
-    public void setWatchdogTimeout(Duration watchdogTimeout) { this.watchdogTimeout = watchdogTimeout; }
-    public boolean isCheckLockSyncedSlaves() { return checkLockSyncedSlaves; }
-    public void setCheckLockSyncedSlaves(boolean checkLockSyncedSlaves) { this.checkLockSyncedSlaves = checkLockSyncedSlaves; }
-    public Duration getSlavesSyncTimeout() { return slavesSyncTimeout; }
-    public void setSlavesSyncTimeout(Duration slavesSyncTimeout) { this.slavesSyncTimeout = slavesSyncTimeout; }
-    public boolean isCreateClientIfMissing() { return createClientIfMissing; }
-    public void setCreateClientIfMissing(boolean createClientIfMissing) { this.createClientIfMissing = createClientIfMissing; }
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public String getKeyPrefix() {
+        return keyPrefix;
+    }
+
+    public void setKeyPrefix(String keyPrefix) {
+        this.keyPrefix = keyPrefix;
+    }
+
+    public String getClientBeanName() {
+        return clientBeanName;
+    }
+
+    public void setClientBeanName(String clientBeanName) {
+        this.clientBeanName = clientBeanName;
+    }
+
+    public Duration getWatchdogTimeout() {
+        return watchdogTimeout;
+    }
+
+    public void setWatchdogTimeout(Duration watchdogTimeout) {
+        this.watchdogTimeout = watchdogTimeout;
+    }
+
+    public boolean isCheckLockSyncedSlaves() {
+        return checkLockSyncedSlaves;
+    }
+
+    public void setCheckLockSyncedSlaves(boolean checkLockSyncedSlaves) {
+        this.checkLockSyncedSlaves = checkLockSyncedSlaves;
+    }
+
+    public Duration getSlavesSyncTimeout() {
+        return slavesSyncTimeout;
+    }
+
+    public void setSlavesSyncTimeout(Duration slavesSyncTimeout) {
+        this.slavesSyncTimeout = slavesSyncTimeout;
+    }
+
+    public boolean isCreateClientIfMissing() {
+        return createClientIfMissing;
+    }
+
+    public void setCreateClientIfMissing(boolean createClientIfMissing) {
+        this.createClientIfMissing = createClientIfMissing;
+    }
 }

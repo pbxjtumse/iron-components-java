@@ -25,10 +25,7 @@ public final class DefaultReliableTaskScanner implements ReliableTaskScanner {
     /** 为到期查询提供统一当前时间的时钟。 */
     private final Clock clock;
 
-    public DefaultReliableTaskScanner(
-            ReliableTaskRepository repository,
-            ReliableTaskEngine engine,
-            Clock clock) {
+    public DefaultReliableTaskScanner(ReliableTaskRepository repository, ReliableTaskEngine engine, Clock clock) {
         this.repository = Objects.requireNonNull(repository, "repository must not be null");
         this.engine = Objects.requireNonNull(engine, "engine must not be null");
         this.clock = Objects.requireNonNull(clock, "clock must not be null");
@@ -38,9 +35,8 @@ public final class DefaultReliableTaskScanner implements ReliableTaskScanner {
     public ReliableTaskScanReport scan(ReliableTaskScanRequest request) {
         Objects.requireNonNull(request, "request must not be null");
         Instant now = clock.instant();
-        List<ReliableTask> candidates = repository.findDue(new ReliableTaskScanQuery(
-                request.getStoreName(), request.getScanBucket(), now, request.getBatchSize()
-        ));
+        List<ReliableTask> candidates =
+            repository.findDue(new ReliableTaskScanQuery(request.getStoreName(), request.getScanBucket(), now, request.getBatchSize()));
 
         int claimed = 0;
         int executed = 0;

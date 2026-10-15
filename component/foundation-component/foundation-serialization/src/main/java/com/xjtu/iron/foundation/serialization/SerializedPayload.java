@@ -15,9 +15,15 @@ public final class SerializedPayload {
         this.context = context == null ? SerializationContext.builder().build() : context;
     }
 
-    public byte[] getBody() { return Arrays.copyOf(body, body.length); }
+    public byte[] getBody() {
+        return Arrays.copyOf(body, body.length);
+    }
 
-    public SerializationContext getContext() { return context; }
+    public SerializationContext getContext() {
+        return context;
+    }
 
-    public int size() { return body.length; }
+    public int size() {
+        return body.length;
+    }
 }

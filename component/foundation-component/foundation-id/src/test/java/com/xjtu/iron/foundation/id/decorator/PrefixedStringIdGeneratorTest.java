@@ -10,24 +10,21 @@ class PrefixedStringIdGeneratorTest {
 
     @Test
     void shouldConcatenatePrefixWithoutInventingSeparator() {
-        PrefixedStringIdGenerator generator =
-                new PrefixedStringIdGenerator("retry_", () -> "123");
+        PrefixedStringIdGenerator generator = new PrefixedStringIdGenerator("retry_", () -> "123");
 
         assertEquals("retry_123", generator.nextId());
     }
 
     @Test
     void shouldUseExplicitSeparator() {
-        PrefixedStringIdGenerator generator =
-                new PrefixedStringIdGenerator("retry", "-", () -> "123");
+        PrefixedStringIdGenerator generator = new PrefixedStringIdGenerator("retry", "-", () -> "123");
 
         assertEquals("retry-123", generator.nextId());
     }
 
     @Test
     void shouldRejectBlankDelegateResult() {
-        PrefixedStringIdGenerator generator =
-                new PrefixedStringIdGenerator("retry", () -> " ");
+        PrefixedStringIdGenerator generator = new PrefixedStringIdGenerator("retry", () -> " ");
 
         assertThrows(IdGenerationException.class, generator::nextId);
     }

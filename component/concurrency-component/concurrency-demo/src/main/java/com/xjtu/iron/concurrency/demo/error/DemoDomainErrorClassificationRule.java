@@ -14,8 +14,7 @@ import org.springframework.stereotype.Component;
  * </p>
  */
 @Component
-public final class DemoDomainErrorClassificationRule
-        implements AsyncErrorClassificationRule {
+public final class DemoDomainErrorClassificationRule implements AsyncErrorClassificationRule {
 
     @Override
     public boolean supports(AsyncErrorClassificationContext context) {
@@ -24,28 +23,13 @@ public final class DemoDomainErrorClassificationRule
 
     @Override
     public AsyncError classify(AsyncErrorClassificationContext context) {
-        DemoDomainException exception =
-                (DemoDomainException) context.getRootCause();
+        DemoDomainException exception = (DemoDomainException) context.getRootCause();
 
         return AsyncError.builder()
-                .classification(AsyncErrorClassification.of(
-                        AsyncErrorCategory.APPLICATION,
-                        AsyncErrorReason.TASK_THROWN,
-                        context.getStage()
-                ))
-                .application(ApplicationErrorInfo.of(
-                        exception.getErrorCode(),
-                        exception.getSceneCode(),
-                        exception.getMessage()
-                ))
-                .exception(ExceptionInfo.from(context.getThrowable()))
-                .recovery(RecoveryHint.of(
-                        AsyncRecoveryAction.COMPENSATE,
-                        false,
-                        true,
-                        true
-                ))
-                .build();
+            .classification(AsyncErrorClassification.of(AsyncErrorCategory.APPLICATION, AsyncErrorReason.TASK_THROWN, context.getStage()))
+            .application(ApplicationErrorInfo.of(exception.getErrorCode(), exception.getSceneCode(), exception.getMessage()))
+            .exception(ExceptionInfo.from(context.getThrowable()))
+            .recovery(RecoveryHint.of(AsyncRecoveryAction.COMPENSATE, false, true, true)).build();
     }
 
     @Override

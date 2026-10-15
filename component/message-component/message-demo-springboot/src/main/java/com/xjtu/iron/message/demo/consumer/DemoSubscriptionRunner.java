@@ -29,9 +29,7 @@ public class DemoSubscriptionRunner {
     private final InMemoryReceivedMessageStore store;
     private final List<MessageSubscription> subscriptions = new ArrayList<>();
 
-    public DemoSubscriptionRunner(
-            MessageTemplate messageTemplate,
-            InMemoryReceivedMessageStore store) {
+    public DemoSubscriptionRunner(MessageTemplate messageTemplate, InMemoryReceivedMessageStore store) {
         this.messageTemplate = messageTemplate;
         this.store = store;
     }
@@ -44,27 +42,15 @@ public class DemoSubscriptionRunner {
     }
 
     private void subscribeProvider(String provider) {
-        ConsumerDefinition<Object> definition = ConsumerDefinition.of(
-                MessageDestination.of("demo", "message").withProviderHint(provider),
-                "message-demo-consumer-group-" + provider,
-                Object.class);
+        ConsumerDefinition<Object> definition = ConsumerDefinition.of(MessageDestination.of("demo", "message").withProviderHint(provider),
+            "message-demo-consumer-group-" + provider, Object.class);
 
-        MessageSubscription subscription = messageTemplate.subscribe(
-                definition,
-                (message, context) -> {
-                    store.add(new ReceivedMessageView(
-                            context.providerName(),
-                            context.physicalDestination(),
-                            context.consumerGroup(),
-                            context.providerMessageId(),
-                            message.messageId(),
-                            message.messageKey(),
-                            message.messageType(),
-                            message.payload(),
-                            context.headers(),
-                            context.receivedAt()));
-                    return ConsumeDecision.ACK;
-                });
+        MessageSubscription subscription = messageTemplate.subscribe(definition, (message, context) -> {
+            store.add(new ReceivedMessageView(context.providerName(), context.physicalDestination(), context.consumerGroup(),
+                context.providerMessageId(), message.messageId(), message.messageKey(), message.messageType(), message.payload(),
+                context.headers(), context.receivedAt()));
+            return ConsumeDecision.ACK;
+        });
         subscriptions.add(subscription);
     }
 

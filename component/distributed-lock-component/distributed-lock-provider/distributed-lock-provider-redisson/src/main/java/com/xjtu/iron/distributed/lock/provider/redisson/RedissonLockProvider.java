@@ -53,8 +53,8 @@ public final class RedissonLockProvider implements LockProvider {
     private final RedissonOwnershipRegistry ownershipRegistry;
     private final Duration watchdogTimeout;
 
-    public RedissonLockProvider(RedissonClient redissonClient, RedissonLockKeyBuilder keyBuilder, RedissonOwnershipRegistry ownershipRegistry,
-            Duration watchdogTimeout) {
+    public RedissonLockProvider(RedissonClient redissonClient, RedissonLockKeyBuilder keyBuilder,
+        RedissonOwnershipRegistry ownershipRegistry, Duration watchdogTimeout) {
         this.redissonClient = Objects.requireNonNull(redissonClient, "redissonClient must not be null");
         this.keyBuilder = Objects.requireNonNull(keyBuilder, "keyBuilder must not be null");
         this.ownershipRegistry = Objects.requireNonNull(ownershipRegistry, "ownershipRegistry must not be null");
@@ -76,10 +76,9 @@ public final class RedissonLockProvider implements LockProvider {
          * 避免配置 30s、请求却写 10s 这类“API 看起来一种语义，底层实际另一种语义”的情况。
          */
         if (options.isAutoRenew() && !options.getLeaseTime().equals(watchdogTimeout)) {
-            throw new IllegalArgumentException(
-                    "redisson provider-managed watchdog uses a client-level timeout. "
-                            + "When autoRenew=true, LockOptions.leaseTime must equal configured redisson watchdogTimeout. "
-                            + "leaseTime=" + options.getLeaseTime() + ", watchdogTimeout=" + watchdogTimeout);
+            throw new IllegalArgumentException("redisson provider-managed watchdog uses a client-level timeout. " +
+                "When autoRenew=true, LockOptions.leaseTime must equal configured redisson watchdogTimeout. " + "leaseTime=" +
+                options.getLeaseTime() + ", watchdogTimeout=" + watchdogTimeout);
         }
     }
 
@@ -95,14 +94,11 @@ public final class RedissonLockProvider implements LockProvider {
         }
 
         LockOptions options = request.getOptions();
-        long waitMillis = options.getWaitStrategy() == LockWaitStrategy.PROVIDER_NATIVE
-                ? options.getWaitTime().toMillis()
-                : 0L;
+        long waitMillis = options.getWaitStrategy() == LockWaitStrategy.PROVIDER_NATIVE ? options.getWaitTime().toMillis() : 0L;
 
         try {
-            LockAcquireResponse response = request.isNativeFencingRequired()
-                    ? acquireFenced(request, lockKey, waitMillis)
-                    : acquirePlain(request, lockKey, waitMillis);
+            LockAcquireResponse response = request.isNativeFencingRequired() ? acquireFenced(request, lockKey, waitMillis) :
+                acquirePlain(request, lockKey, waitMillis);
             if (!response.isAcquired()) {
                 ownershipRegistry.remove(request.getOwnerToken());
             }
@@ -173,28 +169,18 @@ public final class RedissonLockProvider implements LockProvider {
         if (token <= 0L) {
             safeUnlock(lock, Thread.currentThread().getId());
             return LockAcquireResponse.failed(new IllegalStateException("redisson fenced lock returned invalid fencing token: " + token),
-                    "redisson native fencing token is invalid");
+                "redisson native fencing token is invalid");
         }
         return LockAcquireResponse.acquired(buildLease(request, lockKey, token));
     }
 
     private LockLease buildLease(LockAcquireRequest request, String lockKey, Long fencingToken) {
-        Duration actualLeaseTime = request.getOptions().isAutoRenew()
-                ? watchdogTimeout
-                : request.getOptions().getLeaseTime();
+        Duration actualLeaseTime = request.getOptions().isAutoRenew() ? watchdogTimeout : request.getOptions().getLeaseTime();
         Instant acquiredAt = Instant.now();
-        return LockLease.builder()
-                .providerName(providerName())
-                .namespace(request.getNamespace())
-                .lockName(request.getLockName())
-                .lockKey(lockKey)
-                .ownerToken(request.getOwnerToken())
-                .fencingToken(fencingToken)
-                .fencingTokenProviderName(fencingToken == null ? null : providerName())
-                .leaseTime(actualLeaseTime)
-                .acquiredAt(acquiredAt)
-                .expireAt(acquiredAt.plus(actualLeaseTime))
-                .build();
+        return LockLease.builder().providerName(providerName()).namespace(request.getNamespace()).lockName(request.getLockName())
+            .lockKey(lockKey).ownerToken(request.getOwnerToken()).fencingToken(fencingToken)
+            .fencingTokenProviderName(fencingToken == null ? null : providerName()).leaseTime(actualLeaseTime).acquiredAt(acquiredAt)
+            .expireAt(acquiredAt.plus(actualLeaseTime)).build();
     }
 
     @Override
@@ -208,9 +194,7 @@ public final class RedissonLockProvider implements LockProvider {
         RLock lock = redissonClient.getLock(request.getLockKey());
         try {
             if (!lock.isHeldByThread(ownership.threadId())) {
-                LockReleaseResponse response = lock.isLocked()
-                        ? LockReleaseResponse.notOwner()
-                        : LockReleaseResponse.notFound();
+                LockReleaseResponse response = lock.isLocked() ? LockReleaseResponse.notOwner() : LockReleaseResponse.notFound();
                 ownershipRegistry.remove(request.getOwnerToken());
                 return response;
             }
@@ -240,8 +224,8 @@ public final class RedissonLockProvider implements LockProvider {
          * 随后的 expire 会误给新 owner 续命。Redisson Provider 的 autoRenew 明确走 PROVIDER_MANAGED watchdog。
          */
         return LockRenewResponse.failed(
-                new UnsupportedOperationException("manual renew is not supported by redisson provider; use autoRenew=true"),
-                "redisson manual renew is unsupported");
+            new UnsupportedOperationException("manual renew is not supported by redisson provider; use autoRenew=true"),
+            "redisson manual renew is unsupported");
     }
 
     @Override
@@ -257,9 +241,7 @@ public final class RedissonLockProvider implements LockProvider {
             if (lock.isHeldByThread(ownership.threadId())) {
                 return LockCheckResponse.held();
             }
-            LockCheckResponse response = lock.isLocked()
-                    ? LockCheckResponse.notOwner()
-                    : LockCheckResponse.notFound();
+            LockCheckResponse response = lock.isLocked() ? LockCheckResponse.notOwner() : LockCheckResponse.notFound();
             ownershipRegistry.remove(request.getOwnerToken());
             return response;
         } catch (Throwable error) {
@@ -269,15 +251,10 @@ public final class RedissonLockProvider implements LockProvider {
 
     @Override
     public LockProviderCapabilities capabilities() {
-        return LockProviderCapabilities.builder()
-                .autoRenewMode(LockAutoRenewMode.PROVIDER_MANAGED)
-                .manualRenewSupported(false)
-                .fencingTokenSupported(true)
-                .nativeWaitSupported(true)
-                // Redisson 底层有 fair/reentrant，但 iron-lock 公共 API 尚未正式定义这两个语义。
-                .fairLockSupported(false)
-                .reentrantSupported(false)
-                .build();
+        return LockProviderCapabilities.builder().autoRenewMode(LockAutoRenewMode.PROVIDER_MANAGED).manualRenewSupported(false)
+            .fencingTokenSupported(true).nativeWaitSupported(true)
+            // Redisson 底层有 fair/reentrant，但 iron-lock 公共 API 尚未正式定义这两个语义。
+            .fairLockSupported(false).reentrantSupported(false).build();
     }
 
     private LockReleaseResponse diagnoseMissingOwner(RLock lock) {

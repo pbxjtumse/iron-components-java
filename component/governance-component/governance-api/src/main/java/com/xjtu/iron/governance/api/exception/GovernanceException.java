@@ -8,11 +8,7 @@ public class GovernanceException extends RuntimeException {
 
     private final boolean retryable;
 
-    public GovernanceException(String message,
-                               String resourceName,
-                               String errorCode,
-                               boolean retryable,
-                               Throwable cause) {
+    public GovernanceException(String message, String resourceName, String errorCode, boolean retryable, Throwable cause) {
         super(message, cause);
         this.resourceName = resourceName;
         this.errorCode = errorCode;

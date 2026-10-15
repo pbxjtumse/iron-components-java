@@ -31,24 +31,13 @@ public final class NanoIdStringIdGenerator implements StringIdGenerator {
         this(options, new SecureRandom());
     }
 
-    public NanoIdStringIdGenerator(
-            NanoIdOptions options,
-            SecureRandom secureRandom) {
-        NanoIdOptions actualOptions = Objects.requireNonNull(
-                options,
-                "options must not be null"
-        );
+    public NanoIdStringIdGenerator(NanoIdOptions options, SecureRandom secureRandom) {
+        NanoIdOptions actualOptions = Objects.requireNonNull(options, "options must not be null");
         this.alphabet = actualOptions.getAlphabet().toCharArray();
         this.size = actualOptions.getSize();
-        this.secureRandom = Objects.requireNonNull(
-                secureRandom,
-                "secureRandom must not be null"
-        );
+        this.secureRandom = Objects.requireNonNull(secureRandom, "secureRandom must not be null");
         this.mask = calculateMask(alphabet.length);
-        this.step = Math.max(
-                1,
-                (int) Math.ceil(1.6D * mask * size / alphabet.length)
-        );
+        this.step = Math.max(1, (int) Math.ceil(1.6D * mask * size / alphabet.length));
     }
 
     @Override

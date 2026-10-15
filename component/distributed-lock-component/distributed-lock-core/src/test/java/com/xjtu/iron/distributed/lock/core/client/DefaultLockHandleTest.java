@@ -47,22 +47,49 @@ class DefaultLockHandleTest {
     }
 
     private static DefaultLockHandle newHandle(LockProvider provider) {
-        LockLease lease = LockLease.builder()
-                .providerName("redis").namespace("ns").lockName("job:1").lockKey("key")
-                .ownerToken("token").leaseTime(Duration.ofSeconds(30)).acquiredAt(Instant.now()).build();
+        LockLease lease = LockLease.builder().providerName("redis").namespace("ns").lockName("job:1").lockKey("key").ownerToken("token")
+            .leaseTime(Duration.ofSeconds(30)).acquiredAt(Instant.now()).build();
         return new DefaultLockHandle(provider, lease, new LockRuntimeState(), new NoOpLockEventPublisher(), new LockEventFactory(),
-                new LockMetricsFacade(new NoOpLockMetricsRecorder(), new DefaultLockNamePatternResolver()));
+            new LockMetricsFacade(new NoOpLockMetricsRecorder(), new DefaultLockNamePatternResolver()));
     }
 
     private static final class FakeProvider implements LockProvider {
         private final LockReleaseResponse releaseResponse;
         private int releaseCount;
-        private FakeProvider(LockReleaseResponse releaseResponse) { this.releaseResponse = releaseResponse; }
-        @Override public String providerName() { return "redis"; }
-        @Override public LockAcquireResponse acquire(LockAcquireRequest request) { throw new UnsupportedOperationException(); }
-        @Override public LockReleaseResponse release(LockReleaseRequest request) { releaseCount++; return releaseResponse; }
-        @Override public LockRenewResponse renew(LockRenewRequest request) { return LockRenewResponse.renewed(Instant.now()); }
-        @Override public LockCheckResponse check(LockCheckRequest request) { return LockCheckResponse.held(); }
-        @Override public LockProviderCapabilities capabilities() { return LockProviderCapabilities.builder().autoRenewSupported(true).build(); }
+
+        private FakeProvider(LockReleaseResponse releaseResponse) {
+            this.releaseResponse = releaseResponse;
+        }
+
+        @Override
+        public String providerName() {
+            return "redis";
+        }
+
+        @Override
+        public LockAcquireResponse acquire(LockAcquireRequest request) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public LockReleaseResponse release(LockReleaseRequest request) {
+            releaseCount++;
+            return releaseResponse;
+        }
+
+        @Override
+        public LockRenewResponse renew(LockRenewRequest request) {
+            return LockRenewResponse.renewed(Instant.now());
+        }
+
+        @Override
+        public LockCheckResponse check(LockCheckRequest request) {
+            return LockCheckResponse.held();
+        }
+
+        @Override
+        public LockProviderCapabilities capabilities() {
+            return LockProviderCapabilities.builder().autoRenewSupported(true).build();
+        }
     }
 }

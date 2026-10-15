@@ -31,8 +31,7 @@ class RejectedExecutionHandlersTest {
         executor = newExecutor(1);
         RecordingTask task = new RecordingTask();
 
-        assertThrows(RejectedExecutionException.class,
-                () -> new AwareAbortRejectedExecutionHandler().rejectedExecution(task, executor));
+        assertThrows(RejectedExecutionException.class, () -> new AwareAbortRejectedExecutionHandler().rejectedExecution(task, executor));
 
         assertTrue(task.rejected.get());
         assertFalse(task.executed.get());
@@ -58,8 +57,7 @@ class RejectedExecutionHandlersTest {
         executor.shutdownNow();
         RecordingTask task = new RecordingTask();
 
-        assertThrows(RejectedExecutionException.class,
-                () -> new CallerRunsRejectedExecutionHandler().rejectedExecution(task, executor));
+        assertThrows(RejectedExecutionException.class, () -> new CallerRunsRejectedExecutionHandler().rejectedExecution(task, executor));
 
         assertTrue(task.rejected.get());
         assertFalse(task.callerThreadMarked.get());
@@ -99,7 +97,7 @@ class RejectedExecutionHandlersTest {
         RecordingTask current = new RecordingTask();
 
         assertThrows(RejectedExecutionException.class,
-                () -> new DiscardOldestRejectedExecutionHandler().rejectedExecution(current, executor));
+            () -> new DiscardOldestRejectedExecutionHandler().rejectedExecution(current, executor));
 
         assertTrue(current.rejected.get());
     }
@@ -134,7 +132,7 @@ class RejectedExecutionHandlersTest {
         assertTrue(executor.getQueue().offer(new RecordingTask()));
 
         assertThrows(RejectedExecutionException.class,
-                () -> new BlockingWaitRejectedExecutionHandler(Duration.ofMillis(10)).rejectedExecution(task, executor));
+            () -> new BlockingWaitRejectedExecutionHandler(Duration.ofMillis(10)).rejectedExecution(task, executor));
 
         assertTrue(task.rejected.get());
     }
@@ -148,7 +146,7 @@ class RejectedExecutionHandlersTest {
         Thread.currentThread().interrupt();
         try {
             assertThrows(RejectedExecutionException.class,
-                    () -> new BlockingWaitRejectedExecutionHandler(Duration.ofSeconds(1)).rejectedExecution(task, executor));
+                () -> new BlockingWaitRejectedExecutionHandler(Duration.ofSeconds(1)).rejectedExecution(task, executor));
             assertTrue(task.rejected.get());
             assertTrue(Thread.currentThread().isInterrupted());
         } finally {
@@ -158,8 +156,7 @@ class RejectedExecutionHandlersTest {
 
     @Test
     void rejectSupportDoesNotSwallowErrors() {
-        AssertionError error = assertThrows(AssertionError.class,
-                () -> RejectedTaskSupport.reject(new ErrorTask(), "boom"));
+        AssertionError error = assertThrows(AssertionError.class, () -> RejectedTaskSupport.reject(new ErrorTask(), "boom"));
 
         assertEquals("fatal", error.getMessage());
     }
@@ -173,13 +170,7 @@ class RejectedExecutionHandlersTest {
     }
 
     private ThreadPoolExecutor newExecutor(int queueCapacity) {
-        return new ThreadPoolExecutor(
-                1,
-                1,
-                60L,
-                TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(queueCapacity)
-        );
+        return new ThreadPoolExecutor(1, 1, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(queueCapacity));
     }
 
     private static final class RecordingTask implements Runnable, CallerRunsAware, RejectedTaskAware {

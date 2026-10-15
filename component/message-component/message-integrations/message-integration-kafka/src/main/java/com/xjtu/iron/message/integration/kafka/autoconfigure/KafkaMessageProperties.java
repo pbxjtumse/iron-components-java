@@ -18,8 +18,7 @@ import java.util.Map;
  *
  * <p>这里保存 bootstrapServers、clientId、pollTimeout 等 Kafka 接入参数，
  * starter 会把这些配置转换成 {@code KafkaMessageProviderConfig}。</p>
- */
-public class KafkaMessageProperties {
+ */ public class KafkaMessageProperties {
 
     /**
      * 是否启用 Kafka Provider 自动配置。

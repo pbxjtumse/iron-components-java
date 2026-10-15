@@ -32,12 +32,7 @@ import java.util.List;
  */
 @AutoConfiguration
 @EnableConfigurationProperties(RetryProperties.class)
-@ConditionalOnProperty(
-        prefix = "xjtu.iron.retry",
-        name = "enabled",
-        havingValue = "true",
-        matchIfMissing = true
-)
+@ConditionalOnProperty(prefix = "xjtu.iron.retry", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class RetryAutoConfiguration {
 
     public static final String RETRY_ID_GENERATOR_BEAN_NAME = "retryIdGenerator";
@@ -53,8 +48,7 @@ public class RetryAutoConfiguration {
      */
     @Bean(name = RETRY_ID_GENERATOR_BEAN_NAME)
     @ConditionalOnMissingBean(name = RETRY_ID_GENERATOR_BEAN_NAME)
-    public StringIdGenerator retryIdGenerator(
-            ObjectProvider<StringIdGeneratorRegistry> registryProvider) {
+    public StringIdGenerator retryIdGenerator(ObjectProvider<StringIdGeneratorRegistry> registryProvider) {
         StringIdGeneratorRegistry registry = registryProvider.getIfAvailable();
         if (registry == null) {
             return IdGenerators.uuidV7();
@@ -64,15 +58,9 @@ public class RetryAutoConfiguration {
 
     /** 在启用 Spring 事件桥接时注册默认监听器。 */
     @Bean
-    @ConditionalOnProperty(
-            prefix = "xjtu.iron.retry",
-            name = "publish-spring-events",
-            havingValue = "true",
-            matchIfMissing = true
-    )
+    @ConditionalOnProperty(prefix = "xjtu.iron.retry", name = "publish-spring-events", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(SpringApplicationRetryListener.class)
-    public SpringApplicationRetryListener springApplicationRetryListener(
-            ApplicationEventPublisher publisher) {
+    public SpringApplicationRetryListener springApplicationRetryListener(ApplicationEventPublisher publisher) {
         return new SpringApplicationRetryListener(publisher);
     }
 
@@ -105,20 +93,9 @@ public class RetryAutoConfiguration {
     /** 汇总有序监听器和可替换基础设施后创建默认执行器。 */
     @Bean
     @ConditionalOnMissingBean
-    public RetryExecutor retryExecutor(
-            RetryPolicyRegistry retryPolicyRegistry,
-            ObjectProvider<RetryListener> retryListeners,
-            RetrySleeper retrySleeper,
-            RetryClock retryClock,
-            @Qualifier(RETRY_ID_GENERATOR_BEAN_NAME)
-            StringIdGenerator retryIdGenerator) {
+    public RetryExecutor retryExecutor(RetryPolicyRegistry retryPolicyRegistry, ObjectProvider<RetryListener> retryListeners,
+        RetrySleeper retrySleeper, RetryClock retryClock, @Qualifier(RETRY_ID_GENERATOR_BEAN_NAME) StringIdGenerator retryIdGenerator) {
         List<RetryListener> listeners = retryListeners.orderedStream().toList();
-        return new DefaultRetryExecutor(
-                retryPolicyRegistry,
-                listeners,
-                retrySleeper,
-                retryClock,
-                retryIdGenerator
-        );
+        return new DefaultRetryExecutor(retryPolicyRegistry, listeners, retrySleeper, retryClock, retryIdGenerator);
     }
 }

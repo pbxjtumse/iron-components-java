@@ -25,14 +25,9 @@ public final class DefaultIdempotencyStrategy implements IdempotencyStrategy {
     }
 
     @Override
-    public ConsumeDecision execute(
-            ConsumerDefinition<?> definition,
-            MessageEnvelope<?> message,
-            ConsumeContext context,
-            ConsumeInvocation invocation) {
-        MessageIdempotencyOptions options = definition == null
-                ? MessageIdempotencyOptions.disabled()
-                : definition.idempotencyOptions();
+    public ConsumeDecision execute(ConsumerDefinition<?> definition, MessageEnvelope<?> message, ConsumeContext context,
+        ConsumeInvocation invocation) {
+        MessageIdempotencyOptions options = definition == null ? MessageIdempotencyOptions.disabled() : definition.idempotencyOptions();
         return executor.execute(message, context, options, invocation);
     }
 }

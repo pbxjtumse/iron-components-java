@@ -64,37 +64,53 @@ public final class LockLease {
         return new Builder();
     }
 
-    public String getProviderName() { return providerName; }
-    public String getNamespace() { return namespace; }
-    public String getLockName() { return lockName; }
-    public String getLockKey() { return lockKey; }
-    public String getOwnerToken() { return ownerToken; }
+    public String getProviderName() {
+        return providerName;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public String getLockName() {
+        return lockName;
+    }
+
+    public String getLockKey() {
+        return lockKey;
+    }
+
+    public String getOwnerToken() {
+        return ownerToken;
+    }
+
     public OptionalLong fencingToken() {
         return fencingToken == null ? OptionalLong.empty() : OptionalLong.of(fencingToken);
     }
+
     public Optional<String> fencingTokenProviderName() {
         return Optional.ofNullable(fencingTokenProviderName);
     }
-    public Duration getLeaseTime() { return leaseTime; }
-    public Instant getAcquiredAt() { return acquiredAt; }
-    public Instant getExpireAt() { return expireAt; }
+
+    public Duration getLeaseTime() {
+        return leaseTime;
+    }
+
+    public Instant getAcquiredAt() {
+        return acquiredAt;
+    }
+
+    public Instant getExpireAt() {
+        return expireAt;
+    }
 
     /**
      * 在不改变锁租约身份的前提下，为租约补充 fencing token。
      */
     public LockLease withFencingToken(long token, String tokenProviderName) {
-        return builder()
-                .providerName(providerName)
-                .namespace(namespace)
-                .lockName(lockName)
-                .lockKey(lockKey)
-                .ownerToken(ownerToken)
-                .fencingToken(token)
-                .fencingTokenProviderName(tokenProviderName)
-                .leaseTime(leaseTime)
-                .acquiredAt(acquiredAt)
-                .expireAt(expireAt)
-                .build();
+        return builder().providerName(providerName).namespace(namespace).lockName(lockName).lockKey(lockKey).ownerToken(ownerToken)
+            .fencingToken(token).fencingTokenProviderName(tokenProviderName).leaseTime(leaseTime).acquiredAt(acquiredAt).expireAt(expireAt)
+            .build();
     }
 
     private static String requireText(String value, String fieldName) {
@@ -131,21 +147,61 @@ public final class LockLease {
         private Instant acquiredAt;
         private Instant expireAt;
 
-        private Builder() {}
+        private Builder() {
+        }
 
-        public Builder providerName(String providerName) { this.providerName = providerName; return this; }
-        public Builder namespace(String namespace) { this.namespace = namespace; return this; }
-        public Builder lockName(String lockName) { this.lockName = lockName; return this; }
-        public Builder lockKey(String lockKey) { this.lockKey = lockKey; return this; }
-        public Builder ownerToken(String ownerToken) { this.ownerToken = ownerToken; return this; }
-        public Builder fencingToken(Long fencingToken) { this.fencingToken = fencingToken; return this; }
+        public Builder providerName(String providerName) {
+            this.providerName = providerName;
+            return this;
+        }
+
+        public Builder namespace(String namespace) {
+            this.namespace = namespace;
+            return this;
+        }
+
+        public Builder lockName(String lockName) {
+            this.lockName = lockName;
+            return this;
+        }
+
+        public Builder lockKey(String lockKey) {
+            this.lockKey = lockKey;
+            return this;
+        }
+
+        public Builder ownerToken(String ownerToken) {
+            this.ownerToken = ownerToken;
+            return this;
+        }
+
+        public Builder fencingToken(Long fencingToken) {
+            this.fencingToken = fencingToken;
+            return this;
+        }
+
         public Builder fencingTokenProviderName(String fencingTokenProviderName) {
             this.fencingTokenProviderName = fencingTokenProviderName;
             return this;
         }
-        public Builder leaseTime(Duration leaseTime) { this.leaseTime = leaseTime; return this; }
-        public Builder acquiredAt(Instant acquiredAt) { this.acquiredAt = acquiredAt; return this; }
-        public Builder expireAt(Instant expireAt) { this.expireAt = expireAt; return this; }
-        public LockLease build() { return new LockLease(this); }
+
+        public Builder leaseTime(Duration leaseTime) {
+            this.leaseTime = leaseTime;
+            return this;
+        }
+
+        public Builder acquiredAt(Instant acquiredAt) {
+            this.acquiredAt = acquiredAt;
+            return this;
+        }
+
+        public Builder expireAt(Instant expireAt) {
+            this.expireAt = expireAt;
+            return this;
+        }
+
+        public LockLease build() {
+            return new LockLease(this);
+        }
     }
 }

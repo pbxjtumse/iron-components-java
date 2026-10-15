@@ -2,14 +2,7 @@ package com.xjtu.iron.reliable.task.api.state;
 
 /** Reliable Task 的持久化生命周期状态。 */
 public enum ReliableTaskStatus {
-    READY,
-    RUNNING,
-    RETRY_WAIT,
-    WAIT_RECONCILE,
-    MANUAL,
-    SUCCEEDED,
-    DEAD,
-    CANCELLED;
+    READY, RUNNING, RETRY_WAIT, WAIT_RECONCILE, MANUAL, SUCCEEDED, DEAD, CANCELLED;
 
     /** 是否已经结束自动推进。 */
     public boolean isTerminal() {

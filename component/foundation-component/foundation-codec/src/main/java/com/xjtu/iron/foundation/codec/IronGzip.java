@@ -14,14 +14,14 @@ import java.util.zip.GZIPOutputStream;
  */
 public final class IronGzip {
 
-    private IronGzip() {}
+    private IronGzip() {
+    }
 
     public static byte[] compress(byte[] bytes) {
         if (bytes == null || bytes.length == 0) {
             return new byte[0];
         }
-        try (ByteArrayOutputStream output = new ByteArrayOutputStream();
-             GZIPOutputStream gzip = new GZIPOutputStream(output)) {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream(); GZIPOutputStream gzip = new GZIPOutputStream(output)) {
             gzip.write(bytes);
             gzip.finish();
             return output.toByteArray();

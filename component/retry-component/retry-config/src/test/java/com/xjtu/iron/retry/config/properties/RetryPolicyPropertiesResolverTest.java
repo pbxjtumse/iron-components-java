@@ -25,8 +25,7 @@ class RetryPolicyPropertiesResolverTest {
         policies.put("base", base);
         policies.put("child", child);
         properties.setPolicies(policies);
-        Map<String, ResolvedRetryPolicyProperties> resolved =
-                new RetryPolicyPropertiesResolver().resolve(properties);
+        Map<String, ResolvedRetryPolicyProperties> resolved = new RetryPolicyPropertiesResolver().resolve(properties);
         assertEquals(List.of(), resolved.get("child").retryOn);
     }
 
@@ -39,10 +38,8 @@ class RetryPolicyPropertiesResolverTest {
         RetryProperties.PolicyProperties second = new RetryProperties.PolicyProperties();
         second.setBasePolicy("first");
         properties.setPolicies(Map.of("first", first, "second", second));
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> new RetryPolicyPropertiesResolver().resolve(properties)
-        );
+        IllegalArgumentException exception =
+            assertThrows(IllegalArgumentException.class, () -> new RetryPolicyPropertiesResolver().resolve(properties));
         assertEquals(true, exception.getMessage().contains("first"));
         assertEquals(true, exception.getMessage().contains("second"));
     }

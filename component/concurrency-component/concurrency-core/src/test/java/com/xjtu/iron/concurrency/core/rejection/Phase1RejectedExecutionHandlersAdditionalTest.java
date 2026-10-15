@@ -42,14 +42,10 @@ class Phase1RejectedExecutionHandlersAdditionalTest {
     void callerRunsShouldExecuteInSubmittingThreadAndNotReject() throws Exception {
         AtomicReference<Thread> executedThread = new AtomicReference<>();
         Thread submittingThread = Thread.currentThread();
-        var fixture = Phase1TestSupport.commandFixture(
-                "reject-caller-runs",
-                () -> {
-                    executedThread.set(Thread.currentThread());
-                    return "ok";
-                },
-                TaskResultMode.RESULT_AWARE
-        );
+        var fixture = Phase1TestSupport.commandFixture("reject-caller-runs", () -> {
+            executedThread.set(Thread.currentThread());
+            return "ok";
+        }, TaskResultMode.RESULT_AWARE);
         ThreadPoolExecutor executor = executor();
         try {
             fixture.command().submitted();
@@ -74,7 +70,7 @@ class Phase1RejectedExecutionHandlersAdditionalTest {
         fixture.command().submitted();
 
         assertThrows(RejectedExecutionException.class,
-                () -> new CallerRunsRejectedExecutionHandler().rejectedExecution(fixture.command(), executor));
+            () -> new CallerRunsRejectedExecutionHandler().rejectedExecution(fixture.command(), executor));
         assertEquals(AsyncTaskStatus.REJECTED, fixture.runtime().getStatus());
     }
 
@@ -84,12 +80,12 @@ class Phase1RejectedExecutionHandlersAdditionalTest {
         var fixture = Phase1TestSupport.commandFixture("reject-blocking", () -> "ok", TaskResultMode.RESULT_AWARE);
         ThreadPoolExecutor executor = executor();
         try {
-            executor.getQueue().offer(() -> { });
+            executor.getQueue().offer(() -> {
+            });
             fixture.command().submitted();
 
             assertThrows(RejectedExecutionException.class,
-                    () -> new BlockingWaitRejectedExecutionHandler(Duration.ofMillis(5))
-                            .rejectedExecution(fixture.command(), executor));
+                () -> new BlockingWaitRejectedExecutionHandler(Duration.ofMillis(5)).rejectedExecution(fixture.command(), executor));
 
             assertEquals(AsyncTaskStatus.REJECTED, fixture.runtime().getStatus());
             assertTrue(fixture.baseFuture().isCompletedExceptionally());
@@ -99,12 +95,6 @@ class Phase1RejectedExecutionHandlersAdditionalTest {
     }
 
     private static ThreadPoolExecutor executor() {
-        return new ThreadPoolExecutor(
-                1,
-                1,
-                0L,
-                TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<>(1)
-        );
+        return new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1));
     }
 }

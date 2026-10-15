@@ -59,16 +59,10 @@ public class DistributedLockProperties {
      * </p>
      */
     public LockOptions toLockOptions() {
-        LockOptions.Builder builder = LockOptions.builder()
-                .namespace(namespace)
-                .providerName(defaultProvider)
-                .leaseTime(leaseTime)
-                .waitTime(waitTime)
-                .autoRenew(autoRenew)
-                .maxRenewTime(maxRenewTime)
-                .fencingRequired(fencingRequired)
-                .fencingTokenProviderName(fencingTokenProviderName)
-                .failOnLockLost(failOnLockLost);
+        LockOptions.Builder builder =
+            LockOptions.builder().namespace(namespace).providerName(defaultProvider).leaseTime(leaseTime).waitTime(waitTime)
+                .autoRenew(autoRenew).maxRenewTime(maxRenewTime).fencingRequired(fencingRequired)
+                .fencingTokenProviderName(fencingTokenProviderName).failOnLockLost(failOnLockLost);
 
         if (renewInterval != null) {
             builder.renewInterval(renewInterval);

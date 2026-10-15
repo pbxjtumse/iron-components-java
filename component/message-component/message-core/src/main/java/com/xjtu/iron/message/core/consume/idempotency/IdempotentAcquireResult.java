@@ -18,9 +18,17 @@ public final class IdempotentAcquireResult {
         return new IdempotentAcquireResult(status, null, null);
     }
 
-    public IdempotentAcquireStatus status() { return status; }
-    public String code() { return code; }
-    public String description() { return description; }
+    public IdempotentAcquireStatus status() {
+        return status;
+    }
+
+    public String code() {
+        return code;
+    }
+
+    public String description() {
+        return description;
+    }
 
     private static String normalize(String value) {
         if (value == null) {

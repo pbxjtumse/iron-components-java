@@ -16,9 +16,7 @@ public class LoggingGovernanceEventListener implements GovernanceEventListener {
 
     @Override
     public void onEvent(GovernanceEvent event) {
-        log.info("[governance-event] type={}, resource={}, attributes={}",
-                event.getEventType(),
-                event.getResourceName(),
-                event.getAttributes());
+        log.info("[governance-event] type={}, resource={}, attributes={}", event.getEventType(), event.getResourceName(),
+            event.getAttributes());
     }
 }

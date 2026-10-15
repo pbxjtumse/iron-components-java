@@ -6,8 +6,7 @@ import java.util.regex.Pattern;
 public final class MyBatisTableNameValidator {
 
     /** 普通表名或一层 schema 限定表名，禁止引号、空白、注释和 SQL 运算符。 */
-    private static final Pattern SAFE_TABLE_NAME =
-            Pattern.compile("[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)?");
+    private static final Pattern SAFE_TABLE_NAME = Pattern.compile("[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)?");
 
     private MyBatisTableNameValidator() {
     }

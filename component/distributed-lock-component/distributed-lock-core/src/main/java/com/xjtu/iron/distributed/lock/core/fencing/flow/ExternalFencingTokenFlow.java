@@ -40,14 +40,16 @@ public final class ExternalFencingTokenFlow implements FencingTokenFlow {
         FencingTokenResponse tokenResponse = support.issueExternal(context);
         Duration fencingDuration = Duration.between(fencingStart, support.now());
         if (!tokenResponse.isIssued()) {
-            return FencingCompletion.failure(support.fencingFailure(lockProvider, lease, context.waitDuration(), source, tokenResponse, fencingDuration));
+            return FencingCompletion.failure(
+                support.fencingFailure(lockProvider, lease, context.waitDuration(), source, tokenResponse, fencingDuration));
         }
 
         long token = tokenResponse.token().orElseThrow();
         LockLease fencedLease = lease.withFencingToken(token, source);
         support.recordFencingSuccess(lockProvider, fencedLease, source, fencingDuration);
 
-        LockResult<LockHandle> ownershipFailure = support.verifyOwnershipAfterExternalFencing(lockProvider, fencedLease, context.waitDuration());
+        LockResult<LockHandle> ownershipFailure =
+            support.verifyOwnershipAfterExternalFencing(lockProvider, fencedLease, context.waitDuration());
         if (ownershipFailure != null) {
             return FencingCompletion.failure(ownershipFailure);
         }

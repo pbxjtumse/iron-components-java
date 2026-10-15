@@ -48,13 +48,9 @@ public abstract class ReliableTaskRepositoryContract {
         repository().create(task("task-due", now, 3));
         repository().create(task("task-future", now.plusSeconds(60), 3));
 
-        List<ReliableTask> candidates = repository().findDue(
-                new ReliableTaskScanQuery("default", 7, now, 10)
-        );
+        List<ReliableTask> candidates = repository().findDue(new ReliableTaskScanQuery("default", 7, now, 10));
 
-        assertThat(candidates)
-                .extracting(ReliableTask::getTaskId)
-                .containsExactly("task-due");
+        assertThat(candidates).extracting(ReliableTask::getTaskId).containsExactly("task-due");
     }
 
     @Test
@@ -63,55 +59,33 @@ public abstract class ReliableTaskRepositoryContract {
         ReliableTask task = task("task-claim", now, 3);
         repository().create(task);
 
-        ReliableTask candidate = repository().findDue(
-                new ReliableTaskScanQuery("default", 7, now, 10)
-        ).get(0);
-        ReliableTaskClaimResult ownerA = repository().tryClaim(new ReliableTaskClaimCommand(
-                candidate, "owner-a", now, now.plusSeconds(10)
-        ));
-        ReliableTaskClaimResult duplicateClaim = repository().tryClaim(new ReliableTaskClaimCommand(
-                candidate, "owner-b", now, now.plusSeconds(10)
-        ));
+        ReliableTask candidate = repository().findDue(new ReliableTaskScanQuery("default", 7, now, 10)).get(0);
+        ReliableTaskClaimResult ownerA =
+            repository().tryClaim(new ReliableTaskClaimCommand(candidate, "owner-a", now, now.plusSeconds(10)));
+        ReliableTaskClaimResult duplicateClaim =
+            repository().tryClaim(new ReliableTaskClaimCommand(candidate, "owner-b", now, now.plusSeconds(10)));
 
         assertThat(ownerA.isClaimed()).isTrue();
         assertThat(duplicateClaim.isClaimed()).isFalse();
 
         Instant takeoverTime = now.plusSeconds(11);
-        ReliableTask expired = repository().findDue(
-                new ReliableTaskScanQuery("default", 7, takeoverTime, 10)
-        ).get(0);
-        ReliableTaskClaimResult ownerB = repository().tryClaim(new ReliableTaskClaimCommand(
-                expired, "owner-b", takeoverTime, takeoverTime.plusSeconds(10)
-        ));
+        ReliableTask expired = repository().findDue(new ReliableTaskScanQuery("default", 7, takeoverTime, 10)).get(0);
+        ReliableTaskClaimResult ownerB =
+            repository().tryClaim(new ReliableTaskClaimCommand(expired, "owner-b", takeoverTime, takeoverTime.plusSeconds(10)));
 
         assertThat(ownerB.isClaimed()).isTrue();
         assertThat(ownerB.getTask().getVersion()).isEqualTo(ownerA.getTask().getVersion() + 1);
 
-        boolean staleWrite = repository().transition(new ReliableTaskTransitionCommand(
-                ownerA.getTask().getKey(),
-                ownerA.getTask().getOwnerId(),
-                ownerA.getTask().getVersion(),
-                ReliableTaskStatus.SUCCEEDED,
-                null,
-                null,
-                null,
-                takeoverTime
-        ));
-        boolean currentWrite = repository().transition(new ReliableTaskTransitionCommand(
-                ownerB.getTask().getKey(),
-                ownerB.getTask().getOwnerId(),
-                ownerB.getTask().getVersion(),
-                ReliableTaskStatus.SUCCEEDED,
-                null,
-                null,
-                null,
-                takeoverTime.plusSeconds(1)
-        ));
+        boolean staleWrite = repository().transition(
+            new ReliableTaskTransitionCommand(ownerA.getTask().getKey(), ownerA.getTask().getOwnerId(), ownerA.getTask().getVersion(),
+                ReliableTaskStatus.SUCCEEDED, null, null, null, takeoverTime));
+        boolean currentWrite = repository().transition(
+            new ReliableTaskTransitionCommand(ownerB.getTask().getKey(), ownerB.getTask().getOwnerId(), ownerB.getTask().getVersion(),
+                ReliableTaskStatus.SUCCEEDED, null, null, null, takeoverTime.plusSeconds(1)));
 
         assertThat(staleWrite).isFalse();
         assertThat(currentWrite).isTrue();
-        assertThat(repository().find(task.getKey()).orElseThrow().getStatus())
-                .isEqualTo(ReliableTaskStatus.SUCCEEDED);
+        assertThat(repository().find(task.getKey()).orElseThrow().getStatus()).isEqualTo(ReliableTaskStatus.SUCCEEDED);
     }
 
     @Test
@@ -119,24 +93,14 @@ public abstract class ReliableTaskRepositoryContract {
         Instant now = Instant.parse("2026-10-09T00:00:00Z");
         ReliableTask task = task("task-renew", now, 3);
         repository().create(task);
-        ReliableTaskClaimResult claim = repository().tryClaim(new ReliableTaskClaimCommand(
-                task, "owner-a", now, now.plusSeconds(10)
-        ));
+        ReliableTaskClaimResult claim = repository().tryClaim(new ReliableTaskClaimCommand(task, "owner-a", now, now.plusSeconds(10)));
 
-        assertThat(repository().renewLease(new ReliableTaskLeaseRenewCommand(
-                task.getKey(),
-                "owner-a",
-                claim.getTask().getVersion(),
-                now.plusSeconds(5),
-                now.plusSeconds(30)
-        ))).isTrue();
-        assertThat(repository().renewLease(new ReliableTaskLeaseRenewCommand(
-                task.getKey(),
-                "wrong-owner",
-                claim.getTask().getVersion(),
-                now.plusSeconds(6),
-                now.plusSeconds(40)
-        ))).isFalse();
+        assertThat(repository().renewLease(
+            new ReliableTaskLeaseRenewCommand(task.getKey(), "owner-a", claim.getTask().getVersion(), now.plusSeconds(5),
+                now.plusSeconds(30)))).isTrue();
+        assertThat(repository().renewLease(
+            new ReliableTaskLeaseRenewCommand(task.getKey(), "wrong-owner", claim.getTask().getVersion(), now.plusSeconds(6),
+                now.plusSeconds(40)))).isFalse();
     }
 
     @Test
@@ -145,48 +109,17 @@ public abstract class ReliableTaskRepositoryContract {
         ReliableTask task = task("task-admin", now, 3);
         repository().create(task);
 
-        assertThat(repository().adminTransition(new ReliableTaskAdminTransitionCommand(
-                task.getKey(),
-                ReliableTaskStatus.READY,
-                99,
-                ReliableTaskStatus.CANCELLED,
-                null,
-                false,
-                now
-        ))).isFalse();
-        assertThat(repository().adminTransition(new ReliableTaskAdminTransitionCommand(
-                task.getKey(),
-                ReliableTaskStatus.READY,
-                0,
-                ReliableTaskStatus.CANCELLED,
-                null,
-                false,
-                now
-        ))).isTrue();
-        assertThat(repository().find(task.getKey()).orElseThrow().getStatus())
-                .isEqualTo(ReliableTaskStatus.CANCELLED);
+        assertThat(repository().adminTransition(
+            new ReliableTaskAdminTransitionCommand(task.getKey(), ReliableTaskStatus.READY, 99, ReliableTaskStatus.CANCELLED, null, false,
+                now))).isFalse();
+        assertThat(repository().adminTransition(
+            new ReliableTaskAdminTransitionCommand(task.getKey(), ReliableTaskStatus.READY, 0, ReliableTaskStatus.CANCELLED, null, false,
+                now))).isTrue();
+        assertThat(repository().find(task.getKey()).orElseThrow().getStatus()).isEqualTo(ReliableTaskStatus.CANCELLED);
     }
 
     private static ReliableTask task(String taskId, Instant executeAt, int maxAttempts) {
-        return new ReliableTask(
-                ReliableTaskKey.defaults(taskId),
-                "demo",
-                "business-1",
-                "{}",
-                "order-1",
-                7,
-                ReliableTaskStatus.READY,
-                0,
-                maxAttempts,
-                executeAt,
-                null,
-                null,
-                0,
-                null,
-                null,
-                executeAt,
-                executeAt,
-                null
-        );
+        return new ReliableTask(ReliableTaskKey.defaults(taskId), "demo", "business-1", "{}", "order-1", 7, ReliableTaskStatus.READY, 0,
+            maxAttempts, executeAt, null, null, 0, null, null, executeAt, executeAt, null);
     }
 }

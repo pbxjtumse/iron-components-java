@@ -15,35 +15,21 @@ import java.util.Objects;
 /** 负责重试事件构造、监听器顺序通知和单个监听器故障隔离。 */
 final class RetryEventDispatcher {
 
-    private static final System.Logger LOGGER =
-            System.getLogger(RetryEventDispatcher.class.getName());
+    private static final System.Logger LOGGER = System.getLogger(RetryEventDispatcher.class.getName());
 
     private final List<RetryListener> listeners;
     private final ClockProvider clockProvider;
 
     RetryEventDispatcher(List<RetryListener> listeners, ClockProvider clockProvider) {
         this.listeners = immutableListeners(listeners);
-        this.clockProvider = Objects.requireNonNull(
-                clockProvider,
-                "clockProvider must not be null"
-        );
+        this.clockProvider = Objects.requireNonNull(clockProvider, "clockProvider must not be null");
     }
 
     /** 创建包含逻辑执行公共字段的事件构建器。 */
-    RetryEvent.Builder newEvent(
-            RetryEventType eventType,
-            String retryId,
-            String operationName,
-            RetryPolicy retryPolicy,
-            Duration elapsedTime) {
-        return RetryEvent.builder(
-                eventType,
-                retryId,
-                operationName,
-                retryPolicy.getPolicyName(),
-                retryPolicy.getMaxAttempts(),
-                clockProvider.clock().instant()
-        ).elapsedTime(elapsedTime);
+    RetryEvent.Builder newEvent(RetryEventType eventType, String retryId, String operationName, RetryPolicy retryPolicy,
+        Duration elapsedTime) {
+        return RetryEvent.builder(eventType, retryId, operationName, retryPolicy.getPolicyName(), retryPolicy.getMaxAttempts(),
+            clockProvider.clock().instant()).elapsedTime(elapsedTime);
     }
 
     /** 依次通知监听器，并隔离单个监听器的运行时异常。 */
@@ -52,13 +38,9 @@ final class RetryEventDispatcher {
             try {
                 listener.onEvent(event);
             } catch (RuntimeException listenerFailure) {
-                LOGGER.log(
-                        System.Logger.Level.WARNING,
-                        "RetryListener failed and was isolated: listener="
-                                + listener.getClass().getName()
-                                + ", eventType=" + event.getEventType(),
-                        listenerFailure
-                );
+                LOGGER.log(System.Logger.Level.WARNING,
+                    "RetryListener failed and was isolated: listener=" + listener.getClass().getName() + ", eventType=" +
+                        event.getEventType(), listenerFailure);
             }
         }
     }
@@ -69,10 +51,7 @@ final class RetryEventDispatcher {
         }
         List<RetryListener> copiedListeners = new ArrayList<>(listeners.size());
         for (RetryListener listener : listeners) {
-            copiedListeners.add(Objects.requireNonNull(
-                    listener,
-                    "retryListener must not be null"
-            ));
+            copiedListeners.add(Objects.requireNonNull(listener, "retryListener must not be null"));
         }
         return Collections.unmodifiableList(copiedListeners);
     }

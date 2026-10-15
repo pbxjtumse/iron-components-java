@@ -29,31 +29,22 @@ class Phase1TaskCommandAdditionalTest {
 
         assertEquals("ok", fixture.baseFuture().get());
         assertEquals(AsyncTaskStatus.SUCCESS, fixture.runtime().getStatus());
-        assertEquals(0, fixture.publisher().events().stream()
-                .filter(event -> event.getStatus() == AsyncTaskStatus.TIMEOUT)
-                .count());
+        assertEquals(0, fixture.publisher().events().stream().filter(event -> event.getStatus() == AsyncTaskStatus.TIMEOUT).count());
     }
 
     @Test
     @DisplayName("queueTimeout 超过后不执行 operation，并把 baseFuture 异常完成")
     void runShouldNotExecuteWhenQueueTimeoutExceeded() throws Exception {
         AtomicBoolean executed = new AtomicBoolean(false);
-        var task = com.xjtu.iron.concurrency.api.execution.task.AsyncTask
-                .of("test-pool", "queue-timeout", () -> {
-                    executed.set(true);
-                    return "should-not-run";
-                })
-                .taskId("cmd-queue-timeout")
-                .queueTimeout(Duration.ofMillis(1));
+        var task = com.xjtu.iron.concurrency.api.execution.task.AsyncTask.of("test-pool", "queue-timeout", () -> {
+            executed.set(true);
+            return "should-not-run";
+        }).taskId("cmd-queue-timeout").queueTimeout(Duration.ofMillis(1));
         task.validate();
         TaskDefinition<String> definition = TaskDefinition.from(task);
         var fixture = Phase1TestSupport.commandFixture("unused", () -> "unused", TaskResultMode.RESULT_AWARE);
-        TaskExecutionContext<String> context = new TaskExecutionContext<>(
-                definition,
-                definition.getOperation(),
-                fixture.baseFuture(),
-                fixture.runtime()
-        );
+        TaskExecutionContext<String> context =
+            new TaskExecutionContext<>(definition, definition.getOperation(), fixture.baseFuture(), fixture.runtime());
         TaskCommand<String> command = new TaskCommand<>(context, fixture.publisher(), fixture.classifier(), fixture.uncaught());
         command.submitted();
         Thread.sleep(15);
@@ -76,20 +67,16 @@ class Phase1TaskCommandAdditionalTest {
 
         assertEquals(AsyncTaskStatus.REJECTED, fixture.runtime().getStatus());
         assertTrue(fixture.baseFuture().isCompletedExceptionally());
-        long rejectedCount = fixture.publisher().events().stream()
-                .filter(event -> event.getStatus() == AsyncTaskStatus.REJECTED)
-                .count();
+        long rejectedCount = fixture.publisher().events().stream().filter(event -> event.getStatus() == AsyncTaskStatus.REJECTED).count();
         assertEquals(1, rejectedCount);
     }
 
     @Test
     @DisplayName("FIRE_AND_FORGET 失败时应进入 uncaught handler")
     void fireAndForgetFailureShouldCallUncaughtHandler() {
-        var fixture = Phase1TestSupport.commandFixture(
-                "cmd-fire-and-forget",
-                () -> { throw new IllegalStateException("boom"); },
-                TaskResultMode.FIRE_AND_FORGET
-        );
+        var fixture = Phase1TestSupport.commandFixture("cmd-fire-and-forget", () -> {
+            throw new IllegalStateException("boom");
+        }, TaskResultMode.FIRE_AND_FORGET);
         fixture.command().submitted();
 
         fixture.command().run();

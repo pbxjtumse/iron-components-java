@@ -314,31 +314,17 @@ public final class TaskExecutionRuntime {
     public TaskTimingSnapshot timingSnapshot() {
         long nowNano = System.nanoTime();
         long nowMillis = System.currentTimeMillis();
-        boolean pipelineInProgress = !finalOutcomeResolved.get()
-                && (status.get() == AsyncTaskStatus.FALLBACK);
-        long visibleEndMillis = finalEndTimeMillis > 0
-                ? finalEndTimeMillis
-                : (pipelineInProgress ? nowMillis : executionEndTimeMillis);
-        long visibleEndNano = finalEndNanoTime > 0
-                ? finalEndNanoTime
-                : (pipelineInProgress ? nowNano : executionEndNanoTime);
+        boolean pipelineInProgress = !finalOutcomeResolved.get() && (status.get() == AsyncTaskStatus.FALLBACK);
+        long visibleEndMillis = finalEndTimeMillis > 0 ? finalEndTimeMillis : (pipelineInProgress ? nowMillis : executionEndTimeMillis);
+        long visibleEndNano = finalEndNanoTime > 0 ? finalEndNanoTime : (pipelineInProgress ? nowNano : executionEndNanoTime);
 
-        long queueCostNanos = startNanoTime > 0
-                ? startNanoTime - submitNanoTime
-                : (visibleEndNano > 0 ? visibleEndNano : nowNano) - submitNanoTime;
-        long runCostNanos = startNanoTime > 0
-                ? (executionEndNanoTime > 0 ? executionEndNanoTime : nowNano) - startNanoTime
-                : 0L;
+        long queueCostNanos =
+            startNanoTime > 0 ? startNanoTime - submitNanoTime : (visibleEndNano > 0 ? visibleEndNano : nowNano) - submitNanoTime;
+        long runCostNanos = startNanoTime > 0 ? (executionEndNanoTime > 0 ? executionEndNanoTime : nowNano) - startNanoTime : 0L;
         long totalCostNanos = (visibleEndNano > 0 ? visibleEndNano : nowNano) - submitNanoTime;
 
-        return new TaskTimingSnapshot(
-                submitTimeMillis,
-                startTimeMillis,
-                visibleEndMillis,
-                nanosToMillis(queueCostNanos),
-                nanosToMillis(runCostNanos),
-                nanosToMillis(totalCostNanos)
-        );
+        return new TaskTimingSnapshot(submitTimeMillis, startTimeMillis, visibleEndMillis, nanosToMillis(queueCostNanos),
+            nanosToMillis(runCostNanos), nanosToMillis(totalCostNanos));
     }
 
     /**

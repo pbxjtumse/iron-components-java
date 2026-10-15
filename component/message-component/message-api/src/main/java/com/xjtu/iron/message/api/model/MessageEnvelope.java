@@ -3,6 +3,7 @@ package com.xjtu.iron.message.api.model;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
+
 /**
  * message-component 对外暴露的统一消息信封。
  *
@@ -21,12 +22,8 @@ public final class MessageEnvelope<T> {
     private final T payload;
 
     private MessageEnvelope(Builder<T> builder) {
-        this.metadata = new MessageMetadata(
-                builder.messageId,
-                builder.messageType,
-                builder.schemaVersion,
-                builder.messageKey,
-                builder.occurredAt,
+        this.metadata =
+            new MessageMetadata(builder.messageId, builder.messageType, builder.schemaVersion, builder.messageKey, builder.occurredAt,
                 builder.createdAt);
         this.context = builder.context == null ? MessageContext.empty() : builder.context;
         this.headers = builder.headers == null ? MessageHeaders.empty() : builder.headers;
@@ -44,33 +41,18 @@ public final class MessageEnvelope<T> {
     }
 
     /** 使用三个结构化对象和 payload 直接创建完整信封。 */
-    public static <T> MessageEnvelope<T> of(
-            MessageMetadata metadata,
-            MessageContext context,
-            MessageHeaders headers,
-            T payload) {
+    public static <T> MessageEnvelope<T> of(MessageMetadata metadata, MessageContext context, MessageHeaders headers, T payload) {
         Objects.requireNonNull(metadata, "metadata must not be null");
-        return builder(metadata.messageType(), payload)
-                .messageId(metadata.messageId())
-                .schemaVersion(metadata.schemaVersion())
-                .messageKey(metadata.messageKey())
-                .occurredAt(metadata.occurredAt())
-                .createdAt(metadata.createdAt())
-                .context(context)
-                .headers(headers)
-                .build();
+        return builder(metadata.messageType(), payload).messageId(metadata.messageId()).schemaVersion(metadata.schemaVersion())
+            .messageKey(metadata.messageKey()).occurredAt(metadata.occurredAt()).createdAt(metadata.createdAt()).context(context)
+            .headers(headers).build();
     }
 
     /** 返回复制当前字段的 Builder。 */
     public Builder<T> toBuilder() {
-        return new Builder<>(metadata.messageType(), payload)
-                .messageId(metadata.messageId())
-                .schemaVersion(metadata.schemaVersion())
-                .messageKey(metadata.messageKey())
-                .occurredAt(metadata.occurredAt())
-                .createdAt(metadata.createdAt())
-                .context(context)
-                .headers(headers);
+        return new Builder<>(metadata.messageType(), payload).messageId(metadata.messageId()).schemaVersion(metadata.schemaVersion())
+            .messageKey(metadata.messageKey()).occurredAt(metadata.occurredAt()).createdAt(metadata.createdAt()).context(context)
+            .headers(headers);
     }
 
     public MessageMetadata metadata() {

@@ -5,6 +5,7 @@ import com.xjtu.iron.idempotent.api.policy.IdempotencyPolicy;
 import com.xjtu.iron.idempotent.api.repository.IdempotencyRecord;
 import com.xjtu.iron.idempotent.api.repository.IdempotencyRepository;
 import com.xjtu.iron.idempotent.core.execution.preparation.IdempotencyExecutionDefinition;
+
 import java.time.Instant;
 
 /** 单次调用的不可变执行信息，只在方法间传递；不是 Spring Bean，也不存入 ThreadLocal 或执行器字段。
@@ -15,9 +16,14 @@ import java.time.Instant;
  *     <li>3. 不可变指字段引用固定，不代表引用的 Repository 深度不可变；不存入单例字段或 ThreadLocal。</li>
  * </ul>
  */
-record BusinessExecution<T>(String key, String routeKey, IdempotencyExecutionDefinition<T> definition,
-                            IdempotencyRecord record, IdempotencyContext context, Instant startedAt,
-                            boolean lockFallback, boolean recoveryExecution, boolean transactionApplied) {
-    IdempotencyPolicy policy() { return definition.policy(); }
-    IdempotencyRepository repository() { return definition.repository(); }
+record BusinessExecution<T>(String key, String routeKey, IdempotencyExecutionDefinition<T> definition, IdempotencyRecord record,
+                            IdempotencyContext context, Instant startedAt, boolean lockFallback, boolean recoveryExecution,
+                            boolean transactionApplied) {
+    IdempotencyPolicy policy() {
+        return definition.policy();
+    }
+
+    IdempotencyRepository repository() {
+        return definition.repository();
+    }
 }

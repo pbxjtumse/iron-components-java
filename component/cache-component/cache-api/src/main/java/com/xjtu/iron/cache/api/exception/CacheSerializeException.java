@@ -6,5 +6,7 @@ package com.xjtu.iron.cache.api.exception;
 public class CacheSerializeException extends CacheException {
 
     /** 创建带原始异常原因的序列化异常。 */
-    public CacheSerializeException(String message, Throwable cause) { super(message, cause); }
+    public CacheSerializeException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

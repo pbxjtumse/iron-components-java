@@ -19,9 +19,13 @@ public final class TimeRange {
         }
     }
 
-    public LocalTime getStartInclusive() { return startInclusive; }
+    public LocalTime getStartInclusive() {
+        return startInclusive;
+    }
 
-    public LocalTime getEndExclusive() { return endExclusive; }
+    public LocalTime getEndExclusive() {
+        return endExclusive;
+    }
 
     public boolean contains(LocalTime time) {
         Objects.requireNonNull(time, "time must not be null");

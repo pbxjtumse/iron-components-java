@@ -17,11 +17,10 @@ public final class JdbcFencedDemoRepository {
     }
 
     public void initializeSchema() {
-        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS iron_lock_fenced_demo_resource ("
-                + "resource_key VARCHAR(256) NOT NULL PRIMARY KEY,"
-                + "payload VARCHAR(1024),"
-                + "last_fencing_token BIGINT NOT NULL,"
-                + "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)");
+        jdbcTemplate.execute(
+            "CREATE TABLE IF NOT EXISTS iron_lock_fenced_demo_resource (" + "resource_key VARCHAR(256) NOT NULL PRIMARY KEY," +
+                "payload VARCHAR(1024)," + "last_fencing_token BIGINT NOT NULL," +
+                "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)");
     }
 
     /**
@@ -29,15 +28,15 @@ public final class JdbcFencedDemoRepository {
      */
     public boolean updateIfNewer(String resourceKey, String payload, long fencingToken) {
         int updated = jdbcTemplate.update(
-                "UPDATE iron_lock_fenced_demo_resource " + "SET payload = ?, last_fencing_token = ?, updated_at = CURRENT_TIMESTAMP " + "WHERE resource_key = ? AND last_fencing_token < ?",
-                payload, fencingToken, resourceKey, fencingToken);
+            "UPDATE iron_lock_fenced_demo_resource " + "SET payload = ?, last_fencing_token = ?, updated_at = CURRENT_TIMESTAMP " +
+                "WHERE resource_key = ? AND last_fencing_token < ?", payload, fencingToken, resourceKey, fencingToken);
         if (updated == 1) {
             return true;
         }
         try {
             return jdbcTemplate.update(
-                    "INSERT INTO iron_lock_fenced_demo_resource " + "(resource_key, payload, last_fencing_token, updated_at) " + "VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
-                    resourceKey, payload, fencingToken) == 1;
+                "INSERT INTO iron_lock_fenced_demo_resource " + "(resource_key, payload, last_fencing_token, updated_at) " +
+                    "VALUES (?, ?, ?, CURRENT_TIMESTAMP)", resourceKey, payload, fencingToken) == 1;
         } catch (DuplicateKeyException duplicate) {
             /*
              * 可能是另一个 owner 在“首次建行”阶段抢先 INSERT。不能直接判定当前 token 已过期，
@@ -46,19 +45,21 @@ public final class JdbcFencedDemoRepository {
              * - 当前 token 更小或相等：更新 0 行，明确拒绝旧写。
              */
             return jdbcTemplate.update(
-                    "UPDATE iron_lock_fenced_demo_resource " + "SET payload = ?, last_fencing_token = ?, updated_at = CURRENT_TIMESTAMP " + "WHERE resource_key = ? AND last_fencing_token < ?",
-                    payload, fencingToken, resourceKey, fencingToken) == 1;
+                "UPDATE iron_lock_fenced_demo_resource " + "SET payload = ?, last_fencing_token = ?, updated_at = CURRENT_TIMESTAMP " +
+                    "WHERE resource_key = ? AND last_fencing_token < ?", payload, fencingToken, resourceKey, fencingToken) == 1;
         }
     }
 
     public long currentToken(String resourceKey) {
-        Long value = jdbcTemplate.queryForObject("SELECT last_fencing_token FROM iron_lock_fenced_demo_resource WHERE resource_key = ?", Long.class,
+        Long value =
+            jdbcTemplate.queryForObject("SELECT last_fencing_token FROM iron_lock_fenced_demo_resource WHERE resource_key = ?", Long.class,
                 resourceKey);
         return value == null ? 0L : value;
     }
 
     public String currentPayload(String resourceKey) {
-        return jdbcTemplate.queryForObject("SELECT payload FROM iron_lock_fenced_demo_resource WHERE resource_key = ?", String.class, resourceKey);
+        return jdbcTemplate.queryForObject("SELECT payload FROM iron_lock_fenced_demo_resource WHERE resource_key = ?", String.class,
+            resourceKey);
     }
 
     public void delete(String resourceKey) {

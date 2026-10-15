@@ -23,17 +23,10 @@ public final class DefaultTaskHandle<T> implements TaskHandle<T> {
     /** 当前节点任务取消管理器。 */
     private final TaskCancellationManager cancellationManager;
 
-    public DefaultTaskHandle(
-            String taskId,
-            CompletableFuture<T> future,
-            TaskCancellationManager cancellationManager
-    ) {
+    public DefaultTaskHandle(String taskId, CompletableFuture<T> future, TaskCancellationManager cancellationManager) {
         this.taskId = Objects.requireNonNull(taskId, "taskId must not be null");
         this.future = Objects.requireNonNull(future, "future must not be null");
-        this.cancellationManager = Objects.requireNonNull(
-                cancellationManager,
-                "cancellationManager must not be null"
-        );
+        this.cancellationManager = Objects.requireNonNull(cancellationManager, "cancellationManager must not be null");
     }
 
     @Override

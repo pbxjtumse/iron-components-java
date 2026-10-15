@@ -9,7 +9,6 @@ import com.xjtu.iron.idempotent.api.repository.recovery.IdempotencyRecoveryStatu
  *
  * <p>这里故意不访问数据库、不执行 Lua、不加分布式锁。并发正确性已经在 Repository.tryAcquire /
  * tryRecover 中通过 UNIQUE、行锁、Lua 或 CAS 完成；StateMachine 只回答下一步是 EXECUTE、REPLAY 还是 RETURN。</p>
-
  * <p><b>流程阅读编号：I5：将原子事实翻译成动作。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
  * <ul>
  *     <li>1. 输入来自 Repository 的 acquire/recovery 状态，不重新查询数据库。</li>
@@ -52,7 +51,8 @@ public final class DefaultIdempotencyStateMachine implements IdempotencyStateMac
             case SUCCESS -> IdempotencyStateDecision.replay();
             case DISCARDED -> IdempotencyStateDecision.returning(IdempotencyResultStatus.PREVIOUS_DISCARDED);
             case PROCESSING_ACTIVE -> IdempotencyStateDecision.returning(IdempotencyResultStatus.PROCESSING);
-            case NOT_RECOVERABLE, FAILED_FINAL, NOT_FOUND -> IdempotencyStateDecision.returning(IdempotencyResultStatus.RECOVERY_NOT_ALLOWED);
+            case NOT_RECOVERABLE, FAILED_FINAL, NOT_FOUND ->
+                IdempotencyStateDecision.returning(IdempotencyResultStatus.RECOVERY_NOT_ALLOWED);
             case STALE_CANDIDATE -> IdempotencyStateDecision.returning(IdempotencyResultStatus.STALE_RECOVERY_CANDIDATE);
             case KEY_CONFLICT -> IdempotencyStateDecision.returning(IdempotencyResultStatus.KEY_CONFLICT);
             case PROVIDER_ERROR -> IdempotencyStateDecision.returning(IdempotencyResultStatus.REPOSITORY_ERROR);

@@ -30,12 +30,7 @@ public final class ShardRouteInfo {
     /** 总 shard 数量。 */
     private final int totalShardCount;
 
-    public ShardRouteInfo(
-            int shardId,
-            int databaseIndex,
-            int localTableIndex,
-            int totalShardCount
-    ) {
+    public ShardRouteInfo(int shardId, int databaseIndex, int localTableIndex, int totalShardCount) {
         if (shardId < 0) {
             throw new IllegalArgumentException("shardId must not be negative");
         }
@@ -81,10 +76,8 @@ public final class ShardRouteInfo {
         if (!(obj instanceof ShardRouteInfo other)) {
             return false;
         }
-        return shardId == other.shardId
-                && databaseIndex == other.databaseIndex
-                && localTableIndex == other.localTableIndex
-                && totalShardCount == other.totalShardCount;
+        return shardId == other.shardId && databaseIndex == other.databaseIndex && localTableIndex == other.localTableIndex &&
+            totalShardCount == other.totalShardCount;
     }
 
     @Override
@@ -94,11 +87,7 @@ public final class ShardRouteInfo {
 
     @Override
     public String toString() {
-        return "ShardRouteInfo{" +
-                "shardId=" + shardId +
-                ", databaseIndex=" + databaseIndex +
-                ", localTableIndex=" + localTableIndex +
-                ", totalShardCount=" + totalShardCount +
-                '}';
+        return "ShardRouteInfo{" + "shardId=" + shardId + ", databaseIndex=" + databaseIndex + ", localTableIndex=" + localTableIndex +
+            ", totalShardCount=" + totalShardCount + '}';
     }
 }

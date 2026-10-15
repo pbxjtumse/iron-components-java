@@ -19,27 +19,21 @@ public final class DefaultMessageIdempotencyExecutor implements MessageIdempoten
     private final MessageIdempotencyStateManager stateManager;
     private final MessageIdempotencyDecisionHandler decisionHandler;
 
-    public DefaultMessageIdempotencyExecutor(
-            MessageIdempotencyContextFactory contextFactory,
-            MessageIdempotencyStateManager stateManager,
-            MessageIdempotencyDecisionHandler decisionHandler) {
+    public DefaultMessageIdempotencyExecutor(MessageIdempotencyContextFactory contextFactory, MessageIdempotencyStateManager stateManager,
+        MessageIdempotencyDecisionHandler decisionHandler) {
         this.contextFactory = Objects.requireNonNull(contextFactory);
         this.stateManager = Objects.requireNonNull(stateManager);
         this.decisionHandler = Objects.requireNonNull(decisionHandler);
     }
 
     @Override
-    public ConsumeDecision execute(
-            MessageEnvelope<?> message,
-            ConsumeContext context,
-            MessageIdempotencyOptions options,
-            ConsumeInvocation invocation) {
+    public ConsumeDecision execute(MessageEnvelope<?> message, ConsumeContext context, MessageIdempotencyOptions options,
+        ConsumeInvocation invocation) {
         if (options == null || !options.enabled()) {
             return invocation.invoke();
         }
 
-        MessageIdempotencyContext idempotencyContext =
-                contextFactory.create(message, context, options);
+        MessageIdempotencyContext idempotencyContext = contextFactory.create(message, context, options);
 
         IdempotentAcquireResult acquireResult;
         try {
@@ -48,9 +42,6 @@ public final class DefaultMessageIdempotencyExecutor implements MessageIdempoten
             return ConsumeDecision.RETRY;
         }
 
-        return decisionHandler.handle(
-                acquireResult,
-                idempotencyContext,
-                invocation);
+        return decisionHandler.handle(acquireResult, idempotencyContext, invocation);
     }
 }

@@ -20,12 +20,7 @@ public final class ReliableTaskScanReport {
     /** 未能获得执行权而跳过的候选任务数量。 */
     private final int skipped;
 
-    public ReliableTaskScanReport(
-            int candidates,
-            int claimed,
-            int executed,
-            int staleCompletions,
-            int skipped) {
+    public ReliableTaskScanReport(int candidates, int claimed, int executed, int staleCompletions, int skipped) {
         this.candidates = candidates;
         this.claimed = claimed;
         this.executed = executed;
@@ -61,11 +56,8 @@ public final class ReliableTaskScanReport {
         if (!(object instanceof ReliableTaskScanReport that)) {
             return false;
         }
-        return candidates == that.candidates
-                && claimed == that.claimed
-                && executed == that.executed
-                && staleCompletions == that.staleCompletions
-                && skipped == that.skipped;
+        return candidates == that.candidates && claimed == that.claimed && executed == that.executed &&
+            staleCompletions == that.staleCompletions && skipped == that.skipped;
     }
 
     @Override
@@ -75,12 +67,7 @@ public final class ReliableTaskScanReport {
 
     @Override
     public String toString() {
-        return "ReliableTaskScanReport{" +
-                "candidates=" + candidates +
-                ", claimed=" + claimed +
-                ", executed=" + executed +
-                ", staleCompletions=" + staleCompletions +
-                ", skipped=" + skipped +
-                '}';
+        return "ReliableTaskScanReport{" + "candidates=" + candidates + ", claimed=" + claimed + ", executed=" + executed +
+            ", staleCompletions=" + staleCompletions + ", skipped=" + skipped + '}';
     }
 }

@@ -23,12 +23,7 @@ public final class ReliableTaskLeaseRenewCommand {
     /** 本次续租期望写入的新到期时间。 */
     private final Instant leaseUntil;
 
-    public ReliableTaskLeaseRenewCommand(
-            ReliableTaskKey key,
-            String ownerId,
-            long expectedVersion,
-            Instant now,
-            Instant leaseUntil) {
+    public ReliableTaskLeaseRenewCommand(ReliableTaskKey key, String ownerId, long expectedVersion, Instant now, Instant leaseUntil) {
         if (key == null) {
             throw new IllegalArgumentException("key must not be null");
         }
@@ -76,11 +71,8 @@ public final class ReliableTaskLeaseRenewCommand {
         if (!(object instanceof ReliableTaskLeaseRenewCommand that)) {
             return false;
         }
-        return expectedVersion == that.expectedVersion
-                && key.equals(that.key)
-                && ownerId.equals(that.ownerId)
-                && now.equals(that.now)
-                && leaseUntil.equals(that.leaseUntil);
+        return expectedVersion == that.expectedVersion && key.equals(that.key) && ownerId.equals(that.ownerId) && now.equals(that.now) &&
+            leaseUntil.equals(that.leaseUntil);
     }
 
     @Override
@@ -90,12 +82,7 @@ public final class ReliableTaskLeaseRenewCommand {
 
     @Override
     public String toString() {
-        return "ReliableTaskLeaseRenewCommand{" +
-                "key=" + key +
-                ", ownerId='" + ownerId + '\'' +
-                ", expectedVersion=" + expectedVersion +
-                ", now=" + now +
-                ", leaseUntil=" + leaseUntil +
-                '}';
+        return "ReliableTaskLeaseRenewCommand{" + "key=" + key + ", ownerId='" + ownerId + '\'' + ", expectedVersion=" + expectedVersion +
+            ", now=" + now + ", leaseUntil=" + leaseUntil + '}';
     }
 }

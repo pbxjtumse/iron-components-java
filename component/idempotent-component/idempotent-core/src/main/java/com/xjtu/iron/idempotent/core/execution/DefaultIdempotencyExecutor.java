@@ -62,10 +62,9 @@ public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
 
     /** 保持原有装配入口；内部按准备、状态调用、业务执行和结果策略分工。 */
     public DefaultIdempotencyExecutor(IdempotencyRepositoryRegistry repositoryRegistry, IdempotencyPolicyRegistry policyRegistry,
-                                      IdempotencyOwnerTokenGenerator ownerGenerator, IdempotencyFailureClassifier failureClassifier,
-                                      DistributedLockClient lockClient, IdempotencyTransactionCoordinator transactionCoordinator,
-                                      IdempotencyStateMachine stateMachine, IdempotencyEventPublisher events,
-                                      IdempotencyMetrics metrics, Clock clock) {
+        IdempotencyOwnerTokenGenerator ownerGenerator, IdempotencyFailureClassifier failureClassifier, DistributedLockClient lockClient,
+        IdempotencyTransactionCoordinator transactionCoordinator, IdempotencyStateMachine stateMachine, IdempotencyEventPublisher events,
+        IdempotencyMetrics metrics, Clock clock) {
         this.preparer = new IdempotencyExecutionPreparer(repositoryRegistry, policyRegistry);
         this.ownerGenerator = Objects.requireNonNull(ownerGenerator, "ownerGenerator must not be null");
         Objects.requireNonNull(failureClassifier, "failureClassifier must not be null");
@@ -76,12 +75,14 @@ public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
         // 固定的 Core 内部协作者在这里组合；Repository、事务等可替换依赖仍由外部传入。
         this.resultHandler = new IdempotencyResultHandler();
         this.stateOperations = new IdempotencyStateOperationExecutor(lockClient, this.events, this.clock);
-        this.businessExecutor = new IdempotencyBusinessExecutor(failureClassifier, transactionCoordinator, resultHandler, this.events, this.metrics, this.clock);
+        this.businessExecutor =
+            new IdempotencyBusinessExecutor(failureClassifier, transactionCoordinator, resultHandler, this.events, this.metrics,
+                this.clock);
     }
 
     @Override
     public <T> IdempotencyResult<T> execute(IdempotencyRequest request, IdempotencyResultPolicy<T> resultPolicy,
-                                             IdempotencyCallback<T> callback) {
+        IdempotencyCallback<T> callback) {
         Objects.requireNonNull(callback, "callback must not be null");
         Instant startedAt = Instant.now(clock);
 
@@ -105,8 +106,9 @@ public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
 
         publish(IdempotencyEventType.ACQUIRE_ATTEMPT, IdempotencyStage.ACQUIRE_STATE, policy, repository, null);
         // I2-2：经可选短锁调用原子抢占，JDBC 实现对应 Tx-A。
-        StateOperationOutcome<IdempotencyAcquireResult> invocation = stateOperations.invoke(
-                policy, repository, storage, request.getRouteKey(), request.getKey(), () -> repository.tryAcquire(acquireRequest));
+        StateOperationOutcome<IdempotencyAcquireResult> invocation =
+            stateOperations.invoke(policy, repository, storage, request.getRouteKey(), request.getKey(),
+                () -> repository.tryAcquire(acquireRequest));
         if (invocation.lockRejected()) {
             return lockRejected(invocation.error());
         }
@@ -120,7 +122,7 @@ public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
 
     @Override
     public <T> IdempotencyResult<T> recover(IdempotencyRecoveryRequest request, IdempotencyResultPolicy<T> resultPolicy,
-                                             IdempotencyCallback<T> callback) {
+        IdempotencyCallback<T> callback) {
         Objects.requireNonNull(callback, "callback must not be null");
         Instant startedAt = Instant.now(clock);
 
@@ -138,7 +140,7 @@ public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
         // recover() 是显式可靠任务入口；Policy 未允许时，不能把普通超时请求自动升级为恢复执行。
         if (!recoveryPolicy.isExternalTaskEnabled()) {
             return simple(IdempotencyResultStatus.RECOVERY_NOT_ALLOWED, IdempotencyStage.RECOVER_STATE, null,
-                    new IllegalStateException("recovery policy does not enable EXTERNAL_TASK"), false);
+                new IllegalStateException("recovery policy does not enable EXTERNAL_TASK"), false);
         }
 
         // Recovery 会产生新的 owner；expectedOwner/expectedVersion 用来确认扫描 candidate 没有过期。
@@ -147,8 +149,9 @@ public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
         IdempotencyRecoveryAcquireRequest recoveryRequest = createRecoveryRequest(request, policy, storage, newOwner);
 
         publish(IdempotencyEventType.RECOVERY_ATTEMPT, IdempotencyStage.RECOVER_STATE, policy, repository, null);
-        StateOperationOutcome<IdempotencyRecoveryResult> invocation = stateOperations.invoke(
-                policy, repository, storage, request.getRouteKey(), request.getKey(), () -> repository.tryRecover(recoveryRequest));
+        StateOperationOutcome<IdempotencyRecoveryResult> invocation =
+            stateOperations.invoke(policy, repository, storage, request.getRouteKey(), request.getKey(),
+                () -> repository.tryRecover(recoveryRequest));
         if (invocation.lockRejected()) {
             return lockRejected(invocation.error());
         }
@@ -157,7 +160,7 @@ public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
         IdempotencyStateDecision decision = stateMachine.onRecovery(recovery.getStatus());
         if (decision.action() == IdempotencyStateAction.EXECUTE) {
             return businessExecutor.executeAcquired(request.getKey(), request.getRouteKey(), definition, recovery.getRecord(), callback,
-                    startedAt, invocation.lockFallback(), true);
+                startedAt, invocation.lockFallback(), true);
         }
         if (decision.action() == IdempotencyStateAction.REPLAY) {
             return resultHandler.replay(recovery.getRecord(), definition.resultPolicy(), invocation.lockFallback());
@@ -168,32 +171,29 @@ public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
 
     /** 将策略快照组装为 Provider 入参，主流程只关注抢占与决策。 */
     private IdempotencyAcquireRequest createAcquireRequest(IdempotencyRequest request, IdempotencyPolicy policy,
-                                                           IdempotencyStorageContext storage, String ownerToken) {
-        return IdempotencyAcquireRequest.builder()
-                .storageContext(storage).namespace(policy.getNamespace()).key(request.getKey())
-                .requestHash(normalize(request.getRequestHash())).routeKey(normalize(request.getRouteKey())).ownerToken(ownerToken)
-                .mode(policy.getMode()).processingTimeout(policy.getProcessingTimeout()).idempotencyWindow(policy.getIdempotencyWindow())
-                .windowPolicy(policy.getWindowPolicy()).recordRetentionTtl(policy.getRecordRetentionTtl())
-                .recoveryMode(policy.getRecoveryPolicy().getMode()).now(Instant.now(clock)).build();
+        IdempotencyStorageContext storage, String ownerToken) {
+        return IdempotencyAcquireRequest.builder().storageContext(storage).namespace(policy.getNamespace()).key(request.getKey())
+            .requestHash(normalize(request.getRequestHash())).routeKey(normalize(request.getRouteKey())).ownerToken(ownerToken)
+            .mode(policy.getMode()).processingTimeout(policy.getProcessingTimeout()).idempotencyWindow(policy.getIdempotencyWindow())
+            .windowPolicy(policy.getWindowPolicy()).recordRetentionTtl(policy.getRecordRetentionTtl())
+            .recoveryMode(policy.getRecoveryPolicy().getMode()).now(Instant.now(clock)).build();
     }
 
     private IdempotencyRecoveryAcquireRequest createRecoveryRequest(IdempotencyRecoveryRequest request, IdempotencyPolicy policy,
-                                                                     IdempotencyStorageContext storage, String newOwner) {
+        IdempotencyStorageContext storage, String newOwner) {
         IdempotencyRecoveryPolicy recoveryPolicy = policy.getRecoveryPolicy();
-        return new IdempotencyRecoveryAcquireRequest(
-                storage, policy.getNamespace(), request.getKey(), normalize(request.getRequestHash()), normalize(request.getRouteKey()),
-                newOwner, normalize(request.getExpectedOwnerToken()), request.getExpectedVersion(), policy.getMode(),
-                policy.getProcessingTimeout(), recoveryPolicy.isRecoverProcessingTimeout(),
-                recoveryPolicy.isRecoverRetryableFailure(), Instant.now(clock));
+        return new IdempotencyRecoveryAcquireRequest(storage, policy.getNamespace(), request.getKey(), normalize(request.getRequestHash()),
+            normalize(request.getRouteKey()), newOwner, normalize(request.getExpectedOwnerToken()), request.getExpectedVersion(),
+            policy.getMode(), policy.getProcessingTimeout(), recoveryPolicy.isRecoverProcessingTimeout(),
+            recoveryPolicy.isRecoverRetryableFailure(), Instant.now(clock));
     }
 
     private <T> IdempotencyResult<T> applyAcquireDecision(IdempotencyStateDecision decision, IdempotencyRequest request,
-                                                           IdempotencyExecutionDefinition<T> definition,
-                                                           IdempotencyAcquireResult acquire, IdempotencyCallback<T> callback,
-                                                           Instant startedAt, boolean lockFallback) {
+        IdempotencyExecutionDefinition<T> definition, IdempotencyAcquireResult acquire, IdempotencyCallback<T> callback, Instant startedAt,
+        boolean lockFallback) {
         if (decision.action() == IdempotencyStateAction.EXECUTE) {
             return businessExecutor.executeAcquired(request.getKey(), request.getRouteKey(), definition, acquire.getRecord(), callback,
-                    startedAt, lockFallback, false);
+                startedAt, lockFallback, false);
         }
         if (decision.action() == IdempotencyStateAction.REPLAY) {
             return resultHandler.replay(acquire.getRecord(), definition.resultPolicy(), lockFallback);
@@ -203,26 +203,27 @@ public final class DefaultIdempotencyExecutor implements IdempotencyExecutor {
     }
 
     private <T> IdempotencyResult<T> invalid(Throwable error) {
-        return IdempotencyResult.<T>builder().status(IdempotencyResultStatus.VALIDATION_FAILED)
-                .stage(IdempotencyStage.VALIDATE).error(error).build();
+        return IdempotencyResult.<T>builder().status(IdempotencyResultStatus.VALIDATION_FAILED).stage(IdempotencyStage.VALIDATE)
+            .error(error).build();
     }
 
     private <T> IdempotencyResult<T> lockRejected(Throwable error) {
-        return IdempotencyResult.<T>builder().status(IdempotencyResultStatus.LOCK_NOT_ACQUIRED)
-                .stage(IdempotencyStage.LOCK).error(error).build();
+        return IdempotencyResult.<T>builder().status(IdempotencyResultStatus.LOCK_NOT_ACQUIRED).stage(IdempotencyStage.LOCK).error(error)
+            .build();
     }
 
-    private <T> IdempotencyResult<T> simple(IdempotencyResultStatus status, IdempotencyStage stage,
-                                             IdempotencyRecord record, Throwable error, boolean lockFallback) {
-        return IdempotencyResult.<T>builder().status(status).stage(stage).record(record).error(error)
-                .lockFallback(lockFallback).build();
+    private <T> IdempotencyResult<T> simple(IdempotencyResultStatus status, IdempotencyStage stage, IdempotencyRecord record,
+        Throwable error, boolean lockFallback) {
+        return IdempotencyResult.<T>builder().status(status).stage(stage).record(record).error(error).lockFallback(lockFallback).build();
     }
 
-    private void publish(IdempotencyEventType type, IdempotencyStage stage, IdempotencyPolicy policy,
-                         IdempotencyRepository repository, Throwable error) {
+    private void publish(IdempotencyEventType type, IdempotencyStage stage, IdempotencyPolicy policy, IdempotencyRepository repository,
+        Throwable error) {
         events.publish(new IdempotencyEvent(type, stage, policy.getMode(), repository.providerName(), Instant.now(clock), error));
     }
 
-    private String normalize(String value) { return value == null || value.isBlank() ? null : value.trim(); }
+    private String normalize(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
 
 }

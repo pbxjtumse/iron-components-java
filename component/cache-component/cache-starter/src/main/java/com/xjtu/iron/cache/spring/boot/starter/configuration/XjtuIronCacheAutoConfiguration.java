@@ -23,11 +23,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  */
 @AutoConfiguration
 @EnableConfigurationProperties(XjtuIronCacheProperties.class)
-@ConditionalOnProperty(
-        prefix = "xjtu.iron.cache",
-        name = "enabled",
-        havingValue = "true",
-        matchIfMissing = true
-)
+@ConditionalOnProperty(prefix = "xjtu.iron.cache", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class XjtuIronCacheAutoConfiguration {
 }

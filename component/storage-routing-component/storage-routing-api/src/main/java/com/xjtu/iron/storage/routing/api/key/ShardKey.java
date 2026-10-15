@@ -1,6 +1,7 @@
 package com.xjtu.iron.storage.routing.api.key;
 
 import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
+
 import java.util.Objects;
 
 /** 一个分片字段：字段名 + 带类型的值，例如 tenant_id + LONG(1001)。 */

@@ -52,14 +52,22 @@ public class CacheValue<T> {
     }
 
     /** 返回是否命中缓存。 */
-    public boolean isPresent() { return present; }
+    public boolean isPresent() {
+        return present;
+    }
 
     /** 返回是否命中空值占位。 */
-    public boolean isNullValue() { return nullValue; }
+    public boolean isNullValue() {
+        return nullValue;
+    }
 
     /** 返回缓存真实值。 */
-    public T getValue() { return value; }
+    public T getValue() {
+        return value;
+    }
 
     /** 返回命中层级。 */
-    public CacheLevel getLevel() { return level; }
+    public CacheLevel getLevel() {
+        return level;
+    }
 }

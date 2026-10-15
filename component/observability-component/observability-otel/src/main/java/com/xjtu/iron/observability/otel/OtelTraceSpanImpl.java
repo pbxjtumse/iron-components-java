@@ -58,10 +58,7 @@ public class OtelTraceSpanImpl implements ITraceSpan {
             return;
         }
 
-        if (value instanceof Byte
-                || value instanceof Short
-                || value instanceof Integer
-                || value instanceof Long) {
+        if (value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long) {
             span.setAttribute(key, value.longValue());
             return;
         }

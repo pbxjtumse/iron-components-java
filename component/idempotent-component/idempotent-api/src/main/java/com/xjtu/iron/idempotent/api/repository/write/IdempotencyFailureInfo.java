@@ -30,8 +30,19 @@ public final class IdempotencyFailureInfo {
         this.occurredAt = occurredAt;
     }
 
-    public String getCode() { return code; }
-    public String getMessage() { return message; }
-    public boolean isRetryable() { return retryable; }
-    public Instant getOccurredAt() { return occurredAt; }
+    public String getCode() {
+        return code;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public boolean isRetryable() {
+        return retryable;
+    }
+
+    public Instant getOccurredAt() {
+        return occurredAt;
+    }
 }

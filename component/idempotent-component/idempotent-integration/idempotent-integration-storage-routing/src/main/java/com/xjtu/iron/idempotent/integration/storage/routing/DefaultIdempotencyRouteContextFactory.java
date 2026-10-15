@@ -5,6 +5,7 @@ import com.xjtu.iron.idempotent.api.recovery.IdempotencyRecoveryRequest;
 import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
 import com.xjtu.iron.storage.routing.api.key.ShardKey;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
+
 import java.util.Objects;
 
 /** 默认按幂等 key 计算分片的 RouteContextFactory。
@@ -44,13 +45,8 @@ public final class DefaultIdempotencyRouteContextFactory implements IdempotencyR
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             throw new IllegalArgumentException("idempotencyKey must not be blank");
         }
-        return RouteContext.builder()
-                .routeName(storeName)
-                .logicalTable(logicalTable)
-                .shardKey(CompositeShardKey.of(ShardKey.of(IDEMPOTENCY_KEY_FIELD, idempotencyKey)))
-                .attribute("idempotency.key", idempotencyKey)
-                .attribute("idempotency.businessRouteKey", businessRouteKey)
-                .attribute("idempotency.scanBucket", scanBucket)
-                .build();
+        return RouteContext.builder().routeName(storeName).logicalTable(logicalTable)
+            .shardKey(CompositeShardKey.of(ShardKey.of(IDEMPOTENCY_KEY_FIELD, idempotencyKey))).attribute("idempotency.key", idempotencyKey)
+            .attribute("idempotency.businessRouteKey", businessRouteKey).attribute("idempotency.scanBucket", scanBucket).build();
     }
 }

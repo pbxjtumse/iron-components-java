@@ -42,8 +42,8 @@ class DefaultIdempotencyOperationsTest {
         repository.acquireStatus = IdempotencyAcquireStatus.DISCARDED;
         DefaultIdempotencyOperations operations = operations(repository);
 
-        IdempotencyOperationAcquireResult result = operations.acquire(IdempotencyOperationAcquireCommand.builder()
-                .key("msg-1").requestHash("hash").routeKey("topic-a").storageContext(STORAGE)
+        IdempotencyOperationAcquireResult result = operations.acquire(
+            IdempotencyOperationAcquireCommand.builder().key("msg-1").requestHash("hash").routeKey("topic-a").storageContext(STORAGE)
                 .ownerToken("owner-A").policyName("message").build());
 
         assertThat(result.getStatus()).isEqualTo(IdempotencyOperationAcquireStatus.DUPLICATE_DISCARDED);
@@ -56,8 +56,8 @@ class DefaultIdempotencyOperationsTest {
         StubRepository repository = new StubRepository();
         DefaultIdempotencyOperations operations = operations(repository);
 
-        IdempotencyOperationWriteResult result = operations.markDiscarded(IdempotencyCompletionCommand.builder()
-                .key("msg-1").storageContext(STORAGE).ownerToken("owner-A").version(7)
+        IdempotencyOperationWriteResult result = operations.markDiscarded(
+            IdempotencyCompletionCommand.builder().key("msg-1").storageContext(STORAGE).ownerToken("owner-A").version(7)
                 .resultPayload("DISCARDED:PERMANENT_ERROR").policyName("message").build());
 
         assertThat(result.getStatus()).isEqualTo(IdempotencyOperationWriteStatus.UPDATED);
@@ -67,12 +67,12 @@ class DefaultIdempotencyOperationsTest {
     }
 
     private DefaultIdempotencyOperations operations(StubRepository repository) {
-        IdempotencyPolicy policy = IdempotencyPolicy.builder().name("message").mode(IdempotencyMode.DURABLE)
-                .namespace("message-consume").repositoryName("stub").build();
-        return new DefaultIdempotencyOperations(
-                new DefaultIdempotencyRepositoryRegistry(List.of(repository), "stub", "stub"),
-                new DefaultIdempotencyPolicyRegistry(List.of(policy), "message"),
-                Clock.fixed(Instant.parse("2026-09-03T00:00:00Z"), ZoneOffset.UTC));
+        IdempotencyPolicy policy =
+            IdempotencyPolicy.builder().name("message").mode(IdempotencyMode.DURABLE).namespace("message-consume").repositoryName("stub")
+                .build();
+        return new DefaultIdempotencyOperations(new DefaultIdempotencyRepositoryRegistry(List.of(repository), "stub", "stub"),
+            new DefaultIdempotencyPolicyRegistry(List.of(policy), "message"),
+            Clock.fixed(Instant.parse("2026-09-03T00:00:00Z"), ZoneOffset.UTC));
     }
 
     private static final class StubRepository implements IdempotencyRepository {
@@ -80,17 +80,22 @@ class DefaultIdempotencyOperationsTest {
         private IdempotencyAcquireRequest lastAcquire;
         private IdempotencyDiscardRequest lastDiscard;
 
-        @Override public String providerName() { return "stub"; }
+        @Override
+        public String providerName() {
+            return "stub";
+        }
+
         @Override
         public IdempotencyRepositoryCapabilities capabilities() {
-            return IdempotencyRepositoryCapabilities.builder().durableSupported(true).windowedSupported(true)
-                    .resultPayloadSupported(true).build();
+            return IdempotencyRepositoryCapabilities.builder().durableSupported(true).windowedSupported(true).resultPayloadSupported(true)
+                .build();
         }
 
         @Override
         public IdempotencyAcquireResult tryAcquire(IdempotencyAcquireRequest request) {
             this.lastAcquire = request;
-            return IdempotencyAcquireResult.of(acquireStatus, record(request.getStorageContext(), request.getNamespace(), request.getKey()));
+            return IdempotencyAcquireResult.of(acquireStatus,
+                record(request.getStorageContext(), request.getNamespace(), request.getKey()));
         }
 
         @Override
@@ -100,20 +105,22 @@ class DefaultIdempotencyOperationsTest {
 
         @Override
         public IdempotencyWriteResult markSuccess(IdempotencySuccessRequest request) {
-            return IdempotencyWriteResult.of(IdempotencyWriteStatus.UPDATED, record(request.getStorageContext(), request.getNamespace(), request.getKey()));
+            return IdempotencyWriteResult.of(IdempotencyWriteStatus.UPDATED,
+                record(request.getStorageContext(), request.getNamespace(), request.getKey()));
         }
 
         @Override
         public IdempotencyWriteResult markFailed(IdempotencyFailureRequest request) {
-            return IdempotencyWriteResult.of(IdempotencyWriteStatus.UPDATED, record(request.getStorageContext(), request.getNamespace(), request.getKey()));
+            return IdempotencyWriteResult.of(IdempotencyWriteStatus.UPDATED,
+                record(request.getStorageContext(), request.getNamespace(), request.getKey()));
         }
 
         @Override
         public IdempotencyWriteResult markDiscarded(IdempotencyDiscardRequest request) {
             this.lastDiscard = request;
-            IdempotencyRecord record = IdempotencyRecord.builder().storeName(request.getStorageContext().getStoreName()).scanBucket(request.getStorageContext().getScanBucket())
-                    .namespace(request.getNamespace()).key(request.getKey()).status(IdempotencyStatus.DISCARDED)
-                    .ownerToken(request.getOwnerToken()).version(request.getVersion()).build();
+            IdempotencyRecord record = IdempotencyRecord.builder().storeName(request.getStorageContext().getStoreName())
+                .scanBucket(request.getStorageContext().getScanBucket()).namespace(request.getNamespace()).key(request.getKey())
+                .status(IdempotencyStatus.DISCARDED).ownerToken(request.getOwnerToken()).version(request.getVersion()).build();
             return IdempotencyWriteResult.of(IdempotencyWriteStatus.UPDATED, record);
         }
 
@@ -123,9 +130,8 @@ class DefaultIdempotencyOperationsTest {
         }
 
         private IdempotencyRecord record(IdempotencyStorageContext storage, String namespace, String key) {
-            return IdempotencyRecord.builder().storeName(storage.getStoreName()).scanBucket(storage.getScanBucket())
-                    .namespace(namespace).key(key).status(IdempotencyStatus.PROCESSING)
-                    .ownerToken("owner-A").version(1).build();
+            return IdempotencyRecord.builder().storeName(storage.getStoreName()).scanBucket(storage.getScanBucket()).namespace(namespace)
+                .key(key).status(IdempotencyStatus.PROCESSING).ownerToken("owner-A").version(1).build();
         }
     }
 }

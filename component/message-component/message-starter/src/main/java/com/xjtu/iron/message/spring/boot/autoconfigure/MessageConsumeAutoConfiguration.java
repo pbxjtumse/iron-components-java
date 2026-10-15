@@ -52,10 +52,8 @@ public class MessageConsumeAutoConfiguration {
     public MessageConsumeTransactionExecutor messageConsumeTransactionExecutor(MessageProperties properties) {
         MessageConsumeTransactionProperties transaction = properties.getConsume().getTransaction();
         if (transaction.isEnabled() && transaction.isRequired()) {
-            throw new IllegalStateException(
-                    "xjtu.iron.message.consume.transaction.enabled=true and required=true, "
-                            + "but MessageConsumeTransactionExecutor is missing. "
-                            + "Please add a transaction integration bean or disable required.");
+            throw new IllegalStateException("xjtu.iron.message.consume.transaction.enabled=true and required=true, " +
+                "but MessageConsumeTransactionExecutor is missing. " + "Please add a transaction integration bean or disable required.");
         }
         return new NoopMessageConsumeTransactionExecutor();
     }
@@ -69,26 +67,21 @@ public class MessageConsumeAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public MessageIdempotencyContextFactory messageIdempotencyContextFactory(MessageComponentOptions options) {
-        return new DefaultMessageIdempotencyContextFactory(
-                new DefaultMessageIdempotencySceneResolver(),
-                new DefaultMessageIdempotencyKeyResolver(),
-                new MessageIdempotencyOwnerTokenGenerator(),
-                options.clock());
+        return new DefaultMessageIdempotencyContextFactory(new DefaultMessageIdempotencySceneResolver(),
+            new DefaultMessageIdempotencyKeyResolver(), new MessageIdempotencyOwnerTokenGenerator(), options.clock());
     }
 
     @Bean
     @ConditionalOnBean(MessageIdempotentOperations.class)
     @ConditionalOnMissingBean
-    public MessageIdempotencyStateManager messageIdempotencyStateManager(
-            MessageIdempotentOperations operations) {
+    public MessageIdempotencyStateManager messageIdempotencyStateManager(MessageIdempotentOperations operations) {
         return new DefaultMessageIdempotencyStateManager(operations);
     }
 
     @Bean
     @ConditionalOnBean(MessageIdempotencyStateManager.class)
     @ConditionalOnMissingBean
-    public MessageIdempotencyDecisionHandler messageIdempotencyDecisionHandler(
-            MessageIdempotencyStateManager stateManager) {
+    public MessageIdempotencyDecisionHandler messageIdempotencyDecisionHandler(MessageIdempotencyStateManager stateManager) {
         return new MessageIdempotencyDecisionHandler(stateManager);
     }
 
@@ -97,27 +90,21 @@ public class MessageConsumeAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public MessageIdempotencyExecutor messageIdempotencyExecutor(
-            MessageProperties properties,
-            MessageIdempotencyContextFactory contextFactory,
-            ObjectProvider<MessageIdempotencyStateManager> stateManagerProvider,
-            ObjectProvider<MessageIdempotencyDecisionHandler> decisionHandlerProvider) {
+    public MessageIdempotencyExecutor messageIdempotencyExecutor(MessageProperties properties,
+        MessageIdempotencyContextFactory contextFactory, ObjectProvider<MessageIdempotencyStateManager> stateManagerProvider,
+        ObjectProvider<MessageIdempotencyDecisionHandler> decisionHandlerProvider) {
         MessageConsumeIdempotencyProperties idempotency = properties.getConsume().getIdempotency();
         MessageIdempotencyStateManager stateManager = stateManagerProvider.getIfAvailable();
         MessageIdempotencyDecisionHandler decisionHandler = decisionHandlerProvider.getIfAvailable();
         if (stateManager == null || decisionHandler == null) {
             if (idempotency.isEnabled()) {
                 throw new IllegalStateException(
-                        "xjtu.iron.message.consume.idempotency.enabled=true, "
-                                + "but MessageIdempotentOperations is missing. "
-                                + "Please add an idempotent integration bean or disable consume idempotency.");
+                    "xjtu.iron.message.consume.idempotency.enabled=true, " + "but MessageIdempotentOperations is missing. " +
+                        "Please add an idempotent integration bean or disable consume idempotency.");
             }
             return new NoopMessageIdempotencyExecutor();
         }
-        return new DefaultMessageIdempotencyExecutor(
-                contextFactory,
-                stateManager,
-                decisionHandler);
+        return new DefaultMessageIdempotencyExecutor(contextFactory, stateManager, decisionHandler);
     }
 
     @Bean
@@ -128,22 +115,15 @@ public class MessageConsumeAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public MessageConsumeExecutor messageConsumeExecutor(
-            IdempotencyStrategy idempotencyStrategy,
-            TransactionStrategy transactionStrategy,
-            MessageHandlerInvoker handlerInvoker) {
-        return new MessageConsumeExecutor(
-                idempotencyStrategy,
-                transactionStrategy,
-                handlerInvoker);
+    public MessageConsumeExecutor messageConsumeExecutor(IdempotencyStrategy idempotencyStrategy, TransactionStrategy transactionStrategy,
+        MessageHandlerInvoker handlerInvoker) {
+        return new MessageConsumeExecutor(idempotencyStrategy, transactionStrategy, handlerInvoker);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public MessageConsumerAdapter messageConsumerAdapter(
-            MessageWireCodec wireCodec,
-            MessageConsumeExecutor consumeExecutor,
-            MessageContextAccessor contextAccessor) {
+    public MessageConsumerAdapter messageConsumerAdapter(MessageWireCodec wireCodec, MessageConsumeExecutor consumeExecutor,
+        MessageContextAccessor contextAccessor) {
         return new MessageConsumerAdapter(wireCodec, consumeExecutor, contextAccessor);
     }
 }

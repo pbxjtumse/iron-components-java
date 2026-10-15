@@ -77,28 +77,12 @@ public final class DefaultTaskResultPipeline implements TaskResultPipeline {
      * @param timeoutScheduler 结果层超时调度器
      * @param fallbackExecutor fallback 专用执行器
      */
-    public DefaultTaskResultPipeline(
-            AsyncErrorClassifier errorClassifier,
-            TaskLifecyclePublisher lifecyclePublisher,
-            ScheduledExecutorService timeoutScheduler,
-            Executor fallbackExecutor
-    ) {
-        this.errorClassifier = Objects.requireNonNull(
-                errorClassifier,
-                "errorClassifier must not be null"
-        );
-        this.lifecyclePublisher = Objects.requireNonNull(
-                lifecyclePublisher,
-                "lifecyclePublisher must not be null"
-        );
-        this.timeoutScheduler = Objects.requireNonNull(
-                timeoutScheduler,
-                "timeoutScheduler must not be null"
-        );
-        this.fallbackExecutor = Objects.requireNonNull(
-                fallbackExecutor,
-                "fallbackExecutor must not be null"
-        );
+    public DefaultTaskResultPipeline(AsyncErrorClassifier errorClassifier, TaskLifecyclePublisher lifecyclePublisher,
+        ScheduledExecutorService timeoutScheduler, Executor fallbackExecutor) {
+        this.errorClassifier = Objects.requireNonNull(errorClassifier, "errorClassifier must not be null");
+        this.lifecyclePublisher = Objects.requireNonNull(lifecyclePublisher, "lifecyclePublisher must not be null");
+        this.timeoutScheduler = Objects.requireNonNull(timeoutScheduler, "timeoutScheduler must not be null");
+        this.fallbackExecutor = Objects.requireNonNull(fallbackExecutor, "fallbackExecutor must not be null");
     }
 
     /**
@@ -142,11 +126,7 @@ public final class DefaultTaskResultPipeline implements TaskResultPipeline {
      * @param <T> 任务结果类型
      * @return 带结果层超时能力的新 Future
      */
-    private <T> CompletableFuture<T> applyTimeout(
-            TaskExecutionContext<T> context,
-            TaskCommand<T> command,
-            CompletableFuture<T> source
-    ) {
+    private <T> CompletableFuture<T> applyTimeout(TaskExecutionContext<T> context, TaskCommand<T> command, CompletableFuture<T> source) {
         Duration timeout = context.getTask().getTimeout();
         //创建一个新的Future
         CompletableFuture<T> result = new CompletableFuture<>();
@@ -154,11 +134,8 @@ public final class DefaultTaskResultPipeline implements TaskResultPipeline {
         final ScheduledFuture<?> timeoutFuture;
         try {
             //1 此处存在并发情况 只有 timeout 真正抢到了原始任务结果，才能尝试中断底层线程。
-            timeoutFuture = timeoutScheduler.schedule(
-                    () -> handleTimeout(context, command, result, timeout),
-                    timeout.toMillis(),
-                    TimeUnit.MILLISECONDS
-            );
+            timeoutFuture = timeoutScheduler.schedule(() -> handleTimeout(context, command, result, timeout), timeout.toMillis(),
+                TimeUnit.MILLISECONDS);
         } catch (RejectedExecutionException schedulerRejected) {
             /*
              * 超时调度器通常只会在应用关闭阶段拒绝。此时不能把“调度器拒绝”伪造成原始任务失败或触发 fallback，否则原始任务稍后成功时会出现
@@ -174,9 +151,7 @@ public final class DefaultTaskResultPipeline implements TaskResultPipeline {
                 completed = result.complete(value);
             } else {
                 Throwable unwrapped = CompletableFutureExceptionUtils.unwrap(throwable);
-                completed = unwrapped instanceof CancellationException
-                        ? result.cancel(false)
-                        : result.completeExceptionally(unwrapped);
+                completed = unwrapped instanceof CancellationException ? result.cancel(false) : result.completeExceptionally(unwrapped);
             }
 
             if (completed) {
@@ -200,27 +175,18 @@ public final class DefaultTaskResultPipeline implements TaskResultPipeline {
      * @param timeout 配置的超时时间
      * @param <T> 任务结果类型
      */
-    private <T> void handleTimeout(TaskExecutionContext<T> context,
-            TaskCommand<T> command,
-            CompletableFuture<T> result,
-            Duration timeout
-    ) {
+    private <T> void handleTimeout(TaskExecutionContext<T> context, TaskCommand<T> command, CompletableFuture<T> result, Duration timeout) {
         if (result.isDone()) {
             return;
         }
         //设置超时时间
-        TimeoutException timeoutException = new TimeoutException(
-                "Async task result timeout after " + timeout.toMillis() + " ms"
-        );
+        TimeoutException timeoutException = new TimeoutException("Async task result timeout after " + timeout.toMillis() + " ms");
 
         /*
          * TaskCommand 内部通过 CAS 判断超时路径是否首次确定原始任务结果。
          * 只有 timeoutWon=true 才能发布 TIMEOUT 并尝试中断底层线程。
          */
-        boolean timeoutWon = command.completeTimeout(
-                timeoutException,
-                AsyncErrorStage.WAIT_RESULT
-        );
+        boolean timeoutWon = command.completeTimeout(timeoutException, AsyncErrorStage.WAIT_RESULT);
         //若是发生超时 需要中断原始任务
         if (timeoutWon && context.getTask().isCancelOnTimeout()) {
             command.interruptRunningIfNecessary(context.getTask().isInterruptOnTimeout());
@@ -256,9 +222,8 @@ public final class DefaultTaskResultPipeline implements TaskResultPipeline {
              * 主动取消默认不触发 fallback。取消是调用方明确终止任务的控制语义，
              * 不应被降级值重新转换成“成功”。
              */
-            if (source.isCancelled()
-                    || unwrapped instanceof CancellationException
-                    || context.getRuntime().getStatus() == AsyncTaskStatus.CANCELLED) {
+            if (source.isCancelled() || unwrapped instanceof CancellationException ||
+                context.getRuntime().getStatus() == AsyncTaskStatus.CANCELLED) {
                 result.cancel(false);
                 return;
             }
@@ -297,12 +262,8 @@ public final class DefaultTaskResultPipeline implements TaskResultPipeline {
 
         private final CompletableFuture<T> result;
 
-        private FallbackTask(
-                TaskExecutionContext<T> context,
-                Throwable originalThrowable,
-                AsyncError originalError,
-                CompletableFuture<T> result
-        ) {
+        private FallbackTask(TaskExecutionContext<T> context, Throwable originalThrowable, AsyncError originalError,
+            CompletableFuture<T> result) {
             this.context = context;
             this.originalThrowable = originalThrowable;
             this.originalError = originalError;
@@ -329,12 +290,8 @@ public final class DefaultTaskResultPipeline implements TaskResultPipeline {
      * @param result 最终返回给调用方的 Future
      * @param <T> 任务结果类型
      */
-    private <T> void executeFallback(
-            TaskExecutionContext<T> context,
-            Throwable originalThrowable,
-            AsyncError originalError,
-            CompletableFuture<T> result
-    ) {
+    private <T> void executeFallback(TaskExecutionContext<T> context, Throwable originalThrowable, AsyncError originalError,
+        CompletableFuture<T> result) {
         Throwable fallbackInput = CompletableFutureExceptionUtils.rootCause(originalThrowable);
 
         if (fallbackInput == null) {
@@ -347,9 +304,7 @@ public final class DefaultTaskResultPipeline implements TaskResultPipeline {
             T fallbackValue = context.getTask().getFallback().apply(fallbackInput);
 
             if (context.getRuntime().tryFinalize(AsyncTaskStatus.FALLBACK_SUCCESS)) {
-                TaskExecutionEvent successEvent = context.event(AsyncTaskStatus.FALLBACK_SUCCESS, originalError,
-                        "Fallback success"
-                );
+                TaskExecutionEvent successEvent = context.event(AsyncTaskStatus.FALLBACK_SUCCESS, originalError, "Fallback success");
 
                 lifecyclePublisher.publish(successEvent);
                 lifecyclePublisher.publishCompleted(successEvent);
@@ -371,40 +326,21 @@ public final class DefaultTaskResultPipeline implements TaskResultPipeline {
      * @param message 事件说明
      * @param <T> 任务结果类型
      */
-    private <T> void completeFallbackFailure(
-            TaskExecutionContext<T> context,
-            Throwable fallbackThrowable,
-            CompletableFuture<T> result,
-            String message
-    ) {
-        if (context.getRuntime().getStatus() == AsyncTaskStatus.CANCELLED
-                || result.isCancelled()) {
+    private <T> void completeFallbackFailure(TaskExecutionContext<T> context, Throwable fallbackThrowable, CompletableFuture<T> result,
+        String message) {
+        if (context.getRuntime().getStatus() == AsyncTaskStatus.CANCELLED || result.isCancelled()) {
             result.cancel(false);
             return;
         }
 
-        AsyncError fallbackError = errorClassifier.classify(
-                context.getMetadata(),
-                fallbackThrowable,
-                AsyncErrorStage.FALLBACK
-        );
+        AsyncError fallbackError = errorClassifier.classify(context.getMetadata(), fallbackThrowable, AsyncErrorStage.FALLBACK);
 
-        AsyncTaskException fallbackException = new AsyncTaskException(
-                context.getTask().getExecutorName(),
-                context.getTask().getTaskName(),
-                context.getTask().getTaskId(),
-                fallbackError,
-                fallbackThrowable
-        );
+        AsyncTaskException fallbackException =
+            new AsyncTaskException(context.getTask().getExecutorName(), context.getTask().getTaskName(), context.getTask().getTaskId(),
+                fallbackError, fallbackThrowable);
 
-        if (context.getRuntime().tryFinalize(
-                AsyncTaskStatus.FALLBACK_FAILED
-        )) {
-            TaskExecutionEvent failureEvent = context.event(
-                    AsyncTaskStatus.FALLBACK_FAILED,
-                    fallbackError,
-                    message
-            );
+        if (context.getRuntime().tryFinalize(AsyncTaskStatus.FALLBACK_FAILED)) {
+            TaskExecutionEvent failureEvent = context.event(AsyncTaskStatus.FALLBACK_FAILED, fallbackError, message);
 
             lifecyclePublisher.publish(failureEvent);
             lifecyclePublisher.publishCompleted(failureEvent);
@@ -428,8 +364,7 @@ public final class DefaultTaskResultPipeline implements TaskResultPipeline {
     private AsyncError resolveOriginalError(TaskExecutionContext<?> context, Throwable throwable) {
         Throwable unwrapped = CompletableFutureExceptionUtils.unwrap(throwable);
 
-        if (unwrapped instanceof ConcurrencyException concurrencyException
-                && concurrencyException.getError() != null) {
+        if (unwrapped instanceof ConcurrencyException concurrencyException && concurrencyException.getError() != null) {
             return concurrencyException.getError().copy();
         }
 
@@ -442,9 +377,7 @@ public final class DefaultTaskResultPipeline implements TaskResultPipeline {
      * @param context 单次任务执行上下文
      * @return 推断出的错误阶段
      */
-    private AsyncErrorStage originalErrorStage(
-            TaskExecutionContext<?> context
-    ) {
+    private AsyncErrorStage originalErrorStage(TaskExecutionContext<?> context) {
         AsyncTaskStatus status = context.getRuntime().getStatus();
 
         if (status == null) {

@@ -9,29 +9,14 @@ public final class TestExecutors {
     }
 
     public static ThreadPoolExecutor singleThreadWithQueue(int queueCapacity) {
-        return new ThreadPoolExecutor(
-                1,
-                1,
-                0L,
-                TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<>(queueCapacity),
-                namedThreadFactory("test-single-"),
-                new ThreadPoolExecutor.AbortPolicy()
-        );
+        return new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(queueCapacity),
+            namedThreadFactory("test-single-"), new ThreadPoolExecutor.AbortPolicy());
     }
 
-    public static ThreadPoolExecutor saturatedExecutor(
-            RejectedExecutionHandler handler
-    ) {
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(
-                1,
-                1,
-                0L,
-                TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<>(1),
-                namedThreadFactory("test-saturated-"),
-                handler
-        );
+    public static ThreadPoolExecutor saturatedExecutor(RejectedExecutionHandler handler) {
+        ThreadPoolExecutor executor =
+            new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1), namedThreadFactory("test-saturated-"),
+                handler);
 
         CountDownLatch blocker = new CountDownLatch(1);
 

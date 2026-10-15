@@ -32,10 +32,8 @@ public class XjtuIronConcurrencyContextAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ContextAwareTaskDecorator contextAwareTaskDecorator(
-            XjtuIronConcurrencyProperties properties,
-            ObjectProvider<ContextPropagator> contextPropagators
-    ) {
+    public ContextAwareTaskDecorator contextAwareTaskDecorator(XjtuIronConcurrencyProperties properties,
+        ObjectProvider<ContextPropagator> contextPropagators) {
         if (!properties.getContext().isEnabled()) {
             return new DefaultContextAwareTaskDecorator(new NoopContextPropagator());
         }

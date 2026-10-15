@@ -30,11 +30,8 @@ class MessageSendAutoConfigurationTest {
         ObjectProvider<RetryPolicyRegistry> retryPolicyRegistryProvider = beanFactory.getBeanProvider(RetryPolicyRegistry.class);
 
         IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> configuration.messageSendExecutor(
-                        options(),
-                        MessageSendReliabilityOptions.defaults(),
-                        retryExecutorProvider,
-                        retryPolicyRegistryProvider));
+            () -> configuration.messageSendExecutor(options(), MessageSendReliabilityOptions.defaults(), retryExecutorProvider,
+                retryPolicyRegistryProvider));
 
         assertTrue(exception.getMessage().contains("RetryExecutor or RetryPolicyRegistry is missing"));
     }
@@ -46,22 +43,15 @@ class MessageSendAutoConfigurationTest {
         ObjectProvider<RetryExecutor> retryExecutorProvider = beanFactory.getBeanProvider(RetryExecutor.class);
         ObjectProvider<RetryPolicyRegistry> retryPolicyRegistryProvider = beanFactory.getBeanProvider(RetryPolicyRegistry.class);
 
-        MessageSendExecutor executor = configuration.messageSendExecutor(
-                options(),
-                MessageSendReliabilityOptions.disabled(),
-                retryExecutorProvider,
+        MessageSendExecutor executor =
+            configuration.messageSendExecutor(options(), MessageSendReliabilityOptions.disabled(), retryExecutorProvider,
                 retryPolicyRegistryProvider);
 
         assertTrue(executor instanceof DirectMessageSender);
     }
 
     private static MessageComponentOptions options() {
-        return new MessageComponentOptions(
-                "fake",
-                "message-starter-test",
-                "1",
-                Duration.ofSeconds(3),
-                DestinationRoutingMode.STRICT,
-                Clock.systemUTC());
+        return new MessageComponentOptions("fake", "message-starter-test", "1", Duration.ofSeconds(3), DestinationRoutingMode.STRICT,
+            Clock.systemUTC());
     }
 }

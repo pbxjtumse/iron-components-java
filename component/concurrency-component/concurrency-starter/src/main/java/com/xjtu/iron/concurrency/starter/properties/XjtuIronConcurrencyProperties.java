@@ -389,32 +389,19 @@ public class XjtuIronConcurrencyProperties {
                 throw new IllegalArgumentException("pipeline.fallbackCorePoolSize must be greater than 0");
             }
             if (fallbackMaxPoolSize < fallbackCorePoolSize) {
-                throw new IllegalArgumentException(
-                        "pipeline.fallbackMaxPoolSize must be greater than or equal to fallbackCorePoolSize"
-                );
+                throw new IllegalArgumentException("pipeline.fallbackMaxPoolSize must be greater than or equal to fallbackCorePoolSize");
             }
             if (fallbackQueueCapacity <= 0) {
                 throw new IllegalArgumentException("pipeline.fallbackQueueCapacity must be greater than 0");
             }
-            if (fallbackKeepAliveTime == null
-                    || fallbackKeepAliveTime.isZero()
-                    || fallbackKeepAliveTime.isNegative()) {
-                throw new IllegalArgumentException(
-                        "pipeline.fallbackKeepAliveTime must be greater than 0"
-                );
+            if (fallbackKeepAliveTime == null || fallbackKeepAliveTime.isZero() || fallbackKeepAliveTime.isNegative()) {
+                throw new IllegalArgumentException("pipeline.fallbackKeepAliveTime must be greater than 0");
             }
-            if (fallbackAwaitTermination == null
-                    || fallbackAwaitTermination.isZero()
-                    || fallbackAwaitTermination.isNegative()) {
-                throw new IllegalArgumentException(
-                        "pipeline.fallbackAwaitTermination must be greater than 0"
-                );
+            if (fallbackAwaitTermination == null || fallbackAwaitTermination.isZero() || fallbackAwaitTermination.isNegative()) {
+                throw new IllegalArgumentException("pipeline.fallbackAwaitTermination must be greater than 0");
             }
-            if (fallbackRejectionPolicy != RejectionPolicy.ABORT
-                    && fallbackRejectionPolicy != RejectionPolicy.CALLER_RUNS) {
-                throw new IllegalArgumentException(
-                        "pipeline.fallbackRejectionPolicy only supports ABORT or CALLER_RUNS"
-                );
+            if (fallbackRejectionPolicy != RejectionPolicy.ABORT && fallbackRejectionPolicy != RejectionPolicy.CALLER_RUNS) {
+                throw new IllegalArgumentException("pipeline.fallbackRejectionPolicy only supports ABORT or CALLER_RUNS");
             }
         }
     }

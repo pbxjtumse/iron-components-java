@@ -43,10 +43,8 @@ public class XjtuIronConcurrencyObservabilityAutoConfiguration {
         return meterRegistry -> threadPoolRegistry.snapshot().forEach((poolName, executor) -> {
             Tags tags = Tags.of("component", "xjtu-iron-concurrency", "pool", poolName);
             for (ThreadPoolMetricName metricName : ThreadPoolMetricName.values()) {
-                Gauge.builder(metricName.meterName(), executor, metricName::value)
-                        .description(metricName.description())
-                        .tags(tags)
-                        .register(meterRegistry);
+                Gauge.builder(metricName.meterName(), executor, metricName::value).description(metricName.description()).tags(tags)
+                    .register(meterRegistry);
             }
         });
     }

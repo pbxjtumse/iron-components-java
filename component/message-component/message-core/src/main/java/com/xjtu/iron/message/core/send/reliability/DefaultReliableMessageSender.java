@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.*;
+
 /**
  * 基于 retry-component 的可靠发送执行器，是 message-component 二期发送可靠性的核心类。
  *
@@ -48,19 +49,11 @@ public final class DefaultReliableMessageSender implements MessageSendExecutor {
     /** 异步发送包装执行器。 */
     private final Executor asyncExecutor;
 
-    public DefaultReliableMessageSender(
-            RetryExecutor retryExecutor,
-            RetryPolicyRegistry retryPolicyRegistry,
-            MessageSendReliabilityOptions reliabilityOptions,
-            Clock clock,
-            Executor asyncExecutor) {
+    public DefaultReliableMessageSender(RetryExecutor retryExecutor, RetryPolicyRegistry retryPolicyRegistry,
+        MessageSendReliabilityOptions reliabilityOptions, Clock clock, Executor asyncExecutor) {
         this.retryExecutor = Objects.requireNonNull(retryExecutor, "retryExecutor must not be null");
-        this.retryPolicyRegistry = Objects.requireNonNull(
-                retryPolicyRegistry,
-                "retryPolicyRegistry must not be null");
-        this.reliabilityOptions = Objects.requireNonNull(
-                reliabilityOptions,
-                "reliabilityOptions must not be null");
+        this.retryPolicyRegistry = Objects.requireNonNull(retryPolicyRegistry, "retryPolicyRegistry must not be null");
+        this.reliabilityOptions = Objects.requireNonNull(reliabilityOptions, "reliabilityOptions must not be null");
         this.clock = Objects.requireNonNull(clock, "clock must not be null");
         this.asyncExecutor = Objects.requireNonNull(asyncExecutor, "asyncExecutor must not be null");
     }
@@ -73,11 +66,9 @@ public final class DefaultReliableMessageSender implements MessageSendExecutor {
         // 复用 retry-component 中名为 message-send 的基础策略，但替换为消息发送专用分类器。
         RetryPolicy retryPolicy = createMessageSendPolicy();
         RetryExecution<ProviderSendResult> execution = RetryExecution
-                // retry-component 只看到一次“发送操作”，真正的 Provider 发送细节仍由 message-component 封装。
-                .builder("message-send", context -> doProviderSendAttempt(prepared), retryPolicy)
-                .retryId(retryId)
-                .attributes(retryAttributes(prepared))
-                .build();
+            // retry-component 只看到一次“发送操作”，真正的 Provider 发送细节仍由 message-component 封装。
+            .builder("message-send", context -> doProviderSendAttempt(prepared), retryPolicy).retryId(retryId)
+            .attributes(retryAttributes(prepared)).build();
         RetryResult<ProviderSendResult> retryResult = retryExecutor.execute(execution);
         return mapRetryResult(prepared, retryResult);
     }
@@ -97,30 +88,22 @@ public final class DefaultReliableMessageSender implements MessageSendExecutor {
             CompletionStage<ProviderSendResult> providerStage = prepared.provider().send(prepared.request());
             if (providerStage == null) {
                 return ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.CLIENT_ERROR,
-                        "provider returned null completion stage");
+                    "provider returned null completion stage");
             }
             // confirmTimeout 控制单次 attempt 等待 Broker 确认的最长时间；超时后返回 UNKNOWN，默认不继续重试。
-            ProviderSendResult providerResult = providerStage.toCompletableFuture().get(
-                    prepared.confirmTimeout().toMillis(),
-                    TimeUnit.MILLISECONDS);
+            ProviderSendResult providerResult =
+                providerStage.toCompletableFuture().get(prepared.confirmTimeout().toMillis(), TimeUnit.MILLISECONDS);
             if (providerResult == null) {
-                return ProviderSendResult.failed(
-                        SendStatus.FAILED,
-                        SendFailureType.CLIENT_ERROR,
-                        "provider returned null send result");
+                return ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.CLIENT_ERROR, "provider returned null send result");
             }
             return providerResult;
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
-            return ProviderSendResult.failed(
-                    SendStatus.UNKNOWN,
-                    SendFailureType.INTERRUPTED,
-                    "thread interrupted while waiting for send confirmation");
+            return ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.INTERRUPTED,
+                "thread interrupted while waiting for send confirmation");
         } catch (TimeoutException exception) {
-            return ProviderSendResult.failed(
-                    SendStatus.UNKNOWN,
-                    SendFailureType.TIMEOUT,
-                    "send confirmation timeout after " + prepared.confirmTimeout());
+            return ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.TIMEOUT,
+                "send confirmation timeout after " + prepared.confirmTimeout());
         } catch (ExecutionException exception) {
             return classifyProviderThrowable(unwrap(exception));
         } catch (RuntimeException exception) {
@@ -134,27 +117,16 @@ public final class DefaultReliableMessageSender implements MessageSendExecutor {
     private ProviderSendResult classifyProviderThrowable(Throwable throwable) {
         if (throwable instanceof InterruptedException) {
             Thread.currentThread().interrupt();
-            return ProviderSendResult.failed(
-                    SendStatus.UNKNOWN,
-                    SendFailureType.INTERRUPTED,
-                    throwable.getMessage());
+            return ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.INTERRUPTED, throwable.getMessage());
         }
         if (throwable instanceof TimeoutException) {
-            return ProviderSendResult.failed(
-                    SendStatus.UNKNOWN,
-                    SendFailureType.TIMEOUT,
-                    throwable.getMessage());
+            return ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.TIMEOUT, throwable.getMessage());
         }
         if (throwable instanceof IOException) {
-            return ProviderSendResult.failed(
-                    SendStatus.FAILED,
-                    SendFailureType.NETWORK_ERROR,
-                    throwable.getMessage());
+            return ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.NETWORK_ERROR, throwable.getMessage());
         }
-        return ProviderSendResult.failed(
-                SendStatus.UNKNOWN,
-                SendFailureType.UNKNOWN_OUTCOME,
-                throwable == null ? "unknown provider failure" : throwable.getMessage());
+        return ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.UNKNOWN_OUTCOME,
+            throwable == null ? "unknown provider failure" : throwable.getMessage());
     }
 
     /**
@@ -162,39 +134,29 @@ public final class DefaultReliableMessageSender implements MessageSendExecutor {
      */
     private RetryPolicy createMessageSendPolicy() {
         RetryPolicy basePolicy = retryPolicyRegistry.getRequired(reliabilityOptions.retryPolicyName());
-        return RetryPolicy.builder(basePolicy.getPolicyName())
-                .maxAttempts(basePolicy.getMaxAttempts())
-                .maxDuration(basePolicy.getMaxDuration())
-                .operationSafety(basePolicy.getOperationSafety())
-                .safetyMode(basePolicy.getSafetyMode())
-                .traverseCauses(basePolicy.isTraverseCauses())
-                .maxCauseDepth(basePolicy.getMaxCauseDepth())
-                .backoffStrategy(basePolicy.getBackoffStrategy())
-                .classifier(new MessageSendRetryClassifier(reliabilityOptions.retryWhenUnknown()))
-                .build();
+        return RetryPolicy.builder(basePolicy.getPolicyName()).maxAttempts(basePolicy.getMaxAttempts())
+            .maxDuration(basePolicy.getMaxDuration()).operationSafety(basePolicy.getOperationSafety())
+            .safetyMode(basePolicy.getSafetyMode()).traverseCauses(basePolicy.isTraverseCauses())
+            .maxCauseDepth(basePolicy.getMaxCauseDepth()).backoffStrategy(basePolicy.getBackoffStrategy())
+            .classifier(new MessageSendRetryClassifier(reliabilityOptions.retryWhenUnknown())).build();
     }
 
-    private SendResult mapRetryResult(
-            PreparedMessageSend prepared,
-            RetryResult<ProviderSendResult> retryResult) {
+    private SendResult mapRetryResult(PreparedMessageSend prepared, RetryResult<ProviderSendResult> retryResult) {
         SendReliabilityInfo reliabilityInfo = reliabilityInfo(retryResult);
         return switch (retryResult.getStatus()) {
             case SUCCESS -> mapProviderResult(prepared, retryResult.getValue(), reliabilityInfo);
             case EXHAUSTED -> retryExhaustedResult(prepared, retryResult, reliabilityInfo);
             case NOT_RETRYABLE -> notRetryableResult(prepared, retryResult, reliabilityInfo);
-            case TIMED_OUT -> failureResult(prepared, SendStatus.UNKNOWN, SendStage.RETRY,
-                    SendFailureType.TIMEOUT, "retry max duration timed out", reliabilityInfo);
-            case INTERRUPTED -> failureResult(prepared, SendStatus.UNKNOWN, SendStage.RETRY,
-                    SendFailureType.INTERRUPTED, "retry execution interrupted", reliabilityInfo);
-            case CANCELLED, ABORTED -> failureResult(prepared, SendStatus.FAILED, SendStage.RETRY,
-                    SendFailureType.RETRY_EXECUTION_ERROR,
-                    "retry execution " + retryResult.getStatus(), reliabilityInfo);
-            case EXECUTION_FAILED -> failureResult(prepared, SendStatus.FAILED, SendStage.RETRY,
-                    SendFailureType.RETRY_EXECUTION_ERROR,
-                    retryResult.getFailure() == null
-                            ? "retry execution failed"
-                            : retryResult.getFailure().getMessage(),
+            case TIMED_OUT ->
+                failureResult(prepared, SendStatus.UNKNOWN, SendStage.RETRY, SendFailureType.TIMEOUT, "retry max duration timed out",
                     reliabilityInfo);
+            case INTERRUPTED ->
+                failureResult(prepared, SendStatus.UNKNOWN, SendStage.RETRY, SendFailureType.INTERRUPTED, "retry execution interrupted",
+                    reliabilityInfo);
+            case CANCELLED, ABORTED -> failureResult(prepared, SendStatus.FAILED, SendStage.RETRY, SendFailureType.RETRY_EXECUTION_ERROR,
+                "retry execution " + retryResult.getStatus(), reliabilityInfo);
+            case EXECUTION_FAILED -> failureResult(prepared, SendStatus.FAILED, SendStage.RETRY, SendFailureType.RETRY_EXECUTION_ERROR,
+                retryResult.getFailure() == null ? "retry execution failed" : retryResult.getFailure().getMessage(), reliabilityInfo);
         };
     }
 
@@ -204,93 +166,50 @@ public final class DefaultReliableMessageSender implements MessageSendExecutor {
         }
         boolean success = retryResult.getStatus() == com.xjtu.iron.retry.api.execution.RetryStatus.SUCCESS;
         RetryFailureCategory failureCategory = success ? null : retryResult.getFailureCategory();
-        return SendReliabilityInfo.enabled(
-                retryResult.getRetryId(),
-                retryResult.getPolicyName(),
-                retryResult.getStatus().name(),
-                retryResult.getAttempts(),
-                success ? "" : retryResult.getFailureCode(),
-                failureCategory == null ? "" : failureCategory.name());
+        return SendReliabilityInfo.enabled(retryResult.getRetryId(), retryResult.getPolicyName(), retryResult.getStatus().name(),
+            retryResult.getAttempts(), success ? "" : retryResult.getFailureCode(), failureCategory == null ? "" : failureCategory.name());
     }
 
-    private SendResult retryExhaustedResult(
-            PreparedMessageSend prepared,
-            RetryResult<ProviderSendResult> retryResult,
-            SendReliabilityInfo reliabilityInfo) {
+    private SendResult retryExhaustedResult(PreparedMessageSend prepared, RetryResult<ProviderSendResult> retryResult,
+        SendReliabilityInfo reliabilityInfo) {
         ProviderSendResult lastProviderResult = lastProviderResult(retryResult);
         // 如果最后一次结果是 UNKNOWN，即使 retry 耗尽，也不能改写成 FAILED，否则会误导业务立即重发。
         if (lastProviderResult != null && lastProviderResult.status() == SendStatus.UNKNOWN) {
-            return failureResult(prepared, SendStatus.UNKNOWN, SendStage.RETRY,
-                    SendFailureType.RETRY_EXHAUSTED,
-                    "retry exhausted but last send outcome is unknown",
-                    reliabilityInfo);
+            return failureResult(prepared, SendStatus.UNKNOWN, SendStage.RETRY, SendFailureType.RETRY_EXHAUSTED,
+                "retry exhausted but last send outcome is unknown", reliabilityInfo);
         }
-        return failureResult(prepared, SendStatus.FAILED, SendStage.RETRY,
-                SendFailureType.RETRY_EXHAUSTED,
-                "message send retry exhausted",
-                reliabilityInfo);
+        return failureResult(prepared, SendStatus.FAILED, SendStage.RETRY, SendFailureType.RETRY_EXHAUSTED, "message send retry exhausted",
+            reliabilityInfo);
     }
 
-    private SendResult notRetryableResult(
-            PreparedMessageSend prepared,
-            RetryResult<ProviderSendResult> retryResult,
-            SendReliabilityInfo reliabilityInfo) {
+    private SendResult notRetryableResult(PreparedMessageSend prepared, RetryResult<ProviderSendResult> retryResult,
+        SendReliabilityInfo reliabilityInfo) {
         ProviderSendResult lastProviderResult = lastProviderResult(retryResult);
         if (lastProviderResult != null) {
             return mapProviderResult(prepared, lastProviderResult, reliabilityInfo);
         }
-        return failureResult(prepared, SendStatus.FAILED, SendStage.RETRY,
-                SendFailureType.UNKNOWN_ERROR,
-                "message send stopped by retry classifier",
-                reliabilityInfo);
+        return failureResult(prepared, SendStatus.FAILED, SendStage.RETRY, SendFailureType.UNKNOWN_ERROR,
+            "message send stopped by retry classifier", reliabilityInfo);
     }
 
-    private SendResult mapProviderResult(
-            PreparedMessageSend prepared,
-            ProviderSendResult providerResult,
-            SendReliabilityInfo reliabilityInfo) {
+    private SendResult mapProviderResult(PreparedMessageSend prepared, ProviderSendResult providerResult,
+        SendReliabilityInfo reliabilityInfo) {
         SendStage stage = switch (providerResult.status()) {
             case CONFIRMED -> SendStage.COMPLETE;
             case UNKNOWN -> SendStage.CONFIRM;
             case REJECTED, FAILED -> SendStage.SEND;
         };
-        return new SendResult(
-                prepared.message().messageId(),
-                prepared.destination(),
-                prepared.providerDestination().providerName(),
-                prepared.providerDestination().physicalName(),
-                providerResult.status(),
-                stage,
-                providerResult.failureType(),
-                providerResult.providerMessageId(),
-                providerResult.description(),
-                prepared.startedAt(),
-                clock.instant(),
-                providerResult.metadata(),
-                reliabilityInfo);
+        return new SendResult(prepared.message().messageId(), prepared.destination(), prepared.providerDestination().providerName(),
+            prepared.providerDestination().physicalName(), providerResult.status(), stage, providerResult.failureType(),
+            providerResult.providerMessageId(), providerResult.description(), prepared.startedAt(), clock.instant(),
+            providerResult.metadata(), reliabilityInfo);
     }
 
-    private SendResult failureResult(
-            PreparedMessageSend prepared,
-            SendStatus status,
-            SendStage stage,
-            SendFailureType failureType,
-            String description,
-            SendReliabilityInfo reliabilityInfo) {
-        return new SendResult(
-                prepared.message().messageId(),
-                prepared.destination(),
-                prepared.providerDestination().providerName(),
-                prepared.providerDestination().physicalName(),
-                status,
-                stage,
-                failureType,
-                null,
-                description,
-                prepared.startedAt(),
-                clock.instant(),
-                Map.of(),
-                reliabilityInfo);
+    private SendResult failureResult(PreparedMessageSend prepared, SendStatus status, SendStage stage, SendFailureType failureType,
+        String description, SendReliabilityInfo reliabilityInfo) {
+        return new SendResult(prepared.message().messageId(), prepared.destination(), prepared.providerDestination().providerName(),
+            prepared.providerDestination().physicalName(), status, stage, failureType, null, description, prepared.startedAt(),
+            clock.instant(), Map.of(), reliabilityInfo);
     }
 
     private static ProviderSendResult lastProviderResult(RetryResult<ProviderSendResult> retryResult) {
@@ -301,30 +220,20 @@ public final class DefaultReliableMessageSender implements MessageSendExecutor {
     }
 
     private static Map<String, Object> retryAttributes(PreparedMessageSend prepared) {
-        String messageKey = prepared.message().messageKey() == null
-                ? ""
-                : prepared.message().messageKey();
-        return Map.of(
-                "messageId", prepared.message().messageId(),
-                "provider", prepared.providerDestination().providerName(),
-                "destination", prepared.destination().qualifiedName(),
-                "physicalDestination", prepared.providerDestination().physicalName(),
-                "messageKey", messageKey);
+        String messageKey = prepared.message().messageKey() == null ? "" : prepared.message().messageKey();
+        return Map.of("messageId", prepared.message().messageId(), "provider", prepared.providerDestination().providerName(), "destination",
+            prepared.destination().qualifiedName(), "physicalDestination", prepared.providerDestination().physicalName(), "messageKey",
+            messageKey);
     }
 
     private static String createRetryId(PreparedMessageSend prepared) {
-        return "message-send-"
-                + prepared.providerDestination().providerName()
-                + "-"
-                + prepared.message().messageId()
-                + "-"
-                + UUID.randomUUID().toString().replace("-", "");
+        return "message-send-" + prepared.providerDestination().providerName() + "-" + prepared.message().messageId() + "-" +
+            UUID.randomUUID().toString().replace("-", "");
     }
 
     private static Throwable unwrap(Throwable throwable) {
         Throwable current = throwable;
-        while ((current instanceof ExecutionException || current instanceof CompletionException)
-                && current.getCause() != null) {
+        while ((current instanceof ExecutionException || current instanceof CompletionException) && current.getCause() != null) {
             current = current.getCause();
         }
         return current;

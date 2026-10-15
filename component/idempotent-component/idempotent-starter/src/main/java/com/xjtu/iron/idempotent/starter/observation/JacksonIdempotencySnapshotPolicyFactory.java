@@ -15,8 +15,7 @@ import java.util.Objects;
  * </pre>
  * 不再要求 Executor API 传入 Class&lt;T&gt;。
  */
-public final class JacksonIdempotencySnapshotPolicyFactory
-        implements IdempotencySnapshotPolicyFactory {
+public final class JacksonIdempotencySnapshotPolicyFactory implements IdempotencySnapshotPolicyFactory {
 
     private final ObjectMapper objectMapper;
 

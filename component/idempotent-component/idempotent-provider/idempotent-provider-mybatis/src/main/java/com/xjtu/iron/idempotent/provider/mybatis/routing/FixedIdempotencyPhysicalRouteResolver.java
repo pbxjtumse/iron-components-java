@@ -13,10 +13,8 @@ public final class FixedIdempotencyPhysicalRouteResolver implements IdempotencyP
     private final IdempotencyPhysicalRoute route;
 
     public FixedIdempotencyPhysicalRouteResolver(String dataSourceKey, String tableName) {
-        this.route = IdempotencyPhysicalRoute.of(
-                dataSourceKey,
-                MyBatisTableNameValidator.requireValid(tableName, "iron_idempotency_record")
-        );
+        this.route =
+            IdempotencyPhysicalRoute.of(dataSourceKey, MyBatisTableNameValidator.requireValid(tableName, "iron_idempotency_record"));
     }
 
     public static FixedIdempotencyPhysicalRouteResolver defaultDataSource(String tableName) {
@@ -24,11 +22,7 @@ public final class FixedIdempotencyPhysicalRouteResolver implements IdempotencyP
     }
 
     @Override
-    public IdempotencyPhysicalRoute resolvePoint(
-            IdempotencyStorageContext storageContext,
-            String namespace,
-            String idempotencyKey
-    ) {
+    public IdempotencyPhysicalRoute resolvePoint(IdempotencyStorageContext storageContext, String namespace, String idempotencyKey) {
         return route;
     }
 

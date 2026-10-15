@@ -7,14 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public final class RecordingUncaughtExceptionHandler
-        implements AsyncUncaughtExceptionHandler {
+public final class RecordingUncaughtExceptionHandler implements AsyncUncaughtExceptionHandler {
 
-    private final List<Throwable> throwables =
-            new CopyOnWriteArrayList<>();
+    private final List<Throwable> throwables = new CopyOnWriteArrayList<>();
 
-    private final List<TaskExecutionEvent> events =
-            new CopyOnWriteArrayList<>();
+    private final List<TaskExecutionEvent> events = new CopyOnWriteArrayList<>();
 
     @Override
     public void handleException(TaskExecutionEvent event, Throwable throwable) {

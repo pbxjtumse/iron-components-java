@@ -20,7 +20,8 @@ public final class ProviderErrorLockAcquireOutcomeHandler implements LockAcquire
     private final LockEventFactory eventFactory;
     private final LockMetricsFacade metricsFacade;
 
-    public ProviderErrorLockAcquireOutcomeHandler(LockEventPublisher eventPublisher, LockEventFactory eventFactory, LockMetricsFacade metricsFacade) {
+    public ProviderErrorLockAcquireOutcomeHandler(LockEventPublisher eventPublisher, LockEventFactory eventFactory,
+        LockMetricsFacade metricsFacade) {
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher must not be null");
         this.eventFactory = Objects.requireNonNull(eventFactory, "eventFactory must not be null");
         this.metricsFacade = Objects.requireNonNull(metricsFacade, "metricsFacade must not be null");
@@ -33,21 +34,14 @@ public final class ProviderErrorLockAcquireOutcomeHandler implements LockAcquire
 
     @Override
     public LockResult<LockHandle> handle(LockAcquireOutcomeContext context) {
-        Throwable error = context.response().getError() == null
-                ? new LockProviderException(context.response().getMessage())
-                : context.response().getError();
+        Throwable error = context.response().getError() == null ? new LockProviderException(context.response().getMessage()) :
+            context.response().getError();
         metricsFacade.recordAcquire(context.provider().providerName(), context.options().getNamespace(), context.lockName(), false,
-                context.waitDuration());
-        eventPublisher.publish(eventFactory.fromAcquireRequest(
-                context.provider(), context.request(),
-                LockEventType.PROVIDER_ERROR, LockStage.ACQUIRE, LockStatus.PROVIDER_ERROR, error));
-        return LockResult.<LockHandle>builder()
-                .status(LockStatus.PROVIDER_ERROR)
-                .stage(LockStage.ACQUIRE)
-                .acquired(false)
-                .error(error)
-                .lockName(context.lockName())
-                .waitDuration(context.waitDuration())
-                .build();
+            context.waitDuration());
+        eventPublisher.publish(
+            eventFactory.fromAcquireRequest(context.provider(), context.request(), LockEventType.PROVIDER_ERROR, LockStage.ACQUIRE,
+                LockStatus.PROVIDER_ERROR, error));
+        return LockResult.<LockHandle>builder().status(LockStatus.PROVIDER_ERROR).stage(LockStage.ACQUIRE).acquired(false).error(error)
+            .lockName(context.lockName()).waitDuration(context.waitDuration()).build();
     }
 }

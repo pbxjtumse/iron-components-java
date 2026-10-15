@@ -17,8 +17,7 @@ class UlidStringIdGeneratorTest {
     @Test
     void shouldGenerateUniqueLexicographicallyMonotonicUlids() {
         Clock clock = Clock.fixed(Instant.parse("2026-08-03T00:00:00Z"), ZoneOffset.UTC);
-        UlidStringIdGenerator generator =
-                new UlidStringIdGenerator(clock, new SecureRandom(new byte[]{4, 5, 6}));
+        UlidStringIdGenerator generator = new UlidStringIdGenerator(clock, new SecureRandom(new byte[]{4, 5, 6}));
         Set<String> ids = new HashSet<>();
         String previous = null;
 

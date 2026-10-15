@@ -24,10 +24,16 @@ public final class ContentFingerprint {
         return sha256(value == null ? null : value.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String getAlgorithm() { return algorithm; }
+    public String getAlgorithm() {
+        return algorithm;
+    }
 
-    public String getValue() { return value; }
+    public String getValue() {
+        return value;
+    }
 
     @Override
-    public String toString() { return algorithm + ":" + value; }
+    public String toString() {
+        return algorithm + ":" + value;
+    }
 }

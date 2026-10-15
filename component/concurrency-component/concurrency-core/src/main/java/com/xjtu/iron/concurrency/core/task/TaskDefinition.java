@@ -71,17 +71,8 @@ public final class TaskDefinition<T> {
      */
     private final RetryPolicy retryPolicy;
 
-    public TaskDefinition(
-            TaskMetadata metadata,
-            Supplier<T> operation,
-            Duration timeout,
-            Duration queueTimeout,
-            boolean cancelOnTimeout,
-            boolean interruptOnTimeout,
-            Function<Throwable, T> fallback,
-            boolean contextPropagation,
-            RetryPolicy retryPolicy
-    ) {
+    public TaskDefinition(TaskMetadata metadata, Supplier<T> operation, Duration timeout, Duration queueTimeout, boolean cancelOnTimeout,
+        boolean interruptOnTimeout, Function<Throwable, T> fallback, boolean contextPropagation, RetryPolicy retryPolicy) {
         this.metadata = Objects.requireNonNull(metadata, "metadata must not be null");
         this.operation = Objects.requireNonNull(operation, "operation must not be null");
         this.timeout = timeout;
@@ -107,17 +98,8 @@ public final class TaskDefinition<T> {
     public static <T> TaskDefinition<T> from(AsyncTask<T> task) {
         Objects.requireNonNull(task, "task must not be null");
 
-        return new TaskDefinition<>(
-                task.metadata(),
-                task.getOperation(),
-                task.getTimeout(),
-                task.getQueueTimeout(),
-                task.isCancelOnTimeout(),
-                task.isInterruptOnTimeout(),
-                task.getFallback(),
-                task.isContextPropagation(),
-                task.getRetryPolicy()
-        );
+        return new TaskDefinition<>(task.metadata(), task.getOperation(), task.getTimeout(), task.getQueueTimeout(),
+            task.isCancelOnTimeout(), task.isInterruptOnTimeout(), task.getFallback(), task.isContextPropagation(), task.getRetryPolicy());
     }
 
     public TaskMetadata getMetadata() {

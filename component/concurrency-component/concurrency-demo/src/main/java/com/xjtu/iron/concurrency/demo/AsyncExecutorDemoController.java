@@ -60,11 +60,7 @@ public class AsyncExecutorDemoController {
     public Map<String, Object> execute() {
         asyncExecutor.execute(DEFAULT_EXECUTOR, "demoExecute", () -> sleep(100));
 
-        return response(
-                "api", "AsyncExecutor.execute",
-                "meaning", "只提交任务，不关心任务返回值和完成状态",
-                "result", "submitted"
-        );
+        return response("api", "AsyncExecutor.execute", "meaning", "只提交任务，不关心任务返回值和完成状态", "result", "submitted");
     }
 
     /**
@@ -76,11 +72,7 @@ public class AsyncExecutorDemoController {
     public Map<String, Object> tryExecute() {
         boolean accepted = asyncExecutor.tryExecute(DEFAULT_EXECUTOR, "demoTryExecute", () -> sleep(100));
 
-        return response(
-                "api", "AsyncExecutor.tryExecute",
-                "meaning", "适合可降级任务，拒绝时不抛异常，而是返回 false",
-                "accepted", accepted
-        );
+        return response("api", "AsyncExecutor.tryExecute", "meaning", "适合可降级任务，拒绝时不抛异常，而是返回 false", "accepted", accepted);
     }
 
     /**
@@ -93,12 +85,8 @@ public class AsyncExecutorDemoController {
         CompletableFuture<Void> future = asyncExecutor.run(DEFAULT_EXECUTOR, "demoRun", () -> sleep(100));
         future.join();
 
-        return response(
-                "api", "AsyncExecutor.run",
-                "meaning", "没有业务返回值，但可以通过 CompletableFuture<Void> 感知成功、失败、完成",
-                "done", future.isDone(),
-                "completedExceptionally", future.isCompletedExceptionally()
-        );
+        return response("api", "AsyncExecutor.run", "meaning", "没有业务返回值，但可以通过 CompletableFuture<Void> 感知成功、失败、完成",
+            "done", future.isDone(), "completedExceptionally", future.isCompletedExceptionally());
     }
 
     /**
@@ -110,11 +98,7 @@ public class AsyncExecutorDemoController {
     public Map<String, Object> supply() {
         CompletableFuture<String> future = asyncExecutor.supply(BIZ_QUERY_EXECUTOR, "demoSupply", () -> "user:10001");
 
-        return response(
-                "api", "AsyncExecutor.supply",
-                "meaning", "有业务返回值，返回 CompletableFuture<T>",
-                "value", future.join()
-        );
+        return response("api", "AsyncExecutor.supply", "meaning", "有业务返回值，返回 CompletableFuture<T>", "value", future.join());
     }
 
     /**
@@ -124,21 +108,13 @@ public class AsyncExecutorDemoController {
      */
     @GetMapping("/submit")
     public Map<String, Object> submit() {
-        CompletableFuture<String> future = asyncExecutor.submit(
-                AsyncTask.of(BIZ_QUERY_EXECUTOR, "demoSubmit", () -> {
-                            sleep(300);
-                            return "real-value";
-                        })
-                        .timeout(Duration.ofMillis(100))
-                        .fallback(ex -> "fallback-value")
-                        .contextPropagation(true)
-        );
+        CompletableFuture<String> future = asyncExecutor.submit(AsyncTask.of(BIZ_QUERY_EXECUTOR, "demoSubmit", () -> {
+            sleep(300);
+            return "real-value";
+        }).timeout(Duration.ofMillis(100)).fallback(ex -> "fallback-value").contextPropagation(true));
 
-        return response(
-                "api", "AsyncExecutor.submit",
-                "meaning", "完整异步任务模型，适合 timeout、fallback、上下文传播控制",
-                "value", future.join()
-        );
+        return response("api", "AsyncExecutor.submit", "meaning", "完整异步任务模型，适合 timeout、fallback、上下文传播控制", "value",
+            future.join());
     }
 
     /**

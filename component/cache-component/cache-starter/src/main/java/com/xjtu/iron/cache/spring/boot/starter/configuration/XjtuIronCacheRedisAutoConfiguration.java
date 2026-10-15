@@ -28,12 +28,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * </pre>
  */
 @AutoConfiguration(after = RedisAutoConfiguration.class)
-@ConditionalOnProperty(
-        prefix = "xjtu.iron.cache",
-        name = "enabled",
-        havingValue = "true",
-        matchIfMissing = true
-)
+@ConditionalOnProperty(prefix = "xjtu.iron.cache", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class XjtuIronCacheRedisAutoConfiguration {
 
     /**
@@ -47,9 +42,7 @@ public class XjtuIronCacheRedisAutoConfiguration {
     @Bean("ironCacheRedisTemplate")
     @ConditionalOnBean(RedisConnectionFactory.class)
     @ConditionalOnMissingBean(name = "ironCacheRedisTemplate")
-    public RedisTemplate<String, byte[]> ironCacheRedisTemplate(
-            RedisConnectionFactory redisConnectionFactory
-    ) {
+    public RedisTemplate<String, byte[]> ironCacheRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, byte[]> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory);
         redisTemplate.setKeySerializer(new StringRedisSerializer());
@@ -82,9 +75,7 @@ public class XjtuIronCacheRedisAutoConfiguration {
     @Bean
     @ConditionalOnBean(name = "ironCacheRedisTemplate")
     @ConditionalOnMissingBean
-    public RedisBinaryClient redisBinaryClient(
-            @Qualifier("ironCacheRedisTemplate") RedisTemplate<String, byte[]> redisTemplate
-    ) {
+    public RedisBinaryClient redisBinaryClient(@Qualifier("ironCacheRedisTemplate") RedisTemplate<String, byte[]> redisTemplate) {
         return new SpringDataRedisBinaryClient(redisTemplate);
     }
 
@@ -100,21 +91,9 @@ public class XjtuIronCacheRedisAutoConfiguration {
      */
     @Bean("ironRedisCacheProvider")
     @ConditionalOnBean(RedisBinaryClient.class)
-    @ConditionalOnProperty(
-            prefix = "xjtu.iron.cache.redis",
-            name = "enabled",
-            havingValue = "true",
-            matchIfMissing = true
-    )
-    public CacheProvider redisCacheProvider(
-            RedisBinaryClient redisBinaryClient,
-            RedisCacheSerializer redisCacheSerializer,
-            XjtuIronCacheProperties properties
-    ) {
-        return new RedisCacheProvider(
-                redisBinaryClient,
-                redisCacheSerializer,
-                properties.getRedis().getKeyPrefix()
-        );
+    @ConditionalOnProperty(prefix = "xjtu.iron.cache.redis", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public CacheProvider redisCacheProvider(RedisBinaryClient redisBinaryClient, RedisCacheSerializer redisCacheSerializer,
+        XjtuIronCacheProperties properties) {
+        return new RedisCacheProvider(redisBinaryClient, redisCacheSerializer, properties.getRedis().getKeyPrefix());
     }
 }

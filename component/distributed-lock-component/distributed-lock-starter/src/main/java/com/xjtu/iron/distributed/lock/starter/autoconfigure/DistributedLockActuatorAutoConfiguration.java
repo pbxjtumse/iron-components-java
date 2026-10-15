@@ -24,11 +24,11 @@ public class DistributedLockActuatorAutoConfiguration {
     @ConditionalOnBean(LockProviderRegistry.class)
     @ConditionalOnMissingBean(name = "distributedLockHealthIndicator")
     public DistributedLockHealthIndicator distributedLockHealthIndicator(LockProviderRegistry providerRegistry,
-            FencingTokenProviderRegistry fencingRegistry, DistributedLockProperties properties,
-            ObjectProvider<RedisDistributedLockProperties> redisPropertiesProvider,
-            ObjectProvider<MyBatisFencingTokenProperties> myBatisPropertiesProvider,
-            ObjectProvider<RedissonDistributedLockProperties> redissonPropertiesProvider) {
+        FencingTokenProviderRegistry fencingRegistry, DistributedLockProperties properties,
+        ObjectProvider<RedisDistributedLockProperties> redisPropertiesProvider,
+        ObjectProvider<MyBatisFencingTokenProperties> myBatisPropertiesProvider,
+        ObjectProvider<RedissonDistributedLockProperties> redissonPropertiesProvider) {
         return new DistributedLockHealthIndicator(providerRegistry, fencingRegistry, properties, redisPropertiesProvider.getIfAvailable(),
-                myBatisPropertiesProvider.getIfAvailable(), redissonPropertiesProvider.getIfAvailable());
+            myBatisPropertiesProvider.getIfAvailable(), redissonPropertiesProvider.getIfAvailable());
     }
 }

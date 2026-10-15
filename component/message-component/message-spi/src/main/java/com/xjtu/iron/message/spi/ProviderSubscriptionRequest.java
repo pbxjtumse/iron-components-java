@@ -1,4 +1,5 @@
 package com.xjtu.iron.message.spi;
+
 import java.util.Objects;
 
 /**
@@ -22,10 +23,7 @@ public final class ProviderSubscriptionRequest {
     /**
      * 校验订阅请求。
      */
-    public ProviderSubscriptionRequest(
-        ProviderDestination destination,
-        String consumerGroup,
-        ProviderMessageListener listener) {
+    public ProviderSubscriptionRequest(ProviderDestination destination, String consumerGroup, ProviderMessageListener listener) {
         // 物理目的地不能为空。
         destination = Objects.requireNonNull(destination, "destination must not be null");
         // 消费组不能为空。
@@ -37,7 +35,7 @@ public final class ProviderSubscriptionRequest {
         consumerGroup = consumerGroup.trim();
         // 入站监听器不能为空。
         listener = Objects.requireNonNull(listener, "listener must not be null");
-    
+
         // 保存完成校验和标准化后的 destination。
         this.destination = destination;
         // 保存完成校验和标准化后的 consumerGroup。
@@ -45,6 +43,7 @@ public final class ProviderSubscriptionRequest {
         // 保存完成校验和标准化后的 listener。
         this.listener = listener;
     }
+
     /**
      * 返回已解析物理目的地。
      *
@@ -93,9 +92,8 @@ public final class ProviderSubscriptionRequest {
         }
         // 转换为当前类型后逐字段比较。
         ProviderSubscriptionRequest other = (ProviderSubscriptionRequest) object;
-        return Objects.equals(destination, other.destination)
-                && Objects.equals(consumerGroup, other.consumerGroup)
-                && Objects.equals(listener, other.listener);
+        return Objects.equals(destination, other.destination) && Objects.equals(consumerGroup, other.consumerGroup) &&
+            Objects.equals(listener, other.listener);
     }
 
     /**
@@ -117,11 +115,8 @@ public final class ProviderSubscriptionRequest {
     @Override
     public String toString() {
         // 拼接全部字段，保持值对象可诊断。
-        return "ProviderSubscriptionRequest{" +
-                "destination=" + destination +
-                ", consumerGroup=" + consumerGroup +
-                ", listener=" + listener +
-                '}';
+        return "ProviderSubscriptionRequest{" + "destination=" + destination + ", consumerGroup=" + consumerGroup + ", listener=" +
+            listener + '}';
     }
 
 }

@@ -42,18 +42,23 @@ import java.util.List;
 
 /** 分布式锁核心自动配置。 */
 @AutoConfiguration(after = {RedisDistributedLockAutoConfiguration.class, RedissonDistributedLockAutoConfiguration.class,
-        MyBatisFencingTokenAutoConfiguration.class})
-@EnableConfigurationProperties({DistributedLockProperties.class, MyBatisFencingTokenProperties.class, RedissonDistributedLockProperties.class})
+    MyBatisFencingTokenAutoConfiguration.class})
+@EnableConfigurationProperties(
+    {DistributedLockProperties.class, MyBatisFencingTokenProperties.class, RedissonDistributedLockProperties.class})
 @ConditionalOnProperty(prefix = "xjtu.iron.distributed-lock", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class DistributedLockAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public OwnerTokenGenerator ownerTokenGenerator() { return new DefaultOwnerTokenGenerator(); }
+    public OwnerTokenGenerator ownerTokenGenerator() {
+        return new DefaultOwnerTokenGenerator();
+    }
 
     @Bean
     @ConditionalOnMissingBean
-    public LockWaiterFactory lockWaiterFactory() { return new LockWaiterFactory(); }
+    public LockWaiterFactory lockWaiterFactory() {
+        return new LockWaiterFactory();
+    }
 
     @Bean(destroyMethod = "close")
     @ConditionalOnMissingBean
@@ -63,11 +68,15 @@ public class DistributedLockAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public LockNameValidator lockNameValidator() { return new DefaultLockNameValidator(); }
+    public LockNameValidator lockNameValidator() {
+        return new DefaultLockNameValidator();
+    }
 
     @Bean
     @ConditionalOnMissingBean
-    public LockNamePatternResolver lockNamePatternResolver() { return new DefaultLockNamePatternResolver(); }
+    public LockNamePatternResolver lockNamePatternResolver() {
+        return new DefaultLockNamePatternResolver();
+    }
 
     @Bean
     @ConditionalOnMissingBean
@@ -85,11 +94,15 @@ public class DistributedLockAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(LockMetricsRecorder.class)
-    public LockMetricsRecorder noOpLockMetricsRecorder() { return new NoOpLockMetricsRecorder(); }
+    public LockMetricsRecorder noOpLockMetricsRecorder() {
+        return new NoOpLockMetricsRecorder();
+    }
 
     @Bean
     @ConditionalOnMissingBean
-    public LockEventFactory lockEventFactory() { return new LockEventFactory(); }
+    public LockEventFactory lockEventFactory() {
+        return new LockEventFactory();
+    }
 
     @Bean
     @ConditionalOnMissingBean
@@ -129,15 +142,18 @@ public class DistributedLockAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public FencingTokenFlowSupport fencingTokenFlowSupport(FencingTokenCoordinator fencingTokenCoordinator, LockEventPublisher eventPublisher,
-            LockEventFactory eventFactory, LockMetricsFacade metricsFacade, ObjectProvider<Clock> clockProvider) {
+    public FencingTokenFlowSupport fencingTokenFlowSupport(FencingTokenCoordinator fencingTokenCoordinator,
+        LockEventPublisher eventPublisher, LockEventFactory eventFactory, LockMetricsFacade metricsFacade,
+        ObjectProvider<Clock> clockProvider) {
         return new FencingTokenFlowSupport(fencingTokenCoordinator, eventPublisher, eventFactory, metricsFacade,
-                clockProvider.getIfAvailable(Clock::systemUTC));
+            clockProvider.getIfAvailable(Clock::systemUTC));
     }
 
     @Bean
     @ConditionalOnMissingBean(NoFencingTokenFlow.class)
-    public NoFencingTokenFlow noFencingTokenFlow() { return new NoFencingTokenFlow(); }
+    public NoFencingTokenFlow noFencingTokenFlow() {
+        return new NoFencingTokenFlow();
+    }
 
     @Bean
     @ConditionalOnMissingBean(NativeFencingTokenFlow.class)
@@ -159,29 +175,30 @@ public class DistributedLockAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public LockHandleFactory lockHandleFactory(LockEventPublisher eventPublisher, LockEventFactory eventFactory, LockMetricsFacade metricsFacade,
-            LockWatchdog watchdog) {
+    public LockHandleFactory lockHandleFactory(LockEventPublisher eventPublisher, LockEventFactory eventFactory,
+        LockMetricsFacade metricsFacade, LockWatchdog watchdog) {
         return new LockHandleFactory(eventPublisher, eventFactory, metricsFacade, watchdog);
     }
 
     @Bean
     @ConditionalOnMissingBean(AcquiredLockAcquireOutcomeHandler.class)
     public AcquiredLockAcquireOutcomeHandler acquiredLockAcquireOutcomeHandler(FencingTokenFlowRegistry flowRegistry,
-            LockHandleFactory lockHandleFactory, LockEventPublisher eventPublisher, LockEventFactory eventFactory, LockMetricsFacade metricsFacade) {
+        LockHandleFactory lockHandleFactory, LockEventPublisher eventPublisher, LockEventFactory eventFactory,
+        LockMetricsFacade metricsFacade) {
         return new AcquiredLockAcquireOutcomeHandler(flowRegistry, lockHandleFactory, eventPublisher, eventFactory, metricsFacade);
     }
 
     @Bean
     @ConditionalOnMissingBean(NotAcquiredLockAcquireOutcomeHandler.class)
-    public NotAcquiredLockAcquireOutcomeHandler notAcquiredLockAcquireOutcomeHandler(LockEventPublisher eventPublisher, LockEventFactory eventFactory,
-            LockMetricsFacade metricsFacade) {
+    public NotAcquiredLockAcquireOutcomeHandler notAcquiredLockAcquireOutcomeHandler(LockEventPublisher eventPublisher,
+        LockEventFactory eventFactory, LockMetricsFacade metricsFacade) {
         return new NotAcquiredLockAcquireOutcomeHandler(eventPublisher, eventFactory, metricsFacade);
     }
 
     @Bean
     @ConditionalOnMissingBean(ProviderErrorLockAcquireOutcomeHandler.class)
     public ProviderErrorLockAcquireOutcomeHandler providerErrorLockAcquireOutcomeHandler(LockEventPublisher eventPublisher,
-            LockEventFactory eventFactory, LockMetricsFacade metricsFacade) {
+        LockEventFactory eventFactory, LockMetricsFacade metricsFacade) {
         return new ProviderErrorLockAcquireOutcomeHandler(eventPublisher, eventFactory, metricsFacade);
     }
 
@@ -201,20 +218,23 @@ public class DistributedLockAutoConfiguration {
     @ConditionalOnBean(LockProviderRegistry.class)
     @ConditionalOnMissingBean
     public LockAcquisitionService lockAcquisitionService(LockProviderRegistry providerRegistry, OwnerTokenGenerator ownerTokenGenerator,
-            LockWaiterFactory waiterFactory, LockEventPublisher eventPublisher, LockEventFactory eventFactory, LockNameValidator lockNameValidator,
-            @Qualifier("distributedLockDefaultOptions") LockOptions defaultOptions, FencingTokenCoordinator fencingTokenCoordinator,
-            LockAcquireOutcomeHandlerRegistry acquireOutcomeHandlerRegistry, ObjectProvider<Clock> clockProvider) {
-        return new LockAcquisitionService(providerRegistry, ownerTokenGenerator, waiterFactory, eventPublisher, eventFactory, lockNameValidator,
-                defaultOptions, clockProvider.getIfAvailable(Clock::systemUTC), fencingTokenCoordinator, acquireOutcomeHandlerRegistry);
+        LockWaiterFactory waiterFactory, LockEventPublisher eventPublisher, LockEventFactory eventFactory,
+        LockNameValidator lockNameValidator, @Qualifier("distributedLockDefaultOptions") LockOptions defaultOptions,
+        FencingTokenCoordinator fencingTokenCoordinator, LockAcquireOutcomeHandlerRegistry acquireOutcomeHandlerRegistry,
+        ObjectProvider<Clock> clockProvider) {
+        return new LockAcquisitionService(providerRegistry, ownerTokenGenerator, waiterFactory, eventPublisher, eventFactory,
+            lockNameValidator, defaultOptions, clockProvider.getIfAvailable(Clock::systemUTC), fencingTokenCoordinator,
+            acquireOutcomeHandlerRegistry);
     }
 
     @Bean
     @ConditionalOnBean(LockAcquisitionService.class)
     @ConditionalOnMissingBean
     public LockExecutionTemplate lockExecutionTemplate(LockAcquisitionService acquisitionService, LockEventPublisher eventPublisher,
-            LockEventFactory eventFactory, LockMetricsFacade metricsFacade, LockResultResolver resultResolver, ObjectProvider<Clock> clockProvider) {
+        LockEventFactory eventFactory, LockMetricsFacade metricsFacade, LockResultResolver resultResolver,
+        ObjectProvider<Clock> clockProvider) {
         return new LockExecutionTemplate(acquisitionService, eventPublisher, eventFactory, metricsFacade,
-                clockProvider.getIfAvailable(Clock::systemUTC), resultResolver);
+            clockProvider.getIfAvailable(Clock::systemUTC), resultResolver);
     }
 
     @Bean

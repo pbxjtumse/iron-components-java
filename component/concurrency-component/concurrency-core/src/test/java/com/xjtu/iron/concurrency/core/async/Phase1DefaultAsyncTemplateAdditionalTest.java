@@ -28,8 +28,7 @@ class Phase1DefaultAsyncTemplateAdditionalTest {
         CompletableFuture<String> source = new CompletableFuture<>();
         CompletableFuture<String> wrapped = template.withTimeout(source, Duration.ofMillis(10));
 
-        ExecutionException error = assertThrows(ExecutionException.class,
-                () -> wrapped.get(1, TimeUnit.SECONDS));
+        ExecutionException error = assertThrows(ExecutionException.class, () -> wrapped.get(1, TimeUnit.SECONDS));
 
         assertInstanceOf(TimeoutException.class, error.getCause());
         assertFalse(source.isDone(), "包装 Future 超时后，原始 source 不应被完成");
@@ -57,10 +56,9 @@ class Phase1DefaultAsyncTemplateAdditionalTest {
         CompletableFuture<String> failed = new CompletableFuture<>();
         failed.completeExceptionally(new IllegalArgumentException("bad"));
 
-        var batch = template.allOfOutcome(List.of(
-                NamedFuture.of("success", CompletableFuture.completedFuture("ok")),
-                NamedFuture.of("failed", failed)
-        )).get(1, TimeUnit.SECONDS);
+        var batch = template.allOfOutcome(
+                List.of(NamedFuture.of("success", CompletableFuture.completedFuture("ok")), NamedFuture.of("failed", failed)))
+            .get(1, TimeUnit.SECONDS);
 
         assertEquals(2, batch.getOutcomes().size());
         assertTrue(batch.getOutcomes().get(0).isSuccess());

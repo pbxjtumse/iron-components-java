@@ -24,10 +24,11 @@ import java.time.Duration;
  */
 public final class SpringRedisRedissonClientFactory {
 
-    private SpringRedisRedissonClientFactory() {}
+    private SpringRedisRedissonClientFactory() {
+    }
 
     public static RedissonClient create(RedisConnectionDetails details, RedisProperties redisProperties,
-            RedissonDistributedLockProperties lockProperties) {
+        RedissonDistributedLockProperties lockProperties) {
         if (details == null) {
             throw new IllegalStateException("RedisConnectionDetails is required to auto-create RedissonClient");
         }
@@ -69,9 +70,8 @@ public final class SpringRedisRedissonClientFactory {
         String scheme = scheme(standalone.getSslBundle(), properties);
         applySslBundle(config, standalone.getSslBundle());
 
-        SingleServerConfig server = config.useSingleServer()
-                .setAddress(scheme + standalone.getHost() + ':' + standalone.getPort())
-                .setDatabase(standalone.getDatabase());
+        SingleServerConfig server = config.useSingleServer().setAddress(scheme + standalone.getHost() + ':' + standalone.getPort())
+            .setDatabase(standalone.getDatabase());
         applyTimeouts(server, properties);
     }
 
@@ -80,11 +80,8 @@ public final class SpringRedisRedissonClientFactory {
         String scheme = scheme(sentinel.getSslBundle(), properties);
         applySslBundle(config, sentinel.getSslBundle());
 
-        SentinelServersConfig servers = config.useSentinelServers()
-                .setMasterName(sentinel.getMaster())
-                .setDatabase(sentinel.getDatabase());
-        sentinel.getNodes().forEach(node ->
-                servers.addSentinelAddress(scheme + node.host() + ':' + node.port()));
+        SentinelServersConfig servers = config.useSentinelServers().setMasterName(sentinel.getMaster()).setDatabase(sentinel.getDatabase());
+        sentinel.getNodes().forEach(node -> servers.addSentinelAddress(scheme + node.host() + ':' + node.port()));
         if (hasText(sentinel.getUsername())) {
             servers.setSentinelUsername(sentinel.getUsername());
         }
@@ -100,8 +97,7 @@ public final class SpringRedisRedissonClientFactory {
         applySslBundle(config, cluster.getSslBundle());
 
         ClusterServersConfig servers = config.useClusterServers();
-        cluster.getNodes().forEach(node ->
-                servers.addNodeAddress(scheme + node.host() + ':' + node.port()));
+        cluster.getNodes().forEach(node -> servers.addNodeAddress(scheme + node.host() + ':' + node.port()));
         applyTimeouts(servers, properties);
     }
 

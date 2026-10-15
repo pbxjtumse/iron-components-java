@@ -8,8 +8,12 @@ package com.xjtu.iron.cache.api.exception;
 public class CacheException extends RuntimeException {
 
     /** 创建只有消息的缓存异常。 */
-    public CacheException(String message) { super(message); }
+    public CacheException(String message) {
+        super(message);
+    }
 
     /** 创建带原始异常原因的缓存异常。 */
-    public CacheException(String message, Throwable cause) { super(message, cause); }
+    public CacheException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

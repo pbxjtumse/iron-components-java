@@ -38,26 +38,13 @@ public final class ConsumerDefinition<T> {
     private final MessageConsumeTransactionOptions transactionOptions;
 
     public ConsumerDefinition(MessageDestination destination, String consumerGroup, Class<T> payloadType) {
-        this(
-                consumerGroup,
-                null,
-                destination,
-                consumerGroup,
-                payloadType,
-                ConsumerReliabilityMode.AT_LEAST_ONCE,
-                MessageIdempotencyOptions.disabled(),
-                MessageConsumeTransactionOptions.disabled());
+        this(consumerGroup, null, destination, consumerGroup, payloadType, ConsumerReliabilityMode.AT_LEAST_ONCE,
+            MessageIdempotencyOptions.disabled(), MessageConsumeTransactionOptions.disabled());
     }
 
-    public ConsumerDefinition(
-            String consumerId,
-            String providerName,
-            MessageDestination destination,
-            String consumerGroup,
-            Class<T> payloadType,
-            ConsumerReliabilityMode reliabilityMode,
-            MessageIdempotencyOptions idempotencyOptions,
-            MessageConsumeTransactionOptions transactionOptions) {
+    public ConsumerDefinition(String consumerId, String providerName, MessageDestination destination, String consumerGroup,
+        Class<T> payloadType, ConsumerReliabilityMode reliabilityMode, MessageIdempotencyOptions idempotencyOptions,
+        MessageConsumeTransactionOptions transactionOptions) {
         this.consumerId = textOrDefault(consumerId, consumerGroup);
         this.providerName = normalize(providerName);
         this.destination = Objects.requireNonNull(destination, "destination must not be null");
@@ -72,14 +59,37 @@ public final class ConsumerDefinition<T> {
         return new ConsumerDefinition<>(destination, consumerGroup, payloadType);
     }
 
-    public String consumerId() { return consumerId; }
-    public String providerName() { return providerName; }
-    public MessageDestination destination() { return destination; }
-    public String consumerGroup() { return consumerGroup; }
-    public Class<T> payloadType() { return payloadType; }
-    public ConsumerReliabilityMode reliabilityMode() { return reliabilityMode; }
-    public MessageIdempotencyOptions idempotencyOptions() { return idempotencyOptions; }
-    public MessageConsumeTransactionOptions transactionOptions() { return transactionOptions; }
+    public String consumerId() {
+        return consumerId;
+    }
+
+    public String providerName() {
+        return providerName;
+    }
+
+    public MessageDestination destination() {
+        return destination;
+    }
+
+    public String consumerGroup() {
+        return consumerGroup;
+    }
+
+    public Class<T> payloadType() {
+        return payloadType;
+    }
+
+    public ConsumerReliabilityMode reliabilityMode() {
+        return reliabilityMode;
+    }
+
+    public MessageIdempotencyOptions idempotencyOptions() {
+        return idempotencyOptions;
+    }
+
+    public MessageConsumeTransactionOptions transactionOptions() {
+        return transactionOptions;
+    }
 
     private static String textOrDefault(String value, String defaultValue) {
         String normalized = normalize(value);
@@ -111,12 +121,9 @@ public final class ConsumerDefinition<T> {
             return false;
         }
         ConsumerDefinition<?> other = (ConsumerDefinition<?>) object;
-        return Objects.equals(consumerId, other.consumerId)
-                && Objects.equals(providerName, other.providerName)
-                && Objects.equals(destination, other.destination)
-                && Objects.equals(consumerGroup, other.consumerGroup)
-                && Objects.equals(payloadType, other.payloadType)
-                && reliabilityMode == other.reliabilityMode;
+        return Objects.equals(consumerId, other.consumerId) && Objects.equals(providerName, other.providerName) &&
+            Objects.equals(destination, other.destination) && Objects.equals(consumerGroup, other.consumerGroup) &&
+            Objects.equals(payloadType, other.payloadType) && reliabilityMode == other.reliabilityMode;
     }
 
     @Override

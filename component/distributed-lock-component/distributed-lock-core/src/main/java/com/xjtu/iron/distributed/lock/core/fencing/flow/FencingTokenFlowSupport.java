@@ -39,7 +39,7 @@ public final class FencingTokenFlowSupport {
     private final Clock clock;
 
     public FencingTokenFlowSupport(FencingTokenCoordinator coordinator, LockEventPublisher eventPublisher, LockEventFactory eventFactory,
-            LockMetricsFacade metricsFacade, Clock clock) {
+        LockMetricsFacade metricsFacade, Clock clock) {
         this.coordinator = Objects.requireNonNull(coordinator, "coordinator must not be null");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher must not be null");
         this.eventFactory = Objects.requireNonNull(eventFactory, "eventFactory must not be null");
@@ -57,36 +57,28 @@ public final class FencingTokenFlowSupport {
 
     public void recordFencingSuccess(LockProvider lockProvider, LockLease lease, String fencingProviderName, Duration duration) {
         metricsFacade.recordFencing(lockProvider.providerName(), fencingProviderName, lease.getNamespace(), true,
-                duration == null ? Duration.ZERO : duration);
+            duration == null ? Duration.ZERO : duration);
         eventPublisher.publish(eventFactory.fromLease(lease, LockEventType.FENCING_TOKEN_ISSUED, LockStage.FENCING, null, null));
     }
 
-    public LockResult<LockHandle> fencingFailure(LockProvider lockProvider, LockLease lease, Duration waitDuration, String fencingProviderName,
-            FencingTokenResponse tokenResponse, Duration fencingDuration) {
+    public LockResult<LockHandle> fencingFailure(LockProvider lockProvider, LockLease lease, Duration waitDuration,
+        String fencingProviderName, FencingTokenResponse tokenResponse, Duration fencingDuration) {
         Throwable error = tokenResponse.getError();
         if (error == null) {
-            error = new LockProviderException(tokenResponse.getMessage() == null ? "failed to issue fencing token" : tokenResponse.getMessage());
+            error = new LockProviderException(
+                tokenResponse.getMessage() == null ? "failed to issue fencing token" : tokenResponse.getMessage());
         }
 
         releaseAfterPreparationFailure(lockProvider, lease, error);
 
         metricsFacade.recordFencing(lockProvider.providerName(), fencingProviderName, lease.getNamespace(), false,
-                fencingDuration == null ? Duration.ZERO : fencingDuration);
-        eventPublisher.publish(eventFactory.fromFencing(lease,
-                LockEventType.FENCING_TOKEN_FAILED, LockStatus.PROVIDER_ERROR,
-                fencingProviderName, error));
+            fencingDuration == null ? Duration.ZERO : fencingDuration);
+        eventPublisher.publish(
+            eventFactory.fromFencing(lease, LockEventType.FENCING_TOKEN_FAILED, LockStatus.PROVIDER_ERROR, fencingProviderName, error));
 
-        return LockResult.<LockHandle>builder()
-                .status(LockStatus.PROVIDER_ERROR)
-                .stage(LockStage.FENCING)
-                .acquired(true)
-                .error(error)
-                .lockName(lease.getLockName())
-                .lockKey(lease.getLockKey())
-                .ownerToken(lease.getOwnerToken())
-                .fencingTokenProviderName(fencingProviderName)
-                .waitDuration(waitDuration)
-                .build();
+        return LockResult.<LockHandle>builder().status(LockStatus.PROVIDER_ERROR).stage(LockStage.FENCING).acquired(true).error(error)
+            .lockName(lease.getLockName()).lockKey(lease.getLockKey()).ownerToken(lease.getOwnerToken())
+            .fencingTokenProviderName(fencingProviderName).waitDuration(waitDuration).build();
     }
 
     /**
@@ -100,7 +92,8 @@ public final class FencingTokenFlowSupport {
             response = lockProvider.check(LockCheckRequest.fromLease(lease));
         } catch (Throwable error) {
             releaseAfterPreparationFailure(lockProvider, lease, error);
-            eventPublisher.publish(eventFactory.fromLease(lease, LockEventType.PROVIDER_ERROR, LockStage.CHECK, LockStatus.PROVIDER_ERROR, error));
+            eventPublisher.publish(
+                eventFactory.fromLease(lease, LockEventType.PROVIDER_ERROR, LockStage.CHECK, LockStatus.PROVIDER_ERROR, error));
             return preparationCheckFailure(lease, waitDuration, error);
         }
 
@@ -110,44 +103,29 @@ public final class FencingTokenFlowSupport {
         if (response.isLockLost()) {
             metricsFacade.recordLost(lease);
             eventPublisher.publish(eventFactory.fromLease(lease, LockEventType.LOCK_LOST, LockStage.CHECK, LockStatus.LOCK_LOST, null));
-            return LockResult.<LockHandle>builder()
-                    .status(LockStatus.LOCK_LOST)
-                    .stage(LockStage.CHECK)
-                    .acquired(true)
-                    .error(new LockLostException("lock lost while issuing external fencing token: " + lease.getLockName()))
-                    .lockName(lease.getLockName())
-                    .lockKey(lease.getLockKey())
-                    .ownerToken(lease.getOwnerToken())
-                    .fencingToken(lease.fencingToken().orElseThrow())
-                    .fencingTokenProviderName(lease.fencingTokenProviderName().orElse(null))
-                    .waitDuration(waitDuration)
-                    .build();
+            return LockResult.<LockHandle>builder().status(LockStatus.LOCK_LOST).stage(LockStage.CHECK).acquired(true)
+                .error(new LockLostException("lock lost while issuing external fencing token: " + lease.getLockName()))
+                .lockName(lease.getLockName()).lockKey(lease.getLockKey()).ownerToken(lease.getOwnerToken())
+                .fencingToken(lease.fencingToken().orElseThrow()).fencingTokenProviderName(lease.fencingTokenProviderName().orElse(null))
+                .waitDuration(waitDuration).build();
         }
 
         Throwable error = response.getError();
         if (error == null) {
-            error = new LockProviderException(response.getMessage() == null
-                    ? "failed to verify lock ownership after external fencing"
-                    : response.getMessage());
+            error = new LockProviderException(
+                response.getMessage() == null ? "failed to verify lock ownership after external fencing" : response.getMessage());
         }
         releaseAfterPreparationFailure(lockProvider, lease, error);
-        eventPublisher.publish(eventFactory.fromLease(lease, LockEventType.PROVIDER_ERROR, LockStage.CHECK, LockStatus.PROVIDER_ERROR, error));
+        eventPublisher.publish(
+            eventFactory.fromLease(lease, LockEventType.PROVIDER_ERROR, LockStage.CHECK, LockStatus.PROVIDER_ERROR, error));
         return preparationCheckFailure(lease, waitDuration, error);
     }
 
     private LockResult<LockHandle> preparationCheckFailure(LockLease lease, Duration waitDuration, Throwable error) {
-        return LockResult.<LockHandle>builder()
-                .status(LockStatus.PROVIDER_ERROR)
-                .stage(LockStage.CHECK)
-                .acquired(true)
-                .error(error)
-                .lockName(lease.getLockName())
-                .lockKey(lease.getLockKey())
-                .ownerToken(lease.getOwnerToken())
-                .fencingToken(lease.fencingToken().isPresent() ? lease.fencingToken().getAsLong() : null)
-                .fencingTokenProviderName(lease.fencingTokenProviderName().orElse(null))
-                .waitDuration(waitDuration)
-                .build();
+        return LockResult.<LockHandle>builder().status(LockStatus.PROVIDER_ERROR).stage(LockStage.CHECK).acquired(true).error(error)
+            .lockName(lease.getLockName()).lockKey(lease.getLockKey()).ownerToken(lease.getOwnerToken())
+            .fencingToken(lease.fencingToken().isPresent() ? lease.fencingToken().getAsLong() : null)
+            .fencingTokenProviderName(lease.fencingTokenProviderName().orElse(null)).waitDuration(waitDuration).build();
     }
 
     /** 发号或发号后校验失败时，尽最大努力释放已经获取的锁。 */
@@ -163,7 +141,8 @@ public final class FencingTokenFlowSupport {
                 case NOT_OWNER:
                     metricsFacade.recordRelease(lease, false);
                     metricsFacade.recordLost(lease);
-                    eventPublisher.publish(eventFactory.fromLease(lease, LockEventType.LOCK_LOST, LockStage.RELEASE, LockStatus.LOCK_LOST, null));
+                    eventPublisher.publish(
+                        eventFactory.fromLease(lease, LockEventType.LOCK_LOST, LockStage.RELEASE, LockStatus.LOCK_LOST, null));
                     break;
                 case PROVIDER_ERROR:
                 default:
@@ -171,22 +150,20 @@ public final class FencingTokenFlowSupport {
                     Throwable releaseError = releaseResponse.getError();
                     if (releaseError == null) {
                         releaseError = new LockProviderException(
-                                releaseResponse.getMessage() == null
-                                        ? "failed to release lock after preparation failure"
-                                        : releaseResponse.getMessage());
+                            releaseResponse.getMessage() == null ? "failed to release lock after preparation failure" :
+                                releaseResponse.getMessage());
                     }
                     primaryError.addSuppressed(releaseError);
-                    eventPublisher.publish(eventFactory.fromLease(lease,
-                            LockEventType.RELEASE_FAILED, LockStage.RELEASE,
-                            LockStatus.RELEASE_FAILED, releaseError));
+                    eventPublisher.publish(
+                        eventFactory.fromLease(lease, LockEventType.RELEASE_FAILED, LockStage.RELEASE, LockStatus.RELEASE_FAILED,
+                            releaseError));
                     break;
             }
         } catch (Throwable releaseError) {
             metricsFacade.recordRelease(lease, false);
             primaryError.addSuppressed(releaseError);
-            eventPublisher.publish(eventFactory.fromLease(lease,
-                    LockEventType.RELEASE_FAILED, LockStage.RELEASE,
-                    LockStatus.RELEASE_FAILED, releaseError));
+            eventPublisher.publish(
+                eventFactory.fromLease(lease, LockEventType.RELEASE_FAILED, LockStage.RELEASE, LockStatus.RELEASE_FAILED, releaseError));
         }
     }
 }

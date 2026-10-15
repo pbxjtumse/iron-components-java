@@ -9,8 +9,10 @@ import com.xjtu.iron.storage.routing.api.route.RouteContext;
 import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
 import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.api.route.StorageRouteMode;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,12 +22,8 @@ class DefaultStorageRouteResolverTest {
 
     @Test
     void shouldCarryContextMetadataAndTypedResultsThroughTheEntirePipeline() {
-        RouteContext context = RouteContext.builder()
-                .routeName("order-create")
-                .logicalTable("business_order")
-                .shardKey(CompositeShardKey.of(ShardKey.of("order_id", "8")))
-                .attribute("tenantId", "tenant-1")
-                .build();
+        RouteContext context = RouteContext.builder().routeName("order-create").logicalTable("business_order")
+            .shardKey(CompositeShardKey.of(ShardKey.of("order_id", "8"))).attribute("tenantId", "tenant-1").build();
         ShardRouteInfo shardInfo = new ShardRouteInfo(56, 5, 6, 100);
         DefaultStorageRouteResolver resolver = new DefaultStorageRouteResolver(actual -> {
             assertThat(actual).isSameAs(context.requireShardKey());
@@ -56,8 +54,7 @@ class DefaultStorageRouteResolverTest {
             return PhysicalStorageLocation.of("db_05", "order_56");
         });
 
-        assertThatThrownBy(() -> resolver.resolve(request())).isInstanceOf(StorageRoutingException.class)
-                .hasMessageContaining("shardInfo");
+        assertThatThrownBy(() -> resolver.resolve(request())).isInstanceOf(StorageRoutingException.class).hasMessageContaining("shardInfo");
         assertThat(mapped).isFalse();
     }
 
@@ -66,37 +63,33 @@ class DefaultStorageRouteResolverTest {
         DefaultStorageRouteResolver resolver = new DefaultStorageRouteResolver(new HashShardResolver(10, 10), shard -> null);
 
         assertThatThrownBy(() -> resolver.resolve(request())).isInstanceOf(StorageRoutingException.class)
-                .hasMessageContaining("physicalLocation");
+            .hasMessageContaining("physicalLocation");
         assertThatThrownBy(() -> resolver.resolve((RouteContext) null)).isInstanceOf(NullPointerException.class)
-                .hasMessageContaining("context");
+            .hasMessageContaining("context");
     }
 
     @Test
     void allBuiltInResolversShouldWorkWithTheUnifiedInterface() {
-        List<StorageRouteResolver> resolvers = List.of(
-                new FixedStorageRouteResolver(PhysicalStorageLocation.of("db_05", "order_56")),
-                new DefaultStorageRouteResolver(new HashShardResolver(10, 10),
-                        shard -> PhysicalStorageLocation.of("db_05", "order_56")),
-                ShardIdHashStorageRouteResolver.builder().databaseCount(10).tablesPerDatabase(10).build());
+        List<StorageRouteResolver> resolvers = List.of(new FixedStorageRouteResolver(PhysicalStorageLocation.of("db_05", "order_56")),
+            new DefaultStorageRouteResolver(new HashShardResolver(10, 10), shard -> PhysicalStorageLocation.of("db_05", "order_56")),
+            ShardIdHashStorageRouteResolver.builder().databaseCount(10).tablesPerDatabase(10).build());
 
         for (StorageRouteResolver resolver : resolvers) {
-            assertThat(resolver.resolve(request()).physicalLocation())
-                    .isEqualTo(PhysicalStorageLocation.of("db_05", "order_56"));
+            assertThat(resolver.resolve(request()).physicalLocation()).isEqualTo(PhysicalStorageLocation.of("db_05", "order_56"));
         }
     }
 
     @Test
     void fixedResolverShouldKeepEachRequestContextInsteadOfReturningAStoredRoute() {
-        FixedStorageRouteResolver resolver = new FixedStorageRouteResolver(
-                PhysicalStorageLocation.of("primaryDataSource", "business_order"));
+        FixedStorageRouteResolver resolver =
+            new FixedStorageRouteResolver(PhysicalStorageLocation.of("primaryDataSource", "business_order"));
         RouteContext context = RouteContext.builder().routeName("create-order").logicalTable("business_order").build();
 
         StorageRoute route = resolver.resolve(context);
 
         assertThat(route.context()).isSameAs(context);
         assertThat(route.shardInfo()).isNull();
-        assertThat(route.requirePhysicalLocation())
-                .isEqualTo(PhysicalStorageLocation.of("primaryDataSource", "business_order"));
+        assertThat(route.requirePhysicalLocation()).isEqualTo(PhysicalStorageLocation.of("primaryDataSource", "business_order"));
     }
 
     private static RouteContext request() {
@@ -104,9 +97,7 @@ class DefaultStorageRouteResolverTest {
     }
 
     private static RouteContext context(String logicalTable, String shardKeyName, Object shardKeyValue) {
-        return RouteContext.builder()
-                .logicalTable(logicalTable)
-                .shardKey(CompositeShardKey.of(ShardKey.of(shardKeyName, shardKeyValue)))
-                .build();
+        return RouteContext.builder().logicalTable(logicalTable).shardKey(CompositeShardKey.of(ShardKey.of(shardKeyName, shardKeyValue)))
+            .build();
     }
 }

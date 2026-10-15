@@ -22,7 +22,6 @@ import java.util.Objects;
  *
  * <p>固定直连可不提供 shardKey；需要计算分片的解析器必须调用 requireShardKey()。
  * attributes 是 Map 结构快照，值不会深复制，调用方应保证扩展值稳定。</p>
-
  * <p><b>流程阅读编号：数据模型 R0：路由输入。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
  * <ul>
  *     <li>1. shardKey 提供分片输入，logicalTable 表达逻辑表族，属性承载附加元数据。</li>
@@ -128,7 +127,7 @@ public final class RouteContext {
 
     @Override
     public String toString() {
-        return "RouteContext{routeName='" + routeName + "', logicalTable='" + logicalTable + "', shardFields="
-                + (shardKey == null ? 0 : shardKey.size()) + '}';
+        return "RouteContext{routeName='" + routeName + "', logicalTable='" + logicalTable + "', shardFields=" +
+            (shardKey == null ? 0 : shardKey.size()) + '}';
     }
 }

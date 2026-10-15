@@ -36,11 +36,20 @@ public final class IdempotencyAcquireResult {
         return new IdempotencyAcquireResult(IdempotencyAcquireStatus.PROVIDER_ERROR, null, false, error);
     }
 
-    public IdempotencyAcquireStatus getStatus() { return status; }
-    public IdempotencyRecord getRecord() { return record; }
+    public IdempotencyAcquireStatus getStatus() {
+        return status;
+    }
+
+    public IdempotencyRecord getRecord() {
+        return record;
+    }
 
     /** WINDOWED 语义窗口结束后，是否由旧物理记录滚动开启了新 generation。 */
-    public boolean isWindowRollover() { return windowRollover; }
+    public boolean isWindowRollover() {
+        return windowRollover;
+    }
 
-    public Throwable getError() { return error; }
+    public Throwable getError() {
+        return error;
+    }
 }

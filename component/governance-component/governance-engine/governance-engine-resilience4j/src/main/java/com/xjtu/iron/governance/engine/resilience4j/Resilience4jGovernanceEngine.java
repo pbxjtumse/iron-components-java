@@ -44,19 +44,12 @@ public class Resilience4jGovernanceEngine implements GovernanceEngine {
 
     @Override
     public Set<GovernanceEngineCapability> capabilities() {
-        return Set.of(
-                GovernanceEngineCapability.TIMEOUT,
-                GovernanceEngineCapability.RETRY,
-                GovernanceEngineCapability.CIRCUIT_BREAKER,
-                GovernanceEngineCapability.BULKHEAD,
-                GovernanceEngineCapability.RATE_LIMIT
-        );
+        return Set.of(GovernanceEngineCapability.TIMEOUT, GovernanceEngineCapability.RETRY, GovernanceEngineCapability.CIRCUIT_BREAKER,
+            GovernanceEngineCapability.BULKHEAD, GovernanceEngineCapability.RATE_LIMIT);
     }
 
     @Override
-    public <T> T execute(GovernanceContext context,
-                         GovernancePolicy policy,
-                         GovernanceInvocation<T> invocation) throws Throwable {
+    public <T> T execute(GovernanceContext context, GovernancePolicy policy, GovernanceInvocation<T> invocation) throws Throwable {
 
         Supplier<T> supplier = () -> {
             try {
@@ -116,10 +109,8 @@ public class Resilience4jGovernanceEngine implements GovernanceEngine {
         return retries.computeIfAbsent(resourceName, key -> {
             var p = policy.getRetry();
 
-            RetryConfig config = RetryConfig.custom()
-                    .maxAttempts(Math.max(1, p.getMaxAttempts()))
-                    .waitDuration(p.getWaitDuration())
-                    .build();
+            RetryConfig config =
+                RetryConfig.custom().maxAttempts(Math.max(1, p.getMaxAttempts())).waitDuration(p.getWaitDuration()).build();
 
             return Retry.of(key, config);
         });
@@ -129,15 +120,11 @@ public class Resilience4jGovernanceEngine implements GovernanceEngine {
         return circuitBreakers.computeIfAbsent(resourceName, key -> {
             var p = policy.getCircuitBreaker();
 
-            CircuitBreakerConfig config = CircuitBreakerConfig.custom()
-                    .failureRateThreshold(p.getFailureRateThreshold())
-                    .slowCallRateThreshold(p.getSlowCallRateThreshold())
-                    .slowCallDurationThreshold(p.getSlowCallDurationThreshold())
-                    .slidingWindowSize(p.getSlidingWindowSize())
-                    .minimumNumberOfCalls(p.getMinimumNumberOfCalls())
-                    .waitDurationInOpenState(p.getWaitDurationInOpenState())
-                    .permittedNumberOfCallsInHalfOpenState(p.getPermittedNumberOfCallsInHalfOpenState())
-                    .build();
+            CircuitBreakerConfig config = CircuitBreakerConfig.custom().failureRateThreshold(p.getFailureRateThreshold())
+                .slowCallRateThreshold(p.getSlowCallRateThreshold()).slowCallDurationThreshold(p.getSlowCallDurationThreshold())
+                .slidingWindowSize(p.getSlidingWindowSize()).minimumNumberOfCalls(p.getMinimumNumberOfCalls())
+                .waitDurationInOpenState(p.getWaitDurationInOpenState())
+                .permittedNumberOfCallsInHalfOpenState(p.getPermittedNumberOfCallsInHalfOpenState()).build();
 
             return CircuitBreaker.of(key, config);
         });
@@ -147,10 +134,8 @@ public class Resilience4jGovernanceEngine implements GovernanceEngine {
         return bulkheads.computeIfAbsent(resourceName, key -> {
             var p = policy.getBulkhead();
 
-            BulkheadConfig config = BulkheadConfig.custom()
-                    .maxConcurrentCalls(p.getMaxConcurrentCalls())
-                    .maxWaitDuration(p.getMaxWaitDuration())
-                    .build();
+            BulkheadConfig config =
+                BulkheadConfig.custom().maxConcurrentCalls(p.getMaxConcurrentCalls()).maxWaitDuration(p.getMaxWaitDuration()).build();
 
             return Bulkhead.of(key, config);
         });
@@ -160,11 +145,9 @@ public class Resilience4jGovernanceEngine implements GovernanceEngine {
         return rateLimiters.computeIfAbsent(resourceName, key -> {
             var p = policy.getRateLimit();
 
-            RateLimiterConfig config = RateLimiterConfig.custom()
-                    .limitForPeriod(p.getLimitForPeriod())
-                    .limitRefreshPeriod(p.getLimitRefreshPeriod())
-                    .timeoutDuration(p.getTimeoutDuration())
-                    .build();
+            RateLimiterConfig config =
+                RateLimiterConfig.custom().limitForPeriod(p.getLimitForPeriod()).limitRefreshPeriod(p.getLimitRefreshPeriod())
+                    .timeoutDuration(p.getTimeoutDuration()).build();
 
             return RateLimiter.of(key, config);
         });

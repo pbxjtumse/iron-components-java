@@ -11,7 +11,8 @@ import com.xjtu.iron.message.core.consume.ConsumeInvocation;
  */
 public final class NoopMessageIdempotencyExecutor implements MessageIdempotencyExecutor {
     @Override
-    public ConsumeDecision execute(MessageEnvelope<?> message, ConsumeContext context, MessageIdempotencyOptions options, ConsumeInvocation invocation) {
+    public ConsumeDecision execute(MessageEnvelope<?> message, ConsumeContext context, MessageIdempotencyOptions options,
+        ConsumeInvocation invocation) {
         return invocation.invoke();
     }
 }

@@ -28,20 +28,14 @@ public class MessageSendAutoConfiguration {
     @ConditionalOnMissingBean
     public MessageSendReliabilityOptions messageSendReliabilityOptions(MessageProperties properties) {
         MessageSendReliabilityProperties send = properties.getReliability().getSend();
-        return new MessageSendReliabilityOptions(
-                send.isEnabled(),
-                send.getRetryPolicy(),
-                send.isRetryWhenUnknown(),
-                send.isIncludeReliabilityInfo());
+        return new MessageSendReliabilityOptions(send.isEnabled(), send.getRetryPolicy(), send.isRetryWhenUnknown(),
+            send.isIncludeReliabilityInfo());
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public MessageSendExecutor messageSendExecutor(
-            MessageComponentOptions options,
-            MessageSendReliabilityOptions reliabilityOptions,
-            ObjectProvider<RetryExecutor> retryExecutorProvider,
-            ObjectProvider<RetryPolicyRegistry> retryPolicyRegistryProvider) {
+    public MessageSendExecutor messageSendExecutor(MessageComponentOptions options, MessageSendReliabilityOptions reliabilityOptions,
+        ObjectProvider<RetryExecutor> retryExecutorProvider, ObjectProvider<RetryPolicyRegistry> retryPolicyRegistryProvider) {
         if (!reliabilityOptions.enabled()) {
             return new DirectMessageSender(options.clock());
         }
@@ -49,15 +43,10 @@ public class MessageSendAutoConfiguration {
         RetryPolicyRegistry retryPolicyRegistry = retryPolicyRegistryProvider.getIfAvailable();
         if (retryExecutor == null || retryPolicyRegistry == null) {
             throw new IllegalStateException(
-                    "xjtu.iron.message.reliability.send.enabled=true, "
-                            + "but RetryExecutor or RetryPolicyRegistry is missing. "
-                            + "Please add retry-config/retry-core dependency or disable send reliability.");
+                "xjtu.iron.message.reliability.send.enabled=true, " + "but RetryExecutor or RetryPolicyRegistry is missing. " +
+                    "Please add retry-config/retry-core dependency or disable send reliability.");
         }
-        return new DefaultReliableMessageSender(
-                retryExecutor,
-                retryPolicyRegistry,
-                reliabilityOptions,
-                options.clock(),
-                ForkJoinPool.commonPool());
+        return new DefaultReliableMessageSender(retryExecutor, retryPolicyRegistry, reliabilityOptions, options.clock(),
+            ForkJoinPool.commonPool());
     }
 }

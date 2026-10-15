@@ -33,8 +33,7 @@ public final class IdempotencyPhysicalRoute {
     public boolean equals(Object other) {
         if (this == other) return true;
         if (!(other instanceof IdempotencyPhysicalRoute that)) return false;
-        return java.util.Objects.equals(dataSourceKey, that.dataSourceKey)
-                && tableName.equals(that.tableName);
+        return java.util.Objects.equals(dataSourceKey, that.dataSourceKey) && tableName.equals(that.tableName);
     }
 
     @Override

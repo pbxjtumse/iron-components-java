@@ -24,10 +24,8 @@ class DefaultAsyncTemplateTest {
 
     @Test
     void allOfReturnsValuesInInputOrder() {
-        CompletableFuture<List<Integer>> result = template.allOf(List.of(
-                CompletableFuture.completedFuture(1),
-                CompletableFuture.completedFuture(2)
-        ));
+        CompletableFuture<List<Integer>> result =
+            template.allOf(List.of(CompletableFuture.completedFuture(1), CompletableFuture.completedFuture(2)));
 
         assertEquals(List.of(1, 2), result.join());
     }
@@ -37,10 +35,8 @@ class DefaultAsyncTemplateTest {
         CompletableFuture<Integer> success = CompletableFuture.completedFuture(1);
         CompletableFuture<Integer> failure = CompletableFuture.failedFuture(new IllegalStateException("bad"));
 
-        AsyncBatchResult<Integer> result = template.allOfOutcome(List.of(
-                NamedFuture.of("success", success),
-                NamedFuture.of("failure", failure)
-        )).join();
+        AsyncBatchResult<Integer> result =
+            template.allOfOutcome(List.of(NamedFuture.of("success", success), NamedFuture.of("failure", failure))).join();
 
         assertFalse(result.isAllSuccess());
         assertTrue(result.hasFailure());
@@ -92,10 +88,9 @@ class DefaultAsyncTemplateTest {
 
         assertEquals(7, template.anySuccess(List.of(failed, success)).join());
 
-        CompletableFuture<Integer> allFailed = template.anySuccess(List.of(
-                CompletableFuture.failedFuture(new IllegalArgumentException("a")),
-                CompletableFuture.failedFuture(new IllegalStateException("b"))
-        ));
+        CompletableFuture<Integer> allFailed = template.anySuccess(
+            List.of(CompletableFuture.failedFuture(new IllegalArgumentException("a")),
+                CompletableFuture.failedFuture(new IllegalStateException("b"))));
 
         CompletionException error = assertThrows(CompletionException.class, allFailed::join);
         assertEquals("All futures failed", error.getCause().getMessage());

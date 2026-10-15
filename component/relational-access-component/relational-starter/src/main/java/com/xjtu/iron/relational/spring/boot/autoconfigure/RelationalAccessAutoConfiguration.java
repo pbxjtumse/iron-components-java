@@ -31,12 +31,8 @@ import java.util.function.Consumer;
  * SqlSessionFactory。存在 transaction-component 时，Access 同时提供当前事务资源校验和
  * REQUIRES_NEW 能力。</p>
  */
-@AutoConfiguration(
-        afterName = {
-                "org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration",
-                "com.xjtu.iron.transaction.starter.autoconfigure.TransactionAutoConfiguration"
-        }
-)
+@AutoConfiguration(afterName = {"org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration",
+    "com.xjtu.iron.transaction.starter.autoconfigure.TransactionAutoConfiguration"})
 @ConditionalOnClass({SqlSessionTemplate.class, MyBatisAccess.class})
 public class RelationalAccessAutoConfiguration {
 
@@ -50,27 +46,17 @@ public class RelationalAccessAutoConfiguration {
     @ConditionalOnMissingBean(TransactionExecutor.class)
     @ConditionalOnSingleCandidate(DataSource.class)
     public TransactionExecutor myBatisTransactionExecutor(DataSource dataSource) {
-        return new DefaultTransactionExecutor(
-                new SpringTransactionProvider(new DataSourceTransactionManager(dataSource))
-        );
+        return new DefaultTransactionExecutor(new SpringTransactionProvider(new DataSourceTransactionManager(dataSource)));
     }
 
     @Bean
     @ConditionalOnMissingBean(MyBatisAccess.class)
     @ConditionalOnBean(SqlSessionTemplate.class)
     @ConditionalOnSingleCandidate(DataSource.class)
-    public MyBatisAccess myBatisAccess(
-            DataSource dataSource,
-            SqlSessionTemplate sqlSessionTemplate,
-            ObjectProvider<TransactionExecutor> transactionExecutorProvider,
-            ObjectProvider<MyBatisAccessListener> listenerProvider
-    ) {
-        return new SpringMyBatisAccess(
-                dataSource,
-                sqlSessionTemplate,
-                transactionExecutorProvider.getIfAvailable(),
-                compositeListener(listenerProvider.orderedStream().toList())
-        );
+    public MyBatisAccess myBatisAccess(DataSource dataSource, SqlSessionTemplate sqlSessionTemplate,
+        ObjectProvider<TransactionExecutor> transactionExecutorProvider, ObjectProvider<MyBatisAccessListener> listenerProvider) {
+        return new SpringMyBatisAccess(dataSource, sqlSessionTemplate, transactionExecutorProvider.getIfAvailable(),
+            compositeListener(listenerProvider.orderedStream().toList()));
     }
 
     @Bean
@@ -96,20 +82,13 @@ public class RelationalAccessAutoConfiguration {
             }
 
             @Override
-            public void afterFailure(
-                    MyBatisAccessInvocation invocation,
-                    Duration elapsed,
-                    Throwable failure
-            ) {
+            public void afterFailure(MyBatisAccessInvocation invocation, Duration elapsed, Throwable failure) {
                 notifyEach(listeners, listener -> listener.afterFailure(invocation, elapsed, failure));
             }
         };
     }
 
-    private void notifyEach(
-            List<MyBatisAccessListener> listeners,
-            Consumer<MyBatisAccessListener> callback
-    ) {
+    private void notifyEach(List<MyBatisAccessListener> listeners, Consumer<MyBatisAccessListener> callback) {
         for (MyBatisAccessListener listener : listeners) {
             try {
                 callback.accept(listener);

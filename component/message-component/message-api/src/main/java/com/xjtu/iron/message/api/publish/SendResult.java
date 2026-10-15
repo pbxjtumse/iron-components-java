@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+
 /**
  * 业务发送调用最终拿到的统一结果对象。
  *
@@ -64,52 +65,19 @@ public final class SendResult {
     /**
      * 兼容一期的构造器。
      */
-    public SendResult(
-            String messageId,
-            MessageDestination destination,
-            String providerName,
-            String physicalDestination,
-            SendStatus status,
-            SendStage stage,
-            SendFailureType failureType,
-            String providerMessageId,
-            String description,
-            Instant startedAt,
-            Instant completedAt,
-            Map<String, String> metadata) {
-        this(
-                messageId,
-                destination,
-                providerName,
-                physicalDestination,
-                status,
-                stage,
-                failureType,
-                providerMessageId,
-                description,
-                startedAt,
-                completedAt,
-                metadata,
-                SendReliabilityInfo.disabled());
+    public SendResult(String messageId, MessageDestination destination, String providerName, String physicalDestination, SendStatus status,
+        SendStage stage, SendFailureType failureType, String providerMessageId, String description, Instant startedAt, Instant completedAt,
+        Map<String, String> metadata) {
+        this(messageId, destination, providerName, physicalDestination, status, stage, failureType, providerMessageId, description,
+            startedAt, completedAt, metadata, SendReliabilityInfo.disabled());
     }
 
     /**
      * 创建完整发送结果。
      */
-    public SendResult(
-            String messageId,
-            MessageDestination destination,
-            String providerName,
-            String physicalDestination,
-            SendStatus status,
-            SendStage stage,
-            SendFailureType failureType,
-            String providerMessageId,
-            String description,
-            Instant startedAt,
-            Instant completedAt,
-            Map<String, String> metadata,
-            SendReliabilityInfo reliabilityInfo) {
+    public SendResult(String messageId, MessageDestination destination, String providerName, String physicalDestination, SendStatus status,
+        SendStage stage, SendFailureType failureType, String providerMessageId, String description, Instant startedAt, Instant completedAt,
+        Map<String, String> metadata, SendReliabilityInfo reliabilityInfo) {
         this.messageId = messageId;
         this.destination = destination;
         this.providerName = providerName;
@@ -121,12 +89,8 @@ public final class SendResult {
         this.description = description;
         this.startedAt = startedAt;
         this.completedAt = completedAt;
-        this.metadata = metadata == null || metadata.isEmpty()
-                ? Map.of()
-                : Collections.unmodifiableMap(new LinkedHashMap<>(metadata));
-        this.reliabilityInfo = reliabilityInfo == null
-                ? SendReliabilityInfo.disabled()
-                : reliabilityInfo;
+        this.metadata = metadata == null || metadata.isEmpty() ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(metadata));
+        this.reliabilityInfo = reliabilityInfo == null ? SendReliabilityInfo.disabled() : reliabilityInfo;
     }
 
     /**
@@ -208,55 +172,25 @@ public final class SendResult {
             return false;
         }
         SendResult other = (SendResult) object;
-        return Objects.equals(messageId, other.messageId)
-                && Objects.equals(destination, other.destination)
-                && Objects.equals(providerName, other.providerName)
-                && Objects.equals(physicalDestination, other.physicalDestination)
-                && status == other.status
-                && stage == other.stage
-                && failureType == other.failureType
-                && Objects.equals(providerMessageId, other.providerMessageId)
-                && Objects.equals(description, other.description)
-                && Objects.equals(startedAt, other.startedAt)
-                && Objects.equals(completedAt, other.completedAt)
-                && Objects.equals(metadata, other.metadata)
-                && Objects.equals(reliabilityInfo, other.reliabilityInfo);
+        return Objects.equals(messageId, other.messageId) && Objects.equals(destination, other.destination) &&
+            Objects.equals(providerName, other.providerName) && Objects.equals(physicalDestination, other.physicalDestination) &&
+            status == other.status && stage == other.stage && failureType == other.failureType &&
+            Objects.equals(providerMessageId, other.providerMessageId) && Objects.equals(description, other.description) &&
+            Objects.equals(startedAt, other.startedAt) && Objects.equals(completedAt, other.completedAt) &&
+            Objects.equals(metadata, other.metadata) && Objects.equals(reliabilityInfo, other.reliabilityInfo);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-                messageId,
-                destination,
-                providerName,
-                physicalDestination,
-                status,
-                stage,
-                failureType,
-                providerMessageId,
-                description,
-                startedAt,
-                completedAt,
-                metadata,
-                reliabilityInfo);
+        return Objects.hash(messageId, destination, providerName, physicalDestination, status, stage, failureType, providerMessageId,
+            description, startedAt, completedAt, metadata, reliabilityInfo);
     }
 
     @Override
     public String toString() {
-        return "SendResult{"
-                + "messageId=" + messageId
-                + ", destination=" + destination
-                + ", providerName=" + providerName
-                + ", physicalDestination=" + physicalDestination
-                + ", status=" + status
-                + ", stage=" + stage
-                + ", failureType=" + failureType
-                + ", providerMessageId=" + providerMessageId
-                + ", description=" + description
-                + ", startedAt=" + startedAt
-                + ", completedAt=" + completedAt
-                + ", metadata=" + metadata
-                + ", reliabilityInfo=" + reliabilityInfo
-                + '}';
+        return "SendResult{" + "messageId=" + messageId + ", destination=" + destination + ", providerName=" + providerName +
+            ", physicalDestination=" + physicalDestination + ", status=" + status + ", stage=" + stage + ", failureType=" + failureType +
+            ", providerMessageId=" + providerMessageId + ", description=" + description + ", startedAt=" + startedAt + ", completedAt=" +
+            completedAt + ", metadata=" + metadata + ", reliabilityInfo=" + reliabilityInfo + '}';
     }
 }

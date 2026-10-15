@@ -36,7 +36,7 @@ public final class JacksonJsonSerializer implements Serializer {
             byte[] bytes = objectMapper.writeValueAsBytes(value);
             if (bytes.length > options.getMaxBytes()) {
                 throw new SerializationException(SerializationOperation.SERIALIZE,
-                        "serialized payload exceeds maxBytes: " + options.getMaxBytes(), null);
+                    "serialized payload exceeds maxBytes: " + options.getMaxBytes(), null);
             }
             return new SerializedPayload(bytes, context);
         } catch (SerializationException ex) {

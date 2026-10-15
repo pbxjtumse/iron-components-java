@@ -37,8 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class RedisLockProviderIntegrationTest {
 
     @Container
-    static final GenericContainer<?> REDIS = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
-            .withExposedPorts(6379);
+    static final GenericContainer<?> REDIS = new GenericContainer<>(DockerImageName.parse("redis:7-alpine")).withExposedPorts(6379);
 
     private static LettuceConnectionFactory connectionFactory;
 
@@ -65,21 +64,16 @@ class RedisLockProviderIntegrationTest {
     @Test
     void nativeRedisFencingTokenShouldIncreaseForEachSuccessfulLease() {
         String lockName = "integration:fencing:1";
-        LockOptions options = LockOptions.builder()
-                .leaseTime(Duration.ofSeconds(5))
-                .fencingRequired(true)
-                .build();
+        LockOptions options = LockOptions.builder().leaseTime(Duration.ofSeconds(5)).fencingRequired(true).build();
 
-        LockAcquireResponse first = provider.acquire(LockAcquireRequest.builder()
-                .lockName(lockName).ownerToken("owner-1").options(options)
-                .nativeFencingRequired(true).build());
+        LockAcquireResponse first = provider.acquire(
+            LockAcquireRequest.builder().lockName(lockName).ownerToken("owner-1").options(options).nativeFencingRequired(true).build());
         assertTrue(first.isAcquired());
         long firstToken = first.getLease().fencingToken().orElseThrow();
         assertEquals(LockReleaseStatus.RELEASED, provider.release(LockReleaseRequest.fromLease(first.getLease())).getStatus());
 
-        LockAcquireResponse second = provider.acquire(LockAcquireRequest.builder()
-                .lockName(lockName).ownerToken("owner-2").options(options)
-                .nativeFencingRequired(true).build());
+        LockAcquireResponse second = provider.acquire(
+            LockAcquireRequest.builder().lockName(lockName).ownerToken("owner-2").options(options).nativeFencingRequired(true).build());
         assertTrue(second.isAcquired());
         long secondToken = second.getLease().fencingToken().orElseThrow();
         assertTrue(secondToken > firstToken);
@@ -88,21 +82,15 @@ class RedisLockProviderIntegrationTest {
 
     @Test
     void acquireRenewCheckAndReleaseShouldUseLuaAtomically() {
-        LockAcquireRequest acquireRequest = LockAcquireRequest.builder()
-                .lockName("integration:job:1")
-                .ownerToken("owner-a")
-                .options(LockOptions.noWait(Duration.ofSeconds(5)))
-                .build();
+        LockAcquireRequest acquireRequest = LockAcquireRequest.builder().lockName("integration:job:1").ownerToken("owner-a")
+            .options(LockOptions.noWait(Duration.ofSeconds(5))).build();
 
         LockAcquireResponse acquired = provider.acquire(acquireRequest);
         assertTrue(acquired.isAcquired());
         assertNotNull(acquired.getLease());
 
-        LockAcquireResponse busy = provider.acquire(LockAcquireRequest.builder()
-                .lockName("integration:job:1")
-                .ownerToken("owner-b")
-                .options(LockOptions.noWait(Duration.ofSeconds(5)))
-                .build());
+        LockAcquireResponse busy = provider.acquire(LockAcquireRequest.builder().lockName("integration:job:1").ownerToken("owner-b")
+            .options(LockOptions.noWait(Duration.ofSeconds(5))).build());
         assertTrue(busy.isNotAcquired());
         assertNotNull(busy.getRemainingTtl());
 

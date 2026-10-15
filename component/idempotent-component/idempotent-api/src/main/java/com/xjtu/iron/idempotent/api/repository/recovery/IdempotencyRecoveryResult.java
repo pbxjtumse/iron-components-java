@@ -29,8 +29,19 @@ public final class IdempotencyRecoveryResult {
         return new IdempotencyRecoveryResult(IdempotencyRecoveryStatus.PROVIDER_ERROR, null, null, error);
     }
 
-    public IdempotencyRecoveryStatus getStatus() { return status; }
-    public IdempotencyRecord getRecord() { return record; }
-    public String getRecoveryReason() { return recoveryReason; }
-    public Throwable getError() { return error; }
+    public IdempotencyRecoveryStatus getStatus() {
+        return status;
+    }
+
+    public IdempotencyRecord getRecord() {
+        return record;
+    }
+
+    public String getRecoveryReason() {
+        return recoveryReason;
+    }
+
+    public Throwable getError() {
+        return error;
+    }
 }

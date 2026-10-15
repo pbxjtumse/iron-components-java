@@ -30,24 +30,17 @@ import org.springframework.context.annotation.Bean;
  * StorageRoutingProperties；幂等 logicalTable/tablePrefix 则来自独立的 IdempotencyStorageRoutingProperties。
  * 固定单库单表仍使用 xjtu.iron.idempotent.mybatis.table-name，不再和分片表前缀混为一个配置语义。</p>
  */
-@AutoConfiguration(
-        afterName = "com.xjtu.iron.storage.routing.starter.autoconfigure.StorageRoutingAutoConfiguration",
-        before = IdempotencyAutoConfiguration.class
-)
-@EnableConfigurationProperties({
-        IdempotencyProperties.class,
-        IdempotencyStorageRoutingProperties.class,
-        StorageRoutingProperties.class
-})
-@ConditionalOnClass({StorageRoutingIdempotencyPhysicalRouteResolver.class, RouteMappingStrategyFactory.class, StorageRoutingProperties.class})
+@AutoConfiguration(afterName = "com.xjtu.iron.storage.routing.starter.autoconfigure.StorageRoutingAutoConfiguration",
+    before = IdempotencyAutoConfiguration.class)
+@EnableConfigurationProperties({IdempotencyProperties.class, IdempotencyStorageRoutingProperties.class, StorageRoutingProperties.class})
+@ConditionalOnClass(
+    {StorageRoutingIdempotencyPhysicalRouteResolver.class, RouteMappingStrategyFactory.class, StorageRoutingProperties.class})
 @ConditionalOnProperty(prefix = "xjtu.iron.idempotent.mybatis.routing", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class IdempotencyStorageRoutingAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(IdempotencyRouteContextFactory.class)
-    public IdempotencyRouteContextFactory idempotencyRouteContextFactory(
-            IdempotencyStorageRoutingProperties idempotencyRouting
-    ) {
+    public IdempotencyRouteContextFactory idempotencyRouteContextFactory(IdempotencyStorageRoutingProperties idempotencyRouting) {
         return new DefaultIdempotencyRouteContextFactory(idempotencyRouting.getLogicalTable());
     }
 
@@ -60,37 +53,23 @@ public class IdempotencyStorageRoutingAutoConfiguration {
     @Bean(name = "idempotencyRouteMappingStrategy")
     @ConditionalOnBean(StorageRouteResolver.class)
     @ConditionalOnMissingBean(name = "idempotencyRouteMappingStrategy")
-    public RouteMappingStrategy idempotencyRouteMappingStrategy(
-            IdempotencyStorageRoutingProperties idempotencyRouting,
-            StorageRoutingProperties storageRouting
-    ) {
+    public RouteMappingStrategy idempotencyRouteMappingStrategy(IdempotencyStorageRoutingProperties idempotencyRouting,
+        StorageRoutingProperties storageRouting) {
         StorageRoutingProperties.Resolver routing = storageRouting.getResolver();
         StorageRoutingProperties.Hash hash = routing.getHash();
-        return new RouteMappingStrategyFactory(
-                hash.getDataSourcePrefix(),
-                idempotencyRouting.getTablePrefix(),
-                hash.getDataSourceIndexWidth(),
-                hash.getTableIndexWidth())
-                .create(hash.getTableIndexMode());
+        return new RouteMappingStrategyFactory(hash.getDataSourcePrefix(), idempotencyRouting.getTablePrefix(),
+            hash.getDataSourceIndexWidth(), hash.getTableIndexWidth()).create(hash.getTableIndexMode());
     }
 
     @Bean
     @ConditionalOnBean({StorageRouteResolver.class, StorageRouteContext.class})
     @ConditionalOnMissingBean(IdempotencyPhysicalRouteResolver.class)
-    public IdempotencyPhysicalRouteResolver storageRoutingIdempotencyPhysicalRouteResolver(
-            StorageRouteResolver storageRouteResolver,
-            StorageRouteContext storageRouteContext,
-            @Qualifier("idempotencyRouteMappingStrategy") RouteMappingStrategy idempotencyMappingStrategy,
-            IdempotencyStorageRoutingProperties idempotencyRouting,
-            StorageRoutingProperties storageRouting
-    ) {
-        return new StorageRoutingIdempotencyPhysicalRouteResolver(
-                idempotencyRouting.getLogicalTable(),
-                idempotencyRouting.getTablePrefix(),
-                storageRouteResolver,
-                storageRouteContext,
-                idempotencyMappingStrategy,
-                storageRouting.getShardingSphereJdbc().getDataSourceKey(),
-                storageRouting.getShardingSphereProxy().getDataSourceKey());
+    public IdempotencyPhysicalRouteResolver storageRoutingIdempotencyPhysicalRouteResolver(StorageRouteResolver storageRouteResolver,
+        StorageRouteContext storageRouteContext,
+        @Qualifier("idempotencyRouteMappingStrategy") RouteMappingStrategy idempotencyMappingStrategy,
+        IdempotencyStorageRoutingProperties idempotencyRouting, StorageRoutingProperties storageRouting) {
+        return new StorageRoutingIdempotencyPhysicalRouteResolver(idempotencyRouting.getLogicalTable(), idempotencyRouting.getTablePrefix(),
+            storageRouteResolver, storageRouteContext, idempotencyMappingStrategy,
+            storageRouting.getShardingSphereJdbc().getDataSourceKey(), storageRouting.getShardingSphereProxy().getDataSourceKey());
     }
 }

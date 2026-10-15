@@ -9,7 +9,8 @@ import java.util.Optional;
  */
 public final class IronGenericTypes {
 
-    private IronGenericTypes() {}
+    private IronGenericTypes() {
+    }
 
     public static Optional<Type> firstActualTypeArgument(Type type) {
         if (type instanceof ParameterizedType parameterizedType && parameterizedType.getActualTypeArguments().length > 0) {

@@ -58,16 +58,10 @@ public class TraceProviderContext {
      */
     private final List<TraceErrorResolver> errorResolvers;
 
-    public TraceProviderContext(
-            String serviceName,
-            String instrumentationScopeName,
-            List<TraceErrorResolver> errorResolvers
-    ) {
+    public TraceProviderContext(String serviceName, String instrumentationScopeName, List<TraceErrorResolver> errorResolvers) {
         this.serviceName = serviceName;
         this.instrumentationScopeName = instrumentationScopeName;
-        this.errorResolvers = errorResolvers == null
-                ? Collections.emptyList()
-                : Collections.unmodifiableList(errorResolvers);
+        this.errorResolvers = errorResolvers == null ? Collections.emptyList() : Collections.unmodifiableList(errorResolvers);
     }
 
     public String getServiceName() {

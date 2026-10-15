@@ -19,9 +19,13 @@ public final class InstantRange {
         }
     }
 
-    public Instant getStartInclusive() { return startInclusive; }
+    public Instant getStartInclusive() {
+        return startInclusive;
+    }
 
-    public Instant getEndExclusive() { return endExclusive; }
+    public Instant getEndExclusive() {
+        return endExclusive;
+    }
 
     public boolean contains(Instant instant) {
         Objects.requireNonNull(instant, "instant must not be null");

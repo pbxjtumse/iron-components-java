@@ -20,15 +20,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ReliableTaskAutoConfigurationTest {
 
     /** 用于验证 Starter 条件装配结果的 Spring 应用上下文运行器。 */
-    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(
-                    RelationalAccessAutoConfiguration.class,
-                    MybatisAutoConfiguration.class,
-                    ReliableTaskMyBatisProviderAutoConfiguration.class,
-                    ReliableTaskAutoConfiguration.class,
-                    LocalReliableTaskSchedulerConfiguration.class
-            ))
-            .withBean(DataSource.class, ReliableTaskAutoConfigurationTest::dataSource);
+    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
+        AutoConfigurations.of(RelationalAccessAutoConfiguration.class, MybatisAutoConfiguration.class,
+            ReliableTaskMyBatisProviderAutoConfiguration.class, ReliableTaskAutoConfiguration.class,
+            LocalReliableTaskSchedulerConfiguration.class)).withBean(DataSource.class, ReliableTaskAutoConfigurationTest::dataSource);
 
     @Test
     void shouldCreateCoreRuntimeButKeepLocalSchedulerDisabledByDefault() {
@@ -44,37 +39,28 @@ class ReliableTaskAutoConfigurationTest {
 
     @Test
     void shouldAllowDisablingTheWholeComponent() {
-        contextRunner
-                .withPropertyValues("xjtu.iron.reliable-task.enabled=false")
-                .run(context -> assertThat(context).doesNotHaveBean(ReliableTaskClient.class));
+        contextRunner.withPropertyValues("xjtu.iron.reliable-task.enabled=false")
+            .run(context -> assertThat(context).doesNotHaveBean(ReliableTaskClient.class));
     }
 
     @Test
     void shouldUseMyBatisProviderWithoutAProviderSwitch() {
-        new ApplicationContextRunner()
-                .withConfiguration(AutoConfigurations.of(
-                        MybatisAutoConfiguration.class,
-                        RelationalAccessAutoConfiguration.class,
-                        ReliableTaskMyBatisProviderAutoConfiguration.class,
-                        ReliableTaskAutoConfiguration.class
-                ))
-                .withBean(DataSource.class, ReliableTaskAutoConfigurationTest::dataSource)
-                .run(context -> {
-                    assertThat(context).hasSingleBean(ReliableTaskRepository.class);
-                    assertThat(context).hasSingleBean(MyBatisReliableTaskRepository.class);
-                    assertThat(context).hasSingleBean(ReliableTaskClient.class);
-                });
+        new ApplicationContextRunner().withConfiguration(
+                AutoConfigurations.of(MybatisAutoConfiguration.class, RelationalAccessAutoConfiguration.class,
+                    ReliableTaskMyBatisProviderAutoConfiguration.class, ReliableTaskAutoConfiguration.class))
+            .withBean(DataSource.class, ReliableTaskAutoConfigurationTest::dataSource).run(context -> {
+                assertThat(context).hasSingleBean(ReliableTaskRepository.class);
+                assertThat(context).hasSingleBean(MyBatisReliableTaskRepository.class);
+                assertThat(context).hasSingleBean(ReliableTaskClient.class);
+            });
     }
 
     @Test
     void shouldFailFastWhenSelectedProviderIsUnavailable() {
-        new ApplicationContextRunner()
-                .withConfiguration(AutoConfigurations.of(ReliableTaskAutoConfiguration.class))
-                .run(context -> {
-                    assertThat(context).hasFailed();
-                    assertThat(context.getStartupFailure())
-                            .hasMessageContaining("ReliableTaskRepository");
-                });
+        new ApplicationContextRunner().withConfiguration(AutoConfigurations.of(ReliableTaskAutoConfiguration.class)).run(context -> {
+            assertThat(context).hasFailed();
+            assertThat(context.getStartupFailure()).hasMessageContaining("ReliableTaskRepository");
+        });
     }
 
     private static DataSource dataSource() {

@@ -57,10 +57,18 @@ public final class RedisScriptResultParser {
             this.value = value;
         }
 
-        public long getFlag() { return flag; }
-        public long getRemainingTtlMillis() { return asLong(value); }
+        public long getFlag() {
+            return flag;
+        }
+
+        public long getRemainingTtlMillis() {
+            return asLong(value);
+        }
+
         public Long getFencingToken() {
-            if (value == null) { return null; }
+            if (value == null) {
+                return null;
+            }
             long parsed = asLong(value);
             return parsed <= 0 ? null : parsed;
         }

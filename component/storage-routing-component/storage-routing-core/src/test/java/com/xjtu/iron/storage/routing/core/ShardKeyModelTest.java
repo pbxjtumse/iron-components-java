@@ -4,11 +4,13 @@ import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
 import com.xjtu.iron.storage.routing.api.key.ShardKey;
 import com.xjtu.iron.storage.routing.api.key.ShardValue;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,11 +33,12 @@ class ShardKeyModelTest {
 
     @Test
     void arbitraryOrMutableValuesShouldNotReachHashingThroughToString() {
-        List<Object> unsupported = List.of(new Object(), new StringBuilder("8"), new AtomicInteger(8),
-                new byte[]{8}, List.of("8"), 8.0, new BigInteger("8") { });
+        List<Object> unsupported =
+            List.of(new Object(), new StringBuilder("8"), new AtomicInteger(8), new byte[]{8}, List.of("8"), 8.0, new BigInteger("8") {
+            });
         for (Object value : unsupported) {
             assertThatThrownBy(() -> ShardValue.of(value)).isInstanceOf(StorageRoutingException.class)
-                    .hasMessageContaining("Unsupported shard value type");
+                .hasMessageContaining("Unsupported shard value type");
         }
         assertThatThrownBy(() -> ShardValue.of(null)).isInstanceOf(NullPointerException.class);
     }
@@ -59,8 +62,8 @@ class ShardKeyModelTest {
     @Test
     void shouldRejectEmptyKeysDuplicateNamesAndMissingFields() {
         assertThatThrownBy(() -> CompositeShardKey.of()).isInstanceOf(StorageRoutingException.class);
-        assertThatThrownBy(() -> CompositeShardKey.of(ShardKey.of("id", 8), ShardKey.of(" id ", 9)))
-                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("Duplicate");
+        assertThatThrownBy(() -> CompositeShardKey.of(ShardKey.of("id", 8), ShardKey.of(" id ", 9))).isInstanceOf(
+            StorageRoutingException.class).hasMessageContaining("Duplicate");
         assertThatThrownBy(() -> CompositeShardKey.of(ShardKey.of("id", 8), null)).isInstanceOf(NullPointerException.class);
         assertThatThrownBy(() -> ShardKey.of(" ", 8)).isInstanceOf(StorageRoutingException.class);
     }

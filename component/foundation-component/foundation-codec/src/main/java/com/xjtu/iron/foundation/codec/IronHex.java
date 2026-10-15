@@ -9,7 +9,8 @@ public final class IronHex {
 
     private static final HexFormat HEX = HexFormat.of();
 
-    private IronHex() {}
+    private IronHex() {
+    }
 
     public static String encode(byte[] bytes) {
         return bytes == null ? null : HEX.formatHex(bytes);

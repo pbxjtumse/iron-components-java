@@ -17,15 +17,10 @@ public interface MessagePublisher {
     SendResult send(MessageDestination destination, MessageEnvelope<?> message, SendOptions options);
 
     /** 使用默认选项异步发送。 */
-    default CompletionStage<SendResult> sendAsync(
-            MessageDestination destination,
-            MessageEnvelope<?> message) {
+    default CompletionStage<SendResult> sendAsync(MessageDestination destination, MessageEnvelope<?> message) {
         return sendAsync(destination, message, SendOptions.defaults());
     }
 
     /** 异步发送并返回标准结果阶段。 */
-    CompletionStage<SendResult> sendAsync(
-            MessageDestination destination,
-            MessageEnvelope<?> message,
-            SendOptions options);
+    CompletionStage<SendResult> sendAsync(MessageDestination destination, MessageEnvelope<?> message, SendOptions options);
 }

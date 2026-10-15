@@ -12,20 +12,14 @@ class CompositeStringIdGeneratorTest {
 
     @Test
     void shouldJoinTechnicalIdSegmentsInDeclaredOrder() {
-        CompositeStringIdGenerator generator = new CompositeStringIdGenerator(
-                List.of(() -> "cn", () -> "node-1", () -> "0001"),
-                ":"
-        );
+        CompositeStringIdGenerator generator = new CompositeStringIdGenerator(List.of(() -> "cn", () -> "node-1", () -> "0001"), ":");
 
         assertEquals("cn:node-1:0001", generator.nextId());
     }
 
     @Test
     void shouldRejectBlankGeneratedSegment() {
-        CompositeStringIdGenerator generator = new CompositeStringIdGenerator(
-                List.of(() -> "cn", () -> ""),
-                ":"
-        );
+        CompositeStringIdGenerator generator = new CompositeStringIdGenerator(List.of(() -> "cn", () -> ""), ":");
 
         assertThrows(IdGenerationException.class, generator::nextId);
     }

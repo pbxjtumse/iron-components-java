@@ -54,32 +54,80 @@ public class IdempotencyProperties {
     /** 用户自定义命名策略。 */
     private final Map<String, Policy> policies = new LinkedHashMap<>();
 
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public String getDefaultPolicy() { return defaultPolicy; }
-    public void setDefaultPolicy(String defaultPolicy) { this.defaultPolicy = defaultPolicy; }
-    public String getDefaultWindowedRepository() { return defaultWindowedRepository; }
-    public void setDefaultWindowedRepository(String value) { this.defaultWindowedRepository = value; }
-    public String getDefaultDurableRepository() { return defaultDurableRepository; }
-    public void setDefaultDurableRepository(String value) { this.defaultDurableRepository = value; }
-    public Duration getProcessingTimeout() { return processingTimeout; }
-    public void setProcessingTimeout(Duration processingTimeout) { this.processingTimeout = processingTimeout; }
-    public Windowed getWindowed() { return windowed; }
+    public boolean isEnabled() {
+        return enabled;
+    }
 
-    public Durable getDurable() { return durable; }
-    public Lock getLock() { return lock; }
-    public Transaction getTransaction() { return transaction; }
-    public Redis getRedis() { return redis; }
-    public MyBatis getMybatis() { return mybatis; }
-    public Map<String, Policy> getPolicies() { return policies; }
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public String getDefaultPolicy() {
+        return defaultPolicy;
+    }
+
+    public void setDefaultPolicy(String defaultPolicy) {
+        this.defaultPolicy = defaultPolicy;
+    }
+
+    public String getDefaultWindowedRepository() {
+        return defaultWindowedRepository;
+    }
+
+    public void setDefaultWindowedRepository(String value) {
+        this.defaultWindowedRepository = value;
+    }
+
+    public String getDefaultDurableRepository() {
+        return defaultDurableRepository;
+    }
+
+    public void setDefaultDurableRepository(String value) {
+        this.defaultDurableRepository = value;
+    }
+
+    public Duration getProcessingTimeout() {
+        return processingTimeout;
+    }
+
+    public void setProcessingTimeout(Duration processingTimeout) {
+        this.processingTimeout = processingTimeout;
+    }
+
+    public Windowed getWindowed() {
+        return windowed;
+    }
+
+    public Durable getDurable() {
+        return durable;
+    }
+
+    public Lock getLock() {
+        return lock;
+    }
+
+    public Transaction getTransaction() {
+        return transaction;
+    }
+
+    public Redis getRedis() {
+        return redis;
+    }
+
+    public MyBatis getMybatis() {
+        return mybatis;
+    }
+
+    public Map<String, Policy> getPolicies() {
+        return policies;
+    }
 
     public static class Windowed {
         /** 同 key 在该时间内属于同一个逻辑请求。 */
         private Duration idempotencyWindow = Duration.ofMinutes(10);
 
         /** 窗口起点/推进方式，默认从首次 acquire 固定计算。 */
-        private IdempotencyWindowPolicy windowPolicy =
-                IdempotencyWindowPolicy.FIXED_FROM_FIRST_ACQUIRE;
+        private IdempotencyWindowPolicy windowPolicy = IdempotencyWindowPolicy.FIXED_FROM_FIRST_ACQUIRE;
 
         /** 窗口结束后的额外物理保留时间。 */
         private Duration recordRetentionTtl = Duration.ZERO;
@@ -93,18 +141,53 @@ public class IdempotencyProperties {
         /** 是否允许恢复 retryable FAILED。 */
         private boolean recoverFailed;
 
-        public Duration getIdempotencyWindow() { return idempotencyWindow; }
-        public void setIdempotencyWindow(Duration value) { this.idempotencyWindow = value; }
-        public IdempotencyWindowPolicy getWindowPolicy() { return windowPolicy; }
-        public void setWindowPolicy(IdempotencyWindowPolicy value) { this.windowPolicy = value; }
-        public Duration getRecordRetentionTtl() { return recordRetentionTtl; }
-        public void setRecordRetentionTtl(Duration value) { this.recordRetentionTtl = value; }
-        public IdempotencyRecoveryMode getRecoveryMode() { return recoveryMode; }
-        public void setRecoveryMode(IdempotencyRecoveryMode value) { this.recoveryMode = value; }
-        public boolean isRecoverProcessingTimeout() { return recoverProcessingTimeout; }
-        public void setRecoverProcessingTimeout(boolean value) { this.recoverProcessingTimeout = value; }
-        public boolean isRecoverFailed() { return recoverFailed; }
-        public void setRecoverFailed(boolean value) { this.recoverFailed = value; }
+        public Duration getIdempotencyWindow() {
+            return idempotencyWindow;
+        }
+
+        public void setIdempotencyWindow(Duration value) {
+            this.idempotencyWindow = value;
+        }
+
+        public IdempotencyWindowPolicy getWindowPolicy() {
+            return windowPolicy;
+        }
+
+        public void setWindowPolicy(IdempotencyWindowPolicy value) {
+            this.windowPolicy = value;
+        }
+
+        public Duration getRecordRetentionTtl() {
+            return recordRetentionTtl;
+        }
+
+        public void setRecordRetentionTtl(Duration value) {
+            this.recordRetentionTtl = value;
+        }
+
+        public IdempotencyRecoveryMode getRecoveryMode() {
+            return recoveryMode;
+        }
+
+        public void setRecoveryMode(IdempotencyRecoveryMode value) {
+            this.recoveryMode = value;
+        }
+
+        public boolean isRecoverProcessingTimeout() {
+            return recoverProcessingTimeout;
+        }
+
+        public void setRecoverProcessingTimeout(boolean value) {
+            this.recoverProcessingTimeout = value;
+        }
+
+        public boolean isRecoverFailed() {
+            return recoverFailed;
+        }
+
+        public void setRecoverFailed(boolean value) {
+            this.recoverFailed = value;
+        }
     }
 
     public static class Durable {
@@ -117,12 +200,29 @@ public class IdempotencyProperties {
         /** 是否允许恢复 retryable FAILED。 */
         private boolean recoverFailed = true;
 
-        public IdempotencyRecoveryMode getRecoveryMode() { return recoveryMode; }
-        public void setRecoveryMode(IdempotencyRecoveryMode value) { this.recoveryMode = value; }
-        public boolean isRecoverProcessingTimeout() { return recoverProcessingTimeout; }
-        public void setRecoverProcessingTimeout(boolean value) { this.recoverProcessingTimeout = value; }
-        public boolean isRecoverFailed() { return recoverFailed; }
-        public void setRecoverFailed(boolean value) { this.recoverFailed = value; }
+        public IdempotencyRecoveryMode getRecoveryMode() {
+            return recoveryMode;
+        }
+
+        public void setRecoveryMode(IdempotencyRecoveryMode value) {
+            this.recoveryMode = value;
+        }
+
+        public boolean isRecoverProcessingTimeout() {
+            return recoverProcessingTimeout;
+        }
+
+        public void setRecoverProcessingTimeout(boolean value) {
+            this.recoverProcessingTimeout = value;
+        }
+
+        public boolean isRecoverFailed() {
+            return recoverFailed;
+        }
+
+        public void setRecoverFailed(boolean value) {
+            this.recoverFailed = value;
+        }
     }
 
     /** 全局默认短锁配置；命名 Policy 可以选择是否覆盖。 */
@@ -142,16 +242,45 @@ public class IdempotencyProperties {
         /** 锁不可用时是否退化到 Repository 原子状态判断。 */
         private boolean fallbackToStateOnFailure = true;
 
-        public boolean isEnabled() { return enabled; }
-        public void setEnabled(boolean enabled) { this.enabled = enabled; }
-        public String getProviderName() { return providerName; }
-        public void setProviderName(String providerName) { this.providerName = providerName; }
-        public Duration getWaitTime() { return waitTime; }
-        public void setWaitTime(Duration waitTime) { this.waitTime = waitTime; }
-        public Duration getLeaseTime() { return leaseTime; }
-        public void setLeaseTime(Duration leaseTime) { this.leaseTime = leaseTime; }
-        public boolean isFallbackToStateOnFailure() { return fallbackToStateOnFailure; }
-        public void setFallbackToStateOnFailure(boolean value) { this.fallbackToStateOnFailure = value; }
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getProviderName() {
+            return providerName;
+        }
+
+        public void setProviderName(String providerName) {
+            this.providerName = providerName;
+        }
+
+        public Duration getWaitTime() {
+            return waitTime;
+        }
+
+        public void setWaitTime(Duration waitTime) {
+            this.waitTime = waitTime;
+        }
+
+        public Duration getLeaseTime() {
+            return leaseTime;
+        }
+
+        public void setLeaseTime(Duration leaseTime) {
+            this.leaseTime = leaseTime;
+        }
+
+        public boolean isFallbackToStateOnFailure() {
+            return fallbackToStateOnFailure;
+        }
+
+        public void setFallbackToStateOnFailure(boolean value) {
+            this.fallbackToStateOnFailure = value;
+        }
     }
 
     public static class Transaction {
@@ -161,10 +290,21 @@ public class IdempotencyProperties {
         /** true 时若缺少 TransactionExecutor 直接启动失败，避免误以为有 Tx-B 闭环。 */
         private boolean requireTemplate = false;
 
-        public boolean isEnabled() { return enabled; }
-        public void setEnabled(boolean enabled) { this.enabled = enabled; }
-        public boolean isRequireTemplate() { return requireTemplate; }
-        public void setRequireTemplate(boolean requireTemplate) { this.requireTemplate = requireTemplate; }
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public boolean isRequireTemplate() {
+            return requireTemplate;
+        }
+
+        public void setRequireTemplate(boolean requireTemplate) {
+            this.requireTemplate = requireTemplate;
+        }
     }
 
     /**
@@ -218,38 +358,122 @@ public class IdempotencyProperties {
         /** 是否覆盖全局锁失败 fallback 策略。 */
         private Boolean lockFallbackToStateOnFailure;
 
-        public IdempotencyMode getMode() { return mode; }
-        public void setMode(IdempotencyMode mode) { this.mode = mode; }
-        public String getNamespace() { return namespace; }
-        public void setNamespace(String namespace) { this.namespace = namespace; }
-        public String getRepositoryName() { return repositoryName; }
-        public void setRepositoryName(String repositoryName) { this.repositoryName = repositoryName; }
-        public Duration getProcessingTimeout() { return processingTimeout; }
-        public void setProcessingTimeout(Duration processingTimeout) { this.processingTimeout = processingTimeout; }
-        public Duration getIdempotencyWindow() { return idempotencyWindow; }
-        public void setIdempotencyWindow(Duration idempotencyWindow) { this.idempotencyWindow = idempotencyWindow; }
-        public IdempotencyWindowPolicy getWindowPolicy() { return windowPolicy; }
-        public void setWindowPolicy(IdempotencyWindowPolicy windowPolicy) { this.windowPolicy = windowPolicy; }
-        public Duration getRecordRetentionTtl() { return recordRetentionTtl; }
-        public void setRecordRetentionTtl(Duration recordRetentionTtl) { this.recordRetentionTtl = recordRetentionTtl; }
-        public IdempotencyRecoveryMode getRecoveryMode() { return recoveryMode; }
-        public void setRecoveryMode(IdempotencyRecoveryMode recoveryMode) { this.recoveryMode = recoveryMode; }
-        public Boolean getRecoverProcessingTimeout() { return recoverProcessingTimeout; }
+        public IdempotencyMode getMode() {
+            return mode;
+        }
+
+        public void setMode(IdempotencyMode mode) {
+            this.mode = mode;
+        }
+
+        public String getNamespace() {
+            return namespace;
+        }
+
+        public void setNamespace(String namespace) {
+            this.namespace = namespace;
+        }
+
+        public String getRepositoryName() {
+            return repositoryName;
+        }
+
+        public void setRepositoryName(String repositoryName) {
+            this.repositoryName = repositoryName;
+        }
+
+        public Duration getProcessingTimeout() {
+            return processingTimeout;
+        }
+
+        public void setProcessingTimeout(Duration processingTimeout) {
+            this.processingTimeout = processingTimeout;
+        }
+
+        public Duration getIdempotencyWindow() {
+            return idempotencyWindow;
+        }
+
+        public void setIdempotencyWindow(Duration idempotencyWindow) {
+            this.idempotencyWindow = idempotencyWindow;
+        }
+
+        public IdempotencyWindowPolicy getWindowPolicy() {
+            return windowPolicy;
+        }
+
+        public void setWindowPolicy(IdempotencyWindowPolicy windowPolicy) {
+            this.windowPolicy = windowPolicy;
+        }
+
+        public Duration getRecordRetentionTtl() {
+            return recordRetentionTtl;
+        }
+
+        public void setRecordRetentionTtl(Duration recordRetentionTtl) {
+            this.recordRetentionTtl = recordRetentionTtl;
+        }
+
+        public IdempotencyRecoveryMode getRecoveryMode() {
+            return recoveryMode;
+        }
+
+        public void setRecoveryMode(IdempotencyRecoveryMode recoveryMode) {
+            this.recoveryMode = recoveryMode;
+        }
+
+        public Boolean getRecoverProcessingTimeout() {
+            return recoverProcessingTimeout;
+        }
+
         public void setRecoverProcessingTimeout(Boolean recoverProcessingTimeout) {
             this.recoverProcessingTimeout = recoverProcessingTimeout;
         }
-        public Boolean getRecoverFailed() { return recoverFailed; }
-        public void setRecoverFailed(Boolean recoverFailed) { this.recoverFailed = recoverFailed; }
 
-        public Boolean getLockEnabled() { return lockEnabled; }
-        public void setLockEnabled(Boolean lockEnabled) { this.lockEnabled = lockEnabled; }
-        public String getLockProviderName() { return lockProviderName; }
-        public void setLockProviderName(String lockProviderName) { this.lockProviderName = lockProviderName; }
-        public Duration getLockWaitTime() { return lockWaitTime; }
-        public void setLockWaitTime(Duration lockWaitTime) { this.lockWaitTime = lockWaitTime; }
-        public Duration getLockLeaseTime() { return lockLeaseTime; }
-        public void setLockLeaseTime(Duration lockLeaseTime) { this.lockLeaseTime = lockLeaseTime; }
-        public Boolean getLockFallbackToStateOnFailure() { return lockFallbackToStateOnFailure; }
+        public Boolean getRecoverFailed() {
+            return recoverFailed;
+        }
+
+        public void setRecoverFailed(Boolean recoverFailed) {
+            this.recoverFailed = recoverFailed;
+        }
+
+        public Boolean getLockEnabled() {
+            return lockEnabled;
+        }
+
+        public void setLockEnabled(Boolean lockEnabled) {
+            this.lockEnabled = lockEnabled;
+        }
+
+        public String getLockProviderName() {
+            return lockProviderName;
+        }
+
+        public void setLockProviderName(String lockProviderName) {
+            this.lockProviderName = lockProviderName;
+        }
+
+        public Duration getLockWaitTime() {
+            return lockWaitTime;
+        }
+
+        public void setLockWaitTime(Duration lockWaitTime) {
+            this.lockWaitTime = lockWaitTime;
+        }
+
+        public Duration getLockLeaseTime() {
+            return lockLeaseTime;
+        }
+
+        public void setLockLeaseTime(Duration lockLeaseTime) {
+            this.lockLeaseTime = lockLeaseTime;
+        }
+
+        public Boolean getLockFallbackToStateOnFailure() {
+            return lockFallbackToStateOnFailure;
+        }
+
         public void setLockFallbackToStateOnFailure(Boolean value) {
             this.lockFallbackToStateOnFailure = value;
         }
@@ -261,10 +485,22 @@ public class IdempotencyProperties {
 
         /** Redis 幂等 Key 前缀，最终 key 还会包含 storeName/namespace/logicalKey。 */
         private String keyPrefix = "iron:idempotency";
-        public boolean isEnabled() { return enabled; }
-        public void setEnabled(boolean enabled) { this.enabled = enabled; }
-        public String getKeyPrefix() { return keyPrefix; }
-        public void setKeyPrefix(String keyPrefix) { this.keyPrefix = keyPrefix; }
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getKeyPrefix() {
+            return keyPrefix;
+        }
+
+        public void setKeyPrefix(String keyPrefix) {
+            this.keyPrefix = keyPrefix;
+        }
     }
 
     public static class MyBatis {
@@ -276,17 +512,38 @@ public class IdempotencyProperties {
 
         /** Direct 多数据源接入配置。 */
         private final Direct direct = new Direct();
-        public Direct getDirect() { return direct; }
-        public boolean isEnabled() { return enabled; }
-        public void setEnabled(boolean enabled) { this.enabled = enabled; }
-        public String getTableName() { return tableName; }
-        public void setTableName(String tableName) { this.tableName = tableName; }
+
+        public Direct getDirect() {
+            return direct;
+        }
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getTableName() {
+            return tableName;
+        }
+
+        public void setTableName(String tableName) {
+            this.tableName = tableName;
+        }
 
         public static class Direct {
             /** 显式启用统一物理资源注册表与同库 Tx-A/B/C；默认不改变现有单库装配。 */
             private boolean enabled;
-            public boolean isEnabled() { return enabled; }
-            public void setEnabled(boolean enabled) { this.enabled = enabled; }
+
+            public boolean isEnabled() {
+                return enabled;
+            }
+
+            public void setEnabled(boolean enabled) {
+                this.enabled = enabled;
+            }
         }
     }
 }

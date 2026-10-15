@@ -26,19 +26,11 @@ public final class RetryDecision {
     /** 退避时间覆盖的来源。 */
     private final RetryDelaySource delaySource;
 
-    private RetryDecision(
-            RetryDecisionType type,
-            String reason,
-            String failureCode,
-            RetryFailureCategory failureCategory,
-            Duration delayOverride,
-            RetryDelaySource delaySource) {
+    private RetryDecision(RetryDecisionType type, String reason, String failureCode, RetryFailureCategory failureCategory,
+        Duration delayOverride, RetryDelaySource delaySource) {
         this.type = Objects.requireNonNull(type, "type must not be null");
         this.reason = requireText(reason, "reason");
-        this.failureCategory = Objects.requireNonNull(
-                failureCategory,
-                "failureCategory must not be null"
-        );
+        this.failureCategory = Objects.requireNonNull(failureCategory, "failureCategory must not be null");
         this.delayOverride = validateDelay(type, delayOverride);
         this.delaySource = validateDelaySource(delayOverride, delaySource);
         this.failureCode = validateFailureCode(type, failureCode);
@@ -47,73 +39,30 @@ public final class RetryDecision {
 
     /** 创建接受当前结果的成功决策。 */
     public static RetryDecision success(String reason) {
-        return new RetryDecision(
-                RetryDecisionType.SUCCESS,
-                reason,
-                "",
-                RetryFailureCategory.UNKNOWN,
-                null,
-                RetryDelaySource.NONE
-        );
+        return new RetryDecision(RetryDecisionType.SUCCESS, reason, "", RetryFailureCategory.UNKNOWN, null, RetryDelaySource.NONE);
     }
 
     /** 创建使用策略默认退避的重试决策。 */
-    public static RetryDecision retry(
-            String reason,
-            String failureCode,
-            RetryFailureCategory failureCategory) {
-        return new RetryDecision(
-                RetryDecisionType.RETRY,
-                reason,
-                failureCode,
-                failureCategory,
-                null,
-                RetryDelaySource.NONE
-        );
+    public static RetryDecision retry(String reason, String failureCode, RetryFailureCategory failureCategory) {
+        return new RetryDecision(RetryDecisionType.RETRY, reason, failureCode, failureCategory, null, RetryDelaySource.NONE);
     }
 
     /** 创建覆盖策略默认退避的重试决策。 */
-    public static RetryDecision retryAfter(
-            Duration delay,
-            RetryDelaySource delaySource,
-            String reason,
-            String failureCode,
-            RetryFailureCategory failureCategory) {
-        return new RetryDecision(
-                RetryDecisionType.RETRY,
-                reason,
-                failureCode,
-                failureCategory,
-                Objects.requireNonNull(delay, "delay must not be null"),
-                delaySource
-        );
+    public static RetryDecision retryAfter(Duration delay, RetryDelaySource delaySource, String reason, String failureCode,
+        RetryFailureCategory failureCategory) {
+        return new RetryDecision(RetryDecisionType.RETRY, reason, failureCode, failureCategory,
+            Objects.requireNonNull(delay, "delay must not be null"), delaySource);
     }
 
     /** 创建不可重试但属于正常业务终止的停止决策。 */
-    public static RetryDecision stop(
-            String reason,
-            String failureCode,
-            RetryFailureCategory failureCategory) {
-        return new RetryDecision(
-                RetryDecisionType.STOP,
-                reason,
-                failureCode,
-                failureCategory,
-                null,
-                RetryDelaySource.NONE
-        );
+    public static RetryDecision stop(String reason, String failureCode, RetryFailureCategory failureCategory) {
+        return new RetryDecision(RetryDecisionType.STOP, reason, failureCode, failureCategory, null, RetryDelaySource.NONE);
     }
 
     /** 创建要求立即终止的中止决策。 */
     public static RetryDecision abort(String reason, String failureCode) {
-        return new RetryDecision(
-                RetryDecisionType.ABORT,
-                reason,
-                failureCode,
-                RetryFailureCategory.NON_RETRYABLE,
-                null,
-                RetryDelaySource.NONE
-        );
+        return new RetryDecision(RetryDecisionType.ABORT, reason, failureCode, RetryFailureCategory.NON_RETRYABLE, null,
+            RetryDelaySource.NONE);
     }
 
     public RetryDecisionType getType() {
@@ -163,28 +112,19 @@ public final class RetryDecision {
     }
 
     /** 校验等待来源与等待覆盖是否一致。 */
-    private static RetryDelaySource validateDelaySource(
-            Duration delayOverride,
-            RetryDelaySource delaySource) {
+    private static RetryDelaySource validateDelaySource(Duration delayOverride, RetryDelaySource delaySource) {
         if (delayOverride == null) {
             return RetryDelaySource.NONE;
         }
-        RetryDelaySource actualSource = Objects.requireNonNull(
-                delaySource,
-                "delaySource must not be null when delayOverride exists"
-        );
+        RetryDelaySource actualSource = Objects.requireNonNull(delaySource, "delaySource must not be null when delayOverride exists");
         if (actualSource == RetryDelaySource.NONE) {
-            throw new IllegalArgumentException(
-                    "delaySource must not be NONE when delayOverride exists"
-            );
+            throw new IllegalArgumentException("delaySource must not be NONE when delayOverride exists");
         }
         return actualSource;
     }
 
     /** 校验不同决策类型对失败码的约束。 */
-    private static String validateFailureCode(
-            RetryDecisionType type,
-            String failureCode) {
+    private static String validateFailureCode(RetryDecisionType type, String failureCode) {
         if (type == RetryDecisionType.SUCCESS) {
             return failureCode == null ? "" : failureCode.trim();
         }
@@ -192,14 +132,9 @@ public final class RetryDecision {
     }
 
     /** 校验失败分类与决策动作之间没有明显矛盾。 */
-    private static void validateCategory(
-            RetryDecisionType type,
-            RetryFailureCategory failureCategory) {
-        if (type == RetryDecisionType.RETRY
-                && failureCategory == RetryFailureCategory.NON_RETRYABLE) {
-            throw new IllegalArgumentException(
-                    "RETRY decision cannot use NON_RETRYABLE failure category"
-            );
+    private static void validateCategory(RetryDecisionType type, RetryFailureCategory failureCategory) {
+        if (type == RetryDecisionType.RETRY && failureCategory == RetryFailureCategory.NON_RETRYABLE) {
+            throw new IllegalArgumentException("RETRY decision cannot use NON_RETRYABLE failure category");
         }
     }
 

@@ -22,14 +22,43 @@ public class MyBatisFencingTokenProperties {
     /** schema 平台：mysql 或 h2。 */
     private String schemaPlatform = "mysql";
 
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public String getTableName() { return tableName; }
-    public void setTableName(String tableName) { this.tableName = tableName; }
-    public int getMaxRetries() { return maxRetries; }
-    public void setMaxRetries(int maxRetries) { this.maxRetries = maxRetries; }
-    public boolean isInitializeSchema() { return initializeSchema; }
-    public void setInitializeSchema(boolean initializeSchema) { this.initializeSchema = initializeSchema; }
-    public String getSchemaPlatform() { return schemaPlatform; }
-    public void setSchemaPlatform(String schemaPlatform) { this.schemaPlatform = schemaPlatform; }
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
+    }
+
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    public void setMaxRetries(int maxRetries) {
+        this.maxRetries = maxRetries;
+    }
+
+    public boolean isInitializeSchema() {
+        return initializeSchema;
+    }
+
+    public void setInitializeSchema(boolean initializeSchema) {
+        this.initializeSchema = initializeSchema;
+    }
+
+    public String getSchemaPlatform() {
+        return schemaPlatform;
+    }
+
+    public void setSchemaPlatform(String schemaPlatform) {
+        this.schemaPlatform = schemaPlatform;
+    }
 }

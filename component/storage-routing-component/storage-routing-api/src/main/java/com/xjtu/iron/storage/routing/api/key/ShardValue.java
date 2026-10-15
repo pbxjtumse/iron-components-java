@@ -1,6 +1,7 @@
 package com.xjtu.iron.storage.routing.api.key;
 
 import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Objects;
@@ -17,8 +18,8 @@ public final class ShardValue {
 
     /** 类型名参与复合键 v1 编码，重命名或合并类型需要另行规划路由迁移。 */
     public enum Type {
-        STRING(String.class), BYTE(Byte.class), SHORT(Short.class), INTEGER(Integer.class), LONG(Long.class),
-        BIG_INTEGER(BigInteger.class), DECIMAL(BigDecimal.class), UUID(UUID.class);
+        STRING(String.class), BYTE(Byte.class), SHORT(Short.class), INTEGER(Integer.class), LONG(Long.class), BIG_INTEGER(
+            BigInteger.class), DECIMAL(BigDecimal.class), UUID(UUID.class);
 
         private final Class<?> javaType;
 

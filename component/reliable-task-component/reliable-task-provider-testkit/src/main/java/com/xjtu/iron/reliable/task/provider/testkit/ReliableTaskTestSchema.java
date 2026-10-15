@@ -12,33 +12,32 @@ public final class ReliableTaskTestSchema {
     }
 
     public static void create(DataSource dataSource) throws SQLException {
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
+        try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
             statement.execute("""
-                    CREATE TABLE iron_reliable_task (
-                        store_name VARCHAR(64) NOT NULL,
-                        namespace VARCHAR(64) NOT NULL,
-                        task_id VARCHAR(128) NOT NULL,
-                        task_type VARCHAR(64) NOT NULL,
-                        business_key VARCHAR(128),
-                        payload CLOB NOT NULL,
-                        route_key VARCHAR(256),
-                        scan_bucket INT NOT NULL,
-                        status VARCHAR(32) NOT NULL,
-                        attempt_count INT NOT NULL,
-                        max_attempts INT NOT NULL,
-                        next_execute_at TIMESTAMP(6),
-                        owner_id VARCHAR(128),
-                        lease_until TIMESTAMP(6),
-                        version BIGINT NOT NULL,
-                        last_error_code VARCHAR(64),
-                        last_error_message VARCHAR(1024),
-                        created_at TIMESTAMP(6) NOT NULL,
-                        updated_at TIMESTAMP(6) NOT NULL,
-                        completed_at TIMESTAMP(6),
-                        PRIMARY KEY (store_name, namespace, task_id)
-                    )
-                    """);
+                CREATE TABLE iron_reliable_task (
+                    store_name VARCHAR(64) NOT NULL,
+                    namespace VARCHAR(64) NOT NULL,
+                    task_id VARCHAR(128) NOT NULL,
+                    task_type VARCHAR(64) NOT NULL,
+                    business_key VARCHAR(128),
+                    payload CLOB NOT NULL,
+                    route_key VARCHAR(256),
+                    scan_bucket INT NOT NULL,
+                    status VARCHAR(32) NOT NULL,
+                    attempt_count INT NOT NULL,
+                    max_attempts INT NOT NULL,
+                    next_execute_at TIMESTAMP(6),
+                    owner_id VARCHAR(128),
+                    lease_until TIMESTAMP(6),
+                    version BIGINT NOT NULL,
+                    last_error_code VARCHAR(64),
+                    last_error_message VARCHAR(1024),
+                    created_at TIMESTAMP(6) NOT NULL,
+                    updated_at TIMESTAMP(6) NOT NULL,
+                    completed_at TIMESTAMP(6),
+                    PRIMARY KEY (store_name, namespace, task_id)
+                )
+                """);
         }
     }
 }

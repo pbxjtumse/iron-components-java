@@ -24,7 +24,7 @@ public final class DefaultIdempotencyRecoveryQueryService implements Idempotency
     private final IdempotencyPolicyRegistry policyRegistry;
 
     public DefaultIdempotencyRecoveryQueryService(IdempotencyRepositoryRegistry repositoryRegistry,
-                                                   IdempotencyPolicyRegistry policyRegistry) {
+        IdempotencyPolicyRegistry policyRegistry) {
         this.repositoryRegistry = Objects.requireNonNull(repositoryRegistry, "repositoryRegistry must not be null");
         this.policyRegistry = Objects.requireNonNull(policyRegistry, "policyRegistry must not be null");
     }
@@ -43,14 +43,15 @@ public final class DefaultIdempotencyRecoveryQueryService implements Idempotency
         IdempotencyPolicy policy = policyRegistry.resolve(policyName, null);
         IdempotencyRepository repository = repositoryRegistry.resolve(policy.getMode(), policy.getRepositoryName());
 
-        IdempotencyRecoveryQuery effectiveQuery = new IdempotencyRecoveryQuery(
-                query.getStoreName(), policy.getNamespace(), query.getScanBucket(), query.getNow(), query.getLimit());
+        IdempotencyRecoveryQuery effectiveQuery =
+            new IdempotencyRecoveryQuery(query.getStoreName(), policy.getNamespace(), query.getScanBucket(), query.getNow(),
+                query.getLimit());
         return query(repository, effectiveQuery);
     }
 
     private List<IdempotencyRecoveryCandidate> query(IdempotencyRepository repository, IdempotencyRecoveryQuery query) {
-        if (!repository.capabilities().isRecoveryQuerySupported()
-                || !(repository instanceof IdempotencyRecoveryRepository recoveryRepository)) {
+        if (!repository.capabilities().isRecoveryQuerySupported() ||
+            !(repository instanceof IdempotencyRecoveryRepository recoveryRepository)) {
             return List.of();
         }
         return recoveryRepository.findRecoveryCandidates(query);

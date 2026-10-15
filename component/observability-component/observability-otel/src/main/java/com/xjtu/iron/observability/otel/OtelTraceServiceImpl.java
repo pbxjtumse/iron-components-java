@@ -35,9 +35,7 @@ public class OtelTraceServiceImpl implements ITraceService {
     }
 
     public OtelTraceServiceImpl(String instrumentationName, List<TraceErrorResolver> errorResolvers) {
-        String realInstrumentationName = isBlank(instrumentationName)
-                ? DEFAULT_INSTRUMENTATION_NAME
-                : instrumentationName;
+        String realInstrumentationName = isBlank(instrumentationName) ? DEFAULT_INSTRUMENTATION_NAME : instrumentationName;
 
         this.tracer = GlobalOpenTelemetry.getTracer(realInstrumentationName);
         this.errorResolvers = errorResolvers == null ? Collections.emptyList() : errorResolvers;

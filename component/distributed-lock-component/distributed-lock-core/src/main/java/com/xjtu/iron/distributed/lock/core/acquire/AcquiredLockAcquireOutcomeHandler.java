@@ -29,7 +29,7 @@ public final class AcquiredLockAcquireOutcomeHandler implements LockAcquireOutco
     private final LockMetricsFacade metricsFacade;
 
     public AcquiredLockAcquireOutcomeHandler(FencingTokenFlowRegistry fencingTokenFlowRegistry, LockHandleFactory lockHandleFactory,
-            LockEventPublisher eventPublisher, LockEventFactory eventFactory, LockMetricsFacade metricsFacade) {
+        LockEventPublisher eventPublisher, LockEventFactory eventFactory, LockMetricsFacade metricsFacade) {
         this.fencingTokenFlowRegistry = Objects.requireNonNull(fencingTokenFlowRegistry, "fencingTokenFlowRegistry must not be null");
         this.lockHandleFactory = Objects.requireNonNull(lockHandleFactory, "lockHandleFactory must not be null");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher must not be null");
@@ -46,16 +46,12 @@ public final class AcquiredLockAcquireOutcomeHandler implements LockAcquireOutco
     public LockResult<LockHandle> handle(LockAcquireOutcomeContext context) {
         LockLease lease = context.response().getLease();
         metricsFacade.recordAcquire(context.provider().providerName(), context.options().getNamespace(), lease.getLockName(), true,
-                context.waitDuration());
+            context.waitDuration());
         eventPublisher.publish(eventFactory.fromLease(lease, LockEventType.ACQUIRED, LockStage.ACQUIRE, LockStatus.ACQUIRED, null));
 
-        FencingContext fencingContext = FencingContext.builder()
-                .lockProvider(context.provider())
-                .options(context.options())
-                .plan(context.fencingPlan())
-                .lease(lease)
-                .waitDuration(context.waitDuration())
-                .build();
+        FencingContext fencingContext =
+            FencingContext.builder().lockProvider(context.provider()).options(context.options()).plan(context.fencingPlan()).lease(lease)
+                .waitDuration(context.waitDuration()).build();
         FencingTokenFlow flow = fencingTokenFlowRegistry.getRequired(context.fencingPlan().mode());
         FencingCompletion completion = flow.complete(fencingContext);
         if (!completion.isSuccess()) {

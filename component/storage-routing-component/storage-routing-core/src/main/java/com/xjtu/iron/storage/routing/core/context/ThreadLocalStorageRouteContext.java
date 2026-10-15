@@ -4,6 +4,7 @@ import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
 import com.xjtu.iron.storage.routing.api.context.StorageRouteScope;
 import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
+
 import java.util.Objects;
 import java.util.Optional;
 
@@ -15,7 +16,6 @@ import java.util.Optional;
  *
  * <p>嵌套仅表示上下文的保存和恢复，不表示支持跨库事务；事务中能否使用该数据源由事务集成层检查。
  * 此上下文不跨线程传播，作用域必须在创建它的线程中按后进先出的顺序关闭。</p>
-
  * <p><b>流程阅读编号：R3：同步线程内的路由作用域。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
  * <ul>
  *     <li>1. open 保存上一层 Scope 并绑定新路由；current 读取最内层路由。</li>

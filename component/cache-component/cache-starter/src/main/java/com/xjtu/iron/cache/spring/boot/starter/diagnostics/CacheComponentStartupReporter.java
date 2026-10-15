@@ -70,15 +70,11 @@ public class CacheComponentStartupReporter implements SmartInitializingSingleton
      */
     private final ObjectProvider<RedisMessageListenerContainer> redisMessageListenerContainerProvider;
 
-    public CacheComponentStartupReporter(
-            ApplicationContext applicationContext,
-            XjtuIronCacheProperties properties,
-            ObjectProvider<CacheClient> cacheClientProvider,
-            ObjectProvider<CacheProvider> cacheProviderProvider,
-            ObjectProvider<CacheEventPublisher> cacheEventPublisherProvider,
-            ObjectProvider<LocalCacheInvalidator> localCacheInvalidatorProvider,
-            ObjectProvider<RedisMessageListenerContainer> redisMessageListenerContainerProvider
-    ) {
+    public CacheComponentStartupReporter(ApplicationContext applicationContext, XjtuIronCacheProperties properties,
+        ObjectProvider<CacheClient> cacheClientProvider, ObjectProvider<CacheProvider> cacheProviderProvider,
+        ObjectProvider<CacheEventPublisher> cacheEventPublisherProvider,
+        ObjectProvider<LocalCacheInvalidator> localCacheInvalidatorProvider,
+        ObjectProvider<RedisMessageListenerContainer> redisMessageListenerContainerProvider) {
         this.applicationContext = applicationContext;
         this.properties = properties;
         this.cacheClientProvider = cacheClientProvider;
@@ -96,8 +92,7 @@ public class CacheComponentStartupReporter implements SmartInitializingSingleton
         LocalCacheInvalidator localCacheInvalidator = localCacheInvalidatorProvider.getIfAvailable();
         RedisMessageListenerContainer listenerContainer = redisMessageListenerContainerProvider.getIfAvailable();
 
-        boolean hasIronRedisEventContainer =
-                applicationContext.containsBean("ironRedisCacheEventListenerContainer");
+        boolean hasIronRedisEventContainer = applicationContext.containsBean("ironRedisCacheEventListenerContainer");
 
         log.info("[CACHE-STARTUP] enabled={}", properties.isEnabled());
         log.info("[CACHE-STARTUP] applicationName={}", properties.getApplication().getName());
@@ -108,16 +103,14 @@ public class CacheComponentStartupReporter implements SmartInitializingSingleton
 
         log.info("[CACHE-STARTUP] event.enabled={}", properties.getEvent().isEnabled());
         log.info("[CACHE-STARTUP] event.channel={}", properties.getEvent().getChannel());
-        log.info("[CACHE-STARTUP] event.publishFailurePolicy={}",
-                properties.getEvent().getPublishFailurePolicy());
+        log.info("[CACHE-STARTUP] event.publishFailurePolicy={}", properties.getEvent().getPublishFailurePolicy());
 
         log.info("[CACHE-STARTUP] cacheClient={}", className(cacheClient));
         log.info("[CACHE-STARTUP] cacheProvider={}", className(cacheProvider));
         log.info("[CACHE-STARTUP] cacheEventPublisher={}", className(eventPublisher));
         log.info("[CACHE-STARTUP] localCacheInvalidator={}", className(localCacheInvalidator));
         log.info("[CACHE-STARTUP] redisMessageListenerContainer={}", className(listenerContainer));
-        log.info("[CACHE-STARTUP] ironRedisCacheEventListenerContainer.exists={}",
-                hasIronRedisEventContainer);
+        log.info("[CACHE-STARTUP] ironRedisCacheEventListenerContainer.exists={}", hasIronRedisEventContainer);
     }
 
     private String className(Object bean) {

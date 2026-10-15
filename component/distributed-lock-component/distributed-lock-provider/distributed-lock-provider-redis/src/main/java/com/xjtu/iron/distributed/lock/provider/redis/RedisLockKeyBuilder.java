@@ -23,7 +23,8 @@ public final class RedisLockKeyBuilder {
     private final String fencingKeySuffix;
 
     public RedisLockKeyBuilder() {
-        this(RedisLockConstants.DEFAULT_KEY_PREFIX, RedisLockConstants.DEFAULT_RELEASE_CHANNEL_PREFIX, RedisLockConstants.DEFAULT_FENCING_KEY_SUFFIX);
+        this(RedisLockConstants.DEFAULT_KEY_PREFIX, RedisLockConstants.DEFAULT_RELEASE_CHANNEL_PREFIX,
+            RedisLockConstants.DEFAULT_FENCING_KEY_SUFFIX);
     }
 
     public RedisLockKeyBuilder(String keyPrefix, String releaseChannelPrefix, String fencingKeySuffix) {

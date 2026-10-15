@@ -28,15 +28,30 @@ public final class FencingTokenRequest {
         this.options = Objects.requireNonNull(builder.options, "options must not be null");
     }
 
-    public static Builder builder() { return new Builder(); }
+    public static Builder builder() {
+        return new Builder();
+    }
 
-    public String getNamespace() { return namespace; }
-    public String getLockName() { return lockName; }
-    public String getOwnerToken() { return ownerToken; }
-    public LockOptions getOptions() { return options; }
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public String getLockName() {
+        return lockName;
+    }
+
+    public String getOwnerToken() {
+        return ownerToken;
+    }
+
+    public LockOptions getOptions() {
+        return options;
+    }
 
     private static String requireText(String value, String fieldName) {
-        if (value == null || value.trim().isEmpty()) { throw new IllegalArgumentException(fieldName + " must not be blank"); }
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(fieldName + " must not be blank");
+        }
         return value.trim();
     }
 
@@ -46,11 +61,32 @@ public final class FencingTokenRequest {
         private String lockName;
         private String ownerToken;
         private LockOptions options;
-        private Builder() {}
-        public Builder namespace(String namespace) { this.namespace = namespace; return this; }
-        public Builder lockName(String lockName) { this.lockName = lockName; return this; }
-        public Builder ownerToken(String ownerToken) { this.ownerToken = ownerToken; return this; }
-        public Builder options(LockOptions options) { this.options = options; return this; }
-        public FencingTokenRequest build() { return new FencingTokenRequest(this); }
+
+        private Builder() {
+        }
+
+        public Builder namespace(String namespace) {
+            this.namespace = namespace;
+            return this;
+        }
+
+        public Builder lockName(String lockName) {
+            this.lockName = lockName;
+            return this;
+        }
+
+        public Builder ownerToken(String ownerToken) {
+            this.ownerToken = ownerToken;
+            return this;
+        }
+
+        public Builder options(LockOptions options) {
+            this.options = options;
+            return this;
+        }
+
+        public FencingTokenRequest build() {
+            return new FencingTokenRequest(this);
+        }
     }
 }

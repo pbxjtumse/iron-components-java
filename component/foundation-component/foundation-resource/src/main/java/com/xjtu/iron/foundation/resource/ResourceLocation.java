@@ -16,19 +16,34 @@ public final class ResourceLocation {
         this.value = value;
     }
 
-    public static ResourceLocation of(String value) { return new ResourceLocation(value); }
+    public static ResourceLocation of(String value) {
+        return new ResourceLocation(value);
+    }
 
-    public String value() { return value; }
+    public String value() {
+        return value;
+    }
 
-    public boolean isClasspath() { return value.startsWith("classpath:"); }
+    public boolean isClasspath() {
+        return value.startsWith("classpath:");
+    }
 
-    public boolean isFile() { return value.startsWith("file:"); }
+    public boolean isFile() {
+        return value.startsWith("file:");
+    }
 
-    @Override public String toString() { return value; }
+    @Override
+    public String toString() {
+        return value;
+    }
 
-    @Override public boolean equals(Object other) {
+    @Override
+    public boolean equals(Object other) {
         return other instanceof ResourceLocation that && Objects.equals(value, that.value);
     }
 
-    @Override public int hashCode() { return value.hashCode(); }
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
 }

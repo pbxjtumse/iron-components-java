@@ -32,6 +32,11 @@ public final class IdempotencyStateDecision {
         return new IdempotencyStateDecision(IdempotencyStateAction.RETURN, status);
     }
 
-    public IdempotencyStateAction action() { return action; }
-    public IdempotencyResultStatus resultStatus() { return resultStatus; }
+    public IdempotencyStateAction action() {
+        return action;
+    }
+
+    public IdempotencyResultStatus resultStatus() {
+        return resultStatus;
+    }
 }

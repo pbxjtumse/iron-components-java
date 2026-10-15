@@ -19,9 +19,13 @@ public final class DateRange {
         }
     }
 
-    public LocalDate getStartInclusive() { return startInclusive; }
+    public LocalDate getStartInclusive() {
+        return startInclusive;
+    }
 
-    public LocalDate getEndInclusive() { return endInclusive; }
+    public LocalDate getEndInclusive() {
+        return endInclusive;
+    }
 
     public boolean contains(LocalDate date) {
         Objects.requireNonNull(date, "date must not be null");

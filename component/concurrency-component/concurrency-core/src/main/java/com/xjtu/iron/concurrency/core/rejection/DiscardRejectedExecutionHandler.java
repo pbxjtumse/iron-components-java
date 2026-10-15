@@ -19,15 +19,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 public final class DiscardRejectedExecutionHandler implements RejectedExecutionHandler {
 
     @Override
-    public void rejectedExecution(
-            Runnable runnable,
-            ThreadPoolExecutor executor
-    ) {
-        RejectedTaskSupport.reject(
-                runnable,
-                executor.isShutdown()
-                        ? "Executor already shutdown; task discarded"
-                        : "Task discarded by reject-aware DISCARD policy"
-        );
+    public void rejectedExecution(Runnable runnable, ThreadPoolExecutor executor) {
+        RejectedTaskSupport.reject(runnable,
+            executor.isShutdown() ? "Executor already shutdown; task discarded" : "Task discarded by reject-aware DISCARD policy");
     }
 }

@@ -65,29 +65,20 @@ public final class StorageRoute {
 
     /** 固定直连同时保留逻辑表；不会从物理表名反推逻辑表。 */
     public static StorageRoute direct(String logicalTable, String dataSourceKey, String tableName) {
-        return fixedDirect(
-                RouteContext.builder().logicalTable(logicalTable).build(),
-                PhysicalStorageLocation.of(dataSourceKey, tableName));
+        return fixedDirect(RouteContext.builder().logicalTable(logicalTable).build(), PhysicalStorageLocation.of(dataSourceKey, tableName));
     }
 
     /** 固定直连：保留本次输入上下文，不计算也不伪造分片编号。 */
     public static StorageRoute fixedDirect(RouteContext context, PhysicalStorageLocation physicalLocation) {
-        return builder()
-                .mode(StorageRouteMode.DIRECT_DATASOURCE)
-                .context(Objects.requireNonNull(context, "context must not be null"))
-                .physicalLocation(Objects.requireNonNull(physicalLocation, "physicalLocation must not be null"))
-                .build();
+        return builder().mode(StorageRouteMode.DIRECT_DATASOURCE).context(Objects.requireNonNull(context, "context must not be null"))
+            .physicalLocation(Objects.requireNonNull(physicalLocation, "physicalLocation must not be null")).build();
     }
 
     /** 分片直连：同时保存原始输入、逻辑分片编号和最终物理库表。 */
-    public static StorageRoute shardedDirect(RouteContext context, ShardRouteInfo shardInfo,
-            PhysicalStorageLocation physicalLocation) {
-        return builder()
-                .mode(StorageRouteMode.DIRECT_DATASOURCE)
-                .context(Objects.requireNonNull(context, "context must not be null"))
-                .shardInfo(Objects.requireNonNull(shardInfo, "shardInfo must not be null"))
-                .physicalLocation(Objects.requireNonNull(physicalLocation, "physicalLocation must not be null"))
-                .build();
+    public static StorageRoute shardedDirect(RouteContext context, ShardRouteInfo shardInfo, PhysicalStorageLocation physicalLocation) {
+        return builder().mode(StorageRouteMode.DIRECT_DATASOURCE).context(Objects.requireNonNull(context, "context must not be null"))
+            .shardInfo(Objects.requireNonNull(shardInfo, "shardInfo must not be null"))
+            .physicalLocation(Objects.requireNonNull(physicalLocation, "physicalLocation must not be null")).build();
     }
 
     /** 中间件路由：保存逻辑输入及可选的预计算分片编号，不伪造应用侧物理库表。 */
@@ -101,11 +92,8 @@ public final class StorageRoute {
         if (requiredMode == StorageRouteMode.DIRECT_DATASOURCE) {
             throw new StorageRoutingException("middleware route mode must not be DIRECT_DATASOURCE");
         }
-        return builder()
-                .mode(requiredMode)
-                .context(Objects.requireNonNull(context, "context must not be null"))
-                .shardInfo(shardInfo)
-                .build();
+        return builder().mode(requiredMode).context(Objects.requireNonNull(context, "context must not be null")).shardInfo(shardInfo)
+            .build();
     }
 
     public static Builder builder() {
@@ -249,7 +237,7 @@ public final class StorageRoute {
 
     @Override
     public String toString() {
-        return "StorageRoute{mode=" + mode + ", context=" + context + ", shardInfo=" + shardInfo
-                + ", physicalLocation=" + physicalLocation + '}';
+        return "StorageRoute{mode=" + mode + ", context=" + context + ", shardInfo=" + shardInfo + ", physicalLocation=" +
+            physicalLocation + '}';
     }
 }

@@ -32,88 +32,65 @@ class MessageSendRetryClassifierTest {
 
     @Test
     void networkFailureShouldRetry() {
-        ProviderSendResult result = ProviderSendResult.failed(
-                SendStatus.FAILED,
-                SendFailureType.NETWORK_ERROR,
-                "temporary network failure");
+        ProviderSendResult result =
+            ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.NETWORK_ERROR, "temporary network failure");
 
         RetryDecision decision = classifier(false).classify(attempt(result, 1));
 
-        assertDecision(decision, RetryDecisionType.RETRY,
-                "MESSAGE_SEND_NETWORK_ERROR", RetryFailureCategory.DEPENDENCY_UNAVAILABLE);
+        assertDecision(decision, RetryDecisionType.RETRY, "MESSAGE_SEND_NETWORK_ERROR", RetryFailureCategory.DEPENDENCY_UNAVAILABLE);
     }
 
     @Test
     void clientErrorShouldRetryInShortProcessLevelRetry() {
-        ProviderSendResult result = ProviderSendResult.failed(
-                SendStatus.FAILED,
-                SendFailureType.CLIENT_ERROR,
-                "temporary client error");
+        ProviderSendResult result = ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.CLIENT_ERROR, "temporary client error");
 
         RetryDecision decision = classifier(false).classify(attempt(result, 1));
 
-        assertDecision(decision, RetryDecisionType.RETRY,
-                "MESSAGE_SEND_CLIENT_ERROR", RetryFailureCategory.TRANSIENT);
+        assertDecision(decision, RetryDecisionType.RETRY, "MESSAGE_SEND_CLIENT_ERROR", RetryFailureCategory.TRANSIENT);
     }
 
     @Test
     void timeoutUnknownResultShouldStopByDefault() {
-        ProviderSendResult result = ProviderSendResult.failed(
-                SendStatus.UNKNOWN,
-                SendFailureType.TIMEOUT,
-                "confirm timeout");
+        ProviderSendResult result = ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.TIMEOUT, "confirm timeout");
 
         RetryDecision decision = classifier(false).classify(attempt(result, 1));
 
-        assertDecision(decision, RetryDecisionType.STOP,
-                "MESSAGE_SEND_TIMEOUT", RetryFailureCategory.UNKNOWN);
+        assertDecision(decision, RetryDecisionType.STOP, "MESSAGE_SEND_TIMEOUT", RetryFailureCategory.UNKNOWN);
     }
 
     @Test
     void unknownResultCanRetryWhenExplicitlyEnabled() {
-        ProviderSendResult result = ProviderSendResult.failed(
-                SendStatus.UNKNOWN,
-                SendFailureType.TIMEOUT,
-                "confirm timeout");
+        ProviderSendResult result = ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.TIMEOUT, "confirm timeout");
 
         RetryDecision decision = classifier(true).classify(attempt(result, 1));
 
-        assertDecision(decision, RetryDecisionType.RETRY,
-                "MESSAGE_SEND_TIMEOUT", RetryFailureCategory.UNKNOWN);
+        assertDecision(decision, RetryDecisionType.RETRY, "MESSAGE_SEND_TIMEOUT", RetryFailureCategory.UNKNOWN);
     }
 
     @Test
     void rejectedResultShouldStop() {
-        ProviderSendResult result = ProviderSendResult.failed(
-                SendStatus.REJECTED,
-                SendFailureType.ROUTING_ERROR,
-                "invalid topic");
+        ProviderSendResult result = ProviderSendResult.failed(SendStatus.REJECTED, SendFailureType.ROUTING_ERROR, "invalid topic");
 
         RetryDecision decision = classifier(false).classify(attempt(result, 1));
 
-        assertDecision(decision, RetryDecisionType.STOP,
-                "MESSAGE_SEND_ROUTING_ERROR", RetryFailureCategory.NON_RETRYABLE);
+        assertDecision(decision, RetryDecisionType.STOP, "MESSAGE_SEND_ROUTING_ERROR", RetryFailureCategory.NON_RETRYABLE);
     }
 
     @Test
     void nonRetryableFailedResultShouldStop() {
-        ProviderSendResult result = ProviderSendResult.failed(
-                SendStatus.FAILED,
-                SendFailureType.AUTHORIZATION_ERROR,
-                "authorization failed");
+        ProviderSendResult result =
+            ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.AUTHORIZATION_ERROR, "authorization failed");
 
         RetryDecision decision = classifier(false).classify(attempt(result, 1));
 
-        assertDecision(decision, RetryDecisionType.STOP,
-                "MESSAGE_SEND_AUTHORIZATION_ERROR", RetryFailureCategory.NON_RETRYABLE);
+        assertDecision(decision, RetryDecisionType.STOP, "MESSAGE_SEND_AUTHORIZATION_ERROR", RetryFailureCategory.NON_RETRYABLE);
     }
 
     @Test
     void invalidResultTypeShouldAbort() {
         RetryDecision decision = classifier(false).classify(attempt("not-provider-result", 1));
 
-        assertDecision(decision, RetryDecisionType.ABORT,
-                "MESSAGE_SEND_INVALID_RESULT", RetryFailureCategory.NON_RETRYABLE);
+        assertDecision(decision, RetryDecisionType.ABORT, "MESSAGE_SEND_INVALID_RESULT", RetryFailureCategory.NON_RETRYABLE);
     }
 
     private static MessageSendRetryClassifier classifier(boolean retryWhenUnknown) {
@@ -122,27 +99,12 @@ class MessageSendRetryClassifierTest {
 
     private static <T> RetryAttempt<T> attempt(T result, int attemptNumber) {
         Instant now = Instant.parse("2026-01-01T00:00:00Z");
-        return new RetryAttempt<>(
-                "retry-test",
-                "message-send",
-                "message-send",
-                attemptNumber,
-                now,
-                now,
-                now,
-                Duration.ZERO,
-                Duration.ZERO,
-                Duration.ofSeconds(10),
-                result,
-                null,
-                Map.of());
+        return new RetryAttempt<>("retry-test", "message-send", "message-send", attemptNumber, now, now, now, Duration.ZERO, Duration.ZERO,
+            Duration.ofSeconds(10), result, null, Map.of());
     }
 
-    private static void assertDecision(
-            RetryDecision decision,
-            RetryDecisionType type,
-            String failureCode,
-            RetryFailureCategory failureCategory) {
+    private static void assertDecision(RetryDecision decision, RetryDecisionType type, String failureCode,
+        RetryFailureCategory failureCategory) {
         assertEquals(type, decision.getType());
         assertEquals(failureCode, decision.getFailureCode());
         assertEquals(failureCategory, decision.getFailureCategory());

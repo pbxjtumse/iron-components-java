@@ -16,10 +16,27 @@ public class CampaignRuleDTO {
     /** 规则内容。 */
     private String ruleContent;
 
-    public Long getCampaignId() { return campaignId; }
-    public void setCampaignId(Long campaignId) { this.campaignId = campaignId; }
-    public String getRuleName() { return ruleName; }
-    public void setRuleName(String ruleName) { this.ruleName = ruleName; }
-    public String getRuleContent() { return ruleContent; }
-    public void setRuleContent(String ruleContent) { this.ruleContent = ruleContent; }
+    public Long getCampaignId() {
+        return campaignId;
+    }
+
+    public void setCampaignId(Long campaignId) {
+        this.campaignId = campaignId;
+    }
+
+    public String getRuleName() {
+        return ruleName;
+    }
+
+    public void setRuleName(String ruleName) {
+        this.ruleName = ruleName;
+    }
+
+    public String getRuleContent() {
+        return ruleContent;
+    }
+
+    public void setRuleContent(String ruleContent) {
+        this.ruleContent = ruleContent;
+    }
 }

@@ -15,10 +15,8 @@ public final class IronTrees {
     private IronTrees() {
     }
 
-    public static <T, K> List<T> buildTree(List<T> nodes,
-                                           Function<T, K> idMapper,
-                                           Function<T, K> parentIdMapper,
-                                           BiConsumer<T, List<T>> childrenWriter) {
+    public static <T, K> List<T> buildTree(List<T> nodes, Function<T, K> idMapper, Function<T, K> parentIdMapper,
+        BiConsumer<T, List<T>> childrenWriter) {
         Objects.requireNonNull(idMapper, "idMapper must not be null");
         Objects.requireNonNull(parentIdMapper, "parentIdMapper must not be null");
         Objects.requireNonNull(childrenWriter, "childrenWriter must not be null");
@@ -53,11 +51,7 @@ public final class IronTrees {
         return Collections.unmodifiableList(roots);
     }
 
-    private static <T, K> void detectCycle(T node,
-                                           Function<T, K> idMapper,
-                                           Function<T, K> parentIdMapper,
-                                           Map<K, T> byId,
-                                           Set<K> visited) {
+    private static <T, K> void detectCycle(T node, Function<T, K> idMapper, Function<T, K> parentIdMapper, Map<K, T> byId, Set<K> visited) {
         K id = idMapper.apply(node);
         if (!visited.add(id)) {
             throw new IllegalArgumentException("cycle detected in tree nodes at id: " + id);

@@ -9,7 +9,12 @@ public final class FixedIdGenerator implements IdGenerator {
 
     private final String value;
 
-    public FixedIdGenerator(String value) { this.value = value; }
+    public FixedIdGenerator(String value) {
+        this.value = value;
+    }
 
-    @Override public String nextId() { return value; }
+    @Override
+    public String nextId() {
+        return value;
+    }
 }

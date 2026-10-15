@@ -17,9 +17,18 @@ public final class InMemoryResource implements Resource {
         this.bytes = bytes == null ? new byte[0] : Arrays.copyOf(bytes, bytes.length);
     }
 
-    @Override public String getLocation() { return location; }
+    @Override
+    public String getLocation() {
+        return location;
+    }
 
-    @Override public boolean exists() { return true; }
+    @Override
+    public boolean exists() {
+        return true;
+    }
 
-    @Override public InputStream openStream() { return new ByteArrayInputStream(bytes); }
+    @Override
+    public InputStream openStream() {
+        return new ByteArrayInputStream(bytes);
+    }
 }

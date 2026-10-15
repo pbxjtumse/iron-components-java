@@ -44,19 +44,13 @@ public class StorageRoutingAutoConfiguration {
         }
         if (resolver.getType() == StorageRoutingProperties.ResolverType.FIXED) {
             StorageRoutingProperties.Fixed fixed = resolver.getFixed();
-            return new FixedStorageRouteResolver(
-                    PhysicalStorageLocation.of(fixed.getDataSourceKey(), fixed.getTableName()));
+            return new FixedStorageRouteResolver(PhysicalStorageLocation.of(fixed.getDataSourceKey(), fixed.getTableName()));
         }
         StorageRoutingProperties.Hash hash = resolver.getHash();
-        return ShardIdHashStorageRouteResolver.builder()
-                .dataSourcePrefix(hash.getDataSourcePrefix())
-                .tablePrefix(hash.getTablePrefix())
-                .databaseCount(hash.getDatabaseCount())
-                .tablesPerDatabase(hash.getTablesPerDatabase())
-                .dataSourceIndexWidth(hash.getDataSourceIndexWidth())
-                .tableIndexWidth(hash.getTableIndexWidth())
-                .tableIndexMode(hash.getTableIndexMode())
-                .build();
+        return ShardIdHashStorageRouteResolver.builder().dataSourcePrefix(hash.getDataSourcePrefix()).tablePrefix(hash.getTablePrefix())
+            .databaseCount(hash.getDatabaseCount()).tablesPerDatabase(hash.getTablesPerDatabase())
+            .dataSourceIndexWidth(hash.getDataSourceIndexWidth()).tableIndexWidth(hash.getTableIndexWidth())
+            .tableIndexMode(hash.getTableIndexMode()).build();
     }
 
     @Bean

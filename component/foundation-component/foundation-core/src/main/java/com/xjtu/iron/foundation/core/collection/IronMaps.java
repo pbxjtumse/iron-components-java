@@ -58,7 +58,8 @@ public final class IronMaps {
             return Optional.of(number.intValue());
         }
         try {
-            return IronStrings.isBlank(String.valueOf(value)) ? Optional.empty() : Optional.of(Integer.parseInt(String.valueOf(value).trim()));
+            return IronStrings.isBlank(String.valueOf(value)) ? Optional.empty() :
+                Optional.of(Integer.parseInt(String.valueOf(value).trim()));
         } catch (RuntimeException ex) {
             return Optional.empty();
         }
@@ -74,7 +75,8 @@ public final class IronMaps {
             return Optional.of(number.longValue());
         }
         try {
-            return IronStrings.isBlank(String.valueOf(value)) ? Optional.empty() : Optional.of(Long.parseLong(String.valueOf(value).trim()));
+            return IronStrings.isBlank(String.valueOf(value)) ? Optional.empty() :
+                Optional.of(Long.parseLong(String.valueOf(value).trim()));
         } catch (RuntimeException ex) {
             return Optional.empty();
         }

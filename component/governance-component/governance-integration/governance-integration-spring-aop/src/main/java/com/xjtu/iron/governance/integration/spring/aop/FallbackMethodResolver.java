@@ -4,9 +4,7 @@ import java.lang.reflect.Method;
 
 public class FallbackMethodResolver {
 
-    public Method resolve(Class<?> targetClass,
-                          String fallbackMethodName,
-                          Object[] args) {
+    public Method resolve(Class<?> targetClass, String fallbackMethodName, Object[] args) {
         Method[] methods = targetClass.getDeclaredMethods();
 
         for (Method method : methods) {
@@ -18,8 +16,8 @@ public class FallbackMethodResolver {
                 return method;
             }
 
-            if (method.getParameterCount() == args.length + 1
-                    && Throwable.class.isAssignableFrom(method.getParameterTypes()[args.length])) {
+            if (method.getParameterCount() == args.length + 1 &&
+                Throwable.class.isAssignableFrom(method.getParameterTypes()[args.length])) {
                 return method;
             }
         }

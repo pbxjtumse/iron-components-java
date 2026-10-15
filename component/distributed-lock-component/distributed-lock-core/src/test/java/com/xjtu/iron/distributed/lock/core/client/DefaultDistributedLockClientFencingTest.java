@@ -33,8 +33,8 @@ class DefaultDistributedLockClientFencingTest {
         FakeLockProvider lockProvider = new FakeLockProvider(false);
         DefaultDistributedLockClient client = client(lockProvider, issuedProvider(42L));
 
-        LockResult<LockHandle> result = client.tryLock("order:1",
-                LockOptions.builder().fencingRequired(true) .fencingTokenProviderName("mybatis-sequence").build());
+        LockResult<LockHandle> result =
+            client.tryLock("order:1", LockOptions.builder().fencingRequired(true).fencingTokenProviderName("mybatis-sequence").build());
 
         assertThat(result.status()).isEqualTo(LockStatus.ACQUIRED);
         assertThat(result.fencingToken()).contains(42L);
@@ -48,8 +48,8 @@ class DefaultDistributedLockClientFencingTest {
         lockProvider.checkResponse = LockCheckResponse.notOwner();
         DefaultDistributedLockClient client = client(lockProvider, issuedProvider(42L));
 
-        LockResult<LockHandle> result = client.tryLock("order:lost",
-                LockOptions.builder().fencingRequired(true) .fencingTokenProviderName("mybatis-sequence").build());
+        LockResult<LockHandle> result =
+            client.tryLock("order:lost", LockOptions.builder().fencingRequired(true).fencingTokenProviderName("mybatis-sequence").build());
 
         assertThat(result.status()).isEqualTo(LockStatus.LOCK_LOST);
         assertThat(result.stage()).isEqualTo(LockStage.CHECK);
@@ -63,9 +63,8 @@ class DefaultDistributedLockClientFencingTest {
         FakeLockProvider lockProvider = new FakeLockProvider(false);
         DefaultDistributedLockClient client = client(lockProvider, failedProvider());
 
-        LockResult<String> result = client.execute("order:1",
-                LockOptions.builder().fencingRequired(true)
-                        .fencingTokenProviderName("mybatis-sequence").build(),
+        LockResult<String> result =
+            client.execute("order:1", LockOptions.builder().fencingRequired(true).fencingTokenProviderName("mybatis-sequence").build(),
                 handle -> "must-not-run");
 
         assertThat(result.status()).isEqualTo(LockStatus.PROVIDER_ERROR);
@@ -81,9 +80,18 @@ class DefaultDistributedLockClientFencingTest {
 
     private FencingTokenProvider issuedProvider(long token) {
         return new FencingTokenProvider() {
-            @Override public String providerName() { return "mybatis-sequence"; }
-            @Override public boolean supports(FencingTokenRequest request) { return true; }
-            @Override public FencingTokenResponse nextToken(FencingTokenRequest request) {
+            @Override
+            public String providerName() {
+                return "mybatis-sequence";
+            }
+
+            @Override
+            public boolean supports(FencingTokenRequest request) {
+                return true;
+            }
+
+            @Override
+            public FencingTokenResponse nextToken(FencingTokenRequest request) {
                 return FencingTokenResponse.issued(token);
             }
         };
@@ -91,9 +99,18 @@ class DefaultDistributedLockClientFencingTest {
 
     private FencingTokenProvider failedProvider() {
         return new FencingTokenProvider() {
-            @Override public String providerName() { return "mybatis-sequence"; }
-            @Override public boolean supports(FencingTokenRequest request) { return true; }
-            @Override public FencingTokenResponse nextToken(FencingTokenRequest request) {
+            @Override
+            public String providerName() {
+                return "mybatis-sequence";
+            }
+
+            @Override
+            public boolean supports(FencingTokenRequest request) {
+                return true;
+            }
+
+            @Override
+            public FencingTokenResponse nextToken(FencingTokenRequest request) {
                 return FencingTokenResponse.failed(new IllegalStateException("db unavailable"));
             }
         };
@@ -109,40 +126,42 @@ class DefaultDistributedLockClientFencingTest {
             this.nativeFencing = nativeFencing;
         }
 
-        @Override public String providerName() { return "redis"; }
+        @Override
+        public String providerName() {
+            return "redis";
+        }
 
         @Override
         public LockAcquireResponse acquire(LockAcquireRequest request) {
             this.lastRequest = request;
-            LockLease.Builder builder = LockLease.builder()
-                    .providerName("redis")
-                    .namespace(request.getNamespace())
-                    .lockName(request.getLockName())
-                    .lockKey("key")
-                    .ownerToken(request.getOwnerToken())
-                    .leaseTime(request.getOptions().getLeaseTime())
-                    .acquiredAt(Instant.now());
+            LockLease.Builder builder =
+                LockLease.builder().providerName("redis").namespace(request.getNamespace()).lockName(request.getLockName()).lockKey("key")
+                    .ownerToken(request.getOwnerToken()).leaseTime(request.getOptions().getLeaseTime()).acquiredAt(Instant.now());
             if (request.isNativeFencingRequired()) {
                 builder.fencingToken(1L).fencingTokenProviderName("redis");
             }
             return LockAcquireResponse.acquired(builder.build());
         }
 
-        @Override public LockReleaseResponse release(LockReleaseRequest request) {
+        @Override
+        public LockReleaseResponse release(LockReleaseRequest request) {
             releaseCount++;
             return LockReleaseResponse.released();
         }
-        @Override public LockRenewResponse renew(LockRenewRequest request) {
+
+        @Override
+        public LockRenewResponse renew(LockRenewRequest request) {
             return LockRenewResponse.renewed(Instant.now());
         }
-        @Override public LockCheckResponse check(LockCheckRequest request) {
+
+        @Override
+        public LockCheckResponse check(LockCheckRequest request) {
             return checkResponse;
         }
-        @Override public LockProviderCapabilities capabilities() {
-            return LockProviderCapabilities.builder()
-                    .autoRenewSupported(true)
-                    .fencingTokenSupported(nativeFencing)
-                    .build();
+
+        @Override
+        public LockProviderCapabilities capabilities() {
+            return LockProviderCapabilities.builder().autoRenewSupported(true).fencingTokenSupported(nativeFencing).build();
         }
     }
 }

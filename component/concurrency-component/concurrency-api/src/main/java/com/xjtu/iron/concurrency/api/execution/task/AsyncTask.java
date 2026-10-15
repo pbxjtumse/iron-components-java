@@ -298,9 +298,7 @@ public class AsyncTask<T> {
         }
 
         if (interruptOnTimeout && !cancelOnTimeout) {
-            throw new IllegalArgumentException(
-                    "interruptOnTimeout requires cancelOnTimeout=true"
-            );
+            throw new IllegalArgumentException("interruptOnTimeout requires cancelOnTimeout=true");
         }
 
         if (retryPolicy == null) {
@@ -320,14 +318,7 @@ public class AsyncTask<T> {
      * @return 任务元数据快照
      */
     public TaskMetadata metadata() {
-        return new TaskMetadata(
-                taskId,
-                executorName,
-                taskName,
-                bizKey,
-                description,
-                tags
-        );
+        return new TaskMetadata(taskId, executorName, taskName, bizKey, description, tags);
     }
 
     public String getTaskId() {

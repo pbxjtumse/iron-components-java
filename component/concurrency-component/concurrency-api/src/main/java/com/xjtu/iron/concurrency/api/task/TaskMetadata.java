@@ -1,5 +1,3 @@
-
-
 package com.xjtu.iron.concurrency.api.task;
 
 import java.util.Collections;
@@ -41,14 +39,7 @@ public final class TaskMetadata {
      */
     private final Map<String, String> tags;
 
-    public TaskMetadata(
-            String taskId,
-            String executorName,
-            String taskName,
-            String bizKey,
-            String description,
-            Map<String, String> tags
-    ) {
+    public TaskMetadata(String taskId, String executorName, String taskName, String bizKey, String description, Map<String, String> tags) {
         this.taskId = taskId;
         this.executorName = executorName;
         this.taskName = taskName;

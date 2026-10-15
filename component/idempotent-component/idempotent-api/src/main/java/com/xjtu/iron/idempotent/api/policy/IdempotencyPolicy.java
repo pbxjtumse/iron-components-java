@@ -56,13 +56,12 @@ public final class IdempotencyPolicy {
         this.namespace = normalize(builder.namespace) == null ? DEFAULT_NAMESPACE : builder.namespace.trim();
         this.repositoryName = normalize(builder.repositoryName);
         this.processingTimeout = builder.processingTimeout == null ? DEFAULT_PROCESSING_TIMEOUT : builder.processingTimeout;
-        this.idempotencyWindow = builder.idempotencyWindow != null
-                ? builder.idempotencyWindow : (mode.isWindowed() ? DEFAULT_WINDOW : null);
+        this.idempotencyWindow =
+            builder.idempotencyWindow != null ? builder.idempotencyWindow : (mode.isWindowed() ? DEFAULT_WINDOW : null);
         this.windowPolicy = builder.windowPolicy == null ? IdempotencyWindowPolicy.FIXED_FROM_FIRST_ACQUIRE : builder.windowPolicy;
         this.recordRetentionTtl = builder.recordRetentionTtl == null ? DEFAULT_RETENTION : builder.recordRetentionTtl;
-        this.recoveryPolicy = builder.recoveryPolicy != null
-                ? builder.recoveryPolicy
-                : (mode == IdempotencyMode.DURABLE ? IdempotencyRecoveryPolicy.externalTask() : IdempotencyRecoveryPolicy.none());
+        this.recoveryPolicy = builder.recoveryPolicy != null ? builder.recoveryPolicy :
+            (mode == IdempotencyMode.DURABLE ? IdempotencyRecoveryPolicy.externalTask() : IdempotencyRecoveryPolicy.none());
         this.lockOptions = builder.lockOptions == null ? IdempotencyLockOptions.disabled() : builder.lockOptions;
     }
 
@@ -103,16 +102,45 @@ public final class IdempotencyPolicy {
         lockOptions.validate();
     }
 
-    public String getName() { return name; }
-    public IdempotencyMode getMode() { return mode; }
-    public String getNamespace() { return namespace; }
-    public String getRepositoryName() { return repositoryName; }
-    public Duration getProcessingTimeout() { return processingTimeout; }
-    public Duration getIdempotencyWindow() { return idempotencyWindow; }
-    public IdempotencyWindowPolicy getWindowPolicy() { return windowPolicy; }
-    public Duration getRecordRetentionTtl() { return recordRetentionTtl; }
-    public IdempotencyRecoveryPolicy getRecoveryPolicy() { return recoveryPolicy; }
-    public IdempotencyLockOptions getLockOptions() { return lockOptions; }
+    public String getName() {
+        return name;
+    }
+
+    public IdempotencyMode getMode() {
+        return mode;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public String getRepositoryName() {
+        return repositoryName;
+    }
+
+    public Duration getProcessingTimeout() {
+        return processingTimeout;
+    }
+
+    public Duration getIdempotencyWindow() {
+        return idempotencyWindow;
+    }
+
+    public IdempotencyWindowPolicy getWindowPolicy() {
+        return windowPolicy;
+    }
+
+    public Duration getRecordRetentionTtl() {
+        return recordRetentionTtl;
+    }
+
+    public IdempotencyRecoveryPolicy getRecoveryPolicy() {
+        return recoveryPolicy;
+    }
+
+    public IdempotencyLockOptions getLockOptions() {
+        return lockOptions;
+    }
 
     private static String normalize(String value) {
         return value == null || value.isBlank() ? null : value.trim();
@@ -130,16 +158,55 @@ public final class IdempotencyPolicy {
         private IdempotencyRecoveryPolicy recoveryPolicy;
         private IdempotencyLockOptions lockOptions = IdempotencyLockOptions.disabled();
 
-        public Builder name(String value) { this.name = value; return this; }
-        public Builder mode(IdempotencyMode value) { this.mode = value; return this; }
-        public Builder namespace(String value) { this.namespace = value; return this; }
-        public Builder repositoryName(String value) { this.repositoryName = value; return this; }
-        public Builder processingTimeout(Duration value) { this.processingTimeout = value; return this; }
-        public Builder idempotencyWindow(Duration value) { this.idempotencyWindow = value; return this; }
-        public Builder windowPolicy(IdempotencyWindowPolicy value) { this.windowPolicy = value; return this; }
-        public Builder recordRetentionTtl(Duration value) { this.recordRetentionTtl = value; return this; }
-        public Builder recoveryPolicy(IdempotencyRecoveryPolicy value) { this.recoveryPolicy = value; return this; }
-        public Builder lockOptions(IdempotencyLockOptions value) { this.lockOptions = value; return this; }
+        public Builder name(String value) {
+            this.name = value;
+            return this;
+        }
+
+        public Builder mode(IdempotencyMode value) {
+            this.mode = value;
+            return this;
+        }
+
+        public Builder namespace(String value) {
+            this.namespace = value;
+            return this;
+        }
+
+        public Builder repositoryName(String value) {
+            this.repositoryName = value;
+            return this;
+        }
+
+        public Builder processingTimeout(Duration value) {
+            this.processingTimeout = value;
+            return this;
+        }
+
+        public Builder idempotencyWindow(Duration value) {
+            this.idempotencyWindow = value;
+            return this;
+        }
+
+        public Builder windowPolicy(IdempotencyWindowPolicy value) {
+            this.windowPolicy = value;
+            return this;
+        }
+
+        public Builder recordRetentionTtl(Duration value) {
+            this.recordRetentionTtl = value;
+            return this;
+        }
+
+        public Builder recoveryPolicy(IdempotencyRecoveryPolicy value) {
+            this.recoveryPolicy = value;
+            return this;
+        }
+
+        public Builder lockOptions(IdempotencyLockOptions value) {
+            this.lockOptions = value;
+            return this;
+        }
 
         public IdempotencyPolicy build() {
             IdempotencyPolicy policy = new IdempotencyPolicy(this);

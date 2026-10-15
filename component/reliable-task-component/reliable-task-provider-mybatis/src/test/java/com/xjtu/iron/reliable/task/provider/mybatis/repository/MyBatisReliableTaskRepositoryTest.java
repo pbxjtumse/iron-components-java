@@ -22,8 +22,7 @@ class MyBatisReliableTaskRepositoryTest extends ReliableTaskRepositoryContract {
     @BeforeEach
     void setUp() throws Exception {
         JdbcDataSource dataSource = new JdbcDataSource();
-        dataSource.setURL("jdbc:h2:mem:reliable_task_mybatis_" + System.nanoTime()
-                + ";MODE=MySQL;DB_CLOSE_DELAY=-1");
+        dataSource.setURL("jdbc:h2:mem:reliable_task_mybatis_" + System.nanoTime() + ";MODE=MySQL;DB_CLOSE_DELAY=-1");
         ReliableTaskTestSchema.create(dataSource);
 
         Configuration configuration = new Configuration();
@@ -33,8 +32,7 @@ class MyBatisReliableTaskRepositoryTest extends ReliableTaskRepositoryContract {
         factoryBean.setConfiguration(configuration);
         SqlSessionFactory sqlSessionFactory = factoryBean.getObject();
         SqlSessionTemplate template = new SqlSessionTemplate(sqlSessionFactory);
-        repository = new MyBatisReliableTaskRepository(new SpringMyBatisAccess(
-                dataSource, template, null, MyBatisAccessListener.noop()));
+        repository = new MyBatisReliableTaskRepository(new SpringMyBatisAccess(dataSource, template, null, MyBatisAccessListener.noop()));
     }
 
     @Override

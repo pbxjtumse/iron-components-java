@@ -10,6 +10,7 @@ import com.xjtu.iron.message.core.context.MessageContextAccessor;
 
 import java.time.Instant;
 import java.util.Objects;
+
 /**
  * 发送前的消息信封补齐器。
  *
@@ -26,10 +27,8 @@ public final class MessageEnvelopeEnricher {
     private final StringIdGenerator messageIdGenerator;
     private final MessageContextAccessor contextAccessor;
 
-    public MessageEnvelopeEnricher(
-            MessageComponentOptions options,
-            StringIdGenerator messageIdGenerator,
-            MessageContextAccessor contextAccessor) {
+    public MessageEnvelopeEnricher(MessageComponentOptions options, StringIdGenerator messageIdGenerator,
+        MessageContextAccessor contextAccessor) {
         this.options = Objects.requireNonNull(options, "options must not be null");
         this.messageIdGenerator = Objects.requireNonNull(messageIdGenerator, "messageIdGenerator must not be null");
         this.contextAccessor = Objects.requireNonNull(contextAccessor, "contextAccessor must not be null");
@@ -51,13 +50,8 @@ public final class MessageEnvelopeEnricher {
         String correlationId = firstText(explicit.correlationId(), firstText(parent.correlationId(), messageId));
         String causationId = firstText(explicit.causationId(), current == null ? null : current.envelope().messageId());
         String tenantId = firstText(explicit.tenantId(), parent.tenantId());
-        return message.toBuilder()
-                .messageId(messageId)
-                .schemaVersion(schemaVersion)
-                .occurredAt(occurredAt)
-                .createdAt(createdAt)
-                .context(new MessageContext(source, correlationId, causationId, tenantId))
-                .build();
+        return message.toBuilder().messageId(messageId).schemaVersion(schemaVersion).occurredAt(occurredAt).createdAt(createdAt)
+            .context(new MessageContext(source, correlationId, causationId, tenantId)).build();
     }
 
     private static String firstText(String preferred, String fallback) {

@@ -7,10 +7,7 @@ final class RetryExceptionRule {
     private final RetryFailureCategory category;
     private final String failureCode;
 
-    RetryExceptionRule(
-            Class<? extends Throwable> exceptionType,
-            RetryFailureCategory category,
-            String failureCode) {
+    RetryExceptionRule(Class<? extends Throwable> exceptionType, RetryFailureCategory category, String failureCode) {
         this.exceptionType = exceptionType;
         this.category = category;
         this.failureCode = failureCode;

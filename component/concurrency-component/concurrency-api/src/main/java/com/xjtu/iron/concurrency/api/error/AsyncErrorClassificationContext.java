@@ -40,13 +40,8 @@ public final class AsyncErrorClassificationContext {
      */
     private final AsyncErrorStage stage;
 
-    public AsyncErrorClassificationContext(
-            TaskMetadata task,
-            Throwable throwable,
-            Throwable unwrapped,
-            Throwable rootCause,
-            AsyncErrorStage stage
-    ) {
+    public AsyncErrorClassificationContext(TaskMetadata task, Throwable throwable, Throwable unwrapped, Throwable rootCause,
+        AsyncErrorStage stage) {
         this.task = Objects.requireNonNull(task, "task metadata must not be null");
         this.throwable = throwable;
         this.unwrapped = unwrapped;
@@ -57,20 +52,10 @@ public final class AsyncErrorClassificationContext {
     /**
      * 从任务元数据、异常和阶段构造分类上下文。
      */
-    public static AsyncErrorClassificationContext of(
-            TaskMetadata task,
-            Throwable throwable,
-            AsyncErrorStage stage
-    ) {
+    public static AsyncErrorClassificationContext of(TaskMetadata task, Throwable throwable, AsyncErrorStage stage) {
         Throwable unwrapped = CompletableFutureExceptionUtils.unwrap(throwable);
         Throwable rootCause = CompletableFutureExceptionUtils.rootCause(throwable);
-        return new AsyncErrorClassificationContext(
-                task,
-                throwable,
-                unwrapped,
-                rootCause,
-                stage
-        );
+        return new AsyncErrorClassificationContext(task, throwable, unwrapped, rootCause, stage);
     }
 
     /**

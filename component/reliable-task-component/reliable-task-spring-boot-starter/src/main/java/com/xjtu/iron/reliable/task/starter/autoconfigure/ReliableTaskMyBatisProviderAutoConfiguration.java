@@ -15,26 +15,17 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 
 /** 选择 MyBatis 时注册 Mapper 并创建 ReliableTaskRepository。 */
-@AutoConfiguration(
-        afterName = "org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration",
-        before = ReliableTaskAutoConfiguration.class
-)
+@AutoConfiguration(afterName = "org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration",
+    before = ReliableTaskAutoConfiguration.class)
 @ConditionalOnClass({SqlSessionFactory.class, ReliableTaskMapper.class})
 @EnableConfigurationProperties(ReliableTaskProperties.class)
-@ConditionalOnProperty(
-        prefix = "xjtu.iron.reliable-task",
-        name = "enabled",
-        havingValue = "true",
-        matchIfMissing = true
-)
+@ConditionalOnProperty(prefix = "xjtu.iron.reliable-task", name = "enabled", havingValue = "true", matchIfMissing = true)
 @MapperScan(basePackageClasses = ReliableTaskMapper.class)
 public class ReliableTaskMyBatisProviderAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(ReliableTaskRepository.class)
-    public ReliableTaskRepository myBatisReliableTaskRepository(
-            MyBatisAccess access,
-            ReliableTaskProperties properties) {
+    public ReliableTaskRepository myBatisReliableTaskRepository(MyBatisAccess access, ReliableTaskProperties properties) {
         return new MyBatisReliableTaskRepository(access, properties.getTableName());
     }
 }

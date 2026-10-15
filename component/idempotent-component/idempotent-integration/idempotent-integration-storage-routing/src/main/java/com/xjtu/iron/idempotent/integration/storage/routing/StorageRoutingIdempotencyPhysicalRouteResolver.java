@@ -21,8 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** 把幂等逻辑存储上下文转换为 MyBatis Access 使用的物理数据源与物理表。 */
-public final class StorageRoutingIdempotencyPhysicalRouteResolver
-        implements IdempotencyPhysicalRouteResolver {
+public final class StorageRoutingIdempotencyPhysicalRouteResolver implements IdempotencyPhysicalRouteResolver {
 
     /** 幂等表族的逻辑表名。 */
     private final String logicalTable;
@@ -53,64 +52,37 @@ public final class StorageRoutingIdempotencyPhysicalRouteResolver
      */
     private final String proxyAccessKey;
 
-    public StorageRoutingIdempotencyPhysicalRouteResolver(
-            String logicalTable,
-            String directTableName,
-            StorageRouteResolver storageRouteResolver,
-            StorageRouteContext storageRouteContext,
-            RouteMappingStrategy idempotencyMappingStrategy,
-            String shardingSphereJdbcAccessKey,
-            String proxyAccessKey
-    ) {
+    public StorageRoutingIdempotencyPhysicalRouteResolver(String logicalTable, String directTableName,
+        StorageRouteResolver storageRouteResolver, StorageRouteContext storageRouteContext, RouteMappingStrategy idempotencyMappingStrategy,
+        String shardingSphereJdbcAccessKey, String proxyAccessKey) {
         this.logicalTable = requireText(logicalTable, "logicalTable");
         this.directTableName = requireText(directTableName, "directTableName");
-        this.storageRouteResolver = Objects.requireNonNull(
-                storageRouteResolver,
-                "storageRouteResolver must not be null"
-        );
-        this.storageRouteContext = Objects.requireNonNull(
-                storageRouteContext,
-                "storageRouteContext must not be null"
-        );
-        this.idempotencyMappingStrategy = Objects.requireNonNull(
-                idempotencyMappingStrategy,
-                "idempotencyMappingStrategy must not be null"
-        );
+        this.storageRouteResolver = Objects.requireNonNull(storageRouteResolver, "storageRouteResolver must not be null");
+        this.storageRouteContext = Objects.requireNonNull(storageRouteContext, "storageRouteContext must not be null");
+        this.idempotencyMappingStrategy = Objects.requireNonNull(idempotencyMappingStrategy, "idempotencyMappingStrategy must not be null");
         this.shardingSphereJdbcAccessKey = normalize(shardingSphereJdbcAccessKey);
         this.proxyAccessKey = normalize(proxyAccessKey);
     }
 
     @Override
-    public IdempotencyPhysicalRoute resolvePoint(
-            IdempotencyStorageContext storageContext,
-            String namespace,
-            String idempotencyKey
-    ) {
+    public IdempotencyPhysicalRoute resolvePoint(IdempotencyStorageContext storageContext, String namespace, String idempotencyKey) {
         Objects.requireNonNull(storageContext, "storageContext must not be null");
         Optional<StorageRoute> boundRoute = this.storageRouteContext.current();
         if (boundRoute.isPresent() && boundRoute.get().mode() != StorageRouteMode.DIRECT_DATASOURCE) {
             return toAccessRoute(boundRoute.get());
         }
-        CompositeShardKey shardKey = boundRoute.map(StorageRoute::context)
-                .map(RouteContext::shardKey)
-                .orElseGet(() -> defaultShardKey(idempotencyKey));
+        CompositeShardKey shardKey =
+            boundRoute.map(StorageRoute::context).map(RouteContext::shardKey).orElseGet(() -> defaultShardKey(idempotencyKey));
 
-        RouteContext context = baseContext(
-                storageContext.getStoreName(),
-                namespace,
-                storageContext.getScanBucket()
-        ).shardKey(shardKey)
-                .attribute("idempotency.key", idempotencyKey)
-                .build();
+        RouteContext context = baseContext(storageContext.getStoreName(), namespace, storageContext.getScanBucket()).shardKey(shardKey)
+            .attribute("idempotency.key", idempotencyKey).build();
 
         ShardRouteInfo boundShard = boundRoute.map(StorageRoute::shardInfo).orElse(null);
         if (boundShard != null) {
             return toPhysicalRoute(remapBound(context, boundRoute.orElseThrow()));
         }
         if (boundRoute.isPresent()) {
-            return toPhysicalRoute(
-                    directIdempotencyRoute(context, boundRoute.get().dataSourceKey())
-            );
+            return toPhysicalRoute(directIdempotencyRoute(context, boundRoute.get().dataSourceKey()));
         }
         StorageRoute resolved = storageRouteResolver.resolve(context);
         return toAccessRoute(normalizeResolvedRoute(context, resolved));
@@ -123,14 +95,8 @@ public final class StorageRoutingIdempotencyPhysicalRouteResolver
         if (boundRoute.isPresent() && boundRoute.get().mode() != StorageRouteMode.DIRECT_DATASOURCE) {
             return List.of(toAccessRoute(boundRoute.get()));
         }
-        RouteContext.Builder contextBuilder = baseContext(
-                query.getStoreName(),
-                query.getNamespace(),
-                query.getScanBucket()
-        );
-        boundRoute.map(StorageRoute::context)
-                .map(RouteContext::shardKey)
-                .ifPresent(contextBuilder::shardKey);
+        RouteContext.Builder contextBuilder = baseContext(query.getStoreName(), query.getNamespace(), query.getScanBucket());
+        boundRoute.map(StorageRoute::context).map(RouteContext::shardKey).ifPresent(contextBuilder::shardKey);
         RouteContext context = contextBuilder.build();
 
         ShardRouteInfo boundShard = boundRoute.map(StorageRoute::shardInfo).orElse(null);
@@ -138,53 +104,37 @@ public final class StorageRoutingIdempotencyPhysicalRouteResolver
             return List.of(toPhysicalRoute(remapBound(context, boundRoute.orElseThrow())));
         }
         if (boundRoute.isPresent()) {
-            return List.of(toPhysicalRoute(
-                    directIdempotencyRoute(context, boundRoute.get().dataSourceKey())
-            ));
+            return List.of(toPhysicalRoute(directIdempotencyRoute(context, boundRoute.get().dataSourceKey())));
         }
         try {
             StorageRoute resolved = storageRouteResolver.resolve(context);
             return List.of(toAccessRoute(normalizeResolvedRoute(context, resolved)));
         } catch (StorageRoutingException failure) {
             throw new StorageRoutingException(
-                    "Recovery scan requires a bound physical StorageRoute before scanning scanBucket="
-                            + query.getScanBucket(),
-                    failure
-            );
+                "Recovery scan requires a bound physical StorageRoute before scanning scanBucket=" + query.getScanBucket(), failure);
         }
     }
 
     private RouteContext.Builder baseContext(String storeName, String namespace, int scanBucket) {
-        return RouteContext.builder()
-                .routeName(storeName)
-                .logicalTable(logicalTable)
-                .attribute("idempotency.namespace", namespace)
-                .attribute("idempotency.scanBucket", scanBucket);
+        return RouteContext.builder().routeName(storeName).logicalTable(logicalTable).attribute("idempotency.namespace", namespace)
+            .attribute("idempotency.scanBucket", scanBucket);
     }
 
     private CompositeShardKey defaultShardKey(String idempotencyKey) {
-        return CompositeShardKey.of(ShardKey.of(
-                DefaultIdempotencyRouteContextFactory.IDEMPOTENCY_KEY_FIELD,
-                requireText(idempotencyKey, "idempotencyKey")
-        ));
+        return CompositeShardKey.of(
+            ShardKey.of(DefaultIdempotencyRouteContextFactory.IDEMPOTENCY_KEY_FIELD, requireText(idempotencyKey, "idempotencyKey")));
     }
 
     private StorageRoute remapBound(RouteContext context, StorageRoute bound) {
         StorageRoute mapped = remap(context, bound.requireShardInfo());
         if (!Objects.equals(mapped.dataSourceKey(), bound.dataSourceKey())) {
-            throw new StorageRoutingException(
-                    "bound route and idempotency mapping must use the same dataSourceKey"
-            );
+            throw new StorageRoutingException("bound route and idempotency mapping must use the same dataSourceKey");
         }
         return mapped;
     }
 
     private StorageRoute remap(RouteContext context, ShardRouteInfo shardInfo) {
-        return StorageRoute.shardedDirect(
-                context,
-                shardInfo,
-                idempotencyMappingStrategy.map(shardInfo)
-        );
+        return StorageRoute.shardedDirect(context, shardInfo, idempotencyMappingStrategy.map(shardInfo));
     }
 
     private StorageRoute normalizeResolvedRoute(RouteContext context, StorageRoute resolved) {
@@ -192,33 +142,24 @@ public final class StorageRoutingIdempotencyPhysicalRouteResolver
         if (resolved.mode() != StorageRouteMode.DIRECT_DATASOURCE) {
             return resolved;
         }
-        return resolved.shardInfo() == null
-                ? directIdempotencyRoute(context, resolved.dataSourceKey())
-                : remap(context, resolved.requireShardInfo());
+        return resolved.shardInfo() == null ? directIdempotencyRoute(context, resolved.dataSourceKey()) :
+            remap(context, resolved.requireShardInfo());
     }
 
     private StorageRoute directIdempotencyRoute(RouteContext context, String dataSourceKey) {
-        return StorageRoute.fixedDirect(
-                context,
-                PhysicalStorageLocation.of(dataSourceKey, directTableName)
-        );
+        return StorageRoute.fixedDirect(context, PhysicalStorageLocation.of(dataSourceKey, directTableName));
     }
 
     private IdempotencyPhysicalRoute toPhysicalRoute(StorageRoute route) {
         PhysicalStorageLocation location = route.requirePhysicalLocation();
-        return IdempotencyPhysicalRoute.of(
-                location.dataSourceKey(),
-                location.tableName()
-        );
+        return IdempotencyPhysicalRoute.of(location.dataSourceKey(), location.tableName());
     }
 
     private IdempotencyPhysicalRoute toAccessRoute(StorageRoute route) {
         if (route.mode() == StorageRouteMode.DIRECT_DATASOURCE) {
             return toPhysicalRoute(route);
         }
-        String dataSourceKey = route.mode() == StorageRouteMode.SHARDING_SPHERE_JDBC
-                ? shardingSphereJdbcAccessKey
-                : proxyAccessKey;
+        String dataSourceKey = route.mode() == StorageRouteMode.SHARDING_SPHERE_JDBC ? shardingSphereJdbcAccessKey : proxyAccessKey;
         // 外层绑定的 middleware route 可能属于业务表。这里只继承中间件模式，
         // 幂等技术表必须始终使用自己的 logicalTable，不能泄漏业务表名。
         return IdempotencyPhysicalRoute.of(dataSourceKey, logicalTable);

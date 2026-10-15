@@ -17,33 +17,18 @@ import org.springframework.context.annotation.Bean;
 /**
  * MessageTemplate 门面自动配置。
  */
-@AutoConfiguration(after = {
-        MessageCoreAutoConfiguration.class,
-        MessageProviderAutoConfiguration.class,
-        MessageSendAutoConfiguration.class,
-        MessageConsumeAutoConfiguration.class
-})
+@AutoConfiguration(after = {MessageCoreAutoConfiguration.class, MessageProviderAutoConfiguration.class, MessageSendAutoConfiguration.class,
+    MessageConsumeAutoConfiguration.class})
 @ConditionalOnProperty(prefix = "xjtu.iron.message", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class MessageTemplateAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean(MessageProviderRegistry.class)
-    public MessageTemplate messageTemplate(
-            MessageComponentOptions options,
-            MessageProviderRegistry providerRegistry,
-            DestinationResolver destinationResolver,
-            MessageEnvelopeEnricher envelopeEnricher,
-            MessageWireCodec wireCodec,
-            MessageSendExecutor sendExecutor,
-            MessageConsumerAdapter consumerAdapter) {
-        return new MessageTemplate(
-                options,
-                providerRegistry,
-                destinationResolver,
-                envelopeEnricher,
-                wireCodec,
-                sendExecutor,
-                consumerAdapter);
+    public MessageTemplate messageTemplate(MessageComponentOptions options, MessageProviderRegistry providerRegistry,
+        DestinationResolver destinationResolver, MessageEnvelopeEnricher envelopeEnricher, MessageWireCodec wireCodec,
+        MessageSendExecutor sendExecutor, MessageConsumerAdapter consumerAdapter) {
+        return new MessageTemplate(options, providerRegistry, destinationResolver, envelopeEnricher, wireCodec, sendExecutor,
+            consumerAdapter);
     }
 }

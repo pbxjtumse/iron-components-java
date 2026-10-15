@@ -3,6 +3,7 @@ package com.xjtu.iron.message.core.routing;
 import com.xjtu.iron.message.api.model.MessageDestination;
 
 import java.util.*;
+
 /**
  * 目的地路由注册表，保存逻辑目的地到物理目的地的静态映射。
  *
@@ -23,19 +24,14 @@ public final class DestinationRouteRegistry {
                 throw new IllegalArgumentException("destination route must not be null");
             }
             RouteKey key = new RouteKey(route.namespace(), route.name());
-            Map<String, DestinationRoute> providerRoutes = mutableRoutes.computeIfAbsent(
-                    key,
-                    ignored -> new LinkedHashMap<>());
+            Map<String, DestinationRoute> providerRoutes = mutableRoutes.computeIfAbsent(key, ignored -> new LinkedHashMap<>());
             DestinationRoute previous = providerRoutes.putIfAbsent(route.providerName(), route);
             if (previous != null) {
-                throw new IllegalArgumentException(
-                        "duplicate destination route: " + key + ", provider=" + route.providerName());
+                throw new IllegalArgumentException("duplicate destination route: " + key + ", provider=" + route.providerName());
             }
         }
         Map<RouteKey, Map<String, DestinationRoute>> immutable = new LinkedHashMap<>();
-        mutableRoutes.forEach((key, value) -> immutable.put(
-                key,
-                Collections.unmodifiableMap(new LinkedHashMap<>(value))));
+        mutableRoutes.forEach((key, value) -> immutable.put(key, Collections.unmodifiableMap(new LinkedHashMap<>(value))));
         this.routes = Collections.unmodifiableMap(immutable);
     }
 
@@ -48,9 +44,7 @@ public final class DestinationRouteRegistry {
         if (providerRoutes == null) {
             return Optional.empty();
         }
-        String normalizedProvider = providerName == null
-                ? null
-                : providerName.trim().toLowerCase(Locale.ROOT);
+        String normalizedProvider = providerName == null ? null : providerName.trim().toLowerCase(Locale.ROOT);
         return Optional.ofNullable(providerRoutes.get(normalizedProvider));
     }
 
@@ -72,9 +66,7 @@ public final class DestinationRouteRegistry {
         /**
          * 创建不可变 RouteKey。
          */
-        private RouteKey(
-            String namespace,
-            String name) {
+        private RouteKey(String namespace, String name) {
             // 保存 namespace。
             this.namespace = namespace;
             // 保存 name。
@@ -84,6 +76,7 @@ public final class DestinationRouteRegistry {
         private static RouteKey of(MessageDestination destination) {
             return new RouteKey(destination.namespace(), destination.name());
         }
+
         /**
          * 返回namespace。
          *
@@ -122,8 +115,7 @@ public final class DestinationRouteRegistry {
             }
             // 转换为当前类型后逐字段比较。
             RouteKey other = (RouteKey) object;
-            return Objects.equals(namespace, other.namespace)
-                    && Objects.equals(name, other.name);
+            return Objects.equals(namespace, other.namespace) && Objects.equals(name, other.name);
         }
 
         /**
@@ -145,10 +137,7 @@ public final class DestinationRouteRegistry {
         @Override
         public String toString() {
             // 拼接全部字段，保持值对象可诊断。
-            return "RouteKey{" +
-                    "namespace=" + namespace +
-                    ", name=" + name +
-                    '}';
+            return "RouteKey{" + "namespace=" + namespace + ", name=" + name + '}';
         }
 
     }

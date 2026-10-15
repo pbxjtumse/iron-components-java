@@ -24,7 +24,15 @@ public final class IdempotencyExecutionDefinition<T> {
         this.resultPolicy = Objects.requireNonNull(resultPolicy, "resultPolicy must not be null");
     }
 
-    public IdempotencyPolicy policy() { return policy; }
-    public IdempotencyRepository repository() { return repository; }
-    public IdempotencyResultPolicy<T> resultPolicy() { return resultPolicy; }
+    public IdempotencyPolicy policy() {
+        return policy;
+    }
+
+    public IdempotencyRepository repository() {
+        return repository;
+    }
+
+    public IdempotencyResultPolicy<T> resultPolicy() {
+        return resultPolicy;
+    }
 }

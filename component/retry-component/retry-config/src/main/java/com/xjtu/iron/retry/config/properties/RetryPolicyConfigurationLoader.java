@@ -21,26 +21,16 @@ public final class RetryPolicyConfigurationLoader {
         this(new RetryPolicyPropertiesResolver(), new RetryPolicyFactory());
     }
 
-    RetryPolicyConfigurationLoader(
-            RetryPolicyPropertiesResolver propertiesResolver,
-            RetryPolicyFactory policyFactory) {
-        this.propertiesResolver = Objects.requireNonNull(
-                propertiesResolver,
-                "propertiesResolver must not be null"
-        );
-        this.policyFactory = Objects.requireNonNull(
-                policyFactory,
-                "policyFactory must not be null"
-        );
+    RetryPolicyConfigurationLoader(RetryPolicyPropertiesResolver propertiesResolver, RetryPolicyFactory policyFactory) {
+        this.propertiesResolver = Objects.requireNonNull(propertiesResolver, "propertiesResolver must not be null");
+        this.policyFactory = Objects.requireNonNull(policyFactory, "policyFactory must not be null");
     }
 
     /** 解析全部命名策略，并保持配置声明顺序返回不可变快照。 */
     public Map<String, RetryPolicy> load(RetryProperties properties) {
-        Map<String, ResolvedRetryPolicyProperties> resolvedPolicies =
-                propertiesResolver.resolve(properties);
+        Map<String, ResolvedRetryPolicyProperties> resolvedPolicies = propertiesResolver.resolve(properties);
         Map<String, RetryPolicy> policies = new LinkedHashMap<>();
-        for (Map.Entry<String, ResolvedRetryPolicyProperties> entry
-                : resolvedPolicies.entrySet()) {
+        for (Map.Entry<String, ResolvedRetryPolicyProperties> entry : resolvedPolicies.entrySet()) {
             policies.put(entry.getKey(), policyFactory.create(entry.getKey(), entry.getValue()));
         }
         return Collections.unmodifiableMap(policies);

@@ -68,52 +68,16 @@ public final class ConsumeContext {
     /** Provider 特有诊断属性，例如 kafka.partition、pulsar.ledgerId、rocketmq.queueOffset。 */
     private final Map<String, String> attributes;
 
-    public ConsumeContext(
-            String providerName,
-            String physicalDestination,
-            String consumerGroup,
-            String providerMessageId,
-            int deliveryAttempt,
-            Instant receivedAt,
-            Map<String, String> attributes) {
-        this(
-                providerName,
-                physicalDestination,
-                null,
-                consumerGroup,
-                providerMessageId,
-                null,
-                null,
-                null,
-                deliveryAttempt,
-                receivedAt,
-                Instant.now(),
-                ConsumerReliabilityMode.AT_LEAST_ONCE,
-                MessageIdempotencyMode.NONE,
-                null,
-                null,
-                Map.of(),
-                attributes);
+    public ConsumeContext(String providerName, String physicalDestination, String consumerGroup, String providerMessageId,
+        int deliveryAttempt, Instant receivedAt, Map<String, String> attributes) {
+        this(providerName, physicalDestination, null, consumerGroup, providerMessageId, null, null, null, deliveryAttempt, receivedAt,
+            Instant.now(), ConsumerReliabilityMode.AT_LEAST_ONCE, MessageIdempotencyMode.NONE, null, null, Map.of(), attributes);
     }
 
-    public ConsumeContext(
-            String providerName,
-            String physicalDestination,
-            MessageDestination logicalDestination,
-            String consumerGroup,
-            String providerMessageId,
-            String messageId,
-            String messageKey,
-            String eventType,
-            int deliveryAttempt,
-            Instant receivedAt,
-            Instant startedAt,
-            ConsumerReliabilityMode reliabilityMode,
-            MessageIdempotencyMode idempotencyMode,
-            String idempotencyScene,
-            String idempotencyKey,
-            Map<String, String> headers,
-            Map<String, String> attributes) {
+    public ConsumeContext(String providerName, String physicalDestination, MessageDestination logicalDestination, String consumerGroup,
+        String providerMessageId, String messageId, String messageKey, String eventType, int deliveryAttempt, Instant receivedAt,
+        Instant startedAt, ConsumerReliabilityMode reliabilityMode, MessageIdempotencyMode idempotencyMode, String idempotencyScene,
+        String idempotencyKey, Map<String, String> headers, Map<String, String> attributes) {
         this.providerName = normalize(providerName);
         this.physicalDestination = normalize(physicalDestination);
         this.logicalDestination = logicalDestination;
@@ -134,46 +98,83 @@ public final class ConsumeContext {
     }
 
     public ConsumeContext withIdempotency(String scene, String key, MessageIdempotencyMode mode) {
-        return new ConsumeContext(
-                providerName,
-                physicalDestination,
-                logicalDestination,
-                consumerGroup,
-                providerMessageId,
-                messageId,
-                messageKey,
-                eventType,
-                deliveryAttempt,
-                receivedAt,
-                startedAt,
-                reliabilityMode,
-                mode == null ? idempotencyMode : mode,
-                scene,
-                key,
-                headers,
-                attributes);
+        return new ConsumeContext(providerName, physicalDestination, logicalDestination, consumerGroup, providerMessageId, messageId,
+            messageKey, eventType, deliveryAttempt, receivedAt, startedAt, reliabilityMode, mode == null ? idempotencyMode : mode, scene,
+            key, headers, attributes);
     }
 
-    public String providerName() { return providerName; }
-    public String physicalDestination() { return physicalDestination; }
-    public MessageDestination logicalDestination() { return logicalDestination; }
-    public String consumerGroup() { return consumerGroup; }
-    public String providerMessageId() { return providerMessageId; }
-    public String messageId() { return messageId; }
-    public String messageKey() { return messageKey; }
-    public String eventType() { return eventType; }
-    public int deliveryAttempt() { return deliveryAttempt; }
-    public Instant receivedAt() { return receivedAt; }
-    public Instant startedAt() { return startedAt; }
-    public ConsumerReliabilityMode reliabilityMode() { return reliabilityMode; }
-    public MessageIdempotencyMode idempotencyMode() { return idempotencyMode; }
-    public String idempotencyScene() { return idempotencyScene; }
-    public String idempotencyKey() { return idempotencyKey; }
-    public Map<String, String> headers() { return headers; }
-    public Map<String, String> attributes() { return attributes; }
+    public String providerName() {
+        return providerName;
+    }
+
+    public String physicalDestination() {
+        return physicalDestination;
+    }
+
+    public MessageDestination logicalDestination() {
+        return logicalDestination;
+    }
+
+    public String consumerGroup() {
+        return consumerGroup;
+    }
+
+    public String providerMessageId() {
+        return providerMessageId;
+    }
+
+    public String messageId() {
+        return messageId;
+    }
+
+    public String messageKey() {
+        return messageKey;
+    }
+
+    public String eventType() {
+        return eventType;
+    }
+
+    public int deliveryAttempt() {
+        return deliveryAttempt;
+    }
+
+    public Instant receivedAt() {
+        return receivedAt;
+    }
+
+    public Instant startedAt() {
+        return startedAt;
+    }
+
+    public ConsumerReliabilityMode reliabilityMode() {
+        return reliabilityMode;
+    }
+
+    public MessageIdempotencyMode idempotencyMode() {
+        return idempotencyMode;
+    }
+
+    public String idempotencyScene() {
+        return idempotencyScene;
+    }
+
+    public String idempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public Map<String, String> headers() {
+        return headers;
+    }
+
+    public Map<String, String> attributes() {
+        return attributes;
+    }
 
     /** 兼容旧代码中的 metadata 命名。 */
-    public Map<String, String> metadata() { return attributes; }
+    public Map<String, String> metadata() {
+        return attributes;
+    }
 
     private static Map<String, String> immutable(Map<String, String> source) {
         if (source == null || source.isEmpty()) {
@@ -199,44 +200,21 @@ public final class ConsumeContext {
             return false;
         }
         ConsumeContext other = (ConsumeContext) object;
-        return deliveryAttempt == other.deliveryAttempt
-                && Objects.equals(providerName, other.providerName)
-                && Objects.equals(physicalDestination, other.physicalDestination)
-                && Objects.equals(logicalDestination, other.logicalDestination)
-                && Objects.equals(consumerGroup, other.consumerGroup)
-                && Objects.equals(providerMessageId, other.providerMessageId)
-                && Objects.equals(messageId, other.messageId)
-                && Objects.equals(messageKey, other.messageKey)
-                && Objects.equals(eventType, other.eventType)
-                && Objects.equals(receivedAt, other.receivedAt)
-                && Objects.equals(startedAt, other.startedAt)
-                && reliabilityMode == other.reliabilityMode
-                && idempotencyMode == other.idempotencyMode
-                && Objects.equals(idempotencyScene, other.idempotencyScene)
-                && Objects.equals(idempotencyKey, other.idempotencyKey)
-                && Objects.equals(headers, other.headers)
-                && Objects.equals(attributes, other.attributes);
+        return deliveryAttempt == other.deliveryAttempt && Objects.equals(providerName, other.providerName) &&
+            Objects.equals(physicalDestination, other.physicalDestination) &&
+            Objects.equals(logicalDestination, other.logicalDestination) && Objects.equals(consumerGroup, other.consumerGroup) &&
+            Objects.equals(providerMessageId, other.providerMessageId) && Objects.equals(messageId, other.messageId) &&
+            Objects.equals(messageKey, other.messageKey) && Objects.equals(eventType, other.eventType) &&
+            Objects.equals(receivedAt, other.receivedAt) && Objects.equals(startedAt, other.startedAt) &&
+            reliabilityMode == other.reliabilityMode && idempotencyMode == other.idempotencyMode &&
+            Objects.equals(idempotencyScene, other.idempotencyScene) && Objects.equals(idempotencyKey, other.idempotencyKey) &&
+            Objects.equals(headers, other.headers) && Objects.equals(attributes, other.attributes);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-                providerName,
-                physicalDestination,
-                logicalDestination,
-                consumerGroup,
-                providerMessageId,
-                messageId,
-                messageKey,
-                eventType,
-                deliveryAttempt,
-                receivedAt,
-                startedAt,
-                reliabilityMode,
-                idempotencyMode,
-                idempotencyScene,
-                idempotencyKey,
-                headers,
-                attributes);
+        return Objects.hash(providerName, physicalDestination, logicalDestination, consumerGroup, providerMessageId, messageId, messageKey,
+            eventType, deliveryAttempt, receivedAt, startedAt, reliabilityMode, idempotencyMode, idempotencyScene, idempotencyKey, headers,
+            attributes);
     }
 }

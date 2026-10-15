@@ -11,10 +11,8 @@ public final class TestTaskFactory {
     }
 
     public static <T> AsyncTask<T> task(String taskId, Supplier<T> supplier) {
-        AsyncTask<T> task = AsyncTask.of("test-pool", "test-task", supplier)
-                .taskId(taskId)
-                .bizKey("biz-" + taskId)
-                .tag("scene", "phase1-test");
+        AsyncTask<T> task =
+            AsyncTask.of("test-pool", "test-task", supplier).taskId(taskId).bizKey("biz-" + taskId).tag("scene", "phase1-test");
 
         task.validate();
         return task;

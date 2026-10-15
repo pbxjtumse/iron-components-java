@@ -39,13 +39,33 @@ public final class LockAcquireOutcomeContext {
         return new Builder();
     }
 
-    public String lockName() { return lockName; }
-    public LockProvider provider() { return provider; }
-    public LockOptions options() { return options; }
-    public LockAcquireRequest request() { return request; }
-    public LockAcquireResponse response() { return response; }
-    public FencingTokenPlan fencingPlan() { return fencingPlan; }
-    public Duration waitDuration() { return waitDuration; }
+    public String lockName() {
+        return lockName;
+    }
+
+    public LockProvider provider() {
+        return provider;
+    }
+
+    public LockOptions options() {
+        return options;
+    }
+
+    public LockAcquireRequest request() {
+        return request;
+    }
+
+    public LockAcquireResponse response() {
+        return response;
+    }
+
+    public FencingTokenPlan fencingPlan() {
+        return fencingPlan;
+    }
+
+    public Duration waitDuration() {
+        return waitDuration;
+    }
 
     public static final class Builder {
         private String lockName;
@@ -56,15 +76,43 @@ public final class LockAcquireOutcomeContext {
         private FencingTokenPlan fencingPlan;
         private Duration waitDuration;
 
-        private Builder() {}
+        private Builder() {
+        }
 
-        public Builder lockName(String lockName) { this.lockName = lockName; return this; }
-        public Builder provider(LockProvider provider) { this.provider = provider; return this; }
-        public Builder options(LockOptions options) { this.options = options; return this; }
-        public Builder request(LockAcquireRequest request) { this.request = request; return this; }
-        public Builder response(LockAcquireResponse response) { this.response = response; return this; }
-        public Builder fencingPlan(FencingTokenPlan fencingPlan) { this.fencingPlan = fencingPlan; return this; }
-        public Builder waitDuration(Duration waitDuration) { this.waitDuration = waitDuration; return this; }
+        public Builder lockName(String lockName) {
+            this.lockName = lockName;
+            return this;
+        }
+
+        public Builder provider(LockProvider provider) {
+            this.provider = provider;
+            return this;
+        }
+
+        public Builder options(LockOptions options) {
+            this.options = options;
+            return this;
+        }
+
+        public Builder request(LockAcquireRequest request) {
+            this.request = request;
+            return this;
+        }
+
+        public Builder response(LockAcquireResponse response) {
+            this.response = response;
+            return this;
+        }
+
+        public Builder fencingPlan(FencingTokenPlan fencingPlan) {
+            this.fencingPlan = fencingPlan;
+            return this;
+        }
+
+        public Builder waitDuration(Duration waitDuration) {
+            this.waitDuration = waitDuration;
+            return this;
+        }
 
         public LockAcquireOutcomeContext build() {
             return new LockAcquireOutcomeContext(this);

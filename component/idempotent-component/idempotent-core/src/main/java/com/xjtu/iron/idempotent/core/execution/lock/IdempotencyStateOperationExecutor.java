@@ -40,8 +40,7 @@ public final class IdempotencyStateOperationExecutor {
 
     /** 可选锁只包 tryAcquire/tryRecover，且 lock identity 必须包含 storeName。 */
     public <R> StateOperationOutcome<R> invoke(IdempotencyPolicy policy, IdempotencyRepository repository,
-                                                           IdempotencyStorageContext storage, String routeKey, String key,
-                                                           java.util.function.Supplier<R> operation) {
+        IdempotencyStorageContext storage, String routeKey, String key, java.util.function.Supplier<R> operation) {
         IdempotencyLockOptions lock = policy.getLockOptions();
         if (!lock.isEnabled()) return StateOperationOutcome.direct(operation.get());
 
@@ -54,15 +53,10 @@ public final class IdempotencyStateOperationExecutor {
         }
 
         LockWaitStrategy waitStrategy = lock.getWaitTime().isZero() ? LockWaitStrategy.NO_WAIT : LockWaitStrategy.BACKOFF;
-        LockOptions lockOptions = LockOptions.builder()
-                .namespace("idempotency:" + policy.getNamespace())
-                .providerName(lock.getProviderName())
-                .waitTime(lock.getWaitTime())
-                .waitStrategy(waitStrategy)
-                .leaseTime(lock.getLeaseTime())
-                .autoRenew(false)
-                .fencingRequired(false)
-                .build();
+        LockOptions lockOptions =
+            LockOptions.builder().namespace("idempotency:" + policy.getNamespace()).providerName(lock.getProviderName())
+                .waitTime(lock.getWaitTime()).waitStrategy(waitStrategy).leaseTime(lock.getLeaseTime()).autoRenew(false)
+                .fencingRequired(false).build();
 
         String lockName = "state:" + storage.getStoreName() + ":" + routePart(routeKey) + ":" + key;
         LockResult<R> result = lockClient.execute(lockName, lockOptions, (LockCallback<R>) handle -> operation.get());
@@ -71,8 +65,8 @@ public final class IdempotencyStateOperationExecutor {
             publish(IdempotencyEventType.LOCK_FALLBACK, IdempotencyStage.LOCK, policy, repository, result.error().orElse(null));
             return StateOperationOutcome.fallback(operation.get());
         }
-        return StateOperationOutcome.lockRejected(result.error().orElseGet(
-                () -> new IllegalStateException("distributed lock not acquired: " + result.status())));
+        return StateOperationOutcome.lockRejected(
+            result.error().orElseGet(() -> new IllegalStateException("distributed lock not acquired: " + result.status())));
     }
 
     private String routePart(String routeKey) {
@@ -80,11 +74,13 @@ public final class IdempotencyStateOperationExecutor {
         return normalized == null ? "_" : normalized;
     }
 
-    private void publish(IdempotencyEventType type, IdempotencyStage stage, IdempotencyPolicy policy,
-                         IdempotencyRepository repository, Throwable error) {
+    private void publish(IdempotencyEventType type, IdempotencyStage stage, IdempotencyPolicy policy, IdempotencyRepository repository,
+        Throwable error) {
         events.publish(new IdempotencyEvent(type, stage, policy.getMode(), repository.providerName(), Instant.now(clock), error));
     }
 
-    private String normalize(String value) { return value == null || value.isBlank() ? null : value.trim(); }
+    private String normalize(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
 
 }

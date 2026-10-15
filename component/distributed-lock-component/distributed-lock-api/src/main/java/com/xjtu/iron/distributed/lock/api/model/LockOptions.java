@@ -267,10 +267,7 @@ public final class LockOptions {
      * @return 不等待锁选项
      */
     public static LockOptions noWait() {
-        return builder()
-                .waitTime(Duration.ZERO)
-                .waitStrategy(LockWaitStrategy.NO_WAIT)
-                .build();
+        return builder().waitTime(Duration.ZERO).waitStrategy(LockWaitStrategy.NO_WAIT).build();
     }
 
     /**
@@ -285,11 +282,7 @@ public final class LockOptions {
      * @return 不等待锁选项
      */
     public static LockOptions noWait(Duration leaseTime) {
-        return builder()
-                .waitTime(Duration.ZERO)
-                .waitStrategy(LockWaitStrategy.NO_WAIT)
-                .leaseTime(leaseTime)
-                .build();
+        return builder().waitTime(Duration.ZERO).waitStrategy(LockWaitStrategy.NO_WAIT).leaseTime(leaseTime).build();
     }
 
     /**
@@ -304,10 +297,7 @@ public final class LockOptions {
      * @return 带等待时间的锁选项
      */
     public static LockOptions waitFor(Duration waitTime) {
-        return builder()
-                .waitTime(waitTime)
-                .waitStrategy(LockWaitStrategy.BACKOFF)
-                .build();
+        return builder().waitTime(waitTime).waitStrategy(LockWaitStrategy.BACKOFF).build();
     }
 
     /**
@@ -323,11 +313,7 @@ public final class LockOptions {
      * @return 带等待时间和租约时间的锁选项
      */
     public static LockOptions waitFor(Duration waitTime, Duration leaseTime) {
-        return builder()
-                .waitTime(waitTime)
-                .waitStrategy(LockWaitStrategy.BACKOFF)
-                .leaseTime(leaseTime)
-                .build();
+        return builder().waitTime(waitTime).waitStrategy(LockWaitStrategy.BACKOFF).leaseTime(leaseTime).build();
     }
 
     /**
@@ -344,12 +330,8 @@ public final class LockOptions {
      * @return 自动续期锁选项
      */
     public static LockOptions autoRenew(Duration maxRenewTime) {
-        return builder()
-                .waitTime(Duration.ZERO)
-                .waitStrategy(LockWaitStrategy.NO_WAIT)
-                .leaseTime(DEFAULT_LEASE_TIME)
-                .autoRenew(maxRenewTime)
-                .build();
+        return builder().waitTime(Duration.ZERO).waitStrategy(LockWaitStrategy.NO_WAIT).leaseTime(DEFAULT_LEASE_TIME)
+            .autoRenew(maxRenewTime).build();
     }
 
     /**
@@ -366,12 +348,8 @@ public final class LockOptions {
      * @return 自动续期锁选项
      */
     public static LockOptions autoRenew(Duration leaseTime, Duration maxRenewTime) {
-        return builder()
-                .waitTime(Duration.ZERO)
-                .waitStrategy(LockWaitStrategy.NO_WAIT)
-                .leaseTime(leaseTime)
-                .autoRenew(maxRenewTime)
-                .build();
+        return builder().waitTime(Duration.ZERO).waitStrategy(LockWaitStrategy.NO_WAIT).leaseTime(leaseTime).autoRenew(maxRenewTime)
+            .build();
     }
 
     /**
@@ -388,12 +366,7 @@ public final class LockOptions {
      * @return 带等待和自动续期的锁选项
      */
     public static LockOptions waitForAndAutoRenew(Duration waitTime, Duration leaseTime, Duration maxRenewTime) {
-        return builder()
-                .waitTime(waitTime)
-                .waitStrategy(LockWaitStrategy.BACKOFF)
-                .leaseTime(leaseTime)
-                .autoRenew(maxRenewTime)
-                .build();
+        return builder().waitTime(waitTime).waitStrategy(LockWaitStrategy.BACKOFF).leaseTime(leaseTime).autoRenew(maxRenewTime).build();
     }
 
     public static Builder builder() {
@@ -691,9 +664,7 @@ public final class LockOptions {
             Duration actualWaitTime = waitTime == null ? DEFAULT_WAIT_TIME : waitTime;
             Duration actualLeaseTime = leaseTime == null ? DEFAULT_LEASE_TIME : leaseTime;
             LockWaitStrategy actualWaitStrategy = inferWaitStrategy(actualWaitTime, waitStrategy);
-            Duration actualRenewInterval = renewInterval == null
-                    ? defaultRenewInterval(actualLeaseTime)
-                    : renewInterval;
+            Duration actualRenewInterval = renewInterval == null ? defaultRenewInterval(actualLeaseTime) : renewInterval;
 
             this.namespace = normalizeNamespace(namespace);
             this.waitTime = actualWaitTime;
@@ -718,19 +689,9 @@ public final class LockOptions {
 
     @Override
     public String toString() {
-        return "LockOptions{" +
-                "namespace='" + namespace + '\'' +
-                ", waitTime=" + waitTime +
-                ", leaseTime=" + leaseTime +
-                ", waitStrategy=" + waitStrategy +
-                ", autoRenew=" + autoRenew +
-                ", renewInterval=" + renewInterval +
-                ", maxRenewTime=" + maxRenewTime +
-                ", fencingRequired=" + fencingRequired +
-                ", failOnLockLost=" + failOnLockLost +
-                ", providerName='" + providerName + '\'' +
-                ", fencingTokenProviderName='" + fencingTokenProviderName + '\'' +
-                ", backoffSpec=" + backoffSpec +
-                '}';
+        return "LockOptions{" + "namespace='" + namespace + '\'' + ", waitTime=" + waitTime + ", leaseTime=" + leaseTime +
+            ", waitStrategy=" + waitStrategy + ", autoRenew=" + autoRenew + ", renewInterval=" + renewInterval + ", maxRenewTime=" +
+            maxRenewTime + ", fencingRequired=" + fencingRequired + ", failOnLockLost=" + failOnLockLost + ", providerName='" +
+            providerName + '\'' + ", fencingTokenProviderName='" + fencingTokenProviderName + '\'' + ", backoffSpec=" + backoffSpec + '}';
     }
 }

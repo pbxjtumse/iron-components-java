@@ -39,13 +39,8 @@ public final class MessageComponentOptions {
     /**
      * 校验并标准化组件参数。
      */
-    public MessageComponentOptions(
-        String defaultProviderName,
-        String applicationName,
-        String defaultSchemaVersion,
-        Duration defaultConfirmTimeout,
-        DestinationRoutingMode routingMode,
-        Clock clock) {
+    public MessageComponentOptions(String defaultProviderName, String applicationName, String defaultSchemaVersion,
+        Duration defaultConfirmTimeout, DestinationRoutingMode routingMode, Clock clock) {
         // 默认 Provider 必须存在，否则无路由消息无法发送。
         defaultProviderName = requireText(defaultProviderName, "defaultProviderName").toLowerCase(java.util.Locale.ROOT);
         // applicationName 是可选值，空白统一转为 null。
@@ -53,9 +48,7 @@ public final class MessageComponentOptions {
         // 默认结构版本必须存在。
         defaultSchemaVersion = requireText(defaultSchemaVersion, "defaultSchemaVersion");
         // 默认确认超时不能为空。
-        defaultConfirmTimeout = Objects.requireNonNull(
-                defaultConfirmTimeout,
-                "defaultConfirmTimeout must not be null");
+        defaultConfirmTimeout = Objects.requireNonNull(defaultConfirmTimeout, "defaultConfirmTimeout must not be null");
         // 确认超时必须为正数。
         if (defaultConfirmTimeout.isZero() || defaultConfirmTimeout.isNegative()) {
             // 非正时间无法形成合理等待窗口。
@@ -65,7 +58,7 @@ public final class MessageComponentOptions {
         routingMode = Objects.requireNonNull(routingMode, "routingMode must not be null");
         // 时钟不能为空，测试可传入固定时钟。
         clock = Objects.requireNonNull(clock, "clock must not be null");
-    
+
         // 保存完成校验和标准化后的 defaultProviderName。
         this.defaultProviderName = defaultProviderName;
         // 保存完成校验和标准化后的 applicationName。
@@ -87,17 +80,10 @@ public final class MessageComponentOptions {
      * @param applicationName 应用名称
      * @return 默认参数
      */
-    public static MessageComponentOptions defaults(
-            String defaultProviderName,
-            String applicationName) {
+    public static MessageComponentOptions defaults(String defaultProviderName, String applicationName) {
         // 默认使用结构版本 1、三秒确认超时和系统 UTC 时钟。
-        return new MessageComponentOptions(
-                defaultProviderName,
-                applicationName,
-                "1",
-                Duration.ofSeconds(3),
-                DestinationRoutingMode.STRICT,
-                Clock.systemUTC());
+        return new MessageComponentOptions(defaultProviderName, applicationName, "1", Duration.ofSeconds(3), DestinationRoutingMode.STRICT,
+            Clock.systemUTC());
     }
 
     /** 标准化可选文本。 */
@@ -125,6 +111,7 @@ public final class MessageComponentOptions {
         // 返回合法值。
         return normalized;
     }
+
     /**
      * 返回未配置路由和 providerHint 时使用的默认 Provider。
      *
@@ -203,12 +190,10 @@ public final class MessageComponentOptions {
         }
         // 转换为当前类型后逐字段比较。
         MessageComponentOptions other = (MessageComponentOptions) object;
-        return Objects.equals(defaultProviderName, other.defaultProviderName)
-                && Objects.equals(applicationName, other.applicationName)
-                && Objects.equals(defaultSchemaVersion, other.defaultSchemaVersion)
-                && Objects.equals(defaultConfirmTimeout, other.defaultConfirmTimeout)
-                && Objects.equals(routingMode, other.routingMode)
-                && Objects.equals(clock, other.clock);
+        return Objects.equals(defaultProviderName, other.defaultProviderName) && Objects.equals(applicationName, other.applicationName) &&
+            Objects.equals(defaultSchemaVersion, other.defaultSchemaVersion) &&
+            Objects.equals(defaultConfirmTimeout, other.defaultConfirmTimeout) && Objects.equals(routingMode, other.routingMode) &&
+            Objects.equals(clock, other.clock);
     }
 
     /**
@@ -230,14 +215,9 @@ public final class MessageComponentOptions {
     @Override
     public String toString() {
         // 拼接全部字段，保持值对象可诊断。
-        return "MessageComponentOptions{" +
-                "defaultProviderName=" + defaultProviderName +
-                ", applicationName=" + applicationName +
-                ", defaultSchemaVersion=" + defaultSchemaVersion +
-                ", defaultConfirmTimeout=" + defaultConfirmTimeout +
-                ", routingMode=" + routingMode +
-                ", clock=" + clock +
-                '}';
+        return "MessageComponentOptions{" + "defaultProviderName=" + defaultProviderName + ", applicationName=" + applicationName +
+            ", defaultSchemaVersion=" + defaultSchemaVersion + ", defaultConfirmTimeout=" + defaultConfirmTimeout + ", routingMode=" +
+            routingMode + ", clock=" + clock + '}';
     }
 
 }

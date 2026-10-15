@@ -35,18 +35,9 @@ import org.springframework.context.annotation.Primary;
  * <p>这个类放在最后装配，因为它依赖 Caffeine Provider、Redis Provider、
  * CacheMetricsRecorder。</p>
  */
-@AutoConfiguration(after = {
-        XjtuIronCacheObservabilityAutoConfiguration.class,
-        XjtuIronCacheCaffeineAutoConfiguration.class,
-        XjtuIronCacheRedisAutoConfiguration.class,
-        XjtuIronCacheEventAutoConfiguration.class
-})
-@ConditionalOnProperty(
-        prefix = "xjtu.iron.cache",
-        name = "enabled",
-        havingValue = "true",
-        matchIfMissing = true
-)
+@AutoConfiguration(after = {XjtuIronCacheObservabilityAutoConfiguration.class, XjtuIronCacheCaffeineAutoConfiguration.class,
+    XjtuIronCacheRedisAutoConfiguration.class, XjtuIronCacheEventAutoConfiguration.class})
+@ConditionalOnProperty(prefix = "xjtu.iron.cache", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class XjtuIronCacheCoreAutoConfiguration {
 
     /**
@@ -97,10 +88,8 @@ public class XjtuIronCacheCoreAutoConfiguration {
     @Bean("ironCompositeCacheProvider")
     @Primary
     @ConditionalOnBean(name = {"ironCaffeineCacheProvider", "ironRedisCacheProvider"})
-    public CacheProvider compositeCacheProvider(
-            @Qualifier("ironCaffeineCacheProvider") CacheProvider caffeineProvider,
-            @Qualifier("ironRedisCacheProvider") CacheProvider redisProvider
-    ) {
+    public CacheProvider compositeCacheProvider(@Qualifier("ironCaffeineCacheProvider") CacheProvider caffeineProvider,
+        @Qualifier("ironRedisCacheProvider") CacheProvider redisProvider) {
         return new CompositeCacheProvider(caffeineProvider, redisProvider);
     }
 
@@ -117,28 +106,13 @@ public class XjtuIronCacheCoreAutoConfiguration {
     @Bean
     @ConditionalOnBean(name = "ironCompositeCacheProvider")
     @ConditionalOnMissingBean
-    public CacheClient cacheClient(
-            @Qualifier("ironCompositeCacheProvider") CacheProvider cacheProvider,
-            CacheSpecResolver cacheSpecResolver,
-            CacheTtlResolver cacheTtlResolver,
-            CacheLoadGuard cacheLoadGuard,
-            CacheMetricsRecorder cacheMetricsRecorder,
-            CacheEventPublisher cacheEventPublisher,
-            CacheTraceContext cacheTraceContext,
-            XjtuIronCacheProperties properties
-    ) {
-        return new DefaultCacheClient(
-                cacheProvider,
-                cacheSpecResolver,
-                cacheTtlResolver,
-                cacheLoadGuard,
-                cacheMetricsRecorder,
-                cacheEventPublisher,
-                properties.getApplication().getName(),
-                properties.getApplication().getInstanceId(),
-                properties.getEvent().getPublishFailurePolicy(),
-                cacheTraceContext
-        );
+    public CacheClient cacheClient(@Qualifier("ironCompositeCacheProvider") CacheProvider cacheProvider,
+        CacheSpecResolver cacheSpecResolver, CacheTtlResolver cacheTtlResolver, CacheLoadGuard cacheLoadGuard,
+        CacheMetricsRecorder cacheMetricsRecorder, CacheEventPublisher cacheEventPublisher, CacheTraceContext cacheTraceContext,
+        XjtuIronCacheProperties properties) {
+        return new DefaultCacheClient(cacheProvider, cacheSpecResolver, cacheTtlResolver, cacheLoadGuard, cacheMetricsRecorder,
+            cacheEventPublisher, properties.getApplication().getName(), properties.getApplication().getInstanceId(),
+            properties.getEvent().getPublishFailurePolicy(), cacheTraceContext);
     }
 
     @Bean

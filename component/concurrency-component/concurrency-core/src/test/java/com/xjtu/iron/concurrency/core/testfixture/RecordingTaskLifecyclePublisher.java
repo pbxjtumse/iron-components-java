@@ -8,14 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public final class RecordingTaskLifecyclePublisher
-        implements TaskLifecyclePublisher {
+public final class RecordingTaskLifecyclePublisher implements TaskLifecyclePublisher {
 
-    private final List<TaskExecutionEvent> events =
-            new CopyOnWriteArrayList<>();
+    private final List<TaskExecutionEvent> events = new CopyOnWriteArrayList<>();
 
-    private final List<TaskExecutionEvent> completedEvents =
-            new CopyOnWriteArrayList<>();
+    private final List<TaskExecutionEvent> completedEvents = new CopyOnWriteArrayList<>();
 
     @Override
     public void publish(TaskExecutionEvent event) {
@@ -36,26 +33,18 @@ public final class RecordingTaskLifecyclePublisher
     }
 
     public List<AsyncTaskStatus> statuses() {
-        return events.stream()
-                .map(TaskExecutionEvent::getStatus)
-                .toList();
+        return events.stream().map(TaskExecutionEvent::getStatus).toList();
     }
 
     public long count(AsyncTaskStatus status) {
-        return events.stream()
-                .filter(event -> event.getStatus() == status)
-                .count();
+        return events.stream().filter(event -> event.getStatus() == status).count();
     }
 
     public boolean contains(AsyncTaskStatus status) {
-        return events.stream()
-                .anyMatch(event -> event.getStatus() == status);
+        return events.stream().anyMatch(event -> event.getStatus() == status);
     }
 
     public TaskExecutionEvent first(AsyncTaskStatus status) {
-        return events.stream()
-                .filter(event -> event.getStatus() == status)
-                .findFirst()
-                .orElseThrow();
+        return events.stream().filter(event -> event.getStatus() == status).findFirst().orElseThrow();
     }
 }

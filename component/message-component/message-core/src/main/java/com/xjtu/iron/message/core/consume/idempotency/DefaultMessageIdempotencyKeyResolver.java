@@ -22,10 +22,9 @@ public final class DefaultMessageIdempotencyKeyResolver implements MessageIdempo
     }
 
     private static String messageIdKey(MessageEnvelope<?> message, ConsumeContext context) {
-        return requireText(context.providerName(), "providerName") + ":"
-                + requireText(context.physicalDestination(), "physicalDestination") + ":"
-                + requireText(context.consumerGroup(), "consumerGroup") + ":"
-                + requireText(message.messageId(), "messageId");
+        return requireText(context.providerName(), "providerName") + ":" +
+            requireText(context.physicalDestination(), "physicalDestination") + ":" +
+            requireText(context.consumerGroup(), "consumerGroup") + ":" + requireText(message.messageId(), "messageId");
     }
 
     private static String businessKey(MessageEnvelope<?> message) {

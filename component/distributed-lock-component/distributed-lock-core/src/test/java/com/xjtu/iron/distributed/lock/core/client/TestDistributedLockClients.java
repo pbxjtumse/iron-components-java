@@ -44,24 +44,24 @@ final class TestDistributedLockClients {
 
         FencingTokenCoordinator coordinator = new FencingTokenCoordinator(new DefaultFencingTokenProviderRegistry(fencingProviders));
         FencingTokenFlowSupport flowSupport = new FencingTokenFlowSupport(coordinator, eventPublisher, eventFactory, metricsFacade, clock);
-        List<FencingTokenFlow> flows = Arrays.asList(new NoFencingTokenFlow(), new NativeFencingTokenFlow(flowSupport),
-                new ExternalFencingTokenFlow(flowSupport));
+        List<FencingTokenFlow> flows =
+            Arrays.asList(new NoFencingTokenFlow(), new NativeFencingTokenFlow(flowSupport), new ExternalFencingTokenFlow(flowSupport));
         FencingTokenFlowRegistry flowRegistry = new DefaultFencingTokenFlowRegistry(flows);
 
         NoOpLockWatchdog watchdog = new NoOpLockWatchdog();
         LockHandleFactory handleFactory = new LockHandleFactory(eventPublisher, eventFactory, metricsFacade, watchdog);
-        List<LockAcquireOutcomeHandler> handlers = Arrays.asList(
-                new AcquiredLockAcquireOutcomeHandler(flowRegistry, handleFactory, eventPublisher, eventFactory, metricsFacade),
+        List<LockAcquireOutcomeHandler> handlers =
+            Arrays.asList(new AcquiredLockAcquireOutcomeHandler(flowRegistry, handleFactory, eventPublisher, eventFactory, metricsFacade),
                 new NotAcquiredLockAcquireOutcomeHandler(eventPublisher, eventFactory, metricsFacade),
-                new ProviderErrorLockAcquireOutcomeHandler( eventPublisher, eventFactory, metricsFacade));
+                new ProviderErrorLockAcquireOutcomeHandler(eventPublisher, eventFactory, metricsFacade));
 
-        LockAcquisitionService acquisitionService = new LockAcquisitionService(
-                new DefaultLockProviderRegistry("redis", Collections.singletonList(lockProvider)), new DefaultOwnerTokenGenerator(),
-                new LockWaiterFactory(), eventPublisher, eventFactory, new DefaultLockNameValidator(), LockOptions.defaults(), clock, coordinator,
-                new DefaultLockAcquireOutcomeHandlerRegistry(handlers));
+        LockAcquisitionService acquisitionService =
+            new LockAcquisitionService(new DefaultLockProviderRegistry("redis", Collections.singletonList(lockProvider)),
+                new DefaultOwnerTokenGenerator(), new LockWaiterFactory(), eventPublisher, eventFactory, new DefaultLockNameValidator(),
+                LockOptions.defaults(), clock, coordinator, new DefaultLockAcquireOutcomeHandlerRegistry(handlers));
 
-        LockExecutionTemplate executionTemplate = new LockExecutionTemplate(acquisitionService, eventPublisher, eventFactory, metricsFacade, clock,
-                new LockResultResolver());
+        LockExecutionTemplate executionTemplate =
+            new LockExecutionTemplate(acquisitionService, eventPublisher, eventFactory, metricsFacade, clock, new LockResultResolver());
 
         return new DefaultDistributedLockClient(acquisitionService, executionTemplate);
     }

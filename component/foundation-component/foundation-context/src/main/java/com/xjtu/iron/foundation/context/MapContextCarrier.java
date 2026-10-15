@@ -11,7 +11,8 @@ public final class MapContextCarrier implements ContextCarrier {
 
     private final Map<String, String> values = new LinkedHashMap<>();
 
-    public MapContextCarrier() {}
+    public MapContextCarrier() {
+    }
 
     public MapContextCarrier(Map<String, String> source) {
         if (source != null) {
@@ -20,7 +21,9 @@ public final class MapContextCarrier implements ContextCarrier {
     }
 
     @Override
-    public String get(String name) { return values.get(name); }
+    public String get(String name) {
+        return values.get(name);
+    }
 
     @Override
     public void put(String name, String value) {
@@ -30,5 +33,7 @@ public final class MapContextCarrier implements ContextCarrier {
     }
 
     @Override
-    public Map<String, String> asMap() { return Collections.unmodifiableMap(values); }
+    public Map<String, String> asMap() {
+        return Collections.unmodifiableMap(values);
+    }
 }

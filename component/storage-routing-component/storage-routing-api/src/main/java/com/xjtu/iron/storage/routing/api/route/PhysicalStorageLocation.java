@@ -1,6 +1,7 @@
 package com.xjtu.iron.storage.routing.api.route;
 
 import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
+
 import java.util.Objects;
 
 /**
@@ -44,10 +45,7 @@ public final class PhysicalStorageLocation {
 
     @Override
     public String toString() {
-        return "PhysicalStorageLocation{" +
-                "dataSourceKey='" + dataSourceKey + '\'' +
-                ", tableName='" + tableName + '\'' +
-                '}';
+        return "PhysicalStorageLocation{" + "dataSourceKey='" + dataSourceKey + '\'' + ", tableName='" + tableName + '\'' + '}';
     }
 
     @Override
@@ -58,8 +56,7 @@ public final class PhysicalStorageLocation {
         if (!(o instanceof PhysicalStorageLocation that)) {
             return false;
         }
-        return Objects.equals(dataSourceKey, that.dataSourceKey)
-                && Objects.equals(tableName, that.tableName);
+        return Objects.equals(dataSourceKey, that.dataSourceKey) && Objects.equals(tableName, that.tableName);
     }
 
     @Override

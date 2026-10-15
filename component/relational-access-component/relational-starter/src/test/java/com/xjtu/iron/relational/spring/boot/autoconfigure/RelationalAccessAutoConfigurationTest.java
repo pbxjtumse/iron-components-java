@@ -18,51 +18,39 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RelationalAccessAutoConfigurationTest {
 
     /** 同时加载官方 MyBatis 与组件 Access 自动配置的上下文运行器。 */
-    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(
-                    MybatisAutoConfiguration.class,
-                    RelationalAccessAutoConfiguration.class));
+    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
+        AutoConfigurations.of(MybatisAutoConfiguration.class, RelationalAccessAutoConfiguration.class));
 
     @Test
     void shouldAutoConfigureAccessAndResolverForSingleDataSource() {
-        contextRunner
-                .withBean(DataSource.class, RelationalAccessAutoConfigurationTest::dataSource)
-                .run(context -> {
-                    assertThat(context).hasSingleBean(MyBatisAccess.class);
-                    assertThat(context).hasSingleBean(MyBatisAccessResolver.class);
-                });
+        contextRunner.withBean(DataSource.class, RelationalAccessAutoConfigurationTest::dataSource).run(context -> {
+            assertThat(context).hasSingleBean(MyBatisAccess.class);
+            assertThat(context).hasSingleBean(MyBatisAccessResolver.class);
+        });
     }
 
     @Test
     void shouldNotGuessAccessWhenMultipleDataSourcesExist() {
-        contextRunner
-                .withBean("firstDataSource", DataSource.class,
-                        RelationalAccessAutoConfigurationTest::dataSource)
-                .withBean("secondDataSource", DataSource.class,
-                        RelationalAccessAutoConfigurationTest::dataSource)
-                .run(context -> {
-                    assertThat(context).doesNotHaveBean(MyBatisAccess.class);
-                    assertThat(context).doesNotHaveBean(MyBatisAccessResolver.class);
-                });
+        contextRunner.withBean("firstDataSource", DataSource.class, RelationalAccessAutoConfigurationTest::dataSource)
+            .withBean("secondDataSource", DataSource.class, RelationalAccessAutoConfigurationTest::dataSource).run(context -> {
+                assertThat(context).doesNotHaveBean(MyBatisAccess.class);
+                assertThat(context).doesNotHaveBean(MyBatisAccessResolver.class);
+            });
     }
 
     @Test
     void shouldPreserveUserProvidedAccess() {
         MyBatisAccess custom = new NoopMyBatisAccess();
-        contextRunner
-                .withBean(DataSource.class, RelationalAccessAutoConfigurationTest::dataSource)
-                .withBean(MyBatisAccess.class, () -> custom)
-                .run(context -> {
-                    assertThat(context.getBean(MyBatisAccess.class)).isSameAs(custom);
-                    assertThat(context).hasSingleBean(MyBatisAccessResolver.class);
-                });
+        contextRunner.withBean(DataSource.class, RelationalAccessAutoConfigurationTest::dataSource)
+            .withBean(MyBatisAccess.class, () -> custom).run(context -> {
+                assertThat(context.getBean(MyBatisAccess.class)).isSameAs(custom);
+                assertThat(context).hasSingleBean(MyBatisAccessResolver.class);
+            });
     }
 
     private static DataSource dataSource() {
         JdbcDataSource dataSource = new JdbcDataSource();
-        dataSource.setURL("jdbc:h2:mem:relational_starter_"
-                + UUID.randomUUID().toString().replace("-", "")
-                + ";DB_CLOSE_DELAY=-1");
+        dataSource.setURL("jdbc:h2:mem:relational_starter_" + UUID.randomUUID().toString().replace("-", "") + ";DB_CLOSE_DELAY=-1");
         dataSource.setUser("sa");
         dataSource.setPassword("");
         return dataSource;
@@ -72,29 +60,17 @@ class RelationalAccessAutoConfigurationTest {
     private static final class NoopMyBatisAccess implements MyBatisAccess {
 
         @Override
-        public <M, T> T execute(
-                String operationName,
-                Class<M> mapperType,
-                MyBatisMapperWork<M, T> work
-        ) {
+        public <M, T> T execute(String operationName, Class<M> mapperType, MyBatisMapperWork<M, T> work) {
             throw new UnsupportedOperationException("not used");
         }
 
         @Override
-        public <M, T> T executeInCurrentTransaction(
-                String operationName,
-                Class<M> mapperType,
-                MyBatisMapperWork<M, T> work
-        ) {
+        public <M, T> T executeInCurrentTransaction(String operationName, Class<M> mapperType, MyBatisMapperWork<M, T> work) {
             throw new UnsupportedOperationException("not used");
         }
 
         @Override
-        public <M, T> T executeInNewTransaction(
-                String operationName,
-                Class<M> mapperType,
-                MyBatisMapperWork<M, T> work
-        ) {
+        public <M, T> T executeInNewTransaction(String operationName, Class<M> mapperType, MyBatisMapperWork<M, T> work) {
             throw new UnsupportedOperationException("not used");
         }
 

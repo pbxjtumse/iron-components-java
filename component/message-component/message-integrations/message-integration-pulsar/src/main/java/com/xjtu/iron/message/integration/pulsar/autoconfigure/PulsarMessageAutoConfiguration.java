@@ -26,8 +26,7 @@ import org.springframework.context.annotation.Bean;
  *
  * <p>它负责读取 Pulsar serviceUrl、listenerThreads、operationTimeout 等配置，并创建 Pulsar Provider Bean。
  * Provider 创建完成后由 message-starter 统一注册到 ProviderRegistry。</p>
- */
-public class PulsarMessageAutoConfiguration {
+ */ public class PulsarMessageAutoConfiguration {
 
     /**
      * 创建 Pulsar Provider 配置快照。
@@ -37,14 +36,9 @@ public class PulsarMessageAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public PulsarMessageProviderConfig pulsarMessageProviderConfig(
-            PulsarMessageProperties properties) {
-        return new PulsarMessageProviderConfig(
-                properties.getServiceUrl(),
-                properties.getOperationTimeout(),
-                properties.getNegativeAckRedeliveryDelay(),
-                properties.getReceiverQueueSize(),
-                properties.getAuthenticationToken());
+    public PulsarMessageProviderConfig pulsarMessageProviderConfig(PulsarMessageProperties properties) {
+        return new PulsarMessageProviderConfig(properties.getServiceUrl(), properties.getOperationTimeout(),
+            properties.getNegativeAckRedeliveryDelay(), properties.getReceiverQueueSize(), properties.getAuthenticationToken());
     }
 
     /**

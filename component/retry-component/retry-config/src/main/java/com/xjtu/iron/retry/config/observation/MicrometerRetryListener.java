@@ -27,16 +27,9 @@ public final class MicrometerRetryListener implements RetryListener {
     private final AtomicLong activeExecutions = new AtomicLong();
 
     public MicrometerRetryListener(MeterRegistry meterRegistry) {
-        this.meterRegistry = Objects.requireNonNull(
-                meterRegistry,
-                "meterRegistry must not be null"
-        );
-        Gauge.builder(
-                "iron.retry.active",
-                activeExecutions,
-                AtomicLong::doubleValue
-        ).description("Current active logical retry executions")
-                .register(meterRegistry);
+        this.meterRegistry = Objects.requireNonNull(meterRegistry, "meterRegistry must not be null");
+        Gauge.builder("iron.retry.active", activeExecutions, AtomicLong::doubleValue).description("Current active logical retry executions")
+            .register(meterRegistry);
     }
 
     /** 根据事件类型更新对应指标。 */
@@ -52,97 +45,51 @@ public final class MicrometerRetryListener implements RetryListener {
         }
 
         if (eventType == RetryEventType.SAFETY_WARNING) {
-            counter(
-                    "iron.retry.safety.warning.total",
-                    Tags.of("operation", operation, "policy", policy)
-            ).increment();
+            counter("iron.retry.safety.warning.total", Tags.of("operation", operation, "policy", policy)).increment();
         }
 
         if (eventType == RetryEventType.ATTEMPT_COMPLETED) {
             String outcome = actualEvent.getFailure() == null ? "returned" : "threw";
-            counter(
-                    "iron.retry.attempt.total",
-                    Tags.of(
-                            "operation", operation,
-                            "policy", policy,
-                            "outcome", outcome
-                    )
-            ).increment();
-            timer(
-                    "iron.retry.attempt.duration",
-                    Tags.of("operation", operation, "policy", policy)
-            ).record(actualEvent.getAttemptDuration());
+            counter("iron.retry.attempt.total", Tags.of("operation", operation, "policy", policy, "outcome", outcome)).increment();
+            timer("iron.retry.attempt.duration", Tags.of("operation", operation, "policy", policy)).record(
+                actualEvent.getAttemptDuration());
         }
 
         if (eventType == RetryEventType.DECISION_MADE) {
-            counter(
-                    "iron.retry.decision.total",
-                    Tags.of(
-                            "operation", operation,
-                            "policy", policy,
-                            "decision", actualEvent.getDecisionType().name(),
-                            "category", actualEvent.getFailureCategory().name()
-                    )
-            ).increment();
+            counter("iron.retry.decision.total",
+                Tags.of("operation", operation, "policy", policy, "decision", actualEvent.getDecisionType().name(), "category",
+                    actualEvent.getFailureCategory().name())).increment();
         }
 
         if (eventType == RetryEventType.RETRY_SCHEDULED) {
-            counter(
-                    "iron.retry.scheduled.total",
-                    Tags.of(
-                            "operation", operation,
-                            "policy", policy,
-                            "category", actualEvent.getFailureCategory().name(),
-                            "delaySource", actualEvent.getRetryDelay().getSource().name()
-                    )
-            ).increment();
-            timer(
-                    "iron.retry.backoff.duration",
-                    Tags.of(
-                            "operation", operation,
-                            "policy", policy,
-                            "delaySource", actualEvent.getRetryDelay().getSource().name()
-                    )
-            ).record(actualEvent.getRetryDelay().getDuration());
+            counter("iron.retry.scheduled.total",
+                Tags.of("operation", operation, "policy", policy, "category", actualEvent.getFailureCategory().name(), "delaySource",
+                    actualEvent.getRetryDelay().getSource().name())).increment();
+            timer("iron.retry.backoff.duration",
+                Tags.of("operation", operation, "policy", policy, "delaySource", actualEvent.getRetryDelay().getSource().name())).record(
+                actualEvent.getRetryDelay().getDuration());
         }
 
         if (actualEvent.getFinalStatus() != null) {
             activeExecutions.updateAndGet(current -> Math.max(0L, current - 1L));
-            counter(
-                    "iron.retry.execution.total",
-                    Tags.of(
-                            "operation", operation,
-                            "policy", policy,
-                            "status", actualEvent.getFinalStatus().name(),
-                            "category", actualEvent.getFailureCategory().name()
-                    )
-            ).increment();
-            timer(
-                    "iron.retry.execution.duration",
-                    Tags.of(
-                            "operation", operation,
-                            "policy", policy,
-                            "status", actualEvent.getFinalStatus().name()
-                    )
-            ).record(actualEvent.getElapsedTime());
+            counter("iron.retry.execution.total",
+                Tags.of("operation", operation, "policy", policy, "status", actualEvent.getFinalStatus().name(), "category",
+                    actualEvent.getFailureCategory().name())).increment();
+            timer("iron.retry.execution.duration",
+                Tags.of("operation", operation, "policy", policy, "status", actualEvent.getFinalStatus().name())).record(
+                actualEvent.getElapsedTime());
         }
     }
 
     /** 获取或创建指定名称和标签的计数器。 */
     private Counter counter(String name, Tags tags) {
         String key = name + '|' + tags;
-        return counters.computeIfAbsent(
-                key,
-                ignored -> Counter.builder(name).tags(tags).register(meterRegistry)
-        );
+        return counters.computeIfAbsent(key, ignored -> Counter.builder(name).tags(tags).register(meterRegistry));
     }
 
     /** 获取或创建指定名称和标签的计时器。 */
     private Timer timer(String name, Tags tags) {
         String key = name + '|' + tags;
-        return timers.computeIfAbsent(
-                key,
-                ignored -> Timer.builder(name).tags(tags).register(meterRegistry)
-        );
+        return timers.computeIfAbsent(key, ignored -> Timer.builder(name).tags(tags).register(meterRegistry));
     }
 }

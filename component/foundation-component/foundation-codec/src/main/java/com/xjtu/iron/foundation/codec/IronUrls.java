@@ -9,7 +9,8 @@ import java.nio.charset.StandardCharsets;
  */
 public final class IronUrls {
 
-    private IronUrls() {}
+    private IronUrls() {
+    }
 
     public static String encode(String value) {
         return value == null ? null : URLEncoder.encode(value, StandardCharsets.UTF_8);

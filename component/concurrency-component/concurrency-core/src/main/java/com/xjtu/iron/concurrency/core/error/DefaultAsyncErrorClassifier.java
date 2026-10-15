@@ -30,108 +30,59 @@ public final class DefaultAsyncErrorClassifier implements AsyncErrorClassifier {
 
         Throwable root = context.getRootCause();
         Throwable throwable = context.getThrowable();
-        AsyncErrorStage actualStage = context.getStage() == null
-                ? AsyncErrorStage.NONE
-                : context.getStage();
+        AsyncErrorStage actualStage = context.getStage() == null ? AsyncErrorStage.NONE : context.getStage();
 
         if (root == null) {
             return AsyncError.none();
         }
 
-        if (root instanceof ConcurrencyRejectedException
-                || root instanceof RejectedExecutionException) {
-            return error(
-                    AsyncErrorCategory.RESOURCE,
-                    AsyncErrorReason.REJECTED,
-                    actualStage == AsyncErrorStage.NONE ? AsyncErrorStage.SUBMIT : actualStage,
-                    throwable,
-                    RecoveryHint.of(AsyncRecoveryAction.DELAY_RETRY, true, false, true)
-            );
+        if (root instanceof ConcurrencyRejectedException || root instanceof RejectedExecutionException) {
+            return error(AsyncErrorCategory.RESOURCE, AsyncErrorReason.REJECTED,
+                actualStage == AsyncErrorStage.NONE ? AsyncErrorStage.SUBMIT : actualStage, throwable,
+                RecoveryHint.of(AsyncRecoveryAction.DELAY_RETRY, true, false, true));
         }
 
         if (root instanceof TimeoutException) {
             boolean queueTimeout = actualStage == AsyncErrorStage.QUEUE;
-            return error(
-                    queueTimeout ? AsyncErrorCategory.RESOURCE : AsyncErrorCategory.DEPENDENCY,
-                    queueTimeout ? AsyncErrorReason.QUEUE_TIMEOUT : AsyncErrorReason.TIMEOUT,
-                    queueTimeout ? AsyncErrorStage.QUEUE : AsyncErrorStage.WAIT_RESULT,
-                    throwable,
-                    RecoveryHint.of(
-                            queueTimeout ? AsyncRecoveryAction.DELAY_RETRY : AsyncRecoveryAction.FAST_RETRY,
-                            true,
-                            false,
-                            queueTimeout
-                    )
-            );
+            return error(queueTimeout ? AsyncErrorCategory.RESOURCE : AsyncErrorCategory.DEPENDENCY,
+                queueTimeout ? AsyncErrorReason.QUEUE_TIMEOUT : AsyncErrorReason.TIMEOUT,
+                queueTimeout ? AsyncErrorStage.QUEUE : AsyncErrorStage.WAIT_RESULT, throwable,
+                RecoveryHint.of(queueTimeout ? AsyncRecoveryAction.DELAY_RETRY : AsyncRecoveryAction.FAST_RETRY, true, false,
+                    queueTimeout));
         }
 
         if (root instanceof CancellationException) {
-            return error(
-                    AsyncErrorCategory.COMPONENT,
-                    AsyncErrorReason.CANCELLED,
-                    AsyncErrorStage.CANCEL,
-                    throwable,
-                    RecoveryHint.none()
-            );
+            return error(AsyncErrorCategory.COMPONENT, AsyncErrorReason.CANCELLED, AsyncErrorStage.CANCEL, throwable, RecoveryHint.none());
         }
 
         if (root instanceof ThreadPoolNotFoundException) {
-            return error(
-                    AsyncErrorCategory.COMPONENT,
-                    AsyncErrorReason.EXECUTOR_NOT_FOUND,
-                    AsyncErrorStage.SUBMIT,
-                    throwable,
-                    RecoveryHint.of(AsyncRecoveryAction.ALERT, false, false, true)
-            );
+            return error(AsyncErrorCategory.COMPONENT, AsyncErrorReason.EXECUTOR_NOT_FOUND, AsyncErrorStage.SUBMIT, throwable,
+                RecoveryHint.of(AsyncRecoveryAction.ALERT, false, false, true));
         }
 
         if (root instanceof ConcurrencyException) {
-            return error(
-                    AsyncErrorCategory.COMPONENT,
-                    AsyncErrorReason.TASK_THROWN,
-                    actualStage == AsyncErrorStage.NONE ? AsyncErrorStage.RUN : actualStage,
-                    throwable,
-                    RecoveryHint.of(AsyncRecoveryAction.ALERT, false, false, true)
-            );
+            return error(AsyncErrorCategory.COMPONENT, AsyncErrorReason.TASK_THROWN,
+                actualStage == AsyncErrorStage.NONE ? AsyncErrorStage.RUN : actualStage, throwable,
+                RecoveryHint.of(AsyncRecoveryAction.ALERT, false, false, true));
         }
 
-        if (root instanceof NullPointerException
-                || root instanceof ClassCastException
-                || root instanceof IllegalStateException
-                || root instanceof IllegalArgumentException) {
-            return error(
-                    AsyncErrorCategory.SYSTEM,
-                    AsyncErrorReason.TASK_THROWN,
-                    actualStage == AsyncErrorStage.NONE ? AsyncErrorStage.RUN : actualStage,
-                    throwable,
-                    RecoveryHint.of(AsyncRecoveryAction.ALERT, false, false, true)
-            );
+        if (root instanceof NullPointerException || root instanceof ClassCastException || root instanceof IllegalStateException ||
+            root instanceof IllegalArgumentException) {
+            return error(AsyncErrorCategory.SYSTEM, AsyncErrorReason.TASK_THROWN,
+                actualStage == AsyncErrorStage.NONE ? AsyncErrorStage.RUN : actualStage, throwable,
+                RecoveryHint.of(AsyncRecoveryAction.ALERT, false, false, true));
         }
 
-        return error(
-                AsyncErrorCategory.UNKNOWN,
-                AsyncErrorReason.UNKNOWN,
-                actualStage,
-                throwable,
-                RecoveryHint.of(AsyncRecoveryAction.ALERT, false, false, true)
-        );
+        return error(AsyncErrorCategory.UNKNOWN, AsyncErrorReason.UNKNOWN, actualStage, throwable,
+            RecoveryHint.of(AsyncRecoveryAction.ALERT, false, false, true));
     }
 
     /**
      * 创建没有应用业务信息的通用技术错误。
      */
-    private AsyncError error(
-            AsyncErrorCategory category,
-            AsyncErrorReason reason,
-            AsyncErrorStage stage,
-            Throwable throwable,
-            RecoveryHint recoveryHint
-    ) {
-        return AsyncError.builder()
-                .classification(AsyncErrorClassification.of(category, reason, stage))
-                .application(ApplicationErrorInfo.none())
-                .exception(ExceptionInfo.from(throwable))
-                .recovery(recoveryHint)
-                .build();
+    private AsyncError error(AsyncErrorCategory category, AsyncErrorReason reason, AsyncErrorStage stage, Throwable throwable,
+        RecoveryHint recoveryHint) {
+        return AsyncError.builder().classification(AsyncErrorClassification.of(category, reason, stage))
+            .application(ApplicationErrorInfo.none()).exception(ExceptionInfo.from(throwable)).recovery(recoveryHint).build();
     }
 }

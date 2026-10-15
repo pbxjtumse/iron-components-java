@@ -48,10 +48,10 @@ class ThreadLocalStorageRouteContextTest {
     void requireCurrentShouldFailWhenNoRouteBound() {
         ThreadLocalStorageRouteContext context = new ThreadLocalStorageRouteContext();
 
-        assertThatThrownBy(context::requireCurrent)
-                .isInstanceOf(StorageRoutingException.class)
-                .hasMessageContaining("No StorageRoute bound");
+        assertThatThrownBy(context::requireCurrent).isInstanceOf(StorageRoutingException.class)
+            .hasMessageContaining("No StorageRoute bound");
     }
+
     @Test
     void shouldRejectOutOfOrderCloseEvenWhenBothScopesUseSameRoute() {
         var context = new ThreadLocalStorageRouteContext();
@@ -76,7 +76,9 @@ class ThreadLocalStorageRouteContextTest {
                     assertThat(context.current()).isEmpty();
                     assertThatThrownBy(scope::close).isInstanceOf(StorageRoutingException.class).hasMessageContaining("owning thread");
                     assertThat(context.current()).isEmpty();
-                } catch (Throwable error) { failure.set(error); }
+                } catch (Throwable error) {
+                    failure.set(error);
+                }
             });
             worker.start();
             worker.join();

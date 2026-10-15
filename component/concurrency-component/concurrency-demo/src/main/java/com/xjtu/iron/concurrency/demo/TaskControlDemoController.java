@@ -34,10 +34,7 @@ public final class TaskControlDemoController {
     /** 任务状态查询入口。 */
     private final TaskExecutionRegistry taskExecutionRegistry;
 
-    public TaskControlDemoController(
-            AsyncExecutor asyncExecutor,
-            TaskExecutionRegistry taskExecutionRegistry
-    ) {
+    public TaskControlDemoController(AsyncExecutor asyncExecutor, TaskExecutionRegistry taskExecutionRegistry) {
         this.asyncExecutor = asyncExecutor;
         this.taskExecutionRegistry = taskExecutionRegistry;
     }
@@ -53,10 +50,8 @@ public final class TaskControlDemoController {
         });
 
         String taskId = "cancel-queued-" + UUID.randomUUID();
-        TaskHandle<String> handle = asyncExecutor.submitHandle(
-                AsyncTask.of("tiny-pool", "cancelQueuedTarget", () -> "should-not-run")
-                        .taskId(taskId)
-        );
+        TaskHandle<String> handle =
+            asyncExecutor.submitHandle(AsyncTask.of("tiny-pool", "cancelQueuedTarget", () -> "should-not-run").taskId(taskId));
 
         TaskCancelResult cancelResult = handle.cancel(false);
         return response(taskId, cancelResult, handle.getFuture().isCancelled(), null);
@@ -71,32 +66,21 @@ public final class TaskControlDemoController {
         CountDownLatch started = new CountDownLatch(1);
         AtomicReference<String> workerThread = new AtomicReference<>();
 
-        TaskHandle<String> handle = asyncExecutor.submitHandle(
-                AsyncTask.of("default", "cancelRunningTarget", () -> {
-                            workerThread.set(Thread.currentThread().getName());
-                            started.countDown();
-                            try {
-                                Thread.sleep(10_000L);
-                                return "unexpected-finish";
-                            } catch (InterruptedException interrupted) {
-                                Thread.currentThread().interrupt();
-                                throw new IllegalStateException(
-                                        "Task observed interrupt",
-                                        interrupted
-                                );
-                            }
-                        })
-                        .taskId(taskId)
-        );
+        TaskHandle<String> handle = asyncExecutor.submitHandle(AsyncTask.of("default", "cancelRunningTarget", () -> {
+            workerThread.set(Thread.currentThread().getName());
+            started.countDown();
+            try {
+                Thread.sleep(10_000L);
+                return "unexpected-finish";
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Task observed interrupt", interrupted);
+            }
+        }).taskId(taskId));
 
         await(started, 1_000L);
         TaskCancelResult cancelResult = handle.cancel(true);
-        return response(
-                taskId,
-                cancelResult,
-                handle.getFuture().isCancelled(),
-                workerThread.get()
-        );
+        return response(taskId, cancelResult, handle.getFuture().isCancelled(), workerThread.get());
     }
 
     /**
@@ -117,13 +101,7 @@ public final class TaskControlDemoController {
         String taskId = "caller-runs-" + UUID.randomUUID();
         String submitThread = Thread.currentThread().getName();
         String executionThread = asyncExecutor.submit(
-                AsyncTask.of(
-                                "caller-runs-pool",
-                                "callerRunsTarget",
-                                () -> Thread.currentThread().getName()
-                        )
-                        .taskId(taskId)
-        ).join();
+            AsyncTask.of("caller-runs-pool", "callerRunsTarget", () -> Thread.currentThread().getName()).taskId(taskId)).join();
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("taskId", taskId);
@@ -153,10 +131,7 @@ public final class TaskControlDemoController {
         boolean failedAsynchronously = false;
 
         try {
-            asyncExecutor.submit(
-                    AsyncTask.of("discard-pool", "discardTarget", () -> "never-run")
-                            .taskId(taskId)
-            ).join();
+            asyncExecutor.submit(AsyncTask.of("discard-pool", "discardTarget", () -> "never-run").taskId(taskId)).join();
         } catch (CompletionException expected) {
             failedAsynchronously = true;
         }
@@ -168,12 +143,7 @@ public final class TaskControlDemoController {
         return result;
     }
 
-    private Map<String, Object> response(
-            String taskId,
-            TaskCancelResult cancelResult,
-            boolean futureCancelled,
-            String workerThread
-    ) {
+    private Map<String, Object> response(String taskId, TaskCancelResult cancelResult, boolean futureCancelled, String workerThread) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("taskId", taskId);
         result.put("cancelResult", cancelResult);

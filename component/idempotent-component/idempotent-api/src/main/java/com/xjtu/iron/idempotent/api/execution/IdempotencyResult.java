@@ -59,40 +59,57 @@ public final class IdempotencyResult<T> {
      * EXECUTED / RECOVERED / REPLAYED 都属于调用方可直接使用的成功结果。
      */
     public boolean isSuccess() {
-        return status == IdempotencyResultStatus.EXECUTED
-                || status == IdempotencyResultStatus.RECOVERED
-                || status == IdempotencyResultStatus.REPLAYED;
+        return status == IdempotencyResultStatus.EXECUTED || status == IdempotencyResultStatus.RECOVERED ||
+            status == IdempotencyResultStatus.REPLAYED;
     }
 
-    public IdempotencyResultStatus status() { return status; }
+    public IdempotencyResultStatus status() {
+        return status;
+    }
 
-    public IdempotencyResultStatus getStatus() { return status; }
+    public IdempotencyResultStatus getStatus() {
+        return status;
+    }
 
-    public IdempotencyStage stage() { return stage; }
+    public IdempotencyStage stage() {
+        return stage;
+    }
 
-    public IdempotencyStage getStage() { return stage; }
+    public IdempotencyStage getStage() {
+        return stage;
+    }
 
     public Optional<T> value() {
         return Optional.ofNullable(value);
     }
 
-    public T getValue() { return value; }
+    public T getValue() {
+        return value;
+    }
 
     public Optional<IdempotencyRecord> record() {
         return Optional.ofNullable(record);
     }
 
-    public IdempotencyRecord getRecord() { return record; }
+    public IdempotencyRecord getRecord() {
+        return record;
+    }
 
     public Optional<Throwable> error() {
         return Optional.ofNullable(error);
     }
 
-    public Throwable getError() { return error; }
+    public Throwable getError() {
+        return error;
+    }
 
-    public boolean lockFallback() { return lockFallback; }
+    public boolean lockFallback() {
+        return lockFallback;
+    }
 
-    public boolean isLockFallback() { return lockFallback; }
+    public boolean isLockFallback() {
+        return lockFallback;
+    }
 
     /**
      * 是否真正启用了“Business + markSuccess”同一个本地事务的 Tx-B 闭环。
@@ -104,7 +121,9 @@ public final class IdempotencyResult<T> {
         return transactionApplied;
     }
 
-    public boolean transactionApplied() { return transactionApplied; }
+    public boolean transactionApplied() {
+        return transactionApplied;
+    }
 
     public static final class Builder<T> {
         /** 本次调用最终状态。 */
@@ -128,20 +147,43 @@ public final class IdempotencyResult<T> {
         /** 是否启用了 Tx-B 事务闭环。 */
         private boolean transactionApplied;
 
-        public Builder<T> status(IdempotencyResultStatus value) { this.status = value; return this; }
+        public Builder<T> status(IdempotencyResultStatus value) {
+            this.status = value;
+            return this;
+        }
 
-        public Builder<T> stage(IdempotencyStage value) { this.stage = value; return this; }
+        public Builder<T> stage(IdempotencyStage value) {
+            this.stage = value;
+            return this;
+        }
 
-        public Builder<T> value(T value) { this.value = value; return this; }
+        public Builder<T> value(T value) {
+            this.value = value;
+            return this;
+        }
 
-        public Builder<T> record(IdempotencyRecord value) { this.record = value; return this; }
+        public Builder<T> record(IdempotencyRecord value) {
+            this.record = value;
+            return this;
+        }
 
-        public Builder<T> error(Throwable value) { this.error = value; return this; }
+        public Builder<T> error(Throwable value) {
+            this.error = value;
+            return this;
+        }
 
-        public Builder<T> lockFallback(boolean value) { this.lockFallback = value; return this; }
+        public Builder<T> lockFallback(boolean value) {
+            this.lockFallback = value;
+            return this;
+        }
 
-        public Builder<T> transactionApplied(boolean value) { this.transactionApplied = value; return this; }
+        public Builder<T> transactionApplied(boolean value) {
+            this.transactionApplied = value;
+            return this;
+        }
 
-        public IdempotencyResult<T> build() { return new IdempotencyResult<>(this); }
+        public IdempotencyResult<T> build() {
+            return new IdempotencyResult<>(this);
+        }
     }
 }

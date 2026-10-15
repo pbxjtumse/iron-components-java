@@ -23,7 +23,15 @@ public final class IdempotencyOperationAcquireResult {
         return new IdempotencyOperationAcquireResult(IdempotencyOperationAcquireStatus.STORAGE_ERROR, null, error);
     }
 
-    public IdempotencyOperationAcquireStatus getStatus() { return status; }
-    public IdempotencyRecord getRecord() { return record; }
-    public Throwable getError() { return error; }
+    public IdempotencyOperationAcquireStatus getStatus() {
+        return status;
+    }
+
+    public IdempotencyRecord getRecord() {
+        return record;
+    }
+
+    public Throwable getError() {
+        return error;
+    }
 }

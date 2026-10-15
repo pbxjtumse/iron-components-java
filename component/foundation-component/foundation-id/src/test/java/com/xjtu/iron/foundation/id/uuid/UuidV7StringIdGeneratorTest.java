@@ -18,8 +18,7 @@ class UuidV7StringIdGeneratorTest {
     @Test
     void shouldGenerateUniqueMonotonicVersionSevenUuidsInSameMillisecond() {
         Clock clock = Clock.fixed(Instant.parse("2026-08-03T00:00:00Z"), ZoneOffset.UTC);
-        UuidV7StringIdGenerator generator =
-                new UuidV7StringIdGenerator(clock, new SecureRandom(new byte[]{1, 2, 3}));
+        UuidV7StringIdGenerator generator = new UuidV7StringIdGenerator(clock, new SecureRandom(new byte[]{1, 2, 3}));
         Set<String> ids = new HashSet<>();
         String previous = null;
 

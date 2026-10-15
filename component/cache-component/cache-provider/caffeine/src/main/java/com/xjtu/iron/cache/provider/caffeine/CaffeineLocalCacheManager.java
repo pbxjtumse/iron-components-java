@@ -71,10 +71,7 @@ public class CaffeineLocalCacheManager {
      * </pre>
      */
     public Cache<String, LocalCacheEntry> getCache(String cacheName, CacheSpec spec) {
-        return caches.computeIfAbsent(cacheName, ignored -> Caffeine.newBuilder()
-                .maximumSize(defaultMaximumSize)
-                .recordStats()
-                .build());
+        return caches.computeIfAbsent(cacheName, ignored -> Caffeine.newBuilder().maximumSize(defaultMaximumSize).recordStats().build());
     }
 
     /**

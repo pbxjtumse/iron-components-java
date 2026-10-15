@@ -25,15 +25,9 @@ public class DefaultGovernanceTemplate implements GovernanceTemplate {
     }
 
     @Override
-    public <T> T execute(String resourceName,
-                         Supplier<T> supplier,
-                         Function<Throwable, T> fallback) {
+    public <T> T execute(String resourceName, Supplier<T> supplier, Function<Throwable, T> fallback) {
         GovernanceContext context = createContext(resourceName);
-        return governanceExecutor.execute(
-                context,
-                ctx -> supplier.get(),
-                (ctx, throwable) -> fallback.apply(throwable)
-        );
+        return governanceExecutor.execute(context, ctx -> supplier.get(), (ctx, throwable) -> fallback.apply(throwable));
     }
 
     @Override
@@ -46,7 +40,13 @@ public class DefaultGovernanceTemplate implements GovernanceTemplate {
 
     @Override
     public void execute(String resourceName, Runnable runnable, Consumer<Throwable> fallback) {
-        execute(resourceName, () -> {runnable.run();return null;}, throwable -> {fallback.accept(throwable);return null;});
+        execute(resourceName, () -> {
+            runnable.run();
+            return null;
+        }, throwable -> {
+            fallback.accept(throwable);
+            return null;
+        });
     }
 
     private GovernanceContext createContext(String resourceName) {

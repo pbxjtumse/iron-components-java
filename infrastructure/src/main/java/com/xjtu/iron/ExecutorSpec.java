@@ -9,8 +9,7 @@ import java.util.Set;
 @Getter
 public enum ExecutorSpec {
 
-    ORDER("order-executor", new HashSet<>(Arrays.asList("order", "api"))),
-    PAY("pay-executor",  new HashSet<>(Arrays.asList("pay")));
+    ORDER("order-executor", new HashSet<>(Arrays.asList("order", "api"))), PAY("pay-executor", new HashSet<>(Arrays.asList("pay")));
 
     private final String poolName;
     private final Set<String> tags;
@@ -20,8 +19,13 @@ public enum ExecutorSpec {
         this.tags = tags;
     }
 
-    public String poolName() { return poolName; }
-    public Set<String> tags() { return tags; }
+    public String poolName() {
+        return poolName;
+    }
+
+    public Set<String> tags() {
+        return tags;
+    }
 }
 
 

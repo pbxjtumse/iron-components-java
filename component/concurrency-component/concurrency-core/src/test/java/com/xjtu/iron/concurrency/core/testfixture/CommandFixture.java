@@ -14,14 +14,7 @@ import java.util.concurrent.CompletableFuture;
  * <p>一次 TaskCommand 测试通常不只需要 command 本身，
  * 还需要观察 runtime、baseFuture、publisher、classifier、uncaught 等协作对象。</p>
  */
-public record CommandFixture<T>(
-        TaskDefinition<T> definition,
-        TaskExecutionContext<T> context,
-        CompletableFuture<T> baseFuture,
-        TaskExecutionRuntime runtime,
-        TaskCommand<T> command,
-        RecordingTaskLifecyclePublisher publisher,
-        RecordingAsyncErrorClassifier classifier,
-        RecordingUncaughtExceptionHandler uncaught
-) {
+public record CommandFixture<T>(TaskDefinition<T> definition, TaskExecutionContext<T> context, CompletableFuture<T> baseFuture,
+                                TaskExecutionRuntime runtime, TaskCommand<T> command, RecordingTaskLifecyclePublisher publisher,
+                                RecordingAsyncErrorClassifier classifier, RecordingUncaughtExceptionHandler uncaught) {
 }

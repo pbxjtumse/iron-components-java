@@ -42,8 +42,8 @@ public final class IdempotencyRecoveryRequest {
         this.key = builder.key;
         this.requestHash = builder.requestHash;
         this.routeKey = builder.routeKey;
-        this.storeName = builder.storeName == null || builder.storeName.isBlank()
-                ? IdempotencyStorageContext.DEFAULT_STORE_NAME : builder.storeName.trim();
+        this.storeName = builder.storeName == null || builder.storeName.isBlank() ? IdempotencyStorageContext.DEFAULT_STORE_NAME :
+            builder.storeName.trim();
         this.scanBucket = builder.scanBucket;
         this.expectedOwnerToken = builder.expectedOwnerToken;
         this.expectedVersion = builder.expectedVersion;
@@ -51,17 +51,45 @@ public final class IdempotencyRecoveryRequest {
         this.policy = builder.policy;
     }
 
-    public static Builder builder() { return new Builder(); }
+    public static Builder builder() {
+        return new Builder();
+    }
 
-    public String getKey() { return key; }
-    public String getRequestHash() { return requestHash; }
-    public String getRouteKey() { return routeKey; }
-    public String getStoreName() { return storeName; }
-    public int getScanBucket() { return scanBucket; }
-    public String getExpectedOwnerToken() { return expectedOwnerToken; }
-    public Long getExpectedVersion() { return expectedVersion; }
-    public String getPolicyName() { return policyName; }
-    public IdempotencyPolicy getPolicy() { return policy; }
+    public String getKey() {
+        return key;
+    }
+
+    public String getRequestHash() {
+        return requestHash;
+    }
+
+    public String getRouteKey() {
+        return routeKey;
+    }
+
+    public String getStoreName() {
+        return storeName;
+    }
+
+    public int getScanBucket() {
+        return scanBucket;
+    }
+
+    public String getExpectedOwnerToken() {
+        return expectedOwnerToken;
+    }
+
+    public Long getExpectedVersion() {
+        return expectedVersion;
+    }
+
+    public String getPolicyName() {
+        return policyName;
+    }
+
+    public IdempotencyPolicy getPolicy() {
+        return policy;
+    }
 
     public IdempotencyStorageContext storageContext() {
         return IdempotencyStorageContext.of(storeName, scanBucket);
@@ -95,15 +123,50 @@ public final class IdempotencyRecoveryRequest {
         /** 内联 Policy。 */
         private IdempotencyPolicy policy;
 
-        public Builder key(String value) { this.key = value; return this; }
-        public Builder requestHash(String value) { this.requestHash = value; return this; }
-        public Builder routeKey(String value) { this.routeKey = value; return this; }
-        public Builder storeName(String value) { this.storeName = value; return this; }
-        public Builder scanBucket(int value) { this.scanBucket = value; return this; }
-        public Builder expectedOwnerToken(String value) { this.expectedOwnerToken = value; return this; }
-        public Builder expectedVersion(Long value) { this.expectedVersion = value; return this; }
-        public Builder policyName(String value) { this.policyName = value; return this; }
-        public Builder policy(IdempotencyPolicy value) { this.policy = value; return this; }
+        public Builder key(String value) {
+            this.key = value;
+            return this;
+        }
+
+        public Builder requestHash(String value) {
+            this.requestHash = value;
+            return this;
+        }
+
+        public Builder routeKey(String value) {
+            this.routeKey = value;
+            return this;
+        }
+
+        public Builder storeName(String value) {
+            this.storeName = value;
+            return this;
+        }
+
+        public Builder scanBucket(int value) {
+            this.scanBucket = value;
+            return this;
+        }
+
+        public Builder expectedOwnerToken(String value) {
+            this.expectedOwnerToken = value;
+            return this;
+        }
+
+        public Builder expectedVersion(Long value) {
+            this.expectedVersion = value;
+            return this;
+        }
+
+        public Builder policyName(String value) {
+            this.policyName = value;
+            return this;
+        }
+
+        public Builder policy(IdempotencyPolicy value) {
+            this.policy = value;
+            return this;
+        }
 
         public IdempotencyRecoveryRequest build() {
             if (scanBucket < 0) {

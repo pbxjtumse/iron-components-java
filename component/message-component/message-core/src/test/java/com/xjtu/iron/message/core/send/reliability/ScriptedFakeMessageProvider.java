@@ -49,17 +49,16 @@ final class ScriptedFakeMessageProvider implements MessageProvider {
         sendCount.incrementAndGet();
         ScriptedSendAction action = actions.poll();
         if (action == null) {
-            return CompletableFuture.completedFuture(ProviderSendResult.failed(
-                    com.xjtu.iron.message.api.publish.SendStatus.FAILED,
-                    com.xjtu.iron.message.api.publish.SendFailureType.CLIENT_ERROR,
-                    "fake provider has no scripted result"));
+            return CompletableFuture.completedFuture(ProviderSendResult.failed(com.xjtu.iron.message.api.publish.SendStatus.FAILED,
+                com.xjtu.iron.message.api.publish.SendFailureType.CLIENT_ERROR, "fake provider has no scripted result"));
         }
         return action.execute(request);
     }
 
     @Override
     public ProviderSubscription subscribe(ProviderSubscriptionRequest request) {
-        return () -> { };
+        return () -> {
+        };
     }
 
     @Override

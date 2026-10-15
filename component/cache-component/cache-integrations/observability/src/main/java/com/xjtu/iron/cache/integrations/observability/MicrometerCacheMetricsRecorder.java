@@ -29,7 +29,7 @@ public class MicrometerCacheMetricsRecorder implements CacheMetricsRecorder {
     public void recordHit(CacheKey key, CacheLevel level, long costMillis) {
         meterRegistry.counter("xjtu.iron.cache.hit", "cacheName", key.cacheName(), "level", level.name()).increment();
         meterRegistry.timer("xjtu.iron.cache.get.cost", "cacheName", key.cacheName(), "result", "hit", "level", level.name())
-                .record(costMillis, TimeUnit.MILLISECONDS);
+            .record(costMillis, TimeUnit.MILLISECONDS);
     }
 
     /** 记录缓存 miss 次数和 get 耗时。 */
@@ -37,21 +37,20 @@ public class MicrometerCacheMetricsRecorder implements CacheMetricsRecorder {
     public void recordMiss(CacheKey key, long costMillis) {
         meterRegistry.counter("xjtu.iron.cache.miss", "cacheName", key.cacheName()).increment();
         meterRegistry.timer("xjtu.iron.cache.get.cost", "cacheName", key.cacheName(), "result", "miss")
-                .record(costMillis, TimeUnit.MILLISECONDS);
+            .record(costMillis, TimeUnit.MILLISECONDS);
     }
 
     /** 记录 loader 加载次数和耗时。 */
     @Override
     public void recordLoad(CacheKey key, long costMillis) {
         meterRegistry.counter("xjtu.iron.cache.loader.count", "cacheName", key.cacheName()).increment();
-        meterRegistry.timer("xjtu.iron.cache.loader.cost", "cacheName", key.cacheName())
-                .record(costMillis, TimeUnit.MILLISECONDS);
+        meterRegistry.timer("xjtu.iron.cache.loader.cost", "cacheName", key.cacheName()).record(costMillis, TimeUnit.MILLISECONDS);
     }
 
     /** 记录缓存操作异常。 */
     @Override
     public void recordError(CacheKey key, CacheOperation operation, Throwable throwable) {
-        meterRegistry.counter("xjtu.iron.cache.error", "cacheName", key.cacheName(), "operation", operation.name(),
-                "exception", throwable.getClass().getSimpleName()).increment();
+        meterRegistry.counter("xjtu.iron.cache.error", "cacheName", key.cacheName(), "operation", operation.name(), "exception",
+            throwable.getClass().getSimpleName()).increment();
     }
 }

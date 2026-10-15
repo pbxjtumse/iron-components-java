@@ -16,10 +16,7 @@ public final class ReliableTaskRunResult {
     /** 执行与状态迁移完成后读取到的任务快照；任务不存在时为空。 */
     private final ReliableTask finalTask;
 
-    public ReliableTaskRunResult(
-            ReliableTaskRunStatus status,
-            ReliableTask claimedTask,
-            ReliableTask finalTask) {
+    public ReliableTaskRunResult(ReliableTaskRunStatus status, ReliableTask claimedTask, ReliableTask finalTask) {
         this.status = Objects.requireNonNull(status, "status must not be null");
         this.claimedTask = claimedTask;
         this.finalTask = finalTask;
@@ -45,9 +42,7 @@ public final class ReliableTaskRunResult {
         if (!(object instanceof ReliableTaskRunResult that)) {
             return false;
         }
-        return status == that.status
-                && Objects.equals(claimedTask, that.claimedTask)
-                && Objects.equals(finalTask, that.finalTask);
+        return status == that.status && Objects.equals(claimedTask, that.claimedTask) && Objects.equals(finalTask, that.finalTask);
     }
 
     @Override
@@ -57,10 +52,6 @@ public final class ReliableTaskRunResult {
 
     @Override
     public String toString() {
-        return "ReliableTaskRunResult{" +
-                "status=" + status +
-                ", claimedTask=" + claimedTask +
-                ", finalTask=" + finalTask +
-                '}';
+        return "ReliableTaskRunResult{" + "status=" + status + ", claimedTask=" + claimedTask + ", finalTask=" + finalTask + '}';
     }
 }

@@ -18,14 +18,13 @@ public final class SendOptions {
     /**
      * 校验显式超时时间。
      */
-    public SendOptions(
-        Duration confirmTimeout) {
+    public SendOptions(Duration confirmTimeout) {
         // null 表示使用组件默认值。
         if (confirmTimeout != null && (confirmTimeout.isZero() || confirmTimeout.isNegative())) {
             // 非正超时没有可执行意义，因此直接拒绝。
             throw new IllegalArgumentException("confirmTimeout must be positive");
         }
-    
+
         // 保存完成校验和标准化后的 confirmTimeout。
         this.confirmTimeout = confirmTimeout;
     }
@@ -50,6 +49,7 @@ public final class SendOptions {
         // 统一通过显式构造器执行合法性校验。
         return new SendOptions(timeout);
     }
+
     /**
      * 返回等待发送确认的最大时间；为空时使用组件默认值。
      *
@@ -100,9 +100,7 @@ public final class SendOptions {
     @Override
     public String toString() {
         // 拼接全部字段，保持值对象可诊断。
-        return "SendOptions{" +
-                "confirmTimeout=" + confirmTimeout +
-                '}';
+        return "SendOptions{" + "confirmTimeout=" + confirmTimeout + '}';
     }
 
 }

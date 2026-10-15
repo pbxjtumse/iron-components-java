@@ -30,29 +30,23 @@ public class MessageDemoController {
     private final MessageTemplate messageTemplate;
     private final InMemoryReceivedMessageStore store;
 
-    public MessageDemoController(
-            MessageTemplate messageTemplate,
-            InMemoryReceivedMessageStore store) {
+    public MessageDemoController(MessageTemplate messageTemplate, InMemoryReceivedMessageStore store) {
         this.messageTemplate = messageTemplate;
         this.store = store;
     }
 
     @PostMapping("/send")
-    public SendMessageResponse send(
-            @RequestBody SendMessageRequest request) {
+    public SendMessageResponse send(@RequestBody SendMessageRequest request) {
         SendMessageRequest actualRequest = request == null ? new SendMessageRequest() : request;
         return SendMessageResponse.from(sendToProvider(actualRequest, normalizeProvider(actualRequest.getProvider()), null));
     }
 
     @PostMapping("/send/all")
-    public MultiSendMessageResponse sendAll(
-            @RequestBody SendMessageRequest request) {
+    public MultiSendMessageResponse sendAll(@RequestBody SendMessageRequest request) {
         SendMessageRequest actualRequest = request == null ? new SendMessageRequest() : request;
         String batchId = UUID.randomUUID().toString();
         Instant startedAt = Instant.now();
-        List<SendMessageResponse> results = DEMO_PROVIDERS.stream()
-                .map(provider -> sendSafely(actualRequest, provider, batchId))
-                .toList();
+        List<SendMessageResponse> results = DEMO_PROVIDERS.stream().map(provider -> sendSafely(actualRequest, provider, batchId)).toList();
         return new MultiSendMessageResponse(batchId, startedAt, Instant.now(), results);
     }
 
@@ -65,26 +59,18 @@ public class MessageDemoController {
     public List<ReceivedMessageView> receivedByProvider(@PathVariable String provider) {
         String normalizedProvider = normalizeProvider(provider);
         return store.list().stream()
-                .filter(message -> normalizedProvider == null
-                        || normalizedProvider.equals(normalizeProvider(message.getProviderName())))
-                .toList();
+            .filter(message -> normalizedProvider == null || normalizedProvider.equals(normalizeProvider(message.getProviderName())))
+            .toList();
     }
 
     @GetMapping("/received-summary")
     public Map<String, Long> receivedSummary() {
-        return store.list().stream()
-                .collect(Collectors.groupingBy(
-                        message -> normalizeProvider(message.getProviderName()) == null
-                                ? "unknown"
-                                : normalizeProvider(message.getProviderName()),
-                        LinkedHashMap::new,
-                        Collectors.counting()));
+        return store.list().stream().collect(Collectors.groupingBy(
+            message -> normalizeProvider(message.getProviderName()) == null ? "unknown" : normalizeProvider(message.getProviderName()),
+            LinkedHashMap::new, Collectors.counting()));
     }
 
-    private SendMessageResponse sendSafely(
-            SendMessageRequest request,
-            String provider,
-            String batchId) {
+    private SendMessageResponse sendSafely(SendMessageRequest request, String provider, String batchId) {
         try {
             return SendMessageResponse.from(sendToProvider(request, provider, batchId));
         } catch (RuntimeException exception) {
@@ -92,18 +78,13 @@ public class MessageDemoController {
         }
     }
 
-    private SendResult sendToProvider(
-            SendMessageRequest request,
-            String provider,
-            String batchId) {
+    private SendResult sendToProvider(SendMessageRequest request, String provider, String batchId) {
         MessageDestination destination = MessageDestination.of("demo", logicalTopic(request));
         if (provider != null) {
             destination = destination.withProviderHint(provider);
         }
 
-        Map<String, Object> payload = request.getPayload() == null
-                ? Map.<String, Object>of()
-                : request.getPayload();
+        Map<String, Object> payload = request.getPayload() == null ? Map.<String, Object>of() : request.getPayload();
         Map<String, String> headers = new LinkedHashMap<>();
         if (request.getHeaders() != null) {
             headers.putAll(request.getHeaders());
@@ -113,10 +94,7 @@ public class MessageDemoController {
         }
 
         MessageEnvelope<Map<String, Object>> envelope =
-                MessageEnvelope.builder(eventType(request), payload)
-                        .messageKey(request.getBusinessKey())
-                        .headers(headers)
-                        .build();
+            MessageEnvelope.builder(eventType(request), payload).messageKey(request.getBusinessKey()).headers(headers).build();
 
         return messageTemplate.send(destination, envelope, SendOptions.defaults());
     }

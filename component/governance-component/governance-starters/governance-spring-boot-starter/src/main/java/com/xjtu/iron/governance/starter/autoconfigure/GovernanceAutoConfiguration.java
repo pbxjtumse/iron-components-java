@@ -59,20 +59,13 @@ public class GovernanceAutoConfiguration {
     public ExecutorService governanceTimeoutExecutorService(GovernanceProperties properties) {
         var p = properties.getTimeoutExecutor();
 
-        return new ThreadPoolExecutor(
-                p.getCorePoolSize(),
-                p.getMaxPoolSize(),
-                60L,
-                TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(p.getQueueCapacity()),
-                runnable -> {
-                    Thread thread = new Thread(runnable);
-                    thread.setName("governance-timeout-executor-" + thread.getId());
-                    thread.setDaemon(true);
-                    return thread;
-                },
-                new ThreadPoolExecutor.AbortPolicy()
-        );
+        return new ThreadPoolExecutor(p.getCorePoolSize(), p.getMaxPoolSize(), 60L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(p.getQueueCapacity()), runnable -> {
+            Thread thread = new Thread(runnable);
+            thread.setName("governance-timeout-executor-" + thread.getId());
+            thread.setDaemon(true);
+            return thread;
+        }, new ThreadPoolExecutor.AbortPolicy());
     }
 
     @Bean
@@ -113,16 +106,9 @@ public class GovernanceAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public GovernanceExecutor governanceExecutor(EffectiveGovernancePolicyResolver resolver,
-                                                 GovernanceEngine governanceEngine,
-                                                 GovernanceExceptionMapperChain mapperChain,
-                                                 GovernanceEventBus eventBus) {
-        return new DefaultGovernanceExecutor(
-                resolver,
-                governanceEngine,
-                mapperChain,
-                eventBus
-        );
+    public GovernanceExecutor governanceExecutor(EffectiveGovernancePolicyResolver resolver, GovernanceEngine governanceEngine,
+        GovernanceExceptionMapperChain mapperChain, GovernanceEventBus eventBus) {
+        return new DefaultGovernanceExecutor(resolver, governanceEngine, mapperChain, eventBus);
     }
 
     @Bean

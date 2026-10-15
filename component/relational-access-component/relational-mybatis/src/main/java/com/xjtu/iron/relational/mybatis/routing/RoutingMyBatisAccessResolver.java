@@ -41,9 +41,7 @@ public final class RoutingMyBatisAccessResolver implements MyBatisAccessResolver
         MyBatisAccess access = accesses.get(normalized);
         if (access == null) {
             throw new IllegalArgumentException(
-                    "MyBatisAccess not found for dataSourceKey=" + normalized
-                            + ", knownDataSourceKeys=" + accesses.keySet()
-            );
+                "MyBatisAccess not found for dataSourceKey=" + normalized + ", knownDataSourceKeys=" + accesses.keySet());
         }
         return access;
     }
@@ -51,8 +49,7 @@ public final class RoutingMyBatisAccessResolver implements MyBatisAccessResolver
     @Override
     public boolean supportsCurrentTransactionParticipation() {
         boolean defaultSupported = defaultAccess == null || defaultAccess.supportsCurrentTransactionParticipation();
-        return defaultSupported && accesses.values().stream()
-                .allMatch(MyBatisAccess::supportsCurrentTransactionParticipation);
+        return defaultSupported && accesses.values().stream().allMatch(MyBatisAccess::supportsCurrentTransactionParticipation);
     }
 
     private static String requireText(String value, String name) {

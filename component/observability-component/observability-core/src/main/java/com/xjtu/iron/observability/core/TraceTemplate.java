@@ -106,11 +106,7 @@ public class TraceTemplate {
         }
     }
 
-    public <T, E extends Throwable> T execute(
-            String spanName,
-            Map<String, Object> tags,
-            ITraceCallback<T, E> callback
-    ) throws E {
+    public <T, E extends Throwable> T execute(String spanName, Map<String, Object> tags, ITraceCallback<T, E> callback) throws E {
         ITraceSpan span = safeStartSpan(spanName);
         TraceMdc.MdcScope mdcScope = safePutMdc();
 

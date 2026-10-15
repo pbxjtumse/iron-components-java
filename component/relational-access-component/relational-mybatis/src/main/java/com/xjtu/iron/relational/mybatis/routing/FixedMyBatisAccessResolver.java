@@ -26,10 +26,8 @@ public final class FixedMyBatisAccessResolver implements MyBatisAccessResolver {
     public MyBatisAccess resolve(String requestedDataSourceKey) {
         String requested = normalize(requestedDataSourceKey);
         if (!Objects.equals(dataSourceKey, requested) && requested != null) {
-            throw new IllegalArgumentException(
-                    "MyBatisAccess cannot resolve dataSourceKey=" + requested
-                            + "; configure RoutingMyBatisAccessResolver for multiple databases"
-            );
+            throw new IllegalArgumentException("MyBatisAccess cannot resolve dataSourceKey=" + requested +
+                "; configure RoutingMyBatisAccessResolver for multiple databases");
         }
         return access;
     }

@@ -3,6 +3,7 @@ package com.xjtu.iron.message.core.provider;
 import com.xjtu.iron.message.spi.MessageProvider;
 
 import java.util.*;
+
 /**
  * MessageProvider 注册表，统一管理 Kafka、Pulsar、RocketMQ 等 Provider 实例。
  *
@@ -75,9 +76,7 @@ public final class MessageProviderRegistry implements AutoCloseable {
         // 不存在时抛出可诊断异常。
         if (provider == null) {
             // 附带当前已注册名称。
-            throw new IllegalStateException(
-                    "message provider not found: " + providerName
-                            + ", registered=" + providers.keySet());
+            throw new IllegalStateException("message provider not found: " + providerName + ", registered=" + providers.keySet());
         }
         // 返回 Provider。
         return provider;

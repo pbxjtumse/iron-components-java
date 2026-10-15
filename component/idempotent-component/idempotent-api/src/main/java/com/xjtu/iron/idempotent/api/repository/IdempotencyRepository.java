@@ -36,7 +36,9 @@ public interface IdempotencyRepository {
     /** Provider 能力声明。Core 不通过 providerName 猜测 WINDOWED/DURABLE/事务/Recovery 能力。 */
     IdempotencyRepositoryCapabilities capabilities();
 
-    default boolean supports(IdempotencyMode mode) { return capabilities().supports(mode); }
+    default boolean supports(IdempotencyMode mode) {
+        return capabilities().supports(mode);
+    }
 
     default boolean supportsBusinessTransactionParticipation() {
         return capabilities().isBusinessTransactionParticipationSupported();

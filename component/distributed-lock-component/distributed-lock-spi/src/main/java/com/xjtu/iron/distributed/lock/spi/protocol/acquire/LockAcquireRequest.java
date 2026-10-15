@@ -42,8 +42,7 @@ public final class LockAcquireRequest {
          * 是否要求 LockProvider 原生发号”。二者不是一回事。是否原生发号只能由
          * FencingTokenCoordinator 选出的 FencingTokenPlan 决定，不能简单等于 options.isFencingRequired()。
          */
-        this.nativeFencingRequired = builder.nativeFencingRequired != null
-                && builder.nativeFencingRequired;
+        this.nativeFencingRequired = builder.nativeFencingRequired != null && builder.nativeFencingRequired;
         this.attributes = Collections.unmodifiableMap(new LinkedHashMap<>(builder.attributes));
     }
 

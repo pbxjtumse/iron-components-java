@@ -39,30 +39,18 @@ public final class KafkaMessageProviderConfig {
     private final Map<String, Object> consumerProperties;
 
 
-    private static final Set<String> PROTECTED_PRODUCER_PROPERTIES = Set.of(
-            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-            ProducerConfig.CLIENT_ID_CONFIG,
-            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-            ProducerConfig.ACKS_CONFIG,
-            ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG);
+    private static final Set<String> PROTECTED_PRODUCER_PROPERTIES =
+        Set.of(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, ProducerConfig.CLIENT_ID_CONFIG, ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ProducerConfig.ACKS_CONFIG, ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG);
 
-    private static final Set<String> PROTECTED_CONSUMER_PROPERTIES = Set.of(
-            ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-            ConsumerConfig.CLIENT_ID_CONFIG,
-            ConsumerConfig.GROUP_ID_CONFIG,
-            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+    private static final Set<String> PROTECTED_CONSUMER_PROPERTIES =
+        Set.of(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, ConsumerConfig.CLIENT_ID_CONFIG, ConsumerConfig.GROUP_ID_CONFIG,
+            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
             ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG);
 
     /** 校验强类型字段并复制原生属性。 */
-    public KafkaMessageProviderConfig(
-        String bootstrapServers,
-        String clientIdPrefix,
-        Duration pollTimeout,
-        Duration consumerRetryBackoff,
-        Map<String, Object> producerProperties,
-        Map<String, Object> consumerProperties) {
+    public KafkaMessageProviderConfig(String bootstrapServers, String clientIdPrefix, Duration pollTimeout, Duration consumerRetryBackoff,
+        Map<String, Object> producerProperties, Map<String, Object> consumerProperties) {
         bootstrapServers = requireText(bootstrapServers, "bootstrapServers");
         clientIdPrefix = requireText(clientIdPrefix, "clientIdPrefix");
         if (pollTimeout == null || pollTimeout.isZero() || pollTimeout.isNegative()) {
@@ -75,7 +63,7 @@ public final class KafkaMessageProviderConfig {
         consumerProperties = immutableProperties(consumerProperties);
         rejectProtected(producerProperties, PROTECTED_PRODUCER_PROPERTIES, "producerProperties");
         rejectProtected(consumerProperties, PROTECTED_CONSUMER_PROPERTIES, "consumerProperties");
-    
+
         // 保存完成校验和标准化后的 bootstrapServers。
         this.bootstrapServers = bootstrapServers;
         // 保存完成校验和标准化后的 clientIdPrefix。
@@ -90,32 +78,19 @@ public final class KafkaMessageProviderConfig {
         this.consumerProperties = consumerProperties;
     }
 
-    public static KafkaMessageProviderConfig defaults(
-            String bootstrapServers,
-            String clientIdPrefix) {
-        return new KafkaMessageProviderConfig(
-                bootstrapServers,
-                clientIdPrefix,
-                Duration.ofSeconds(1),
-                Duration.ofSeconds(1),
-                Map.of(),
-                Map.of());
+    public static KafkaMessageProviderConfig defaults(String bootstrapServers, String clientIdPrefix) {
+        return new KafkaMessageProviderConfig(bootstrapServers, clientIdPrefix, Duration.ofSeconds(1), Duration.ofSeconds(1), Map.of(),
+            Map.of());
     }
 
     private static Map<String, Object> immutableProperties(Map<String, Object> properties) {
-        return properties == null || properties.isEmpty()
-                ? Map.of()
-                : Collections.unmodifiableMap(new LinkedHashMap<>(properties));
+        return properties == null || properties.isEmpty() ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(properties));
     }
 
-    private static void rejectProtected(
-            Map<String, Object> properties,
-            Set<String> protectedNames,
-            String fieldName) {
+    private static void rejectProtected(Map<String, Object> properties, Set<String> protectedNames, String fieldName) {
         for (String name : protectedNames) {
             if (properties.containsKey(name)) {
-                throw new IllegalArgumentException(
-                        fieldName + " must not override component-managed property: " + name);
+                throw new IllegalArgumentException(fieldName + " must not override component-managed property: " + name);
             }
         }
     }
@@ -126,6 +101,7 @@ public final class KafkaMessageProviderConfig {
         }
         return value.trim();
     }
+
     /**
      * 返回Kafka 集群引导地址。
      *
@@ -204,12 +180,9 @@ public final class KafkaMessageProviderConfig {
         }
         // 转换为当前类型后逐字段比较。
         KafkaMessageProviderConfig other = (KafkaMessageProviderConfig) object;
-        return Objects.equals(bootstrapServers, other.bootstrapServers)
-                && Objects.equals(clientIdPrefix, other.clientIdPrefix)
-                && Objects.equals(pollTimeout, other.pollTimeout)
-                && Objects.equals(consumerRetryBackoff, other.consumerRetryBackoff)
-                && Objects.equals(producerProperties, other.producerProperties)
-                && Objects.equals(consumerProperties, other.consumerProperties);
+        return Objects.equals(bootstrapServers, other.bootstrapServers) && Objects.equals(clientIdPrefix, other.clientIdPrefix) &&
+            Objects.equals(pollTimeout, other.pollTimeout) && Objects.equals(consumerRetryBackoff, other.consumerRetryBackoff) &&
+            Objects.equals(producerProperties, other.producerProperties) && Objects.equals(consumerProperties, other.consumerProperties);
     }
 
     /**
@@ -231,14 +204,9 @@ public final class KafkaMessageProviderConfig {
     @Override
     public String toString() {
         // 拼接全部字段，保持值对象可诊断。
-        return "KafkaMessageProviderConfig{" +
-                "bootstrapServers=" + bootstrapServers +
-                ", clientIdPrefix=" + clientIdPrefix +
-                ", pollTimeout=" + pollTimeout +
-                ", consumerRetryBackoff=" + consumerRetryBackoff +
-                ", producerProperties=" + producerProperties +
-                ", consumerProperties=" + consumerProperties +
-                '}';
+        return "KafkaMessageProviderConfig{" + "bootstrapServers=" + bootstrapServers + ", clientIdPrefix=" + clientIdPrefix +
+            ", pollTimeout=" + pollTimeout + ", consumerRetryBackoff=" + consumerRetryBackoff + ", producerProperties=" +
+            producerProperties + ", consumerProperties=" + consumerProperties + '}';
     }
 
 }

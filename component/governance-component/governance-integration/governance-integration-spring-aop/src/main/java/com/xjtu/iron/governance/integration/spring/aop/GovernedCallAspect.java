@@ -22,8 +22,7 @@ public class GovernedCallAspect {
     }
 
     @Around("@annotation(governedCall)")
-    public Object around(ProceedingJoinPoint joinPoint,
-                         GovernedCall governedCall) {
+    public Object around(ProceedingJoinPoint joinPoint, GovernedCall governedCall) {
         GovernanceContext context = new GovernanceContext();
         context.setResourceName(governedCall.name());
         context.setResourceType(GovernanceResourceType.OUTBOUND);
@@ -35,30 +34,20 @@ public class GovernedCallAspect {
             return governanceExecutor.execute(context, ctx -> joinPoint.proceed());
         }
 
-        return governanceExecutor.execute(
-                context,
-                ctx -> joinPoint.proceed(),
-                (ctx, throwable) -> {
-                    try {
-                        return invokeFallback(joinPoint, governedCall.fallbackMethod(), throwable);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-        );
+        return governanceExecutor.execute(context, ctx -> joinPoint.proceed(), (ctx, throwable) -> {
+            try {
+                return invokeFallback(joinPoint, governedCall.fallbackMethod(), throwable);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
-    private Object invokeFallback(ProceedingJoinPoint joinPoint,
-                                  String fallbackMethodName,
-                                  Throwable throwable) throws Exception {
+    private Object invokeFallback(ProceedingJoinPoint joinPoint, String fallbackMethodName, Throwable throwable) throws Exception {
         Object target = joinPoint.getTarget();
         Object[] args = joinPoint.getArgs();
 
-        Method method = fallbackMethodResolver.resolve(
-                target.getClass(),
-                fallbackMethodName,
-                args
-        );
+        Method method = fallbackMethodResolver.resolve(target.getClass(), fallbackMethodName, args);
 
         method.setAccessible(true);
 

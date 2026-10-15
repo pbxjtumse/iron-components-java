@@ -41,8 +41,13 @@ public final class IdempotencyStorageContext {
         return new IdempotencyStorageContext(storeName, scanBucket);
     }
 
-    public String getStoreName() { return storeName; }
-    public int getScanBucket() { return scanBucket; }
+    public String getStoreName() {
+        return storeName;
+    }
+
+    public int getScanBucket() {
+        return scanBucket;
+    }
 
     private static String requireText(String value, String message) {
         if (value == null || value.isBlank()) {

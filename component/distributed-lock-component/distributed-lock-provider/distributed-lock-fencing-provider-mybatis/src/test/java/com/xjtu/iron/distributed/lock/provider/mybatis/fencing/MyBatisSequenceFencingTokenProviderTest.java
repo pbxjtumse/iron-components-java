@@ -36,16 +36,12 @@ class MyBatisSequenceFencingTokenProviderTest {
     @BeforeEach
     void setUp() throws Exception {
         JdbcDataSource dataSource = new JdbcDataSource();
-        dataSource.setURL("jdbc:h2:mem:fencing_" + System.nanoTime()
-                + ";MODE=MySQL;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000");
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE iron_lock_fencing_token ("
-                    + "namespace VARCHAR(128) NOT NULL,"
-                    + "lock_name VARCHAR(512) NOT NULL,"
-                    + "current_token BIGINT NOT NULL,"
-                    + "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
-                    + "PRIMARY KEY(namespace, lock_name))");
+        dataSource.setURL("jdbc:h2:mem:fencing_" + System.nanoTime() + ";MODE=MySQL;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000");
+        try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
+            statement.execute(
+                "CREATE TABLE iron_lock_fencing_token (" + "namespace VARCHAR(128) NOT NULL," + "lock_name VARCHAR(512) NOT NULL," +
+                    "current_token BIGINT NOT NULL," + "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "PRIMARY KEY(namespace, lock_name))");
         }
 
         Configuration configuration = new Configuration();
@@ -55,15 +51,10 @@ class MyBatisSequenceFencingTokenProviderTest {
         factoryBean.setConfiguration(configuration);
         SqlSessionFactory factory = factoryBean.getObject();
         SqlSessionTemplate template = new SqlSessionTemplate(factory);
-        DefaultTransactionExecutor transactions = new DefaultTransactionExecutor(
-                new SpringTransactionProvider(new DataSourceTransactionManager(dataSource))
-        );
-        provider = new MyBatisSequenceFencingTokenProvider(new SpringMyBatisAccess(
-                dataSource,
-                template,
-                transactions,
-                MyBatisAccessListener.noop()
-        ));
+        DefaultTransactionExecutor transactions =
+            new DefaultTransactionExecutor(new SpringTransactionProvider(new DataSourceTransactionManager(dataSource)));
+        provider = new MyBatisSequenceFencingTokenProvider(
+            new SpringMyBatisAccess(dataSource, template, transactions, MyBatisAccessListener.noop()));
     }
 
     @Test
@@ -95,20 +86,14 @@ class MyBatisSequenceFencingTokenProviderTest {
                 tokens.add(future.get());
             }
             assertThat(tokens).doesNotHaveDuplicates();
-            assertThat(tokens).containsExactlyInAnyOrderElementsOf(
-                    java.util.stream.LongStream.rangeClosed(1, 20).boxed().toList()
-            );
+            assertThat(tokens).containsExactlyInAnyOrderElementsOf(java.util.stream.LongStream.rangeClosed(1, 20).boxed().toList());
         } finally {
             executor.shutdownNow();
         }
     }
 
     private FencingTokenRequest request(String lockName) {
-        return FencingTokenRequest.builder()
-                .namespace("test")
-                .lockName(lockName)
-                .ownerToken("owner")
-                .options(LockOptions.builder().fencingRequired(true).build())
-                .build();
+        return FencingTokenRequest.builder().namespace("test").lockName(lockName).ownerToken("owner")
+            .options(LockOptions.builder().fencingRequired(true).build()).build();
     }
 }

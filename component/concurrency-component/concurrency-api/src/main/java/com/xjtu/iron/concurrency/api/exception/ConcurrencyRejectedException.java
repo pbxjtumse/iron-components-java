@@ -23,9 +23,7 @@ public class ConcurrencyRejectedException extends ConcurrencyException {
     private final String taskName;
 
     public ConcurrencyRejectedException(String executorName, String taskName, AsyncError error, Throwable cause) {
-        super("Async task rejected: executor=" + executorName + ", task=" + taskName,
-                error,
-                cause);
+        super("Async task rejected: executor=" + executorName + ", task=" + taskName, error, cause);
         this.executorName = executorName;
         this.taskName = taskName;
     }

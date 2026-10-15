@@ -10,7 +10,8 @@ import java.nio.charset.StandardCharsets;
  */
 public final class TestResources {
 
-    private TestResources() {}
+    private TestResources() {
+    }
 
     public static Resource utf8(String location, String content) {
         return new InMemoryResource(location, content.getBytes(StandardCharsets.UTF_8));

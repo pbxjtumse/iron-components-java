@@ -35,12 +35,8 @@ public final class DefaultReliableTaskClient implements ReliableTaskClient {
     /** 为任务时间字段提供统一当前时间的时钟。 */
     private final Clock clock;
 
-    public DefaultReliableTaskClient(
-            ReliableTaskRepository repository,
-            ReliableTaskEngine engine,
-            ReliableTaskRuntimePolicy policy,
-            StringIdGenerator idGenerator,
-            Clock clock) {
+    public DefaultReliableTaskClient(ReliableTaskRepository repository, ReliableTaskEngine engine, ReliableTaskRuntimePolicy policy,
+        StringIdGenerator idGenerator, Clock clock) {
         this.repository = Objects.requireNonNull(repository, "repository must not be null");
         this.engine = Objects.requireNonNull(engine, "engine must not be null");
         this.policy = Objects.requireNonNull(policy, "policy must not be null");
@@ -53,45 +49,25 @@ public final class DefaultReliableTaskClient implements ReliableTaskClient {
         Objects.requireNonNull(submission, "submission must not be null");
         Instant now = clock.instant();
         String taskId = submission.getTaskId() == null ? idGenerator.nextId() : submission.getTaskId();
-        int scanBucket = submission.getScanBucket() == null
-                ? Math.floorMod(taskId.hashCode(), policy.getScanBucketCount())
-                : submission.getScanBucket();
+        int scanBucket =
+            submission.getScanBucket() == null ? Math.floorMod(taskId.hashCode(), policy.getScanBucketCount()) : submission.getScanBucket();
         if (scanBucket >= policy.getScanBucketCount()) {
-            throw new IllegalArgumentException(
-                    "scanBucket must be less than configured scanBucketCount=" + policy.getScanBucketCount()
-            );
+            throw new IllegalArgumentException("scanBucket must be less than configured scanBucketCount=" + policy.getScanBucketCount());
         }
-        int maxAttempts = submission.getMaxAttempts() == null
-                ? policy.getDefaultMaxAttempts()
-                : submission.getMaxAttempts();
-        ReliableTask task = new ReliableTask(
-                new ReliableTaskKey(submission.getStoreName(), submission.getNamespace(), taskId),
-                submission.getTaskType(),
-                submission.getBusinessKey(),
-                submission.getPayload(),
-                submission.getRouteKey(),
-                scanBucket,
-                ReliableTaskStatus.READY,
-                0,
-                maxAttempts,
-                submission.getFirstExecuteAt() == null ? now : submission.getFirstExecuteAt(),
-                null,
-                null,
-                0,
-                null,
-                null,
-                now,
-                now,
-                null
-        );
+        int maxAttempts = submission.getMaxAttempts() == null ? policy.getDefaultMaxAttempts() : submission.getMaxAttempts();
+        ReliableTask task =
+            new ReliableTask(new ReliableTaskKey(submission.getStoreName(), submission.getNamespace(), taskId), submission.getTaskType(),
+                submission.getBusinessKey(), submission.getPayload(), submission.getRouteKey(), scanBucket, ReliableTaskStatus.READY, 0,
+                maxAttempts, submission.getFirstExecuteAt() == null ? now : submission.getFirstExecuteAt(), null, null, 0, null, null, now,
+                now, null);
 
         ReliableTaskCreateResult createResult = repository.create(task);
         if (createResult == ReliableTaskCreateResult.CREATED) {
             return new ReliableTaskSubmitResult(ReliableTaskSubmitStatus.CREATED, task);
         }
 
-        ReliableTask existing = repository.find(task.getKey())
-                .orElseThrow(() -> new IllegalStateException("task disappeared after duplicate create"));
+        ReliableTask existing =
+            repository.find(task.getKey()).orElseThrow(() -> new IllegalStateException("task disappeared after duplicate create"));
         ensureSameLogicalTask(task, existing);
         return new ReliableTaskSubmitResult(ReliableTaskSubmitStatus.ALREADY_EXISTS, existing);
     }
@@ -111,15 +87,11 @@ public final class DefaultReliableTaskClient implements ReliableTaskClient {
     }
 
     private static void ensureSameLogicalTask(ReliableTask expected, ReliableTask actual) {
-        if (!expected.getTaskType().equals(actual.getTaskType())
-                || !expected.getPayload().equals(actual.getPayload())
-                || !Objects.equals(expected.getBusinessKey(), actual.getBusinessKey())
-                || !Objects.equals(expected.getRouteKey(), actual.getRouteKey())
-                || expected.getScanBucket() != actual.getScanBucket()
-                || expected.getMaxAttempts() != actual.getMaxAttempts()) {
-            throw new ReliableTaskConflictException(
-                    "taskId already exists with different task content: " + expected.getTaskId()
-            );
+        if (!expected.getTaskType().equals(actual.getTaskType()) || !expected.getPayload().equals(actual.getPayload()) ||
+            !Objects.equals(expected.getBusinessKey(), actual.getBusinessKey()) ||
+            !Objects.equals(expected.getRouteKey(), actual.getRouteKey()) || expected.getScanBucket() != actual.getScanBucket() ||
+            expected.getMaxAttempts() != actual.getMaxAttempts()) {
+            throw new ReliableTaskConflictException("taskId already exists with different task content: " + expected.getTaskId());
         }
     }
 }

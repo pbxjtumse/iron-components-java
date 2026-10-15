@@ -41,20 +41,10 @@ public final class CompositeAsyncErrorClassifier implements AsyncErrorClassifier
      * @param rules 业务和扩展分类规则
      * @param fallbackClassifier 默认技术分类器
      */
-    public CompositeAsyncErrorClassifier(
-            List<AsyncErrorClassificationRule> rules,
-            AsyncErrorClassifier fallbackClassifier
-    ) {
-        this.rules = rules == null
-                ? List.of()
-                : rules.stream()
-                .filter(Objects::nonNull)
-                .sorted(Comparator.comparingInt(AsyncErrorClassificationRule::order))
-                .toList();
-        this.fallbackClassifier = Objects.requireNonNull(
-                fallbackClassifier,
-                "fallbackClassifier must not be null"
-        );
+    public CompositeAsyncErrorClassifier(List<AsyncErrorClassificationRule> rules, AsyncErrorClassifier fallbackClassifier) {
+        this.rules = rules == null ? List.of() :
+            rules.stream().filter(Objects::nonNull).sorted(Comparator.comparingInt(AsyncErrorClassificationRule::order)).toList();
+        this.fallbackClassifier = Objects.requireNonNull(fallbackClassifier, "fallbackClassifier must not be null");
     }
 
     @Override

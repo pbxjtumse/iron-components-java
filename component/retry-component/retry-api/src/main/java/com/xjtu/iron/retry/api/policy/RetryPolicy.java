@@ -43,18 +43,9 @@ public final class RetryPolicy {
         }
         this.maxAttempts = builder.maxAttempts;
         this.maxDuration = requirePositive(builder.maxDuration, "maxDuration");
-        this.operationSafety = Objects.requireNonNull(
-                builder.operationSafety,
-                "operationSafety must not be null"
-        );
-        this.safetyMode = Objects.requireNonNull(
-                builder.safetyMode,
-                "safetyMode must not be null"
-        );
-        this.backoffStrategy = Objects.requireNonNull(
-                builder.backoffStrategy,
-                "backoffStrategy must not be null"
-        );
+        this.operationSafety = Objects.requireNonNull(builder.operationSafety, "operationSafety must not be null");
+        this.safetyMode = Objects.requireNonNull(builder.safetyMode, "safetyMode must not be null");
+        this.backoffStrategy = Objects.requireNonNull(builder.backoffStrategy, "backoffStrategy must not be null");
         if (builder.maxCauseDepth < 1) {
             throw new IllegalArgumentException("maxCauseDepth must be greater than or equal to 1");
         }
@@ -63,15 +54,9 @@ public final class RetryPolicy {
         validateSafetyConfiguration();
         validateClassifierConfiguration(builder);
         validateExactRuleConflicts(builder.retryRules, builder.stopRules, builder.abortRules);
-        this.retryClassifier = builder.customClassifier == null
-                ? new RuleBasedRetryClassifier(
-                        builder.retryRules,
-                        builder.stopRules,
-                        builder.abortRules,
-                        builder.resultRules,
-                        builder.traverseCauses,
-                        builder.maxCauseDepth)
-                : builder.customClassifier;
+        this.retryClassifier = builder.customClassifier == null ?
+            new RuleBasedRetryClassifier(builder.retryRules, builder.stopRules, builder.abortRules, builder.resultRules,
+                builder.traverseCauses, builder.maxCauseDepth) : builder.customClassifier;
     }
 
     /** 创建命名策略构建器。 */
@@ -117,42 +102,29 @@ public final class RetryPolicy {
 
     /** 判断执行器是否需要发布不安全重试告警。 */
     public boolean shouldWarnUnsafeRetry() {
-        return operationSafety == OperationSafety.NON_IDEMPOTENT
-                && maxAttempts > 1
-                && safetyMode == RetrySafetyMode.WARN;
+        return operationSafety == OperationSafety.NON_IDEMPOTENT && maxAttempts > 1 && safetyMode == RetrySafetyMode.WARN;
     }
 
     /** 校验非幂等操作与安全模式的组合。 */
     private void validateSafetyConfiguration() {
-        if (operationSafety == OperationSafety.NON_IDEMPOTENT
-                && maxAttempts > 1
-                && safetyMode == RetrySafetyMode.REJECT) {
-            throw new IllegalArgumentException(
-                    "NON_IDEMPOTENT operation cannot configure maxAttempts > 1 "
-                            + "when safetyMode is REJECT"
-            );
+        if (operationSafety == OperationSafety.NON_IDEMPOTENT && maxAttempts > 1 && safetyMode == RetrySafetyMode.REJECT) {
+            throw new IllegalArgumentException("NON_IDEMPOTENT operation cannot configure maxAttempts > 1 " + "when safetyMode is REJECT");
         }
     }
 
     /** 禁止同时配置自定义分类器和声明式规则，避免规则被静默忽略。 */
     private static void validateClassifierConfiguration(Builder builder) {
-        boolean hasConfiguredRules = !builder.retryRules.isEmpty()
-                || !builder.stopRules.isEmpty()
-                || !builder.abortRules.isEmpty()
-                || !builder.resultRules.isEmpty();
+        boolean hasConfiguredRules = !builder.retryRules.isEmpty() || !builder.stopRules.isEmpty() || !builder.abortRules.isEmpty() ||
+            !builder.resultRules.isEmpty();
         if (builder.customClassifier != null && hasConfiguredRules) {
             throw new IllegalArgumentException(
-                    "custom classifier cannot be combined with retryOn, stopOn, abortOn "
-                            + "or retryIfResult rules"
-            );
+                "custom classifier cannot be combined with retryOn, stopOn, abortOn " + "or retryIfResult rules");
         }
     }
 
     /** 拒绝同一个异常类型同时配置成不同动作。 */
-    private static void validateExactRuleConflicts(
-            List<RetryExceptionRule> retryRules,
-            List<RetryExceptionRule> stopRules,
-            List<RetryExceptionRule> abortRules) {
+    private static void validateExactRuleConflicts(List<RetryExceptionRule> retryRules, List<RetryExceptionRule> stopRules,
+        List<RetryExceptionRule> abortRules) {
         Map<Class<? extends Throwable>, RetryDecisionType> actions = new java.util.HashMap<>();
         collectRuleActions(actions, retryRules, RetryDecisionType.RETRY);
         collectRuleActions(actions, stopRules, RetryDecisionType.STOP);
@@ -160,17 +132,13 @@ public final class RetryPolicy {
     }
 
     /** 收集精确异常类型与动作并检测冲突。 */
-    private static void collectRuleActions(
-            Map<Class<? extends Throwable>, RetryDecisionType> actions,
-            List<RetryExceptionRule> rules,
-            RetryDecisionType action) {
+    private static void collectRuleActions(Map<Class<? extends Throwable>, RetryDecisionType> actions, List<RetryExceptionRule> rules,
+        RetryDecisionType action) {
         for (RetryExceptionRule rule : rules) {
             RetryDecisionType previous = actions.putIfAbsent(rule.exceptionType(), action);
             if (previous != null && previous != action) {
                 throw new IllegalArgumentException(
-                        "exception type " + rule.exceptionType().getName()
-                                + " is configured for both " + previous + " and " + action
-                );
+                    "exception type " + rule.exceptionType().getName() + " is configured for both " + previous + " and " + action);
             }
         }
     }
@@ -243,20 +211,13 @@ public final class RetryPolicy {
         @SafeVarargs
         @SuppressWarnings("varargs")
         public final Builder retryOn(Class<? extends Throwable>... exceptionTypes) {
-            return retryOn(
-                    RetryFailureCategory.TRANSIENT,
-                    "RETRYABLE_EXCEPTION",
-                    exceptionTypes
-            );
+            return retryOn(RetryFailureCategory.TRANSIENT, "RETRYABLE_EXCEPTION", exceptionTypes);
         }
 
         /** 使用指定失败分类和失败码添加可重试异常。 */
         @SafeVarargs
         @SuppressWarnings("varargs")
-        public final Builder retryOn(
-                RetryFailureCategory category,
-                String failureCode,
-                Class<? extends Throwable>... exceptionTypes) {
+        public final Builder retryOn(RetryFailureCategory category, String failureCode, Class<? extends Throwable>... exceptionTypes) {
             addRules(retryRules, category, failureCode, exceptionTypes, "retryOn");
             return this;
         }
@@ -265,13 +226,7 @@ public final class RetryPolicy {
         @SafeVarargs
         @SuppressWarnings("varargs")
         public final Builder stopOn(Class<? extends Throwable>... exceptionTypes) {
-            addRules(
-                    stopRules,
-                    RetryFailureCategory.NON_RETRYABLE,
-                    "NON_RETRYABLE_EXCEPTION",
-                    exceptionTypes,
-                    "stopOn"
-            );
+            addRules(stopRules, RetryFailureCategory.NON_RETRYABLE, "NON_RETRYABLE_EXCEPTION", exceptionTypes, "stopOn");
             return this;
         }
 
@@ -279,51 +234,29 @@ public final class RetryPolicy {
         @SafeVarargs
         @SuppressWarnings("varargs")
         public final Builder abortOn(Class<? extends Throwable>... exceptionTypes) {
-            addRules(
-                    abortRules,
-                    RetryFailureCategory.NON_RETRYABLE,
-                    "ABORT_EXCEPTION",
-                    exceptionTypes,
-                    "abortOn"
-            );
+            addRules(abortRules, RetryFailureCategory.NON_RETRYABLE, "ABORT_EXCEPTION", exceptionTypes, "abortOn");
             return this;
         }
 
         /** 使用默认结果未就绪分类添加结果重试条件。 */
         public Builder retryIfResult(Predicate<Object> predicate) {
-            return retryIfResult(
-                    predicate,
-                    RetryFailureCategory.RESULT_NOT_READY,
-                    "RESULT_NOT_READY"
-            );
+            return retryIfResult(predicate, RetryFailureCategory.RESULT_NOT_READY, "RESULT_NOT_READY");
         }
 
         /** 使用指定失败分类和失败码添加结果重试条件。 */
-        public Builder retryIfResult(
-                Predicate<Object> predicate,
-                RetryFailureCategory category,
-                String failureCode) {
-            resultRules.add(new RetryResultRule(
-                    Objects.requireNonNull(predicate, "predicate must not be null"),
-                    Objects.requireNonNull(category, "category must not be null"),
-                    requireText(failureCode, "failureCode")
-            ));
+        public Builder retryIfResult(Predicate<Object> predicate, RetryFailureCategory category, String failureCode) {
+            resultRules.add(new RetryResultRule(Objects.requireNonNull(predicate, "predicate must not be null"),
+                Objects.requireNonNull(category, "category must not be null"), requireText(failureCode, "failureCode")));
             return this;
         }
 
         public Builder classifier(RetryClassifier retryClassifier) {
-            this.customClassifier = Objects.requireNonNull(
-                    retryClassifier,
-                    "retryClassifier must not be null"
-            );
+            this.customClassifier = Objects.requireNonNull(retryClassifier, "retryClassifier must not be null");
             return this;
         }
 
         public Builder backoffStrategy(BackoffStrategy backoffStrategy) {
-            this.backoffStrategy = Objects.requireNonNull(
-                    backoffStrategy,
-                    "backoffStrategy must not be null"
-            );
+            this.backoffStrategy = Objects.requireNonNull(backoffStrategy, "backoffStrategy must not be null");
             return this;
         }
 
@@ -333,37 +266,20 @@ public final class RetryPolicy {
         }
 
         /** 向目标列表添加经过校验的异常规则。 */
-        private static void addRules(
-                List<RetryExceptionRule> target,
-                RetryFailureCategory category,
-                String failureCode,
-                Class<? extends Throwable>[] exceptionTypes,
-                String methodName) {
-            RetryFailureCategory actualCategory = Objects.requireNonNull(
-                    category,
-                    "category must not be null"
-            );
-            if (actualCategory == RetryFailureCategory.NON_RETRYABLE
-                    && "retryOn".equals(methodName)) {
-                throw new IllegalArgumentException(
-                        "retryOn cannot use NON_RETRYABLE failure category"
-                );
+        private static void addRules(List<RetryExceptionRule> target, RetryFailureCategory category, String failureCode,
+            Class<? extends Throwable>[] exceptionTypes, String methodName) {
+            RetryFailureCategory actualCategory = Objects.requireNonNull(category, "category must not be null");
+            if (actualCategory == RetryFailureCategory.NON_RETRYABLE && "retryOn".equals(methodName)) {
+                throw new IllegalArgumentException("retryOn cannot use NON_RETRYABLE failure category");
             }
             String actualCode = requireText(failureCode, "failureCode");
-            Objects.requireNonNull(
-                    exceptionTypes,
-                    methodName + " exceptionTypes must not be null"
-            );
+            Objects.requireNonNull(exceptionTypes, methodName + " exceptionTypes must not be null");
             if (exceptionTypes.length == 0) {
-                throw new IllegalArgumentException(
-                        methodName + " requires at least one exception type"
-                );
+                throw new IllegalArgumentException(methodName + " requires at least one exception type");
             }
             for (Class<? extends Throwable> exceptionType : exceptionTypes) {
-                Class<? extends Throwable> actualType = Objects.requireNonNull(
-                        exceptionType,
-                        methodName + " exceptionType must not be null"
-                );
+                Class<? extends Throwable> actualType =
+                    Objects.requireNonNull(exceptionType, methodName + " exceptionType must not be null");
                 target.add(new RetryExceptionRule(actualType, actualCategory, actualCode));
             }
         }

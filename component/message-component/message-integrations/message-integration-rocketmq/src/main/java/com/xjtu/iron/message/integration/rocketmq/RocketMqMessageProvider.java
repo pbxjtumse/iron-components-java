@@ -23,6 +23,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * RocketMQ4 Remoting Provider 实现。
  *
@@ -70,29 +71,20 @@ public final class RocketMqMessageProvider implements MessageProvider {
 
     @Override
     public Set<MessageCapability> capabilities() {
-        return Set.of(
-                MessageCapability.BASIC_PUBLISH,
-                MessageCapability.BASIC_CONSUME,
-                MessageCapability.RETURN_CONSUME_STATUS,
-                MessageCapability.REDELIVERY,
-                MessageCapability.DEAD_LETTER,
-                MessageCapability.BATCH_CONSUME);
+        return Set.of(MessageCapability.BASIC_PUBLISH, MessageCapability.BASIC_CONSUME, MessageCapability.RETURN_CONSUME_STATUS,
+            MessageCapability.REDELIVERY, MessageCapability.DEAD_LETTER, MessageCapability.BATCH_CONSUME);
     }
 
     @Override
     public CompletionStage<ProviderSendResult> send(ProviderSendRequest request) {
         if (closed.get()) {
-            return CompletableFuture.completedFuture(ProviderSendResult.failed(
-                    SendStatus.FAILED,
-                    SendFailureType.CLIENT_ERROR,
-                    "RocketMQ provider is closed"));
+            return CompletableFuture.completedFuture(
+                ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.CLIENT_ERROR, "RocketMQ provider is closed"));
         }
         String topic = request.destination().physicalName();
         if (!topics.contains(topic)) {
-            return CompletableFuture.completedFuture(ProviderSendResult.failed(
-                    SendStatus.REJECTED,
-                    SendFailureType.ROUTING_ERROR,
-                    "RocketMQ topic was not declared: " + topic));
+            return CompletableFuture.completedFuture(
+                ProviderSendResult.failed(SendStatus.REJECTED, SendFailureType.ROUTING_ERROR, "RocketMQ topic was not declared: " + topic));
         }
         Message message = new Message(topic, request.body());
         if (request.messageKey() != null && !request.messageKey().isBlank()) {
@@ -109,9 +101,7 @@ public final class RocketMqMessageProvider implements MessageProvider {
                 @Override
                 public void onSuccess(org.apache.rocketmq.client.producer.SendResult sendResult) {
                     if (sendResult.getSendStatus() == org.apache.rocketmq.client.producer.SendStatus.SEND_OK) {
-                        resultFuture.complete(ProviderSendResult.confirmed(
-                                sendResult.getMsgId(),
-                                sendMetadata(sendResult)));
+                        resultFuture.complete(ProviderSendResult.confirmed(sendResult.getMsgId(), sendMetadata(sendResult)));
                         return;
                     }
                     resultFuture.complete(classifySendStatus(sendResult));
@@ -124,10 +114,8 @@ public final class RocketMqMessageProvider implements MessageProvider {
             });
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
-            resultFuture.complete(ProviderSendResult.failed(
-                    SendStatus.UNKNOWN,
-                    SendFailureType.INTERRUPTED,
-                    "thread interrupted while sending RocketMQ message"));
+            resultFuture.complete(ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.INTERRUPTED,
+                "thread interrupted while sending RocketMQ message"));
         } catch (Exception exception) {
             resultFuture.complete(classifySendFailure(exception));
         }
@@ -227,20 +215,12 @@ public final class RocketMqMessageProvider implements MessageProvider {
         metadata.put(RocketMqMetadataKeys.QUEUE_OFFSET, Long.toString(message.getQueueOffset()));
         metadata.put(RocketMqMetadataKeys.RECONSUME_TIMES, Integer.toString(message.getReconsumeTimes()));
         byte[] body = message.getBody() == null ? new byte[0] : message.getBody();
-        return new ProviderInboundMessage(
-                message.getMsgId(),
-                message.getKeys(),
-                headers,
-                body,
-                Instant.now(),
-                metadata);
+        return new ProviderInboundMessage(message.getMsgId(), message.getKeys(), headers, body, Instant.now(), metadata);
     }
 
     private static Map<String, String> sendMetadata(org.apache.rocketmq.client.producer.SendResult result) {
         Map<String, String> metadata = new LinkedHashMap<>();
-        metadata.put(RocketMqMetadataKeys.MESSAGE_QUEUE, result.getMessageQueue() == null
-                ? ""
-                : result.getMessageQueue().toString());
+        metadata.put(RocketMqMetadataKeys.MESSAGE_QUEUE, result.getMessageQueue() == null ? "" : result.getMessageQueue().toString());
         metadata.put(RocketMqMetadataKeys.QUEUE_OFFSET, Long.toString(result.getQueueOffset()));
         metadata.put(RocketMqMetadataKeys.SEND_STATUS, result.getSendStatus().name());
         return metadata;
@@ -266,79 +246,43 @@ public final class RocketMqMessageProvider implements MessageProvider {
         consumer.shutdown();
     }
 
-    private static ProviderSendResult classifySendStatus(
-            org.apache.rocketmq.client.producer.SendResult sendResult) {
+    private static ProviderSendResult classifySendStatus(org.apache.rocketmq.client.producer.SendResult sendResult) {
         Map<String, String> metadata = sendMetadata(sendResult);
         org.apache.rocketmq.client.producer.SendStatus sendStatus = sendResult.getSendStatus();
         String description = "RocketMQ send status is " + sendStatus;
-        if (sendStatus == org.apache.rocketmq.client.producer.SendStatus.FLUSH_DISK_TIMEOUT
-                || sendStatus == org.apache.rocketmq.client.producer.SendStatus.FLUSH_SLAVE_TIMEOUT
-                || sendStatus == org.apache.rocketmq.client.producer.SendStatus.SLAVE_NOT_AVAILABLE) {
-            return ProviderSendResult.failed(
-                    SendStatus.UNKNOWN,
-                    SendFailureType.UNKNOWN_OUTCOME,
-                    description,
-                    metadata);
+        if (sendStatus == org.apache.rocketmq.client.producer.SendStatus.FLUSH_DISK_TIMEOUT ||
+            sendStatus == org.apache.rocketmq.client.producer.SendStatus.FLUSH_SLAVE_TIMEOUT ||
+            sendStatus == org.apache.rocketmq.client.producer.SendStatus.SLAVE_NOT_AVAILABLE) {
+            return ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.UNKNOWN_OUTCOME, description, metadata);
         }
-        return ProviderSendResult.failed(
-                SendStatus.FAILED,
-                SendFailureType.BROKER_REJECTED,
-                description,
-                metadata);
+        return ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.BROKER_REJECTED, description, metadata);
     }
 
     private static ProviderSendResult classifySendFailure(Throwable throwable) {
-        String typeName = throwable == null
-                ? ""
-                : throwable.getClass().getSimpleName().toLowerCase(java.util.Locale.ROOT);
+        String typeName = throwable == null ? "" : throwable.getClass().getSimpleName().toLowerCase(java.util.Locale.ROOT);
         String message = throwable == null ? "unknown RocketMQ failure" : throwable.getMessage();
-        Map<String, String> metadata = Map.of(
-                "exceptionType", throwable == null ? "" : throwable.getClass().getName());
+        Map<String, String> metadata = Map.of("exceptionType", throwable == null ? "" : throwable.getClass().getName());
         // 等待发送确认超时属于 UNKNOWN，不能证明 Broker 没收到。
         if (typeName.contains("timeout") || containsIgnoreCase(message, "timeout")) {
-            return ProviderSendResult.failed(
-                    SendStatus.UNKNOWN,
-                    SendFailureType.TIMEOUT,
-                    message,
-                    metadata);
+            return ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.TIMEOUT, message, metadata);
         }
         // Remoting / NameServer / 连接失败通常发生在真正写入 Broker 之前，可短重试。
-        if (typeName.contains("connect")
-                || typeName.contains("remoting")
-                || containsIgnoreCase(message, "connect")
-                || containsIgnoreCase(message, "remoting")
-                || containsIgnoreCase(message, "namesrv")) {
-            return ProviderSendResult.failed(
-                    SendStatus.FAILED,
-                    SendFailureType.NETWORK_ERROR,
-                    message,
-                    metadata);
+        if (typeName.contains("connect") || typeName.contains("remoting") || containsIgnoreCase(message, "connect") ||
+            containsIgnoreCase(message, "remoting") || containsIgnoreCase(message, "namesrv")) {
+            return ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.NETWORK_ERROR, message, metadata);
         }
         // 认证和 ACL 属于明确拒绝。
         if (typeName.contains("auth") || containsIgnoreCase(message, "acl")) {
-            return ProviderSendResult.failed(
-                    SendStatus.REJECTED,
-                    SendFailureType.AUTHENTICATION_ERROR,
-                    message,
-                    metadata);
+            return ProviderSendResult.failed(SendStatus.REJECTED, SendFailureType.AUTHENTICATION_ERROR, message, metadata);
         }
         // 路由、Topic 配置错误不是 retry 可以解决的问题。
         if (containsIgnoreCase(message, "no route") || containsIgnoreCase(message, "topic")) {
-            return ProviderSendResult.failed(
-                    SendStatus.REJECTED,
-                    SendFailureType.ROUTING_ERROR,
-                    message,
-                    metadata);
+            return ProviderSendResult.failed(SendStatus.REJECTED, SendFailureType.ROUTING_ERROR, message, metadata);
         }
-        return ProviderSendResult.failed(
-                SendStatus.FAILED,
-                SendFailureType.CLIENT_ERROR,
-                message,
-                metadata);
+        return ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.CLIENT_ERROR, message, metadata);
     }
 
     private static boolean containsIgnoreCase(String value, String part) {
-        return value != null && value.toLowerCase(java.util.Locale.ROOT)
-                .contains(part.toLowerCase(java.util.Locale.ROOT));
+        return value != null && value.toLowerCase(java.util.Locale.ROOT).contains(part.toLowerCase(java.util.Locale.ROOT));
     }
 }

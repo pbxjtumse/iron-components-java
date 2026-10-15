@@ -49,9 +49,7 @@ public final class ReliableTaskScanRequest {
         if (!(object instanceof ReliableTaskScanRequest that)) {
             return false;
         }
-        return scanBucket == that.scanBucket
-                && batchSize == that.batchSize
-                && storeName.equals(that.storeName);
+        return scanBucket == that.scanBucket && batchSize == that.batchSize && storeName.equals(that.storeName);
     }
 
     @Override
@@ -61,10 +59,7 @@ public final class ReliableTaskScanRequest {
 
     @Override
     public String toString() {
-        return "ReliableTaskScanRequest{" +
-                "storeName='" + storeName + '\'' +
-                ", scanBucket=" + scanBucket +
-                ", batchSize=" + batchSize +
-                '}';
+        return "ReliableTaskScanRequest{" + "storeName='" + storeName + '\'' + ", scanBucket=" + scanBucket + ", batchSize=" + batchSize +
+            '}';
     }
 }

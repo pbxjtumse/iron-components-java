@@ -18,8 +18,7 @@ import java.util.concurrent.TimeUnit;
  * 指标标签只使用线程池名、任务名和状态等低基数字段，不使用 taskId、bizKey。
  * </p>
  */
-public final class MicrometerConcurrencyMetricsRecorder
-        implements ConcurrencyMetricsRecorder {
+public final class MicrometerConcurrencyMetricsRecorder implements ConcurrencyMetricsRecorder {
 
     /**
      * Micrometer 指标注册中心。
@@ -27,10 +26,7 @@ public final class MicrometerConcurrencyMetricsRecorder
     private final MeterRegistry meterRegistry;
 
     public MicrometerConcurrencyMetricsRecorder(MeterRegistry meterRegistry) {
-        this.meterRegistry = Objects.requireNonNull(
-                meterRegistry,
-                "meterRegistry must not be null"
-        );
+        this.meterRegistry = Objects.requireNonNull(meterRegistry, "meterRegistry must not be null");
     }
 
     @Override
@@ -42,8 +38,7 @@ public final class MicrometerConcurrencyMetricsRecorder
     public void recordStarted(TaskExecutionEvent event) {
         counter("xjtu.iron.concurrency.task.started", event).increment();
 
-        if (event.getExecutionMode()
-                == com.xjtu.iron.concurrency.api.task.TaskExecutionMode.CALLER_THREAD) {
+        if (event.getExecutionMode() == com.xjtu.iron.concurrency.api.task.TaskExecutionMode.CALLER_THREAD) {
             counter("xjtu.iron.concurrency.task.caller.runs", event).increment();
         }
     }
@@ -104,19 +99,15 @@ public final class MicrometerConcurrencyMetricsRecorder
      * 创建或获取 Counter。
      */
     private Counter counter(String name, TaskExecutionEvent event) {
-        return Counter.builder(name)
-                .tags(tags(event))
-                .register(meterRegistry);
+        return Counter.builder(name).tags(tags(event)).register(meterRegistry);
     }
 
     /**
      * 记录原始任务排队、运行和总耗时。
      */
     private void recordExecutionTimers(TaskExecutionEvent event) {
-        timer("xjtu.iron.concurrency.task.queue.cost", event)
-                .record(event.getTiming().getQueueCostMillis(), TimeUnit.MILLISECONDS);
-        timer("xjtu.iron.concurrency.task.run.cost", event)
-                .record(event.getTiming().getRunCostMillis(), TimeUnit.MILLISECONDS);
+        timer("xjtu.iron.concurrency.task.queue.cost", event).record(event.getTiming().getQueueCostMillis(), TimeUnit.MILLISECONDS);
+        timer("xjtu.iron.concurrency.task.run.cost", event).record(event.getTiming().getRunCostMillis(), TimeUnit.MILLISECONDS);
         recordTotalTimer(event);
     }
 
@@ -124,30 +115,22 @@ public final class MicrometerConcurrencyMetricsRecorder
      * 记录从提交到当前终态的总耗时。
      */
     private void recordTotalTimer(TaskExecutionEvent event) {
-        timer("xjtu.iron.concurrency.task.total.cost", event)
-                .record(event.getTiming().getTotalCostMillis(), TimeUnit.MILLISECONDS);
+        timer("xjtu.iron.concurrency.task.total.cost", event).record(event.getTiming().getTotalCostMillis(), TimeUnit.MILLISECONDS);
     }
 
     /**
      * 创建或获取 Timer。
      */
     private Timer timer(String name, TaskExecutionEvent event) {
-        return Timer.builder(name)
-                .tags(tags(event))
-                .register(meterRegistry);
+        return Timer.builder(name).tags(tags(event)).register(meterRegistry);
     }
 
     /**
      * 构造低基数指标标签。
      */
     private Tags tags(TaskExecutionEvent event) {
-        return Tags.of(
-                "component", "xjtu-iron-concurrency",
-                "executor", safe(event.getTask().getExecutorName()),
-                "task", safe(event.getTask().getTaskName()),
-                "status", event.getStatus().name(),
-                "execution_mode", event.getExecutionMode().name()
-        );
+        return Tags.of("component", "xjtu-iron-concurrency", "executor", safe(event.getTask().getExecutorName()), "task",
+            safe(event.getTask().getTaskName()), "status", event.getStatus().name(), "execution_mode", event.getExecutionMode().name());
     }
 
     private String safe(String value) {

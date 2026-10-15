@@ -26,11 +26,8 @@ public final class MessageSendReliabilityOptions {
     /** 是否在 SendResult 中暴露可靠性信息。 */
     private final boolean includeReliabilityInfo;
 
-    public MessageSendReliabilityOptions(
-            boolean enabled,
-            String retryPolicyName,
-            boolean retryWhenUnknown,
-            boolean includeReliabilityInfo) {
+    public MessageSendReliabilityOptions(boolean enabled, String retryPolicyName, boolean retryWhenUnknown,
+        boolean includeReliabilityInfo) {
         if (enabled && (retryPolicyName == null || retryPolicyName.isBlank())) {
             throw new IllegalArgumentException("retryPolicyName must not be blank when reliability is enabled");
         }

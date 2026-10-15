@@ -4,6 +4,7 @@ import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.key.CompositeShardKey;
 import com.xjtu.iron.storage.routing.api.resolver.ShardResolver;
 import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
+
 import java.util.Objects;
 
 /**
@@ -15,7 +16,6 @@ import java.util.Objects;
  *
  * <p>字段数量、顺序、类型、编码规则、库表数量均属于路由规则；变更前需要规划数据迁移。
  * 该算法用于确定有限分片，并不承诺哈希无碰撞。</p>
-
  * <p><b>流程阅读编号：R2：计算逻辑分片编号。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
  * <ul>
  *     <li>1. 单字段使用值文本，多字段使用 canonicalForm，得到确定的 hashInput。</li>

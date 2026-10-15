@@ -10,11 +10,8 @@ public final class StandardContextCodec implements ContextCodec {
     private final List<ContextKey<String>> keys;
 
     public StandardContextCodec() {
-        this(List.of(
-                StandardContextKeys.REQUEST_ID,
-                StandardContextKeys.CORRELATION_ID,
-                StandardContextKeys.TENANT_ID,
-                StandardContextKeys.OPERATOR_ID));
+        this(List.of(StandardContextKeys.REQUEST_ID, StandardContextKeys.CORRELATION_ID, StandardContextKeys.TENANT_ID,
+            StandardContextKeys.OPERATOR_ID));
     }
 
     public StandardContextCodec(List<ContextKey<String>> keys) {

@@ -8,17 +8,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 /** 单 DataSource 模式下把 Idempotent Mapper 注册到业务 MyBatis 会话工厂。 */
-@AutoConfiguration(
-        afterName = "org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration",
-        before = IdempotencyAutoConfiguration.class
-)
+@AutoConfiguration(afterName = "org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration",
+    before = IdempotencyAutoConfiguration.class)
 @ConditionalOnBean(SqlSessionTemplate.class)
-@ConditionalOnProperty(
-        prefix = "xjtu.iron.idempotent.mybatis.direct",
-        name = "enabled",
-        havingValue = "false",
-        matchIfMissing = true
-)
+@ConditionalOnProperty(prefix = "xjtu.iron.idempotent.mybatis.direct", name = "enabled", havingValue = "false", matchIfMissing = true)
 @MapperScan(basePackageClasses = IdempotencyMapper.class)
 public class IdempotencyMyBatisMapperAutoConfiguration {
 }

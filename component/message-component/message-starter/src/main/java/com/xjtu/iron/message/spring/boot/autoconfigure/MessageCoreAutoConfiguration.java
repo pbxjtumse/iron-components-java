@@ -38,13 +38,10 @@ public class MessageCoreAutoConfiguration {
     @ConditionalOnMissingBean
     public Serializer messagePayloadSerializer(MessageProperties properties) {
         String serializerType = properties.getSerializer().getType();
-        if (serializerType != null
-                && !serializerType.isBlank()
-                && !"jackson".equals(serializerType.trim().toLowerCase(Locale.ROOT))) {
+        if (serializerType != null && !serializerType.isBlank() && !"jackson".equals(serializerType.trim().toLowerCase(Locale.ROOT))) {
             throw new IllegalStateException(
-                    "Unsupported xjtu.iron.message.serializer.type: " + serializerType
-                            + ". Current starter only provides jackson. "
-                            + "Declare a custom Serializer bean if you need another serializer.");
+                "Unsupported xjtu.iron.message.serializer.type: " + serializerType + ". Current starter only provides jackson. " +
+                    "Declare a custom Serializer bean if you need another serializer.");
         }
         return new JacksonJsonSerializer();
     }
@@ -52,13 +49,8 @@ public class MessageCoreAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public MessageComponentOptions messageComponentOptions(MessageProperties properties) {
-        return new MessageComponentOptions(
-                properties.getProvider(),
-                properties.getApplicationName(),
-                properties.getDefaultSchemaVersion(),
-                properties.getDefaultConfirmTimeout(),
-                properties.getRoutingMode(),
-                Clock.systemUTC());
+        return new MessageComponentOptions(properties.getProvider(), properties.getApplicationName(), properties.getDefaultSchemaVersion(),
+            properties.getDefaultConfirmTimeout(), properties.getRoutingMode(), Clock.systemUTC());
     }
 
     @Bean
@@ -75,10 +67,8 @@ public class MessageCoreAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public MessageEnvelopeEnricher messageEnvelopeEnricher(
-            MessageComponentOptions options,
-            @Qualifier("messageStringIdGenerator") StringIdGenerator messageIdGenerator,
-            MessageContextAccessor contextAccessor) {
+    public MessageEnvelopeEnricher messageEnvelopeEnricher(MessageComponentOptions options,
+        @Qualifier("messageStringIdGenerator") StringIdGenerator messageIdGenerator, MessageContextAccessor contextAccessor) {
         return new MessageEnvelopeEnricher(options, messageIdGenerator, contextAccessor);
     }
 

@@ -37,14 +37,8 @@ public final class DefaultOwnerTokenGenerator implements OwnerTokenGenerator {
         String threadName = sanitize(Thread.currentThread().getName());
         String safeNamespace = sanitize(namespace == null ? "default" : namespace);
         String lockHash = Integer.toHexString((lockName == null ? "" : lockName).hashCode());
-        return applicationName
-                + ':' + safeNamespace
-                + ':' + nodeId
-                + ':' + processId
-                + ':' + threadName
-                + ':' + lockHash
-                + ':' + System.nanoTime()
-                + ':' + UUID.randomUUID();
+        return applicationName + ':' + safeNamespace + ':' + nodeId + ':' + processId + ':' + threadName + ':' + lockHash + ':' +
+            System.nanoTime() + ':' + UUID.randomUUID();
     }
 
     private static String defaultNodeId() {

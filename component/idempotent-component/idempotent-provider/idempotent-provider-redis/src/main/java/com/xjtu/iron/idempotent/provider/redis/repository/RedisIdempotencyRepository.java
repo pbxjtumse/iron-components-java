@@ -73,17 +73,14 @@ public final class RedisIdempotencyRepository implements IdempotencyRepository {
     }
 
     @Override
-    public String providerName() { return PROVIDER_NAME; }
+    public String providerName() {
+        return PROVIDER_NAME;
+    }
 
     @Override
     public IdempotencyRepositoryCapabilities capabilities() {
-        return IdempotencyRepositoryCapabilities.builder()
-                .windowedSupported(true)
-                .durableSupported(false)
-                .resultPayloadSupported(true)
-                .businessTransactionParticipationSupported(false)
-                .recoveryQuerySupported(false)
-                .build();
+        return IdempotencyRepositoryCapabilities.builder().windowedSupported(true).durableSupported(false).resultPayloadSupported(true)
+            .businessTransactionParticipationSupported(false).recoveryQuerySupported(false).build();
     }
 
     @Override
@@ -95,22 +92,12 @@ public final class RedisIdempotencyRepository implements IdempotencyRepository {
             IdempotencyStorageContext storage = requireStorage(request.getStorageContext());
 
             // Lua 内一次完成 EXISTS/HGET/状态判断/HSET/PEXPIREAT，避免 Java 端读后再写的竞态。
-            List<?> raw = redis.execute(
-                    acquireScript,
-                    Collections.singletonList(key(storage, request.getNamespace(), request.getKey())),
-                    String.valueOf(request.getNow().toEpochMilli()),
-                    request.getOwnerToken(),
-                    empty(request.getRequestHash()),
-                    empty(request.getRouteKey()),
-                    String.valueOf(request.getProcessingTimeout().toMillis()),
-                    String.valueOf(request.getIdempotencyWindow().toMillis()),
-                    request.getWindowPolicy().name(),
-                    String.valueOf(request.getRecordRetentionTtl().toMillis()),
-                    request.getRecoveryMode().name(),
-                    storage.getStoreName(),
-                    String.valueOf(storage.getScanBucket()),
-                    request.getNamespace(),
-                    request.getKey());
+            List<?> raw = redis.execute(acquireScript, Collections.singletonList(key(storage, request.getNamespace(), request.getKey())),
+                String.valueOf(request.getNow().toEpochMilli()), request.getOwnerToken(), empty(request.getRequestHash()),
+                empty(request.getRouteKey()), String.valueOf(request.getProcessingTimeout().toMillis()),
+                String.valueOf(request.getIdempotencyWindow().toMillis()), request.getWindowPolicy().name(),
+                String.valueOf(request.getRecordRetentionTtl().toMillis()), request.getRecoveryMode().name(), storage.getStoreName(),
+                String.valueOf(storage.getScanBucket()), request.getNamespace(), request.getKey());
             return parseAcquire(raw);
         } catch (Exception error) {
             return IdempotencyAcquireResult.providerError(error);
@@ -126,19 +113,13 @@ public final class RedisIdempotencyRepository implements IdempotencyRepository {
             IdempotencyStorageContext storage = requireStorage(request.getStorageContext());
 
             // expectedOwner/expectedVersion 由脚本在 Redis 端校验，STALE_CANDIDATE 不回到 Java 再判断。
-            List<?> raw = redis.execute(
-                    recoveryScript,
-                    Collections.singletonList(key(storage, request.getNamespace(), request.getKey())),
-                    String.valueOf(request.getNow().toEpochMilli()),
-                    request.getNewOwnerToken(),
-                    empty(request.getRequestHash()),
-                    empty(request.getRouteKey()),
-                    String.valueOf(request.getProcessingTimeout().toMillis()),
-                    request.isRecoverProcessingTimeout() ? "1" : "0",
-                    request.isRecoverFailed() ? "1" : "0",
-                    empty(request.getExpectedOwnerToken()),
-                    request.getExpectedVersion() == null ? "" : String.valueOf(request.getExpectedVersion()),
-                    String.valueOf(storage.getScanBucket()));
+            List<?> raw = redis.execute(recoveryScript, Collections.singletonList(key(storage, request.getNamespace(), request.getKey())),
+                String.valueOf(request.getNow().toEpochMilli()), request.getNewOwnerToken(), empty(request.getRequestHash()),
+                empty(request.getRouteKey()), String.valueOf(request.getProcessingTimeout().toMillis()),
+                request.isRecoverProcessingTimeout() ? "1" : "0", request.isRecoverFailed() ? "1" : "0",
+                empty(request.getExpectedOwnerToken()),
+                request.getExpectedVersion() == null ? "" : String.valueOf(request.getExpectedVersion()),
+                String.valueOf(storage.getScanBucket()));
             return parseRecovery(raw);
         } catch (Exception error) {
             return IdempotencyRecoveryResult.providerError(error);
@@ -151,12 +132,10 @@ public final class RedisIdempotencyRepository implements IdempotencyRepository {
             IdempotencyStorageContext storage = requireStorage(request.getStorageContext());
 
             // SUCCESS 写入仍是 owner/version 条件更新；锁是否存在不影响这里的最终裁决。
-            List<?> raw = redis.execute(
-                    successScript,
-                    Collections.singletonList(key(storage, request.getNamespace(), request.getKey())),
-                    request.getOwnerToken(), String.valueOf(request.getVersion()), empty(request.getResultPayload()),
-                    String.valueOf(request.getNow().toEpochMilli()), request.getMode().name(), millis(request.getIdempotencyWindow()),
-                    request.getWindowPolicy().name(), String.valueOf(request.getRecordRetentionTtl().toMillis()));
+            List<?> raw = redis.execute(successScript, Collections.singletonList(key(storage, request.getNamespace(), request.getKey())),
+                request.getOwnerToken(), String.valueOf(request.getVersion()), empty(request.getResultPayload()),
+                String.valueOf(request.getNow().toEpochMilli()), request.getMode().name(), millis(request.getIdempotencyWindow()),
+                request.getWindowPolicy().name(), String.valueOf(request.getRecordRetentionTtl().toMillis()));
             return parseWrite(raw);
         } catch (Exception error) {
             return IdempotencyWriteResult.providerError(error);
@@ -169,13 +148,11 @@ public final class RedisIdempotencyRepository implements IdempotencyRepository {
             IdempotencyStorageContext storage = requireStorage(request.getStorageContext());
 
             // FAILED 记录业务失败语义；retryable 只影响外部 recover()，普通 execute() 不会自动重试。
-            List<?> raw = redis.execute(
-                    failedScript,
-                    Collections.singletonList(key(storage, request.getNamespace(), request.getKey())),
-                    request.getOwnerToken(), String.valueOf(request.getVersion()), empty(request.getFailure().getCode()),
-                    empty(request.getFailure().getMessage()), request.getFailure().isRetryable() ? "1" : "0",
-                    String.valueOf(request.getNow().toEpochMilli()), request.getMode().name(), millis(request.getIdempotencyWindow()),
-                    request.getWindowPolicy().name(), String.valueOf(request.getRecordRetentionTtl().toMillis()));
+            List<?> raw = redis.execute(failedScript, Collections.singletonList(key(storage, request.getNamespace(), request.getKey())),
+                request.getOwnerToken(), String.valueOf(request.getVersion()), empty(request.getFailure().getCode()),
+                empty(request.getFailure().getMessage()), request.getFailure().isRetryable() ? "1" : "0",
+                String.valueOf(request.getNow().toEpochMilli()), request.getMode().name(), millis(request.getIdempotencyWindow()),
+                request.getWindowPolicy().name(), String.valueOf(request.getRecordRetentionTtl().toMillis()));
             return parseWrite(raw);
         } catch (Exception error) {
             return IdempotencyWriteResult.providerError(error);
@@ -188,12 +165,10 @@ public final class RedisIdempotencyRepository implements IdempotencyRepository {
             IdempotencyStorageContext storage = requireStorage(request.getStorageContext());
 
             // DISCARDED 是明确终态，重复请求返回 PREVIOUS_DISCARDED，不进入结果回放分支。
-            List<?> raw = redis.execute(
-                    discardedScript,
-                    Collections.singletonList(key(storage, request.getNamespace(), request.getKey())),
-                    request.getOwnerToken(), String.valueOf(request.getVersion()), empty(request.getResultPayload()),
-                    String.valueOf(request.getNow().toEpochMilli()), request.getMode().name(), millis(request.getIdempotencyWindow()),
-                    request.getWindowPolicy().name(), String.valueOf(request.getRecordRetentionTtl().toMillis()));
+            List<?> raw = redis.execute(discardedScript, Collections.singletonList(key(storage, request.getNamespace(), request.getKey())),
+                request.getOwnerToken(), String.valueOf(request.getVersion()), empty(request.getResultPayload()),
+                String.valueOf(request.getNow().toEpochMilli()), request.getMode().name(), millis(request.getIdempotencyWindow()),
+                request.getWindowPolicy().name(), String.valueOf(request.getRecordRetentionTtl().toMillis()));
             return parseWrite(raw);
         } catch (Exception error) {
             return IdempotencyWriteResult.providerError(error);
@@ -279,56 +254,36 @@ public final class RedisIdempotencyRepository implements IdempotencyRepository {
         if (values.size() < offset + 21) {
             return null;
         }
-        return IdempotencyRecord.builder()
-                .storeName(nullable(text(values.get(offset))))
-                .scanBucket(Integer.parseInt(text(values.get(offset + 1))))
-                .namespace(nullable(text(values.get(offset + 2))))
-                .key(nullable(text(values.get(offset + 3))))
-                .routeKey(nullable(text(values.get(offset + 4))))
-                .requestHash(nullable(text(values.get(offset + 5))))
-                .status(IdempotencyStatus.valueOf(text(values.get(offset + 6))))
-                .ownerToken(nullable(text(values.get(offset + 7))))
-                .version(Long.parseLong(text(values.get(offset + 8))))
-                .resultPayload(nullable(text(values.get(offset + 9))))
-                .failureCode(nullable(text(values.get(offset + 10))))
-                .failureMessage(nullable(text(values.get(offset + 11))))
-                .failureRetryable("1".equals(text(values.get(offset + 12))))
-                .recoveryMode(enumValue(IdempotencyRecoveryMode.class, text(values.get(offset + 13)), IdempotencyRecoveryMode.NONE))
-                .windowPolicy(enumValue(IdempotencyWindowPolicy.class, text(values.get(offset + 14)), IdempotencyWindowPolicy.FIXED_FROM_FIRST_ACQUIRE))
-                .processingExpireAt(epochMillis(text(values.get(offset + 15))))
-                .windowExpireAt(epochMillis(text(values.get(offset + 16))))
-                .retentionExpireAt(epochMillis(text(values.get(offset + 17))))
-                .createdAt(epochMillis(text(values.get(offset + 18))))
-                .updatedAt(epochMillis(text(values.get(offset + 19))))
-                .completedAt(epochMillis(text(values.get(offset + 20))))
-                .build();
+        return IdempotencyRecord.builder().storeName(nullable(text(values.get(offset))))
+            .scanBucket(Integer.parseInt(text(values.get(offset + 1)))).namespace(nullable(text(values.get(offset + 2))))
+            .key(nullable(text(values.get(offset + 3)))).routeKey(nullable(text(values.get(offset + 4))))
+            .requestHash(nullable(text(values.get(offset + 5)))).status(IdempotencyStatus.valueOf(text(values.get(offset + 6))))
+            .ownerToken(nullable(text(values.get(offset + 7)))).version(Long.parseLong(text(values.get(offset + 8))))
+            .resultPayload(nullable(text(values.get(offset + 9)))).failureCode(nullable(text(values.get(offset + 10))))
+            .failureMessage(nullable(text(values.get(offset + 11)))).failureRetryable("1".equals(text(values.get(offset + 12))))
+            .recoveryMode(enumValue(IdempotencyRecoveryMode.class, text(values.get(offset + 13)), IdempotencyRecoveryMode.NONE))
+            .windowPolicy(
+                enumValue(IdempotencyWindowPolicy.class, text(values.get(offset + 14)), IdempotencyWindowPolicy.FIXED_FROM_FIRST_ACQUIRE))
+            .processingExpireAt(epochMillis(text(values.get(offset + 15)))).windowExpireAt(epochMillis(text(values.get(offset + 16))))
+            .retentionExpireAt(epochMillis(text(values.get(offset + 17)))).createdAt(epochMillis(text(values.get(offset + 18))))
+            .updatedAt(epochMillis(text(values.get(offset + 19)))).completedAt(epochMillis(text(values.get(offset + 20)))).build();
     }
 
     private IdempotencyRecord fromMap(Map<Object, Object> values) {
         // find() 是只读诊断/查询路径，直接把 Redis Hash 当前内容映射成统一 Record 快照。
-        return IdempotencyRecord.builder()
-                .storeName(value(values, "store_name"))
-                .scanBucket(Integer.parseInt(value(values, "scan_bucket")))
-                .namespace(value(values, "namespace"))
-                .key(value(values, "key"))
-                .routeKey(nullable(value(values, "route_key")))
-                .requestHash(nullable(value(values, "request_hash")))
-                .status(IdempotencyStatus.valueOf(value(values, "status")))
-                .ownerToken(nullable(value(values, "owner_token")))
-                .version(Long.parseLong(value(values, "version")))
-                .resultPayload(nullable(value(values, "result_payload")))
-                .failureCode(nullable(value(values, "failure_code")))
-                .failureMessage(nullable(value(values, "failure_message")))
-                .failureRetryable("1".equals(value(values, "failure_retryable")))
-                .recoveryMode(enumValue(IdempotencyRecoveryMode.class, value(values, "recovery_mode"), IdempotencyRecoveryMode.NONE))
-                .windowPolicy(enumValue(IdempotencyWindowPolicy.class, value(values, "window_policy"), IdempotencyWindowPolicy.FIXED_FROM_FIRST_ACQUIRE))
-                .processingExpireAt(epochMillis(value(values, "processing_expire_at")))
-                .windowExpireAt(epochMillis(value(values, "window_expire_at")))
-                .retentionExpireAt(epochMillis(value(values, "retention_expire_at")))
-                .createdAt(epochMillis(value(values, "created_at")))
-                .updatedAt(epochMillis(value(values, "updated_at")))
-                .completedAt(epochMillis(value(values, "completed_at")))
-                .build();
+        return IdempotencyRecord.builder().storeName(value(values, "store_name")).scanBucket(Integer.parseInt(value(values, "scan_bucket")))
+            .namespace(value(values, "namespace")).key(value(values, "key")).routeKey(nullable(value(values, "route_key")))
+            .requestHash(nullable(value(values, "request_hash"))).status(IdempotencyStatus.valueOf(value(values, "status")))
+            .ownerToken(nullable(value(values, "owner_token"))).version(Long.parseLong(value(values, "version")))
+            .resultPayload(nullable(value(values, "result_payload"))).failureCode(nullable(value(values, "failure_code")))
+            .failureMessage(nullable(value(values, "failure_message"))).failureRetryable("1".equals(value(values, "failure_retryable")))
+            .recoveryMode(enumValue(IdempotencyRecoveryMode.class, value(values, "recovery_mode"), IdempotencyRecoveryMode.NONE))
+            .windowPolicy(
+                enumValue(IdempotencyWindowPolicy.class, value(values, "window_policy"), IdempotencyWindowPolicy.FIXED_FROM_FIRST_ACQUIRE))
+            .processingExpireAt(epochMillis(value(values, "processing_expire_at")))
+            .windowExpireAt(epochMillis(value(values, "window_expire_at")))
+            .retentionExpireAt(epochMillis(value(values, "retention_expire_at"))).createdAt(epochMillis(value(values, "created_at")))
+            .updatedAt(epochMillis(value(values, "updated_at"))).completedAt(epochMillis(value(values, "completed_at"))).build();
     }
 
     private String key(IdempotencyStorageContext storage, String namespace, String logicalKey) {
@@ -339,16 +294,26 @@ public final class RedisIdempotencyRepository implements IdempotencyRepository {
         return Objects.requireNonNull(storage, "storageContext must not be null");
     }
 
-    private String millis(java.time.Duration value) { return value == null ? "0" : String.valueOf(value.toMillis()); }
+    private String millis(java.time.Duration value) {
+        return value == null ? "0" : String.valueOf(value.toMillis());
+    }
 
     private String value(Map<Object, Object> values, String key) {
         Object value = values.get(key);
         return value == null ? "" : value.toString();
     }
 
-    private String text(Object value) { return value == null ? "" : value.toString(); }
-    private String empty(String value) { return value == null ? "" : value; }
-    private String nullable(String value) { return value == null || value.isBlank() ? null : value; }
+    private String text(Object value) {
+        return value == null ? "" : value.toString();
+    }
+
+    private String empty(String value) {
+        return value == null ? "" : value;
+    }
+
+    private String nullable(String value) {
+        return value == null || value.isBlank() ? null : value;
+    }
 
     private Instant epochMillis(String value) {
         return value == null || value.isBlank() ? null : Instant.ofEpochMilli(Long.parseLong(value));

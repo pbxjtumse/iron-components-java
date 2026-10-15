@@ -22,13 +22,10 @@ import java.util.Map;
 /**
  * 消息 Provider 与路由自动配置。
  */
-@AutoConfiguration(
-        after = MessageCoreAutoConfiguration.class,
-        afterName = {
-                "com.xjtu.iron.message.integration.kafka.autoconfigure.KafkaMessageAutoConfiguration",
-                "com.xjtu.iron.message.integration.pulsar.autoconfigure.PulsarMessageAutoConfiguration",
-                "com.xjtu.iron.message.integration.rocketmq.autoconfigure.RocketMqMessageAutoConfiguration"
-        })
+@AutoConfiguration(after = MessageCoreAutoConfiguration.class,
+    afterName = {"com.xjtu.iron.message.integration.kafka.autoconfigure.KafkaMessageAutoConfiguration",
+        "com.xjtu.iron.message.integration.pulsar.autoconfigure.PulsarMessageAutoConfiguration",
+        "com.xjtu.iron.message.integration.rocketmq.autoconfigure.RocketMqMessageAutoConfiguration"})
 @ConditionalOnProperty(prefix = "xjtu.iron.message", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class MessageProviderAutoConfiguration {
 
@@ -37,25 +34,15 @@ public class MessageProviderAutoConfiguration {
     public DestinationRouteRegistry destinationRouteRegistry(MessageProperties properties) {
         ArrayList<DestinationRoute> routes = new ArrayList<>();
         for (MessageRouteProperties route : properties.getRoutes()) {
-            routes.add(new DestinationRoute(
-                    route.getNamespace(),
-                    route.getName(),
-                    route.getProvider(),
-                    route.getPhysicalName(),
-                    Map.of()));
+            routes.add(new DestinationRoute(route.getNamespace(), route.getName(), route.getProvider(), route.getPhysicalName(), Map.of()));
         }
         return new DestinationRouteRegistry(routes);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public DestinationResolver destinationResolver(
-            DestinationRouteRegistry routeRegistry,
-            MessageComponentOptions options) {
-        return new DefaultDestinationResolver(
-                routeRegistry,
-                options.defaultProviderName(),
-                options.routingMode());
+    public DestinationResolver destinationResolver(DestinationRouteRegistry routeRegistry, MessageComponentOptions options) {
+        return new DefaultDestinationResolver(routeRegistry, options.defaultProviderName(), options.routingMode());
     }
 
     @Bean

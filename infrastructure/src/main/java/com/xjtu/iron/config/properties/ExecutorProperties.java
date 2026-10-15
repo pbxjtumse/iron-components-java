@@ -20,6 +20,7 @@ import java.util.Set;
 @ConfigurationProperties(prefix = "executors")
 public class ExecutorProperties {
     private Map<String, ExecutorItem> items = new HashMap<>();
+
     @Getter
     @Setter
     public static class ExecutorItem {
@@ -31,7 +32,8 @@ public class ExecutorProperties {
         private Set<String> tags;
 
         // 构造方法
-        public ExecutorItem() {}
+        public ExecutorItem() {
+        }
     }
 }
 

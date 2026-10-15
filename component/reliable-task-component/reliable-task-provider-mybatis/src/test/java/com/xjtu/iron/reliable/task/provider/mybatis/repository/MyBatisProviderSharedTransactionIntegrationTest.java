@@ -43,8 +43,7 @@ class MyBatisProviderSharedTransactionIntegrationTest {
     @BeforeEach
     void setUp() throws Exception {
         JdbcDataSource dataSource = new JdbcDataSource();
-        dataSource.setURL("jdbc:h2:mem:reliable_task_mybatis_tx_" + System.nanoTime()
-                + ";MODE=MySQL;DB_CLOSE_DELAY=-1");
+        dataSource.setURL("jdbc:h2:mem:reliable_task_mybatis_tx_" + System.nanoTime() + ";MODE=MySQL;DB_CLOSE_DELAY=-1");
         ReliableTaskTestSchema.create(dataSource);
         createBusinessTable(dataSource);
 
@@ -58,8 +57,7 @@ class MyBatisProviderSharedTransactionIntegrationTest {
         SqlSessionTemplate sqlSessionTemplate = new SqlSessionTemplate(sqlSessionFactory);
 
         businessOrderMapper = sqlSessionTemplate.getMapper(BusinessOrderMapper.class);
-        SpringMyBatisAccess access = new SpringMyBatisAccess(
-                dataSource, sqlSessionTemplate, null, MyBatisAccessListener.noop());
+        SpringMyBatisAccess access = new SpringMyBatisAccess(dataSource, sqlSessionTemplate, null, MyBatisAccessListener.noop());
         repository = new MyBatisReliableTaskRepository(access);
         missingTableRepository = new MyBatisReliableTaskRepository(access, "missing_reliable_task");
         transactionTemplate = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
@@ -101,31 +99,12 @@ class MyBatisProviderSharedTransactionIntegrationTest {
 
     private static ReliableTask task(String taskId) {
         Instant now = Instant.parse("2026-10-10T00:00:00Z");
-        return new ReliableTask(
-                ReliableTaskKey.defaults(taskId),
-                "demo",
-                "business-1",
-                "{}",
-                "order-1",
-                7,
-                ReliableTaskStatus.READY,
-                0,
-                3,
-                now,
-                null,
-                null,
-                0,
-                null,
-                null,
-                now,
-                now,
-                null
-        );
+        return new ReliableTask(ReliableTaskKey.defaults(taskId), "demo", "business-1", "{}", "order-1", 7, ReliableTaskStatus.READY, 0, 3,
+            now, null, null, 0, null, null, now, now, null);
     }
 
     private static void createBusinessTable(DataSource dataSource) throws Exception {
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
+        try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE business_order (order_id VARCHAR(64) PRIMARY KEY)");
         }
     }

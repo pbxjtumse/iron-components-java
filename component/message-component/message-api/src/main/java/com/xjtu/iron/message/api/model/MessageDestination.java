@@ -24,14 +24,11 @@ public final class MessageDestination {
 
 
     /** 校验并标准化逻辑目的地。 */
-    public MessageDestination(
-        String namespace,
-        String name,
-        String providerHint) {
+    public MessageDestination(String namespace, String name, String providerHint) {
         namespace = requireText(namespace, "namespace");
         name = requireText(name, "name");
         providerHint = normalizeProvider(providerHint);
-    
+
         // 保存完成校验和标准化后的 namespace。
         this.namespace = namespace;
         // 保存完成校验和标准化后的 name。
@@ -75,6 +72,7 @@ public final class MessageDestination {
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
     }
+
     /**
      * 返回业务域或限界上下文，例如 trade。
      *
@@ -123,9 +121,8 @@ public final class MessageDestination {
         }
         // 转换为当前类型后逐字段比较。
         MessageDestination other = (MessageDestination) object;
-        return Objects.equals(namespace, other.namespace)
-                && Objects.equals(name, other.name)
-                && Objects.equals(providerHint, other.providerHint);
+        return Objects.equals(namespace, other.namespace) && Objects.equals(name, other.name) &&
+            Objects.equals(providerHint, other.providerHint);
     }
 
     /**
@@ -147,11 +144,7 @@ public final class MessageDestination {
     @Override
     public String toString() {
         // 拼接全部字段，保持值对象可诊断。
-        return "MessageDestination{" +
-                "namespace=" + namespace +
-                ", name=" + name +
-                ", providerHint=" + providerHint +
-                '}';
+        return "MessageDestination{" + "namespace=" + namespace + ", name=" + name + ", providerHint=" + providerHint + '}';
     }
 
 }

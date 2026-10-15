@@ -44,9 +44,6 @@ public final class ReliableTaskSubmitResult {
 
     @Override
     public String toString() {
-        return "ReliableTaskSubmitResult{" +
-                "status=" + status +
-                ", task=" + task +
-                '}';
+        return "ReliableTaskSubmitResult{" + "status=" + status + ", task=" + task + '}';
     }
 }

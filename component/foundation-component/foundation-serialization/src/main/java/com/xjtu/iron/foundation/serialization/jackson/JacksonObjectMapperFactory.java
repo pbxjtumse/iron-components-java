@@ -10,7 +10,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
  */
 public final class JacksonObjectMapperFactory {
 
-    private JacksonObjectMapperFactory() {}
+    private JacksonObjectMapperFactory() {
+    }
 
     public static ObjectMapper createDefault() {
         ObjectMapper mapper = new ObjectMapper();

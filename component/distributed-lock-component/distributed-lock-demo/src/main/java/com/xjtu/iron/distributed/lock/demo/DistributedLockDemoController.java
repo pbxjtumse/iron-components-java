@@ -17,24 +17,24 @@ import java.util.Map;
 @RequestMapping("/demo/distributed-lock")
 public class DistributedLockDemoController {
     private final DistributedLockClient lockClient;
-    public DistributedLockDemoController(DistributedLockClient lockClient) { this.lockClient = lockClient; }
+
+    public DistributedLockDemoController(DistributedLockClient lockClient) {
+        this.lockClient = lockClient;
+    }
+
     @GetMapping("/{bizKey}")
     public Map<String, Object> execute(@PathVariable String bizKey) {
-        LockOptions options = LockOptions.builder()
-                .namespace("demo")
-                .leaseTime(Duration.ofSeconds(30))
-                .waitTime(Duration.ofSeconds(2))
-                .autoRenew(true)
-                .maxRenewTime(Duration.ofMinutes(1))
-                .build();
+        LockOptions options =
+            LockOptions.builder().namespace("demo").leaseTime(Duration.ofSeconds(30)).waitTime(Duration.ofSeconds(2)).autoRenew(true)
+                .maxRenewTime(Duration.ofMinutes(1)).build();
         LockResult<String> result = lockClient.execute("demo:job:" + bizKey, options, handle -> "processed:" + bizKey);
         return toBody(result);
     }
 
     @GetMapping("/default-options/{bizKey}")
     public Map<String, Object> executeWithConfiguredDefaults(@PathVariable String bizKey) {
-        LockResult<String> result = lockClient.execute("demo:configured:job:" + bizKey,
-                handle -> "processed-with-configured-defaults:" + bizKey);
+        LockResult<String> result =
+            lockClient.execute("demo:configured:job:" + bizKey, handle -> "processed-with-configured-defaults:" + bizKey);
         return toBody(result);
     }
 
@@ -43,18 +43,10 @@ public class DistributedLockDemoController {
      */
     @GetMapping("/redisson/{bizKey}")
     public Map<String, Object> executeWithRedisson(@PathVariable String bizKey) {
-        LockOptions options = LockOptions.builder()
-                .providerName("redisson")
-                .namespace("demo")
-                .leaseTime(Duration.ofSeconds(30))
-                .waitTime(Duration.ofSeconds(3))
-                .waitStrategy(LockWaitStrategy.PROVIDER_NATIVE)
-                .autoRenew(true)
-                .maxRenewTime(Duration.ofMinutes(1))
-                .build();
-        LockResult<String> result = lockClient.execute(
-                "demo:redisson:job:" + bizKey, options,
-                handle -> "processed-by-redisson:" + bizKey);
+        LockOptions options = LockOptions.builder().providerName("redisson").namespace("demo").leaseTime(Duration.ofSeconds(30))
+            .waitTime(Duration.ofSeconds(3)).waitStrategy(LockWaitStrategy.PROVIDER_NATIVE).autoRenew(true)
+            .maxRenewTime(Duration.ofMinutes(1)).build();
+        LockResult<String> result = lockClient.execute("demo:redisson:job:" + bizKey, options, handle -> "processed-by-redisson:" + bizKey);
         return toBody(result);
     }
 
@@ -63,38 +55,23 @@ public class DistributedLockDemoController {
      */
     @GetMapping("/redisson/fencing/{bizKey}")
     public Map<String, Object> executeWithRedissonFencing(@PathVariable String bizKey) {
-        LockOptions options = LockOptions.builder()
-                .providerName("redisson")
-                .namespace("demo")
-                .leaseTime(Duration.ofSeconds(30))
-                .waitTime(Duration.ofSeconds(3))
-                .waitStrategy(LockWaitStrategy.PROVIDER_NATIVE)
-                .autoRenew(true)
-                .maxRenewTime(Duration.ofMinutes(1))
-                .fencingRequired(true)
-                .fencingTokenProviderName("redisson")
-                .build();
-        LockResult<String> result = lockClient.execute(
-                "demo:redisson:fencing:" + bizKey, options, handle -> {
-                    long token = handle.fencingToken().orElseThrow();
-                    return "processed-by-redisson-fenced:" + bizKey + ", token=" + token;
-                });
+        LockOptions options = LockOptions.builder().providerName("redisson").namespace("demo").leaseTime(Duration.ofSeconds(30))
+            .waitTime(Duration.ofSeconds(3)).waitStrategy(LockWaitStrategy.PROVIDER_NATIVE).autoRenew(true)
+            .maxRenewTime(Duration.ofMinutes(1)).fencingRequired(true).fencingTokenProviderName("redisson").build();
+        LockResult<String> result = lockClient.execute("demo:redisson:fencing:" + bizKey, options, handle -> {
+            long token = handle.fencingToken().orElseThrow();
+            return "processed-by-redisson-fenced:" + bizKey + ", token=" + token;
+        });
         return toBody(result);
     }
 
     @GetMapping("/fencing/{bizKey}")
     public Map<String, Object> executeWithFencing(@PathVariable String bizKey) {
-        LockOptions options = LockOptions.builder()
-                .namespace("demo")
-                .leaseTime(Duration.ofSeconds(30))
-                .waitTime(Duration.ofSeconds(2))
-                .autoRenew(true)
-                .maxRenewTime(Duration.ofMinutes(1))
-                .fencingRequired(true)
-                .build();
+        LockOptions options =
+            LockOptions.builder().namespace("demo").leaseTime(Duration.ofSeconds(30)).waitTime(Duration.ofSeconds(2)).autoRenew(true)
+                .maxRenewTime(Duration.ofMinutes(1)).fencingRequired(true).build();
         LockResult<String> result = lockClient.execute("demo:fencing:job:" + bizKey, options, handle -> {
-            long fencingToken = handle.fencingToken()
-                    .orElseThrow(() -> new IllegalStateException("fencing token is required but missing"));
+            long fencingToken = handle.fencingToken().orElseThrow(() -> new IllegalStateException("fencing token is required but missing"));
             return "processed:" + bizKey + ", fencingToken=" + fencingToken;
         });
         return toBody(result);

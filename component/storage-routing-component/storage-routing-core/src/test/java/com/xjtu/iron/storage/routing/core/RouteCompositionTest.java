@@ -8,9 +8,11 @@ import com.xjtu.iron.storage.routing.api.route.RouteContext;
 import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
 import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.core.resolver.DefaultStorageRouteResolver;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,8 +23,9 @@ class RouteCompositionTest {
     @Test
     void resolverShouldComposeContextShardAndPhysicalLocationWithoutDroppingCompositeFields() {
         CompositeShardKey key = CompositeShardKey.of(ShardKey.of("tenant_id", 42L), ShardKey.of("order_id", "8"));
-        RouteContext context = RouteContext.builder().routeName("order-create").logicalTable("business_order")
-                .shardKey(key).attribute("traceId", "trace-1").build();
+        RouteContext context =
+            RouteContext.builder().routeName("order-create").logicalTable("business_order").shardKey(key).attribute("traceId", "trace-1")
+                .build();
         ShardRouteInfo shard = new ShardRouteInfo(56, 5, 6, 100);
         PhysicalStorageLocation physicalLocation = PhysicalStorageLocation.of("db_05", "business_order_56");
         DefaultStorageRouteResolver resolver = new DefaultStorageRouteResolver(actual -> {
@@ -68,8 +71,8 @@ class RouteCompositionTest {
             return new ShardRouteInfo(0, 0, 0, 1);
         }, shard -> PhysicalStorageLocation.of("db", "orders"));
 
-        assertThatThrownBy(() -> resolver.resolve(RouteContext.builder().build()))
-                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("shardKey");
+        assertThatThrownBy(() -> resolver.resolve(RouteContext.builder().build())).isInstanceOf(StorageRoutingException.class)
+            .hasMessageContaining("shardKey");
         assertThat(calculated).isFalse();
         assertThat(StorageRoute.direct("db", "orders").context()).isNotNull();
         assertThat(StorageRoute.direct("db", "orders").context().shardKey()).isNull();

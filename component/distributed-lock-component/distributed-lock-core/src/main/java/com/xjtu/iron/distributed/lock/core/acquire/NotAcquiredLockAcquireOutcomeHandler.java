@@ -19,7 +19,8 @@ public final class NotAcquiredLockAcquireOutcomeHandler implements LockAcquireOu
     private final LockEventFactory eventFactory;
     private final LockMetricsFacade metricsFacade;
 
-    public NotAcquiredLockAcquireOutcomeHandler(LockEventPublisher eventPublisher, LockEventFactory eventFactory, LockMetricsFacade metricsFacade) {
+    public NotAcquiredLockAcquireOutcomeHandler(LockEventPublisher eventPublisher, LockEventFactory eventFactory,
+        LockMetricsFacade metricsFacade) {
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher must not be null");
         this.eventFactory = Objects.requireNonNull(eventFactory, "eventFactory must not be null");
         this.metricsFacade = Objects.requireNonNull(metricsFacade, "metricsFacade must not be null");
@@ -33,12 +34,10 @@ public final class NotAcquiredLockAcquireOutcomeHandler implements LockAcquireOu
     @Override
     public LockResult<LockHandle> handle(LockAcquireOutcomeContext context) {
         metricsFacade.recordAcquire(context.provider().providerName(), context.options().getNamespace(), context.lockName(), false,
-                context.waitDuration());
-        LockStage stage = context.options().getWaitTime().isZero()
-                ? LockStage.ACQUIRE : LockStage.WAIT;
-        eventPublisher.publish(eventFactory.fromAcquireRequest(
-                context.provider(), context.request(),
-                LockEventType.NOT_ACQUIRED, stage, LockStatus.NOT_ACQUIRED, null));
+            context.waitDuration());
+        LockStage stage = context.options().getWaitTime().isZero() ? LockStage.ACQUIRE : LockStage.WAIT;
+        eventPublisher.publish(eventFactory.fromAcquireRequest(context.provider(), context.request(), LockEventType.NOT_ACQUIRED, stage,
+            LockStatus.NOT_ACQUIRED, null));
         return LockResult.notAcquired(context.lockName(), null, stage, context.waitDuration());
     }
 }

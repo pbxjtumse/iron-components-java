@@ -23,10 +23,7 @@ public class IronConcurrencyReadOnlyController {
     private final ThreadPoolManager threadPoolManager;
     private final TaskExecutionRegistry taskExecutionRegistry;
 
-    public IronConcurrencyReadOnlyController(
-            ThreadPoolManager threadPoolManager,
-            TaskExecutionRegistry taskExecutionRegistry
-    ) {
+    public IronConcurrencyReadOnlyController(ThreadPoolManager threadPoolManager, TaskExecutionRegistry taskExecutionRegistry) {
         this.threadPoolManager = threadPoolManager;
         this.taskExecutionRegistry = taskExecutionRegistry;
     }

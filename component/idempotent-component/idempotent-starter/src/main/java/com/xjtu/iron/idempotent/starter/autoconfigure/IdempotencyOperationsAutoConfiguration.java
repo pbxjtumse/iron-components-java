@@ -24,7 +24,7 @@ public class IdempotencyOperationsAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(IdempotencyOperations.class)
     public IdempotencyOperations idempotencyOperations(IdempotencyRepositoryRegistry repositoryRegistry,
-                                                        IdempotencyPolicyRegistry policyRegistry, Clock clock) {
+        IdempotencyPolicyRegistry policyRegistry, Clock clock) {
         return new DefaultIdempotencyOperations(repositoryRegistry, policyRegistry, clock);
     }
 }

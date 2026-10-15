@@ -10,5 +10,6 @@ import com.xjtu.iron.message.core.consume.ConsumeInvocation;
  * 消息消费幂等执行器。
  */
 public interface MessageIdempotencyExecutor {
-    ConsumeDecision execute(MessageEnvelope<?> message, ConsumeContext context, MessageIdempotencyOptions options, ConsumeInvocation invocation);
+    ConsumeDecision execute(MessageEnvelope<?> message, ConsumeContext context, MessageIdempotencyOptions options,
+        ConsumeInvocation invocation);
 }

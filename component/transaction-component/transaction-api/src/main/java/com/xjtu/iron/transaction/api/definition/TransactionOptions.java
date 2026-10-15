@@ -33,11 +33,25 @@ public final class TransactionOptions {
         return new Builder();
     }
 
-    public String name() { return name; }
-    public TransactionPropagation propagation() { return propagation; }
-    public TransactionIsolation isolation() { return isolation; }
-    public Duration timeout() { return timeout; }
-    public boolean readOnly() { return readOnly; }
+    public String name() {
+        return name;
+    }
+
+    public TransactionPropagation propagation() {
+        return propagation;
+    }
+
+    public TransactionIsolation isolation() {
+        return isolation;
+    }
+
+    public Duration timeout() {
+        return timeout;
+    }
+
+    public boolean readOnly() {
+        return readOnly;
+    }
 
     public static final class Builder {
         private String name = DEFAULT_NAME;

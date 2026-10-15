@@ -9,10 +9,7 @@ import com.xjtu.iron.message.core.consume.ConsumeInvocation;
 public final class NoopTransactionStrategy implements TransactionStrategy {
 
     @Override
-    public ConsumeDecision execute(
-            ConsumerDefinition<?> definition,
-            ConsumeContext context,
-            ConsumeInvocation invocation) {
+    public ConsumeDecision execute(ConsumerDefinition<?> definition, ConsumeContext context, ConsumeInvocation invocation) {
         return invocation.invoke();
     }
 }

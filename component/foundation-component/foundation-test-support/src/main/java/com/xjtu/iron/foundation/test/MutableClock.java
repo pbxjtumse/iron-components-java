@@ -18,11 +18,22 @@ public final class MutableClock extends Clock {
         this.zone = zone;
     }
 
-    public void advance(Duration duration) { this.instant = this.instant.plus(duration); }
+    public void advance(Duration duration) {
+        this.instant = this.instant.plus(duration);
+    }
 
-    @Override public ZoneId getZone() { return zone; }
+    @Override
+    public ZoneId getZone() {
+        return zone;
+    }
 
-    @Override public Clock withZone(ZoneId zone) { return new MutableClock(instant, zone); }
+    @Override
+    public Clock withZone(ZoneId zone) {
+        return new MutableClock(instant, zone);
+    }
 
-    @Override public Instant instant() { return instant; }
+    @Override
+    public Instant instant() {
+        return instant;
+    }
 }

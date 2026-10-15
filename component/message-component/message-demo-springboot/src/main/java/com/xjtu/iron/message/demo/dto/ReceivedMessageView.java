@@ -41,27 +41,13 @@ public final class ReceivedMessageView {
     /**
      * 兼容旧调用的构造器。
      */
-    public ReceivedMessageView(
-            String messageId,
-            String businessKey,
-            String eventType,
-            Object payload,
-            Map<String, String> headers,
-            Instant receivedAt) {
+    public ReceivedMessageView(String messageId, String businessKey, String eventType, Object payload, Map<String, String> headers,
+        Instant receivedAt) {
         this(null, null, null, null, messageId, businessKey, eventType, payload, headers, receivedAt);
     }
 
-    public ReceivedMessageView(
-            String providerName,
-            String physicalDestination,
-            String consumerGroup,
-            String providerMessageId,
-            String messageId,
-            String businessKey,
-            String eventType,
-            Object payload,
-            Map<String, String> headers,
-            Instant receivedAt) {
+    public ReceivedMessageView(String providerName, String physicalDestination, String consumerGroup, String providerMessageId,
+        String messageId, String businessKey, String eventType, Object payload, Map<String, String> headers, Instant receivedAt) {
         this.providerName = providerName;
         this.physicalDestination = physicalDestination;
         this.consumerGroup = consumerGroup;

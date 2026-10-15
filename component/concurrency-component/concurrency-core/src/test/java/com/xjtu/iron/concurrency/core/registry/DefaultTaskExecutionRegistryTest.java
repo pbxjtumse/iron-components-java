@@ -60,16 +60,10 @@ class DefaultTaskExecutionRegistryTest {
     }
 
     private TaskExecutionSnapshot snapshot(String taskId, AsyncTaskStatus status, long offset) {
-        TaskExecutionEvent event = new TaskExecutionEvent(
-                new TaskMetadata(taskId, "pool", "task", null, null, null),
-                status,
-                TaskResultMode.RESULT_AWARE,
-                TaskExecutionMode.THREAD_POOL,
-                TaskTimingSnapshot.empty(),
-                AsyncError.none(),
-                status.name(),
-                Instant.ofEpochMilli(1000 + offset)
-        );
+        TaskExecutionEvent event =
+            new TaskExecutionEvent(new TaskMetadata(taskId, "pool", "task", null, null, null), status, TaskResultMode.RESULT_AWARE,
+                TaskExecutionMode.THREAD_POOL, TaskTimingSnapshot.empty(), AsyncError.none(), status.name(),
+                Instant.ofEpochMilli(1000 + offset));
         return TaskExecutionSnapshot.from(event);
     }
 }

@@ -24,26 +24,20 @@ public final class MessageConsumeExecutor {
     private final TransactionStrategy transactionStrategy;
     private final MessageHandlerInvoker handlerInvoker;
 
-    public MessageConsumeExecutor(
-            IdempotencyStrategy idempotencyStrategy,
-            TransactionStrategy transactionStrategy,
-            MessageHandlerInvoker handlerInvoker) {
+    public MessageConsumeExecutor(IdempotencyStrategy idempotencyStrategy, TransactionStrategy transactionStrategy,
+        MessageHandlerInvoker handlerInvoker) {
         this.idempotencyStrategy = Objects.requireNonNull(idempotencyStrategy, "idempotencyStrategy must not be null");
         this.transactionStrategy = Objects.requireNonNull(transactionStrategy, "transactionStrategy must not be null");
         this.handlerInvoker = Objects.requireNonNull(handlerInvoker, "handlerInvoker must not be null");
     }
 
-    public <T> ConsumeDecision execute(
-            ConsumerDefinition<T> definition,
-            MessageEnvelope<T> message,
-            ConsumeContext context,
-            MessageHandler<T> handler) {
+    public <T> ConsumeDecision execute(ConsumerDefinition<T> definition, MessageEnvelope<T> message, ConsumeContext context,
+        MessageHandler<T> handler) {
         Objects.requireNonNull(definition, "definition must not be null");
         Objects.requireNonNull(message, "message must not be null");
         Objects.requireNonNull(context, "context must not be null");
         Objects.requireNonNull(handler, "handler must not be null");
         return idempotencyStrategy.execute(definition, message, context,
-                () -> transactionStrategy.execute(definition, context,
-                        () -> handlerInvoker.invoke(message, context, handler)));
+            () -> transactionStrategy.execute(definition, context, () -> handlerInvoker.invoke(message, context, handler)));
     }
 }

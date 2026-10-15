@@ -37,11 +37,7 @@ public final class IdempotencyRecoveryPolicy {
      * 外部 Reliable Task 可以接管超时 PROCESSING，也可以恢复 retryable FAILED。
      */
     public static IdempotencyRecoveryPolicy externalTask() {
-        return builder()
-                .mode(IdempotencyRecoveryMode.EXTERNAL_TASK)
-                .recoverProcessingTimeout(true)
-                .recoverRetryableFailure(true)
-                .build();
+        return builder().mode(IdempotencyRecoveryMode.EXTERNAL_TASK).recoverProcessingTimeout(true).recoverRetryableFailure(true).build();
     }
 
     public static Builder builder() {

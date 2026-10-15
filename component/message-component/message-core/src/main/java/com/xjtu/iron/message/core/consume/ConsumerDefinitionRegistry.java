@@ -10,5 +10,6 @@ import java.util.Optional;
  */
 public interface ConsumerDefinitionRegistry {
     void register(ConsumerDefinition<?> definition);
+
     Optional<ConsumerDefinition<?>> find(MessageDestination destination, String consumerGroup);
 }

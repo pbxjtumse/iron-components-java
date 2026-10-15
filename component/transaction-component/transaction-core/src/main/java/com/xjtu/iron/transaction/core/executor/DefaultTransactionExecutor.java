@@ -37,20 +37,15 @@ public final class DefaultTransactionExecutor implements TransactionExecutor {
         this(provider, new UuidTransactionExecutionIdGenerator(), Collections.emptyList());
     }
 
-    public DefaultTransactionExecutor(
-            TransactionProvider provider,
-            List<TransactionEventListener> listeners) {
+    public DefaultTransactionExecutor(TransactionProvider provider, List<TransactionEventListener> listeners) {
         this(provider, new UuidTransactionExecutionIdGenerator(), listeners);
     }
 
-    public DefaultTransactionExecutor(
-            TransactionProvider provider,
-            TransactionExecutionIdGenerator executionIdGenerator,
-            List<TransactionEventListener> listeners) {
+    public DefaultTransactionExecutor(TransactionProvider provider, TransactionExecutionIdGenerator executionIdGenerator,
+        List<TransactionEventListener> listeners) {
         this.provider = Objects.requireNonNull(provider, "provider");
         this.executionIdGenerator = Objects.requireNonNull(executionIdGenerator, "executionIdGenerator");
-        this.listeners = Collections.unmodifiableList(new ArrayList<>(
-                listeners == null ? Collections.emptyList() : listeners));
+        this.listeners = Collections.unmodifiableList(new ArrayList<>(listeners == null ? Collections.emptyList() : listeners));
     }
 
     @Override
@@ -65,14 +60,8 @@ public final class DefaultTransactionExecutor implements TransactionExecutor {
         long startedNanos = System.nanoTime();
 
         // 3. STARTED 表示事务模板调用开始；此时 Provider 还没有建立/复用底层事务。
-        publish(new TransactionEvent(
-                TransactionEventType.STARTED,
-                executionId,
-                options.name(),
-                TransactionStage.BEGIN,
-                null,
-                Duration.ZERO,
-                null));
+        publish(new TransactionEvent(TransactionEventType.STARTED, executionId, options.name(), TransactionStage.BEGIN, null, Duration.ZERO,
+            null));
 
         try {
             // 4. Provider 根据 TransactionOptions 进入真实事务边界。
@@ -89,69 +78,40 @@ public final class DefaultTransactionExecutor implements TransactionExecutor {
 
             // 5. COMPLETED 只表示“本次逻辑 execute 调用正常完成”。
             // 如果 REQUIRED 正在复用外层事务，这里绝不宣称数据库已经发生独立物理 COMMIT。
-            publish(new TransactionEvent(
-                    TransactionEventType.COMPLETED,
-                    executionId,
-                    options.name(),
-                    TransactionStage.COMPLETION,
-                    null,
-                    elapsed(startedNanos),
-                    null));
+            publish(new TransactionEvent(TransactionEventType.COMPLETED, executionId, options.name(), TransactionStage.COMPLETION, null,
+                elapsed(startedNanos), null));
 
             // 6. 事务组件不修改业务结果，直接返回用户 callback 的返回值。
             return value;
         } catch (ProviderTransactionException infrastructureFailure) {
             // 7. BEGIN / COMMIT / ROLLBACK 等底层事务基础设施错误转换成稳定 API 异常。
             TransactionExecutionException apiFailure = new TransactionExecutionException(
-                    "Transaction infrastructure failed at stage " + infrastructureFailure.stage()
-                            + ", transaction=" + options.name(),
-                    executionId,
-                    options.name(),
-                    infrastructureFailure.stage(),
-                    infrastructureFailure.outcome(),
-                    infrastructureFailure.getCause() == null
-                            ? infrastructureFailure
-                            : infrastructureFailure.getCause());
+                "Transaction infrastructure failed at stage " + infrastructureFailure.stage() + ", transaction=" + options.name(),
+                executionId, options.name(), infrastructureFailure.stage(), infrastructureFailure.outcome(),
+                infrastructureFailure.getCause() == null ? infrastructureFailure : infrastructureFailure.getCause());
 
             // 8. rollback 二次失败等诊断信息通过 suppressed exception 保留下来，不覆盖首要异常。
             for (Throwable suppressed : infrastructureFailure.getSuppressed()) {
                 apiFailure.addSuppressed(suppressed);
             }
 
-            publish(new TransactionEvent(
-                    TransactionEventType.INFRASTRUCTURE_FAILED,
-                    executionId,
-                    options.name(),
-                    infrastructureFailure.stage(),
-                    infrastructureFailure.outcome(),
-                    elapsed(startedNanos),
-                    apiFailure));
+            publish(
+                new TransactionEvent(TransactionEventType.INFRASTRUCTURE_FAILED, executionId, options.name(), infrastructureFailure.stage(),
+                    infrastructureFailure.outcome(), elapsed(startedNanos), apiFailure));
 
             throw apiFailure;
         } catch (RuntimeException | Error businessFailure) {
             // 9. 用户 callback 的业务异常保持原类型；Provider 已经按照底层事务规则调用 rollback。
             // REQUIRED 若复用外部事务，Spring 会按自身语义影响那个同一事务；core 不自行猜最终物理结果。
-            publish(new TransactionEvent(
-                    TransactionEventType.BUSINESS_FAILED,
-                    executionId,
-                    options.name(),
-                    TransactionStage.EXECUTE,
-                    null,
-                    elapsed(startedNanos),
-                    businessFailure));
+            publish(new TransactionEvent(TransactionEventType.BUSINESS_FAILED, executionId, options.name(), TransactionStage.EXECUTE, null,
+                elapsed(startedNanos), businessFailure));
 
             // 10. 如果 rollback 自身也失败，Provider 会把基础设施异常挂到业务异常的 suppressed 列表中。
             // 这里额外发布基础设施失败事件，但仍然不改变最终抛出的主业务异常。
             for (Throwable suppressed : businessFailure.getSuppressed()) {
                 if (suppressed instanceof ProviderTransactionException providerFailure) {
-                    publish(new TransactionEvent(
-                            TransactionEventType.INFRASTRUCTURE_FAILED,
-                            executionId,
-                            options.name(),
-                            providerFailure.stage(),
-                            providerFailure.outcome(),
-                            elapsed(startedNanos),
-                            providerFailure));
+                    publish(new TransactionEvent(TransactionEventType.INFRASTRUCTURE_FAILED, executionId, options.name(),
+                        providerFailure.stage(), providerFailure.outcome(), elapsed(startedNanos), providerFailure));
                 }
             }
 

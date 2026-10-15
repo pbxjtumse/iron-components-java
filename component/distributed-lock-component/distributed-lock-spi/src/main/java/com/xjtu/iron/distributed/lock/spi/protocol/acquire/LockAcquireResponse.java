@@ -28,7 +28,9 @@ public final class LockAcquireResponse implements LockProviderResponse<LockAcqui
         }
     }
 
-    public static Builder builder() { return new Builder(); }
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static LockAcquireResponse acquired(LockLease lease) {
         return builder().status(LockAcquireStatus.ACQUIRED).lease(lease).build();
@@ -47,29 +49,76 @@ public final class LockAcquireResponse implements LockProviderResponse<LockAcqui
     }
 
     @Override
-    public LockAcquireStatus getStatus() { return status; }
+    public LockAcquireStatus getStatus() {
+        return status;
+    }
 
     @Override
-    public LockProviderError getProviderError() { return lockProviderError; }
+    public LockProviderError getProviderError() {
+        return lockProviderError;
+    }
 
-    public boolean isAcquired() { return status == LockAcquireStatus.ACQUIRED; }
-    public boolean isNotAcquired() { return status == LockAcquireStatus.NOT_ACQUIRED; }
-    public LockLease getLease() { return lease; }
-    public Duration getRemainingTtl() { return remainingTtl; }
-    public boolean hasError() { return hasProviderError(); }
+    public boolean isAcquired() {
+        return status == LockAcquireStatus.ACQUIRED;
+    }
+
+    public boolean isNotAcquired() {
+        return status == LockAcquireStatus.NOT_ACQUIRED;
+    }
+
+    public LockLease getLease() {
+        return lease;
+    }
+
+    public Duration getRemainingTtl() {
+        return remainingTtl;
+    }
+
+    public boolean hasError() {
+        return hasProviderError();
+    }
 
     public static final class Builder {
         private LockAcquireStatus status;
         private LockLease lease;
         private Duration remainingTtl;
         private LockProviderError lockProviderError;
-        private Builder() {}
-        public Builder status(LockAcquireStatus status) { this.status = status; return this; }
-        public Builder lease(LockLease lease) { this.lease = lease; return this; }
-        public Builder remainingTtl(Duration remainingTtl) { this.remainingTtl = remainingTtl; return this; }
-        public Builder providerError(LockProviderError lockProviderError) { this.lockProviderError = lockProviderError; return this; }
-        public Builder error(Throwable error) { this.lockProviderError = LockProviderError.of(error); return this; }
-        public Builder message(String message) { this.lockProviderError = LockProviderError.of(lockProviderError == null ? null : lockProviderError.getCause(), message); return this; }
-        public LockAcquireResponse build() { return new LockAcquireResponse(this); }
+
+        private Builder() {
+        }
+
+        public Builder status(LockAcquireStatus status) {
+            this.status = status;
+            return this;
+        }
+
+        public Builder lease(LockLease lease) {
+            this.lease = lease;
+            return this;
+        }
+
+        public Builder remainingTtl(Duration remainingTtl) {
+            this.remainingTtl = remainingTtl;
+            return this;
+        }
+
+        public Builder providerError(LockProviderError lockProviderError) {
+            this.lockProviderError = lockProviderError;
+            return this;
+        }
+
+        public Builder error(Throwable error) {
+            this.lockProviderError = LockProviderError.of(error);
+            return this;
+        }
+
+        public Builder message(String message) {
+            this.lockProviderError = LockProviderError.of(lockProviderError == null ? null : lockProviderError.getCause(), message);
+            return this;
+        }
+
+        public LockAcquireResponse build() {
+            return new LockAcquireResponse(this);
+        }
     }
 }

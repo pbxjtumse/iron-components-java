@@ -15,11 +15,6 @@ public final class AwareAbortRejectedExecutionHandler implements RejectedExecuti
 
     @Override
     public void rejectedExecution(Runnable runnable, ThreadPoolExecutor executor) {
-        throw RejectedTaskSupport.reject(
-                runnable,
-                executor.isShutdown()
-                        ? "Executor already shutdown"
-                        : "Task rejected by ABORT policy"
-        );
+        throw RejectedTaskSupport.reject(runnable, executor.isShutdown() ? "Executor already shutdown" : "Task rejected by ABORT policy");
     }
 }

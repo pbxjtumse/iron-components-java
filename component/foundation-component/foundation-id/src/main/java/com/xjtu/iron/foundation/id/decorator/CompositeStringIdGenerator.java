@@ -17,9 +17,7 @@ public final class CompositeStringIdGenerator implements StringIdGenerator {
     /** 不同标识片段之间使用的分隔符。 */
     private final String delimiter;
 
-    public CompositeStringIdGenerator(
-            List<? extends StringIdGenerator> delegates,
-            String delimiter) {
+    public CompositeStringIdGenerator(List<? extends StringIdGenerator> delegates, String delimiter) {
         if (delegates == null || delegates.isEmpty()) {
             throw new IllegalArgumentException("delegates must not be empty");
         }

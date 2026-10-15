@@ -34,9 +34,9 @@ public class RedissonDistributedLockAutoConfiguration {
     @ConditionalOnMissingBean(RedissonClient.class)
     @ConditionalOnBean(RedisConnectionDetails.class)
     @ConditionalOnProperty(prefix = "xjtu.iron.distributed-lock.redisson", name = "create-client-if-missing", havingValue = "true",
-            matchIfMissing = true)
+        matchIfMissing = true)
     public RedissonClient distributedLockRedissonClient(RedisConnectionDetails connectionDetails, RedisProperties redisProperties,
-            RedissonDistributedLockProperties properties) {
+        RedissonDistributedLockProperties properties) {
         return SpringRedisRedissonClientFactory.create(connectionDetails, redisProperties, properties);
     }
 
@@ -56,7 +56,7 @@ public class RedissonDistributedLockAutoConfiguration {
     @ConditionalOnBean(RedissonClient.class)
     @ConditionalOnMissingBean
     public RedissonLockProvider redissonLockProvider(ListableBeanFactory beanFactory, RedissonDistributedLockProperties properties,
-            RedissonLockKeyBuilder keyBuilder, RedissonOwnershipRegistry ownershipRegistry) {
+        RedissonLockKeyBuilder keyBuilder, RedissonOwnershipRegistry ownershipRegistry) {
         RedissonClient client = RedissonClientSelector.select(beanFactory, properties.getClientBeanName());
         return new RedissonLockProvider(client, keyBuilder, ownershipRegistry, properties.getWatchdogTimeout());
     }

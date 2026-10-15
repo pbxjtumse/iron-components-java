@@ -11,16 +11,17 @@ public class ProviderTransactionException extends RuntimeException {
     private final TransactionStage stage;
     private final TransactionOutcome outcome;
 
-    public ProviderTransactionException(
-            String message,
-            TransactionStage stage,
-            TransactionOutcome outcome,
-            Throwable cause) {
+    public ProviderTransactionException(String message, TransactionStage stage, TransactionOutcome outcome, Throwable cause) {
         super(message, cause);
         this.stage = stage;
         this.outcome = outcome;
     }
 
-    public TransactionStage stage() { return stage; }
-    public TransactionOutcome outcome() { return outcome; }
+    public TransactionStage stage() {
+        return stage;
+    }
+
+    public TransactionOutcome outcome() {
+        return outcome;
+    }
 }

@@ -61,10 +61,7 @@ public final class ReliableTaskScanQuery {
         if (!(object instanceof ReliableTaskScanQuery that)) {
             return false;
         }
-        return scanBucket == that.scanBucket
-                && limit == that.limit
-                && storeName.equals(that.storeName)
-                && now.equals(that.now);
+        return scanBucket == that.scanBucket && limit == that.limit && storeName.equals(that.storeName) && now.equals(that.now);
     }
 
     @Override
@@ -74,11 +71,7 @@ public final class ReliableTaskScanQuery {
 
     @Override
     public String toString() {
-        return "ReliableTaskScanQuery{" +
-                "storeName='" + storeName + '\'' +
-                ", scanBucket=" + scanBucket +
-                ", now=" + now +
-                ", limit=" + limit +
-                '}';
+        return "ReliableTaskScanQuery{" + "storeName='" + storeName + '\'' + ", scanBucket=" + scanBucket + ", now=" + now + ", limit=" +
+            limit + '}';
     }
 }

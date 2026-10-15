@@ -49,9 +49,10 @@ public final class LockAcquisitionService {
     private final FencingTokenCoordinator fencingTokenCoordinator;
     private final LockAcquireOutcomeHandlerRegistry outcomeHandlerRegistry;
 
-    public LockAcquisitionService(LockProviderRegistry providerRegistry, OwnerTokenGenerator ownerTokenGenerator, LockWaiterFactory waiterFactory,
-            LockEventPublisher eventPublisher, LockEventFactory eventFactory, LockNameValidator lockNameValidator, LockOptions defaultOptions,
-            Clock clock, FencingTokenCoordinator fencingTokenCoordinator, LockAcquireOutcomeHandlerRegistry outcomeHandlerRegistry) {
+    public LockAcquisitionService(LockProviderRegistry providerRegistry, OwnerTokenGenerator ownerTokenGenerator,
+        LockWaiterFactory waiterFactory, LockEventPublisher eventPublisher, LockEventFactory eventFactory,
+        LockNameValidator lockNameValidator, LockOptions defaultOptions, Clock clock, FencingTokenCoordinator fencingTokenCoordinator,
+        LockAcquireOutcomeHandlerRegistry outcomeHandlerRegistry) {
         this.providerRegistry = Objects.requireNonNull(providerRegistry, "providerRegistry must not be null");
         this.ownerTokenGenerator = Objects.requireNonNull(ownerTokenGenerator, "ownerTokenGenerator must not be null");
         this.waiterFactory = Objects.requireNonNull(waiterFactory, "waiterFactory must not be null");
@@ -88,9 +89,10 @@ public final class LockAcquisitionService {
 
             String ownerToken = ownerTokenGenerator.generate(actualOptions.getNamespace(), lockName);
             LockAcquireRequest request = LockAcquireRequest.builder().lockName(lockName).ownerToken(ownerToken).options(actualOptions)
-                    .nativeFencingRequired(fencingPlan.isNative()).build();
+                .nativeFencingRequired(fencingPlan.isNative()).build();
 
-            eventPublisher.publish(eventFactory.fromAcquireRequest(provider, request, LockEventType.ACQUIRE_ATTEMPT, LockStage.ACQUIRE, null, null));
+            eventPublisher.publish(
+                eventFactory.fromAcquireRequest(provider, request, LockEventType.ACQUIRE_ATTEMPT, LockStage.ACQUIRE, null, null));
 
             // 等待策略也是扩展点：NO_WAIT/BACKOFF 由 Core 控制，PROVIDER_NATIVE 把等待交给 Redisson/ZK/Etcd 等 Provider。
             LockWaiter waiter = waiterFactory.getWaiter(actualOptions.getWaitStrategy());
@@ -98,8 +100,9 @@ public final class LockAcquisitionService {
             LockAcquireResponse response = waiter.waitForLock(new LockWaitContext(request, provider, clock));
             Duration waitDuration = Duration.between(acquireStart, Instant.now(clock));
 
-            LockAcquireOutcomeContext outcomeContext = LockAcquireOutcomeContext.builder().lockName(lockName).provider(provider).options(actualOptions)
-                    .request(request).response(response).fencingPlan(fencingPlan).waitDuration(waitDuration).build();
+            LockAcquireOutcomeContext outcomeContext =
+                LockAcquireOutcomeContext.builder().lockName(lockName).provider(provider).options(actualOptions).request(request)
+                    .response(response).fencingPlan(fencingPlan).waitDuration(waitDuration).build();
             return AcquireAttempt.completed(outcomeHandlerRegistry.handle(outcomeContext), actualOptions);
         } catch (IllegalArgumentException | InvalidLockOptionsException error) {
             return AcquireAttempt.invalid(invalidOptionsResult(lockName, error, operationStart));
@@ -126,7 +129,7 @@ public final class LockAcquisitionService {
 
     private LockResult<LockHandle> invalidOptionsResult(String lockName, RuntimeException error, Instant operationStart) {
         return LockResult.<LockHandle>builder().status(LockStatus.INVALID_OPTIONS).stage(LockStage.VALIDATE).acquired(false).error(error)
-                .lockName(lockName).waitDuration(Duration.between(operationStart, Instant.now(clock))).build();
+            .lockName(lockName).waitDuration(Duration.between(operationStart, Instant.now(clock))).build();
     }
 
     /**

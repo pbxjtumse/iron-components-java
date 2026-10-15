@@ -56,32 +56,13 @@ public final class SendMessageResponse {
     /** 最后失败分类。 */
     private final String lastFailureCategory;
 
-    public SendMessageResponse(
-            String messageId,
-            String providerMessageId,
-            String topic,
-            String status) {
-        this(null, messageId, providerMessageId, topic, null, status, null, null, null,
-                false, null, null, null, 1, null, null);
+    public SendMessageResponse(String messageId, String providerMessageId, String topic, String status) {
+        this(null, messageId, providerMessageId, topic, null, status, null, null, null, false, null, null, null, 1, null, null);
     }
 
-    public SendMessageResponse(
-            String providerName,
-            String messageId,
-            String providerMessageId,
-            String topic,
-            String physicalDestination,
-            String status,
-            String failureType,
-            String stage,
-            String description,
-            boolean reliabilityEnabled,
-            String retryId,
-            String retryPolicy,
-            String retryStatus,
-            int attempts,
-            String lastFailureCode,
-            String lastFailureCategory) {
+    public SendMessageResponse(String providerName, String messageId, String providerMessageId, String topic, String physicalDestination,
+        String status, String failureType, String stage, String description, boolean reliabilityEnabled, String retryId, String retryPolicy,
+        String retryStatus, int attempts, String lastFailureCode, String lastFailureCategory) {
         this.providerName = providerName;
         this.messageId = messageId;
         this.providerMessageId = providerMessageId;
@@ -108,49 +89,22 @@ public final class SendMessageResponse {
      */
     public static SendMessageResponse from(SendResult result) {
         SendReliabilityInfo reliabilityInfo = result.reliabilityInfo();
-        return new SendMessageResponse(
-                result.providerName(),
-                result.messageId(),
-                result.providerMessageId(),
-                result.destination() == null ? null : result.destination().qualifiedName(),
-                result.physicalDestination(),
-                result.status() == null ? null : result.status().name(),
-                result.failureType() == null ? null : result.failureType().name(),
-                result.stage() == null ? null : result.stage().name(),
-                result.description(),
-                reliabilityInfo != null && reliabilityInfo.enabled(),
-                reliabilityInfo == null ? null : reliabilityInfo.retryId(),
-                reliabilityInfo == null ? null : reliabilityInfo.retryPolicy(),
-                reliabilityInfo == null ? null : reliabilityInfo.retryStatus(),
-                reliabilityInfo == null ? 1 : reliabilityInfo.attempts(),
-                reliabilityInfo == null ? null : reliabilityInfo.lastFailureCode(),
-                reliabilityInfo == null ? null : reliabilityInfo.lastFailureCategory());
+        return new SendMessageResponse(result.providerName(), result.messageId(), result.providerMessageId(),
+            result.destination() == null ? null : result.destination().qualifiedName(), result.physicalDestination(),
+            result.status() == null ? null : result.status().name(), result.failureType() == null ? null : result.failureType().name(),
+            result.stage() == null ? null : result.stage().name(), result.description(),
+            reliabilityInfo != null && reliabilityInfo.enabled(), reliabilityInfo == null ? null : reliabilityInfo.retryId(),
+            reliabilityInfo == null ? null : reliabilityInfo.retryPolicy(), reliabilityInfo == null ? null : reliabilityInfo.retryStatus(),
+            reliabilityInfo == null ? 1 : reliabilityInfo.attempts(), reliabilityInfo == null ? null : reliabilityInfo.lastFailureCode(),
+            reliabilityInfo == null ? null : reliabilityInfo.lastFailureCategory());
     }
 
     /**
      * 创建 Demo 层异常响应。
      */
-    public static SendMessageResponse failed(
-            String providerName,
-            String topic,
-            String description) {
-        return new SendMessageResponse(
-                providerName,
-                null,
-                null,
-                topic,
-                null,
-                "FAILED",
-                "UNKNOWN_ERROR",
-                null,
-                description,
-                false,
-                null,
-                null,
-                null,
-                1,
-                null,
-                null);
+    public static SendMessageResponse failed(String providerName, String topic, String description) {
+        return new SendMessageResponse(providerName, null, null, topic, null, "FAILED", "UNKNOWN_ERROR", null, description, false, null,
+            null, null, 1, null, null);
     }
 
     public String getProviderName() {

@@ -27,11 +27,8 @@ class DefaultTaskLifecyclePublisherTest {
     void publishCompletedDoesNotWriteRegistryAgain() {
         CountingRegistry registry = new CountingRegistry();
         RecordingListener listener = new RecordingListener();
-        DefaultTaskLifecyclePublisher publisher = new DefaultTaskLifecyclePublisher(
-                new NoopConcurrencyMetricsRecorder(),
-                registry,
-                listener
-        );
+        DefaultTaskLifecyclePublisher publisher =
+            new DefaultTaskLifecyclePublisher(new NoopConcurrencyMetricsRecorder(), registry, listener);
         TaskExecutionEvent event = event(AsyncTaskStatus.SUCCESS);
 
         publisher.publish(event);
@@ -45,11 +42,8 @@ class DefaultTaskLifecyclePublisherTest {
     void publishRoutesSpecificListenerCallbacks() {
         CountingRegistry registry = new CountingRegistry();
         RecordingListener listener = new RecordingListener();
-        DefaultTaskLifecyclePublisher publisher = new DefaultTaskLifecyclePublisher(
-                new NoopConcurrencyMetricsRecorder(),
-                registry,
-                listener
-        );
+        DefaultTaskLifecyclePublisher publisher =
+            new DefaultTaskLifecyclePublisher(new NoopConcurrencyMetricsRecorder(), registry, listener);
 
         publisher.publish(event(AsyncTaskStatus.SUBMITTED));
         publisher.publish(event(AsyncTaskStatus.RUNNING));
@@ -57,27 +51,14 @@ class DefaultTaskLifecyclePublisherTest {
         publisher.publish(event(AsyncTaskStatus.FALLBACK));
         publisher.publish(event(AsyncTaskStatus.FALLBACK_FAILED));
 
-        assertEquals(List.of(
-                AsyncTaskStatus.SUBMITTED,
-                AsyncTaskStatus.RUNNING,
-                AsyncTaskStatus.REJECTED,
-                AsyncTaskStatus.FALLBACK,
-                AsyncTaskStatus.FALLBACK_FAILED
-        ), listener.specific);
+        assertEquals(List.of(AsyncTaskStatus.SUBMITTED, AsyncTaskStatus.RUNNING, AsyncTaskStatus.REJECTED, AsyncTaskStatus.FALLBACK,
+            AsyncTaskStatus.FALLBACK_FAILED), listener.specific);
         assertEquals(5, registry.updates.get());
     }
 
     private TaskExecutionEvent event(AsyncTaskStatus status) {
-        return new TaskExecutionEvent(
-                new TaskMetadata("task-1", "pool", "task", null, null, null),
-                status,
-                TaskResultMode.RESULT_AWARE,
-                TaskExecutionMode.THREAD_POOL,
-                TaskTimingSnapshot.empty(),
-                AsyncError.none(),
-                status.name(),
-                Instant.now()
-        );
+        return new TaskExecutionEvent(new TaskMetadata("task-1", "pool", "task", null, null, null), status, TaskResultMode.RESULT_AWARE,
+            TaskExecutionMode.THREAD_POOL, TaskTimingSnapshot.empty(), AsyncError.none(), status.name(), Instant.now());
     }
 
     private static final class CountingRegistry implements TaskExecutionRegistry {
@@ -103,11 +84,34 @@ class DefaultTaskLifecyclePublisherTest {
         private final List<AsyncTaskStatus> specific = new ArrayList<>();
         private final List<AsyncTaskStatus> completed = new ArrayList<>();
 
-        @Override public void onSubmitted(TaskExecutionEvent event) { specific.add(event.getStatus()); }
-        @Override public void onStarted(TaskExecutionEvent event) { specific.add(event.getStatus()); }
-        @Override public void onRejected(TaskExecutionEvent event) { specific.add(event.getStatus()); }
-        @Override public void onFallback(TaskExecutionEvent event) { specific.add(event.getStatus()); }
-        @Override public void onFallbackFailure(TaskExecutionEvent event) { specific.add(event.getStatus()); }
-        @Override public void onCompleted(TaskExecutionEvent event) { completed.add(event.getStatus()); }
+        @Override
+        public void onSubmitted(TaskExecutionEvent event) {
+            specific.add(event.getStatus());
+        }
+
+        @Override
+        public void onStarted(TaskExecutionEvent event) {
+            specific.add(event.getStatus());
+        }
+
+        @Override
+        public void onRejected(TaskExecutionEvent event) {
+            specific.add(event.getStatus());
+        }
+
+        @Override
+        public void onFallback(TaskExecutionEvent event) {
+            specific.add(event.getStatus());
+        }
+
+        @Override
+        public void onFallbackFailure(TaskExecutionEvent event) {
+            specific.add(event.getStatus());
+        }
+
+        @Override
+        public void onCompleted(TaskExecutionEvent event) {
+            completed.add(event.getStatus());
+        }
     }
 }

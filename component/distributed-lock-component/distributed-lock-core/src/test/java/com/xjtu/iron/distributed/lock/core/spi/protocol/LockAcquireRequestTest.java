@@ -10,23 +10,16 @@ class LockAcquireRequestTest {
 
     @Test
     void nativeFencingShouldDefaultToFalseEvenWhenFencingIsRequired() {
-        LockAcquireRequest request = LockAcquireRequest.builder()
-                .lockName("order:1")
-                .ownerToken("owner")
-                .options(LockOptions.builder().fencingRequired(true).build())
-                .build();
+        LockAcquireRequest request = LockAcquireRequest.builder().lockName("order:1").ownerToken("owner")
+            .options(LockOptions.builder().fencingRequired(true).build()).build();
 
         assertThat(request.isNativeFencingRequired()).isFalse();
     }
 
     @Test
     void nativeFencingShouldBeTrueOnlyWhenExplicitlySetByCorePlan() {
-        LockAcquireRequest request = LockAcquireRequest.builder()
-                .lockName("order:1")
-                .ownerToken("owner")
-                .options(LockOptions.builder().fencingRequired(true).build())
-                .nativeFencingRequired(true)
-                .build();
+        LockAcquireRequest request = LockAcquireRequest.builder().lockName("order:1").ownerToken("owner")
+            .options(LockOptions.builder().fencingRequired(true).build()).nativeFencingRequired(true).build();
 
         assertThat(request.isNativeFencingRequired()).isTrue();
     }

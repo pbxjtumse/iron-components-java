@@ -14,48 +14,22 @@ public final class CommandFixtureFactory {
     private CommandFixtureFactory() {
     }
 
-    public static <T> CommandFixture<T> create(
-            String taskId,
-            Supplier<T> supplier,
-            TaskResultMode resultMode
-    ) {
+    public static <T> CommandFixture<T> create(String taskId, Supplier<T> supplier, TaskResultMode resultMode) {
         TaskDefinition<T> definition = TestTaskFactory.definition(taskId, supplier);
 
         CompletableFuture<T> baseFuture = new CompletableFuture<>();
         TaskExecutionRuntime runtime = new TaskExecutionRuntime(resultMode);
 
-        TaskExecutionContext<T> context = new TaskExecutionContext<>(
-                definition,
-                definition.getOperation(),
-                baseFuture,
-                runtime
-        );
+        TaskExecutionContext<T> context = new TaskExecutionContext<>(definition, definition.getOperation(), baseFuture, runtime);
 
-        RecordingTaskLifecyclePublisher publisher =
-                new RecordingTaskLifecyclePublisher();
+        RecordingTaskLifecyclePublisher publisher = new RecordingTaskLifecyclePublisher();
 
-        RecordingAsyncErrorClassifier classifier =
-                new RecordingAsyncErrorClassifier();
+        RecordingAsyncErrorClassifier classifier = new RecordingAsyncErrorClassifier();
 
-        RecordingUncaughtExceptionHandler uncaught =
-                new RecordingUncaughtExceptionHandler();
+        RecordingUncaughtExceptionHandler uncaught = new RecordingUncaughtExceptionHandler();
 
-        TaskCommand<T> command = new TaskCommand<>(
-                context,
-                publisher,
-                classifier,
-                uncaught
-        );
+        TaskCommand<T> command = new TaskCommand<>(context, publisher, classifier, uncaught);
 
-        return new CommandFixture<>(
-                definition,
-                context,
-                baseFuture,
-                runtime,
-                command,
-                publisher,
-                classifier,
-                uncaught
-        );
+        return new CommandFixture<>(definition, context, baseFuture, runtime, command, publisher, classifier, uncaught);
     }
 }

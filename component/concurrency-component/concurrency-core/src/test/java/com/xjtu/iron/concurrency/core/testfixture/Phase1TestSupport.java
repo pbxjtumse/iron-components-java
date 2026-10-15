@@ -26,11 +26,7 @@ public final class Phase1TestSupport {
         return TestTaskFactory.definition(taskId, supplier);
     }
 
-    public static <T> CommandFixture<T> commandFixture(
-            String taskId,
-            Supplier<T> supplier,
-            TaskResultMode resultMode
-    ) {
+    public static <T> CommandFixture<T> commandFixture(String taskId, Supplier<T> supplier, TaskResultMode resultMode) {
         return CommandFixtureFactory.create(taskId, supplier, resultMode);
     }
 

@@ -29,9 +29,17 @@ public final class FencingCompletion {
         return new FencingCompletion(null, Objects.requireNonNull(failureResult, "failureResult must not be null"));
     }
 
-    public boolean isSuccess() { return lease != null; }
-    public Optional<LockLease> lease() { return Optional.ofNullable(lease); }
-    public Optional<LockResult<LockHandle>> failureResult() { return Optional.ofNullable(failureResult); }
+    public boolean isSuccess() {
+        return lease != null;
+    }
+
+    public Optional<LockLease> lease() {
+        return Optional.ofNullable(lease);
+    }
+
+    public Optional<LockResult<LockHandle>> failureResult() {
+        return Optional.ofNullable(failureResult);
+    }
 
     public LockLease requireLease() {
         if (lease == null) {

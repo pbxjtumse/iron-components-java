@@ -49,24 +49,14 @@ public class AsyncError {
     private Map<String, String> attributes = new LinkedHashMap<>();
 
     public static AsyncError none() {
-        return AsyncError.builder()
-                .classification(AsyncErrorClassification.none())
-                .application(ApplicationErrorInfo.none())
-                .exception(ExceptionInfo.none())
-                .recovery(RecoveryHint.none())
-                .build();
+        return AsyncError.builder().classification(AsyncErrorClassification.none()).application(ApplicationErrorInfo.none())
+            .exception(ExceptionInfo.none()).recovery(RecoveryHint.none()).build();
     }
 
     public static AsyncError unknown(Throwable throwable) {
         return AsyncError.builder()
-                .classification(AsyncErrorClassification.of(
-                        AsyncErrorCategory.UNKNOWN,
-                        AsyncErrorReason.UNKNOWN,
-                        AsyncErrorStage.NONE
-                ))
-                .exception(ExceptionInfo.from(throwable))
-                .recovery(RecoveryHint.none())
-                .build();
+            .classification(AsyncErrorClassification.of(AsyncErrorCategory.UNKNOWN, AsyncErrorReason.UNKNOWN, AsyncErrorStage.NONE))
+            .exception(ExceptionInfo.from(throwable)).recovery(RecoveryHint.none()).build();
     }
 
     public static Builder builder() {
@@ -101,8 +91,7 @@ public class AsyncError {
     }
 
     public boolean isNone() {
-        return classification == null
-                || classification.getCategory() == AsyncErrorCategory.NONE;
+        return classification == null || classification.getCategory() == AsyncErrorCategory.NONE;
     }
 
     public AsyncErrorClassification getClassification() {

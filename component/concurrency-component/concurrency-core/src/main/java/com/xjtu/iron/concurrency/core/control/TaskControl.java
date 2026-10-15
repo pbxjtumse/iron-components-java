@@ -29,11 +29,7 @@ public final class TaskControl<T> implements CancellableTask {
     /** 最终返回给业务调用方的 Future。 */
     private final CompletableFuture<T> finalFuture;
 
-    public TaskControl(
-            ThreadPoolExecutor executor,
-            TaskCommand<T> command,
-            CompletableFuture<T> finalFuture
-    ) {
+    public TaskControl(ThreadPoolExecutor executor, TaskCommand<T> command, CompletableFuture<T> finalFuture) {
         this.executor = Objects.requireNonNull(executor, "executor must not be null");
         this.command = Objects.requireNonNull(command, "command must not be null");
         this.finalFuture = Objects.requireNonNull(finalFuture, "finalFuture must not be null");
@@ -47,10 +43,7 @@ public final class TaskControl<T> implements CancellableTask {
          */
         executor.remove(command);
 
-        boolean cancelled = command.completeCancelled(
-                new CancellationException("Task cancelled by task control"),
-                mayInterruptIfRunning
-        );
+        boolean cancelled = command.completeCancelled(new CancellationException("Task cancelled by task control"), mayInterruptIfRunning);
 
         if (!cancelled) {
             return TaskCancelResult.ALREADY_COMPLETED;

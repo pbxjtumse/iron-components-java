@@ -18,8 +18,7 @@ import java.util.List;
  *
  * <p>这里保存 RocketMQ Remoting 客户端所需参数，例如 NameServer 地址、生产者组、消费者组、topic 列表和发送超时。
  * 它不表达 RocketMQ5 gRPC 语义。</p>
- */
-public class RocketMqMessageProperties {
+ */ public class RocketMqMessageProperties {
 
     /** 是否启用 RocketMQ Provider 自动配置。 */
     private boolean enabled = false;

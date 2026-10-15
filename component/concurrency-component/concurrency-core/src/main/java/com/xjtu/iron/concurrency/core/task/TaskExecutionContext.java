@@ -47,12 +47,8 @@ public final class TaskExecutionContext<T> {
      */
     private final TaskExecutionRuntime runtime;
 
-    public TaskExecutionContext(
-            TaskDefinition<T> task,
-            Supplier<T> executable,
-            CompletableFuture<T> baseFuture,
-            TaskExecutionRuntime runtime
-    ) {
+    public TaskExecutionContext(TaskDefinition<T> task, Supplier<T> executable, CompletableFuture<T> baseFuture,
+        TaskExecutionRuntime runtime) {
         this.task = Objects.requireNonNull(task, "task must not be null");
         this.metadata = Objects.requireNonNull(task.getMetadata(), "task metadata must not be null");
         this.executable = Objects.requireNonNull(executable, "executable must not be null");
@@ -64,16 +60,8 @@ public final class TaskExecutionContext<T> {
      * 根据当前运行时状态创建生命周期事件。
      */
     public TaskExecutionEvent event(AsyncTaskStatus status, AsyncError error, String message) {
-        return new TaskExecutionEvent(
-                metadata,
-                status,
-                runtime.getResultMode(),
-                runtime.getExecutionMode(),
-                runtime.timingSnapshot(),
-                error,
-                message,
-                Instant.now()
-        );
+        return new TaskExecutionEvent(metadata, status, runtime.getResultMode(), runtime.getExecutionMode(), runtime.timingSnapshot(),
+            error, message, Instant.now());
     }
 
     /**

@@ -19,7 +19,9 @@ public final class Expiration {
         return new Expiration(clock.instant().plus(ttl));
     }
 
-    public Instant getExpireAt() { return expireAt; }
+    public Instant getExpireAt() {
+        return expireAt;
+    }
 
     public boolean isExpired(Clock clock) {
         return !clock.instant().isBefore(expireAt);

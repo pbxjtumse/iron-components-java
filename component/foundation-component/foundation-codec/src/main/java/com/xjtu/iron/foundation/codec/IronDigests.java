@@ -11,7 +11,8 @@ import java.security.NoSuchAlgorithmException;
  */
 public final class IronDigests {
 
-    private IronDigests() {}
+    private IronDigests() {
+    }
 
     public static String sha256Hex(String value) {
         return value == null ? null : sha256Hex(value.getBytes(StandardCharsets.UTF_8));

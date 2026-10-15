@@ -29,16 +29,9 @@ import java.util.List;
 import java.util.UUID;
 
 /** Reliable Task 的 Spring Boot 自动装配。 */
-@AutoConfiguration(afterName = {
-        "com.xjtu.iron.reliable.task.starter.autoconfigure.ReliableTaskMyBatisProviderAutoConfiguration"
-})
+@AutoConfiguration(afterName = {"com.xjtu.iron.reliable.task.starter.autoconfigure.ReliableTaskMyBatisProviderAutoConfiguration"})
 @EnableConfigurationProperties(ReliableTaskProperties.class)
-@ConditionalOnProperty(
-        prefix = "xjtu.iron.reliable-task",
-        name = "enabled",
-        havingValue = "true",
-        matchIfMissing = true
-)
+@ConditionalOnProperty(prefix = "xjtu.iron.reliable-task", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ReliableTaskAutoConfiguration {
 
     /** Starter 提供的默认任务 ID 生成器 Bean 名称。 */
@@ -59,65 +52,46 @@ public class ReliableTaskAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public ReliableTaskRuntimePolicy reliableTaskRuntimePolicy(ReliableTaskProperties properties) {
-        return new ReliableTaskRuntimePolicy(
-                properties.getDefaultMaxAttempts(),
-                properties.getScanBucketCount(),
-                properties.getLeaseDuration(),
-                properties.getFailureRetryDelay()
-        );
+        return new ReliableTaskRuntimePolicy(properties.getDefaultMaxAttempts(), properties.getScanBucketCount(),
+            properties.getLeaseDuration(), properties.getFailureRetryDelay());
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public ReliableTaskHandlerRegistry reliableTaskHandlerRegistry(
-            ObjectProvider<ReliableTaskHandler> handlers) {
+    public ReliableTaskHandlerRegistry reliableTaskHandlerRegistry(ObjectProvider<ReliableTaskHandler> handlers) {
         List<ReliableTaskHandler> values = handlers.orderedStream().toList();
         return new DefaultReliableTaskHandlerRegistry(values);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public ReliableTaskEngine reliableTaskEngine(
-            ReliableTaskRepository repository,
-            ReliableTaskHandlerRegistry handlerRegistry,
-            ReliableTaskRuntimePolicy policy,
-            Clock clock,
-            ReliableTaskProperties properties) {
+    public ReliableTaskEngine reliableTaskEngine(ReliableTaskRepository repository, ReliableTaskHandlerRegistry handlerRegistry,
+        ReliableTaskRuntimePolicy policy, Clock clock, ReliableTaskProperties properties) {
         String configuredOwner = properties.getOwnerId();
-        String ownerId = configuredOwner == null || configuredOwner.isBlank()
-                ? "reliable-task-" + UUID.randomUUID()
-                : configuredOwner.trim();
+        String ownerId =
+            configuredOwner == null || configuredOwner.isBlank() ? "reliable-task-" + UUID.randomUUID() : configuredOwner.trim();
         return new ReliableTaskEngine(repository, handlerRegistry, policy, clock, ownerId);
     }
 
     @Bean
     @ConditionalOnBean(ReliableTaskEngine.class)
     @ConditionalOnMissingBean(ReliableTaskClient.class)
-    public ReliableTaskClient reliableTaskClient(
-            ReliableTaskRepository repository,
-            ReliableTaskEngine engine,
-            ReliableTaskRuntimePolicy policy,
-            @Qualifier(TASK_ID_GENERATOR_BEAN) StringIdGenerator idGenerator,
-            Clock clock) {
+    public ReliableTaskClient reliableTaskClient(ReliableTaskRepository repository, ReliableTaskEngine engine,
+        ReliableTaskRuntimePolicy policy, @Qualifier(TASK_ID_GENERATOR_BEAN) StringIdGenerator idGenerator, Clock clock) {
         return new DefaultReliableTaskClient(repository, engine, policy, idGenerator, clock);
     }
 
     @Bean
     @ConditionalOnBean(ReliableTaskEngine.class)
     @ConditionalOnMissingBean(ReliableTaskScanner.class)
-    public ReliableTaskScanner reliableTaskScanner(
-            ReliableTaskRepository repository,
-            ReliableTaskEngine engine,
-            Clock clock) {
+    public ReliableTaskScanner reliableTaskScanner(ReliableTaskRepository repository, ReliableTaskEngine engine, Clock clock) {
         return new DefaultReliableTaskScanner(repository, engine, clock);
     }
 
     @Bean
     @ConditionalOnBean(ReliableTaskRepository.class)
     @ConditionalOnMissingBean(ReliableTaskAdminClient.class)
-    public ReliableTaskAdminClient reliableTaskAdminClient(
-            ReliableTaskRepository repository,
-            Clock clock) {
+    public ReliableTaskAdminClient reliableTaskAdminClient(ReliableTaskRepository repository, Clock clock) {
         return new DefaultReliableTaskAdminClient(repository, clock);
     }
 }

@@ -176,33 +176,19 @@ public final class LockResult<T> {
     public static LockResult<LockHandle> acquired(LockHandle handle, Duration waitDuration) {
         Objects.requireNonNull(handle, "handle must not be null");
 
-        return LockResult.<LockHandle>builder()
-                .status(LockStatus.ACQUIRED)
-                .stage(LockStage.ACQUIRE)
-                .acquired(true)
-                .value(handle)
-                .handle(handle)
-                .lockName(handle.lockName())
-                .lockKey(handle.lockKey())
-                .ownerToken(handle.ownerToken())
-                .fencingToken(handle.fencingToken().isPresent() ? handle.fencingToken().getAsLong() : null)
-                .fencingTokenProviderName(handle.fencingTokenProviderName().orElse(null))
-                .waitDuration(waitDuration)
-                .build();
+        return LockResult.<LockHandle>builder().status(LockStatus.ACQUIRED).stage(LockStage.ACQUIRE).acquired(true).value(handle)
+            .handle(handle).lockName(handle.lockName()).lockKey(handle.lockKey()).ownerToken(handle.ownerToken())
+            .fencingToken(handle.fencingToken().isPresent() ? handle.fencingToken().getAsLong() : null)
+            .fencingTokenProviderName(handle.fencingTokenProviderName().orElse(null)).waitDuration(waitDuration).build();
     }
 
     /**
      * 创建 execute 成功结果。
      */
     public static <T> LockResult<T> success(T value, LockHandle handle, Duration waitDuration, Duration holdDuration) {
-        Builder<T> builder = LockResult.<T>builder()
-                .status(LockStatus.SUCCESS)
-                .stage(LockStage.EXECUTE)
-                .acquired(true)
-                .value(value)
-                .handle(handle)
-                .waitDuration(waitDuration)
-                .holdDuration(holdDuration);
+        Builder<T> builder =
+            LockResult.<T>builder().status(LockStatus.SUCCESS).stage(LockStage.EXECUTE).acquired(true).value(value).handle(handle)
+                .waitDuration(waitDuration).holdDuration(holdDuration);
         fillHandleFields(builder, handle);
         return builder.build();
     }
@@ -217,37 +203,24 @@ public final class LockResult<T> {
         if (stage != LockStage.ACQUIRE && stage != LockStage.WAIT) {
             throw new IllegalArgumentException("NOT_ACQUIRED stage must be ACQUIRE or WAIT");
         }
-        return LockResult.<T>builder()
-                .status(LockStatus.NOT_ACQUIRED)
-                .stage(stage)
-                .acquired(false)
-                .lockName(lockName)
-                .lockKey(lockKey)
-                .waitDuration(waitDuration)
-                .build();
+        return LockResult.<T>builder().status(LockStatus.NOT_ACQUIRED).stage(stage).acquired(false).lockName(lockName).lockKey(lockKey)
+            .waitDuration(waitDuration).build();
     }
 
     /**
      * 创建失败结果。
      */
     public static <T> LockResult<T> failure(LockStatus status, LockStage stage, boolean acquired, Throwable error) {
-        return LockResult.<T>builder()
-                .status(status)
-                .stage(stage)
-                .acquired(acquired)
-                .error(error)
-                .build();
+        return LockResult.<T>builder().status(status).stage(stage).acquired(acquired).error(error).build();
     }
 
     private static <T> void fillHandleFields(Builder<T> builder, LockHandle handle) {
         if (handle == null) {
             return;
         }
-        builder.lockName(handle.lockName())
-                .lockKey(handle.lockKey())
-                .ownerToken(handle.ownerToken())
-                .fencingToken(handle.fencingToken().isPresent() ? handle.fencingToken().getAsLong() : null)
-                .fencingTokenProviderName(handle.fencingTokenProviderName().orElse(null));
+        builder.lockName(handle.lockName()).lockKey(handle.lockKey()).ownerToken(handle.ownerToken())
+            .fencingToken(handle.fencingToken().isPresent() ? handle.fencingToken().getAsLong() : null)
+            .fencingTokenProviderName(handle.fencingTokenProviderName().orElse(null));
     }
 
     public LockStatus status() {

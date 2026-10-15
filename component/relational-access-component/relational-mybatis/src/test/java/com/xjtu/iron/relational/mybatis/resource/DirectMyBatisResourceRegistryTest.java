@@ -21,20 +21,12 @@ class DirectMyBatisResourceRegistryTest {
         DataSource second = dataSource("mapper_second");
         initialize(first, "first");
         initialize(second, "second");
-        DirectMyBatisResourceRegistry registry = DirectMyBatisResourceRegistry.fromDataSources(
-                Map.of("db-01", first, "db-02", second)
-        );
+        DirectMyBatisResourceRegistry registry = DirectMyBatisResourceRegistry.fromDataSources(Map.of("db-01", first, "db-02", second));
 
-        String firstMarker = registry.require("db-01").getMyBatisAccess().execute(
-                "probe.first",
-                DirectProbeMapper.class,
-                DirectProbeMapper::selectMarker
-        );
-        String secondMarker = registry.require("db-02").getMyBatisAccess().execute(
-                "probe.second",
-                DirectProbeMapper.class,
-                DirectProbeMapper::selectMarker
-        );
+        String firstMarker =
+            registry.require("db-01").getMyBatisAccess().execute("probe.first", DirectProbeMapper.class, DirectProbeMapper::selectMarker);
+        String secondMarker =
+            registry.require("db-02").getMyBatisAccess().execute("probe.second", DirectProbeMapper.class, DirectProbeMapper::selectMarker);
 
         assertThat(firstMarker).isEqualTo("first");
         assertThat(secondMarker).isEqualTo("second");
@@ -46,15 +38,10 @@ class DirectMyBatisResourceRegistryTest {
         DataSource second = dataSource("transaction_second");
         initialize(first, "first");
         initialize(second, "second");
-        DirectMyBatisResourceRegistry registry = DirectMyBatisResourceRegistry.fromDataSources(
-                Map.of("db-01", first, "db-02", second)
-        );
+        DirectMyBatisResourceRegistry registry = DirectMyBatisResourceRegistry.fromDataSources(Map.of("db-01", first, "db-02", second));
 
-        registry.require("db-02").getMyBatisAccess().executeInNewTransaction(
-                "probe.update",
-                DirectProbeMapper.class,
-                mapper -> mapper.updateMarker("updated-second")
-        );
+        registry.require("db-02").getMyBatisAccess()
+            .executeInNewTransaction("probe.update", DirectProbeMapper.class, mapper -> mapper.updateMarker("updated-second"));
 
         assertThat(readMarker(registry, "db-01")).isEqualTo("first");
         assertThat(readMarker(registry, "db-02")).isEqualTo("updated-second");
@@ -64,42 +51,31 @@ class DirectMyBatisResourceRegistryTest {
     void shouldResolveAccessAndTransactionExecutorFromSamePhysicalResource() {
         DataSource first = dataSource("first");
         DataSource second = dataSource("second");
-        DirectMyBatisResourceRegistry registry = DirectMyBatisResourceRegistry.fromDataSources(
-                Map.of("db-01", first, "db-02", second)
-        );
+        DirectMyBatisResourceRegistry registry = DirectMyBatisResourceRegistry.fromDataSources(Map.of("db-01", first, "db-02", second));
 
         assertThat(registry.require("db-01").getDataSource()).isSameAs(first);
         assertThat(registry.require("db-02").getDataSource()).isSameAs(second);
-        assertThat(registry.getMyBatisAccessResolver().resolve("db-01"))
-                .isSameAs(registry.require("db-01").getMyBatisAccess());
-        assertThat(registry.getTransactionExecutorResolver().resolve("db-02"))
-                .isSameAs(registry.require("db-02").getTransactionExecutor());
+        assertThat(registry.getMyBatisAccessResolver().resolve("db-01")).isSameAs(registry.require("db-01").getMyBatisAccess());
+        assertThat(registry.getTransactionExecutorResolver().resolve("db-02")).isSameAs(registry.require("db-02").getTransactionExecutor());
     }
 
     @Test
     void shouldRejectOneDataSourceRegisteredUnderMultipleKeys() {
         DataSource shared = dataSource("shared");
 
-        assertThatThrownBy(() -> new DirectMyBatisResourceRegistry(List.of(
-                new DirectMyBatisResource("db-01", shared),
-                new DirectMyBatisResource("db-02", shared)
-        )))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("multiple keys");
+        assertThatThrownBy(() -> new DirectMyBatisResourceRegistry(
+            List.of(new DirectMyBatisResource("db-01", shared), new DirectMyBatisResource("db-02", shared)))).isInstanceOf(
+            IllegalArgumentException.class).hasMessageContaining("multiple keys");
     }
 
     @Test
     void shouldRejectUnknownPhysicalDataSourceKey() {
-        DirectMyBatisResourceRegistry registry = DirectMyBatisResourceRegistry.fromDataSources(
-                Map.of("db-01", dataSource("known"))
-        );
+        DirectMyBatisResourceRegistry registry = DirectMyBatisResourceRegistry.fromDataSources(Map.of("db-01", dataSource("known")));
 
-        assertThatThrownBy(() -> registry.getMyBatisAccessResolver().resolve("db-missing"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("db-missing");
-        assertThatThrownBy(() -> registry.getTransactionExecutorResolver().resolve("db-missing"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("db-missing");
+        assertThatThrownBy(() -> registry.getMyBatisAccessResolver().resolve("db-missing")).isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("db-missing");
+        assertThatThrownBy(() -> registry.getTransactionExecutorResolver().resolve("db-missing")).isInstanceOf(
+            IllegalArgumentException.class).hasMessageContaining("db-missing");
     }
 
     private static DataSource dataSource(String name) {
@@ -109,21 +85,14 @@ class DirectMyBatisResourceRegistryTest {
     }
 
     private static void initialize(DataSource dataSource, String marker) throws Exception {
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
+        try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE direct_probe (id INTEGER PRIMARY KEY, marker VARCHAR(64) NOT NULL)");
             statement.execute("INSERT INTO direct_probe (id, marker) VALUES (1, '" + marker + "')");
         }
     }
 
-    private static String readMarker(
-            DirectMyBatisResourceRegistry registry,
-            String dataSourceKey
-    ) throws Exception {
-        return registry.require(dataSourceKey).getMyBatisAccess().execute(
-                "probe.read",
-                DirectProbeMapper.class,
-                DirectProbeMapper::selectMarker
-        );
+    private static String readMarker(DirectMyBatisResourceRegistry registry, String dataSourceKey) throws Exception {
+        return registry.require(dataSourceKey).getMyBatisAccess()
+            .execute("probe.read", DirectProbeMapper.class, DirectProbeMapper::selectMarker);
     }
 }

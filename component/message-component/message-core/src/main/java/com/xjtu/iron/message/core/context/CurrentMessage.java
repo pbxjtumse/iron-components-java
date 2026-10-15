@@ -22,19 +22,18 @@ public final class CurrentMessage {
     /**
      * 校验当前消息上下文。
      */
-    public CurrentMessage(
-        MessageEnvelope<?> envelope,
-        ConsumeContext consumeContext) {
+    public CurrentMessage(MessageEnvelope<?> envelope, ConsumeContext consumeContext) {
         // 入站消息信封不能为空。
         envelope = Objects.requireNonNull(envelope, "envelope must not be null");
         // 消费上下文不能为空。
         consumeContext = Objects.requireNonNull(consumeContext, "consumeContext must not be null");
-    
+
         // 保存完成校验和标准化后的 envelope。
         this.envelope = envelope;
         // 保存完成校验和标准化后的 consumeContext。
         this.consumeContext = consumeContext;
     }
+
     /**
      * 返回当前入站消息信封。
      *
@@ -73,8 +72,7 @@ public final class CurrentMessage {
         }
         // 转换为当前类型后逐字段比较。
         CurrentMessage other = (CurrentMessage) object;
-        return Objects.equals(envelope, other.envelope)
-                && Objects.equals(consumeContext, other.consumeContext);
+        return Objects.equals(envelope, other.envelope) && Objects.equals(consumeContext, other.consumeContext);
     }
 
     /**
@@ -96,10 +94,7 @@ public final class CurrentMessage {
     @Override
     public String toString() {
         // 拼接全部字段，保持值对象可诊断。
-        return "CurrentMessage{" +
-                "envelope=" + envelope +
-                ", consumeContext=" + consumeContext +
-                '}';
+        return "CurrentMessage{" + "envelope=" + envelope + ", consumeContext=" + consumeContext + '}';
     }
 
 }

@@ -4,7 +4,7 @@ import com.xjtu.iron.domain.customer.gateway.CreditGateway;
 import com.xjtu.iron.domain.customer.model.Credit;
 
 public class CreditGatewayImpl implements CreditGateway {
-    public Credit getCredit(String customerId){
-      return null;
+    public Credit getCredit(String customerId) {
+        return null;
     }
 }

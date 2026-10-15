@@ -21,10 +21,8 @@ public class DefaultThreadPoolManager implements ThreadPoolManager {
     private final ThreadPoolRegistry threadPoolRegistry;
     private final RejectedExecutionHandlerFactory rejectedExecutionHandlerFactory;
 
-    public DefaultThreadPoolManager(
-            ThreadPoolRegistry threadPoolRegistry,
-            RejectedExecutionHandlerFactory rejectedExecutionHandlerFactory
-    ) {
+    public DefaultThreadPoolManager(ThreadPoolRegistry threadPoolRegistry,
+        RejectedExecutionHandlerFactory rejectedExecutionHandlerFactory) {
         this.threadPoolRegistry = threadPoolRegistry;
         this.rejectedExecutionHandlerFactory = rejectedExecutionHandlerFactory;
     }
@@ -122,7 +120,8 @@ public class DefaultThreadPoolManager implements ThreadPoolManager {
         snapshot.setQueueSize(queueSize);
         snapshot.setQueueRemainingCapacity(remaining);
         snapshot.setQueueCapacity(queueCapacity);
-        snapshot.setActiveUsageRatio(executor.getMaximumPoolSize() == 0 ? 0D : (double) executor.getActiveCount() / executor.getMaximumPoolSize());
+        snapshot.setActiveUsageRatio(
+            executor.getMaximumPoolSize() == 0 ? 0D : (double) executor.getActiveCount() / executor.getMaximumPoolSize());
         snapshot.setQueueUsageRatio(queueCapacity == 0 ? 0D : (double) queueSize / queueCapacity);
         snapshot.setCompletedTaskCount(executor.getCompletedTaskCount());
         snapshot.setTaskCount(executor.getTaskCount());
