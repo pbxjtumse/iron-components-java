@@ -7,5 +7,8 @@ package com.xjtu.iron.domain.customer;
  * @date 2018-01-08 11:02 AM
  */
 public enum CompanyType {
-    POTENTIAL, INTENTIONAL, IMPORTANT, VIP;
+    POTENTIAL,
+    INTENTIONAL,
+    IMPORTANT,
+    VIP;
 }

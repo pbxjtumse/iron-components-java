@@ -67,8 +67,11 @@ public final class MyBatisIdempotencyRepository implements IdempotencyRepository
     public IdempotencyAcquireResult tryAcquire(IdempotencyAcquireRequest request) {
         try {
             requireStorage(request.getStorageContext());
-            return access.executeInNewTransaction("idempotency.try-acquire", IdempotencyMapper.class,
-                mapper -> tryAcquire(mapper, request));
+            return access.executeInNewTransaction(
+                "idempotency.try-acquire",
+                IdempotencyMapper.class,
+                mapper -> tryAcquire(mapper, request)
+            );
         } catch (Exception failure) {
             return IdempotencyAcquireResult.providerError(failure);
         }
@@ -90,28 +93,37 @@ public final class MyBatisIdempotencyRepository implements IdempotencyRepository
         if (isWindowExpired(current, request.getNow())) {
             return IdempotencyAcquireResult.acquired(restartWindow(mapper, current, request), true);
         }
-        if (routeConflict(current.getRouteKey(), request.getRouteKey()) ||
-            hashConflict(current.getRequestHash(), request.getRequestHash())) {
+        if (routeConflict(current.getRouteKey(), request.getRouteKey()) || hashConflict(
+            current.getRequestHash(),
+            request.getRequestHash()
+        )) {
             return IdempotencyAcquireResult.of(IdempotencyAcquireStatus.KEY_CONFLICT, current);
         }
 
         return switch (current.getStatus()) {
-            case SUCCESS ->
-                IdempotencyAcquireResult.of(IdempotencyAcquireStatus.SUCCESS, touchSlidingWindowIfNeeded(mapper, current, request));
-            case DISCARDED ->
-                IdempotencyAcquireResult.of(IdempotencyAcquireStatus.DISCARDED, touchSlidingWindowIfNeeded(mapper, current, request));
+            case SUCCESS -> IdempotencyAcquireResult.of(
+                IdempotencyAcquireStatus.SUCCESS,
+                touchSlidingWindowIfNeeded(mapper, current, request)
+            );
+            case DISCARDED -> IdempotencyAcquireResult.of(
+                IdempotencyAcquireStatus.DISCARDED,
+                touchSlidingWindowIfNeeded(mapper, current, request)
+            );
             case PROCESSING -> {
                 if (isProcessingExpired(current, request.getNow())) {
                     yield IdempotencyAcquireResult.of(IdempotencyAcquireStatus.PROCESSING_EXPIRED, current);
                 }
-                yield IdempotencyAcquireResult.of(IdempotencyAcquireStatus.PROCESSING_ACTIVE,
-                    touchSlidingWindowIfNeeded(mapper, current, request));
+                yield IdempotencyAcquireResult.of(
+                    IdempotencyAcquireStatus.PROCESSING_ACTIVE,
+                    touchSlidingWindowIfNeeded(mapper, current, request)
+                );
             }
             case FAILED -> {
                 IdempotencyRecord touched = touchSlidingWindowIfNeeded(mapper, current, request);
                 yield IdempotencyAcquireResult.of(
                     touched.isFailureRetryable() ? IdempotencyAcquireStatus.FAILED_RETRYABLE : IdempotencyAcquireStatus.FAILED_FINAL,
-                    touched);
+                    touched
+                );
             }
         };
     }
@@ -121,8 +133,11 @@ public final class MyBatisIdempotencyRepository implements IdempotencyRepository
     public IdempotencyRecoveryResult tryRecover(IdempotencyRecoveryAcquireRequest request) {
         try {
             requireStorage(request.getStorageContext());
-            return access.executeInNewTransaction("idempotency.try-recover", IdempotencyMapper.class,
-                mapper -> tryRecover(mapper, request));
+            return access.executeInNewTransaction(
+                "idempotency.try-recover",
+                IdempotencyMapper.class,
+                mapper -> tryRecover(mapper, request)
+            );
         } catch (Exception failure) {
             return IdempotencyRecoveryResult.providerError(failure);
         }
@@ -146,8 +161,10 @@ public final class MyBatisIdempotencyRepository implements IdempotencyRepository
         if (request.getExpectedOwnerToken() != null && !Objects.equals(request.getExpectedOwnerToken(), current.getOwnerToken())) {
             return IdempotencyRecoveryResult.of(IdempotencyRecoveryStatus.STALE_CANDIDATE, current);
         }
-        if (routeConflict(current.getRouteKey(), request.getRouteKey()) ||
-            hashConflict(current.getRequestHash(), request.getRequestHash())) {
+        if (routeConflict(current.getRouteKey(), request.getRouteKey()) || hashConflict(
+            current.getRequestHash(),
+            request.getRequestHash()
+        )) {
             return IdempotencyRecoveryResult.of(IdempotencyRecoveryStatus.KEY_CONFLICT, current);
         }
         if (current.getStatus() == IdempotencyStatus.SUCCESS) {
@@ -168,8 +185,10 @@ public final class MyBatisIdempotencyRepository implements IdempotencyRepository
         if (!current.isFailureRetryable() || !request.isRecoverFailed()) {
             return IdempotencyRecoveryResult.of(IdempotencyRecoveryStatus.FAILED_FINAL, current);
         }
-        return IdempotencyRecoveryResult.acquired(reacquire(mapper, current, request),
-            current.getFailureCode() == null ? "FAILED_RETRY" : current.getFailureCode());
+        return IdempotencyRecoveryResult.acquired(
+            reacquire(mapper, current, request),
+            current.getFailureCode() == null ? "FAILED_RETRY" : current.getFailureCode()
+        );
     }
 
     /** Tx-B：业务数据和 SUCCESS 使用当前事务中的同一个 MyBatis 资源。 */
@@ -183,10 +202,25 @@ public final class MyBatisIdempotencyRepository implements IdempotencyRepository
     public IdempotencyWriteResult markDiscarded(IdempotencyDiscardRequest request) {
         try {
             IdempotencyStorageContext storage = requireStorage(request.getStorageContext());
-            return access.executeInCurrentTransaction("idempotency.mark-discarded", IdempotencyMapper.class,
-                mapper -> complete(mapper, storage, request.getNamespace(), request.getKey(), request.getOwnerToken(), request.getVersion(),
-                    IdempotencyStatus.DISCARDED, request.getResultPayload(), request.getMode(), request.getWindowPolicy(),
-                    request.getIdempotencyWindow(), request.getRecordRetentionTtl(), request.getNow()));
+            return access.executeInCurrentTransaction(
+                "idempotency.mark-discarded",
+                IdempotencyMapper.class,
+                mapper -> complete(
+                    mapper,
+                    storage,
+                    request.getNamespace(),
+                    request.getKey(),
+                    request.getOwnerToken(),
+                    request.getVersion(),
+                    IdempotencyStatus.DISCARDED,
+                    request.getResultPayload(),
+                    request.getMode(),
+                    request.getWindowPolicy(),
+                    request.getIdempotencyWindow(),
+                    request.getRecordRetentionTtl(),
+                    request.getNow()
+                )
+            );
         } catch (Exception failure) {
             return IdempotencyWriteResult.providerError(failure);
         }
@@ -195,10 +229,25 @@ public final class MyBatisIdempotencyRepository implements IdempotencyRepository
     private IdempotencyWriteResult complete(IdempotencySuccessRequest request, IdempotencyStatus status, String payload) {
         try {
             IdempotencyStorageContext storage = requireStorage(request.getStorageContext());
-            return access.executeInCurrentTransaction("idempotency.mark-success", IdempotencyMapper.class,
-                mapper -> complete(mapper, storage, request.getNamespace(), request.getKey(), request.getOwnerToken(), request.getVersion(),
-                    status, payload, request.getMode(), request.getWindowPolicy(), request.getIdempotencyWindow(),
-                    request.getRecordRetentionTtl(), request.getNow()));
+            return access.executeInCurrentTransaction(
+                "idempotency.mark-success",
+                IdempotencyMapper.class,
+                mapper -> complete(
+                    mapper,
+                    storage,
+                    request.getNamespace(),
+                    request.getKey(),
+                    request.getOwnerToken(),
+                    request.getVersion(),
+                    status,
+                    payload,
+                    request.getMode(),
+                    request.getWindowPolicy(),
+                    request.getIdempotencyWindow(),
+                    request.getRecordRetentionTtl(),
+                    request.getNow()
+                )
+            );
         } catch (Exception failure) {
             return IdempotencyWriteResult.providerError(failure);
         }
@@ -224,20 +273,40 @@ public final class MyBatisIdempotencyRepository implements IdempotencyRepository
     public IdempotencyWriteResult markFailed(IdempotencyFailureRequest request) {
         try {
             IdempotencyStorageContext storage = requireStorage(request.getStorageContext());
-            return access.executeInNewTransaction("idempotency.mark-failed", IdempotencyMapper.class, mapper -> {
-                WindowTimes times = completionWindowTimes(mapper, storage, request.getNamespace(), request.getKey(), request.getMode(),
-                    request.getWindowPolicy(), request.getIdempotencyWindow(), request.getRecordRetentionTtl(), request.getNow());
-                IdempotencyRow row = keyRow(storage, request.getNamespace(), request.getKey());
-                row.setFailureCode(request.getFailure().getCode());
-                row.setFailureMessage(request.getFailure().getMessage());
-                row.setFailureRetryable(request.getFailure().isRetryable());
-                row.setUpdatedAt(request.getNow());
-                row.setWindowExpireAt(times.windowExpireAt);
-                row.setRetentionExpireAt(times.retentionExpireAt);
-                int updated = mapper.fail(tableName, row, request.getOwnerToken(), request.getVersion());
-                return classifyWrite(mapper, updated, storage, request.getNamespace(), request.getKey(), request.getOwnerToken(),
-                    request.getVersion());
-            });
+            return access.executeInNewTransaction(
+                "idempotency.mark-failed",
+                IdempotencyMapper.class,
+                mapper -> {
+                    WindowTimes times = completionWindowTimes(
+                        mapper,
+                        storage,
+                        request.getNamespace(),
+                        request.getKey(),
+                        request.getMode(),
+                        request.getWindowPolicy(),
+                        request.getIdempotencyWindow(),
+                        request.getRecordRetentionTtl(),
+                        request.getNow()
+                    );
+                    IdempotencyRow row = keyRow(storage, request.getNamespace(), request.getKey());
+                    row.setFailureCode(request.getFailure().getCode());
+                    row.setFailureMessage(request.getFailure().getMessage());
+                    row.setFailureRetryable(request.getFailure().isRetryable());
+                    row.setUpdatedAt(request.getNow());
+                    row.setWindowExpireAt(times.windowExpireAt);
+                    row.setRetentionExpireAt(times.retentionExpireAt);
+                    int updated = mapper.fail(tableName, row, request.getOwnerToken(), request.getVersion());
+                    return classifyWrite(
+                        mapper,
+                        updated,
+                        storage,
+                        request.getNamespace(),
+                        request.getKey(),
+                        request.getOwnerToken(),
+                        request.getVersion()
+                    );
+                }
+            );
         } catch (Exception failure) {
             return IdempotencyWriteResult.providerError(failure);
         }
@@ -247,8 +316,11 @@ public final class MyBatisIdempotencyRepository implements IdempotencyRepository
     public Optional<IdempotencyRecord> find(IdempotencyStorageContext storageContext, String namespace, String key) {
         IdempotencyStorageContext storage = requireStorage(storageContext);
         try {
-            return access.execute("idempotency.find", IdempotencyMapper.class,
-                mapper -> Optional.ofNullable(select(mapper, storage, namespace, key)));
+            return access.execute(
+                "idempotency.find",
+                IdempotencyMapper.class,
+                mapper -> Optional.ofNullable(select(mapper, storage, namespace, key))
+            );
         } catch (Exception failure) {
             throw new IllegalStateException("query idempotency record failed", failure);
         }
@@ -257,9 +329,18 @@ public final class MyBatisIdempotencyRepository implements IdempotencyRepository
     @Override
     public List<IdempotencyRecoveryCandidate> findRecoveryCandidates(IdempotencyRecoveryQuery query) {
         try {
-            return access.execute("idempotency.scan-recovery", IdempotencyMapper.class,
-                mapper -> mapper.findRecoveryCandidates(tableName, query.getStoreName(), query.getScanBucket(), query.getNamespace(),
-                    query.getNow(), Math.max(1, query.getLimit())).stream().map(IdempotencyRow::toRecoveryCandidate).toList());
+            return access.execute(
+                "idempotency.scan-recovery",
+                IdempotencyMapper.class,
+                mapper -> mapper.findRecoveryCandidates(
+                    tableName,
+                    query.getStoreName(),
+                    query.getScanBucket(),
+                    query.getNamespace(),
+                    query.getNow(),
+                    Math.max(1, query.getLimit())
+                ).stream().map(IdempotencyRow::toRecoveryCandidate).toList()
+            );
         } catch (Exception failure) {
             throw new IllegalStateException("query recovery candidates failed", failure);
         }
@@ -377,7 +458,8 @@ public final class MyBatisIdempotencyRepository implements IdempotencyRepository
             return IdempotencyWriteResult.of(IdempotencyWriteStatus.STALE_OWNER, current);
         }
         return IdempotencyWriteResult.providerError(
-            new IllegalStateException("conditional write returned 0 but owner still appears current"));
+            new IllegalStateException("conditional write returned 0 but owner still appears current")
+        );
     }
 
     private IdempotencyRecord selectForUpdate(IdempotencyMapper mapper, IdempotencyStorageContext storage, String namespace, String key) {

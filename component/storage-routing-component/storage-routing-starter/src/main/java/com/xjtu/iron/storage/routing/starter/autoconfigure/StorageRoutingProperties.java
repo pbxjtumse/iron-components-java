@@ -113,7 +113,8 @@ public class StorageRoutingProperties {
     }
 
     public enum ResolverType {
-        FIXED, HASH
+        FIXED,
+        HASH
     }
 
     public static final class Fixed {

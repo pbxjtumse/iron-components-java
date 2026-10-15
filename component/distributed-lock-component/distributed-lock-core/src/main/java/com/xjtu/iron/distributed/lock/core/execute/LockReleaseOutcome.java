@@ -8,7 +8,10 @@ import com.xjtu.iron.distributed.lock.spi.protocol.release.LockReleaseStatus;
 public final class LockReleaseOutcome {
 
     public enum Type {
-        RELEASED, LOCK_LOST, RELEASE_FAILED, ALREADY_ATTEMPTED
+        RELEASED,
+        LOCK_LOST,
+        RELEASE_FAILED,
+        ALREADY_ATTEMPTED
     }
 
     private final Type type;
