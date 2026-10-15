@@ -11,6 +11,7 @@ import com.xjtu.iron.observability.api.tracing.ITraceSpan;
  */
 public enum NoopTraceSpan implements ITraceSpan {
 
+    /** 全局共享的无操作 Span 单例。 */
     INSTANCE;
 
     @Override

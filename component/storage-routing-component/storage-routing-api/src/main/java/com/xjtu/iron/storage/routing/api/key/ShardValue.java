@@ -18,13 +18,29 @@ public final class ShardValue {
 
     /** 类型名参与复合键 v1 编码，重命名或合并类型需要另行规划路由迁移。 */
     public enum Type {
+
+        /** 字符串分片值，保留原始内容及首尾空格。 */
         STRING(String.class),
+
+        /** {@link Byte} 整数分片值。 */
         BYTE(Byte.class),
+
+        /** {@link Short} 整数分片值。 */
         SHORT(Short.class),
+
+        /** {@link Integer} 整数分片值。 */
         INTEGER(Integer.class),
+
+        /** {@link Long} 整数分片值。 */
         LONG(Long.class),
+
+        /** 任意精度整数分片值。 */
         BIG_INTEGER(BigInteger.class),
+
+        /** 任意精度小数分片值，编码时保留 scale。 */
         DECIMAL(BigDecimal.class),
+
+        /** UUID 分片值。 */
         UUID(UUID.class);
 
         private final Class<?> javaType;

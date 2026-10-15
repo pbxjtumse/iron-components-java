@@ -112,8 +112,13 @@ public class StorageRoutingProperties {
         }
     }
 
+    /** Starter 内置的 Direct 路由解析方式。 */
     public enum ResolverType {
+
+        /** 所有请求都路由到配置的固定物理库表。 */
         FIXED,
+
+        /** 根据 shard key 计算数据库与表的物理分片。 */
         HASH
     }
 

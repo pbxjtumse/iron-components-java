@@ -1,5 +1,6 @@
 package com.xjtu.iron.governance.model.resource;
 
+/** 被治理资源在调用链中的类型。 */
 public enum GovernanceResourceType {
 
     /**

@@ -7,6 +7,10 @@ package com.xjtu.iron.domain.customer;
  * @date 2018-01-08 11:09 AM
  */
 public enum SourceType {
-    BIZ_ONE, //From biz one
-    BIZ_TWO; //From biz two
+
+    /** 客户数据来自业务系统一。 */
+    BIZ_ONE,
+
+    /** 客户数据来自业务系统二。 */
+    BIZ_TWO;
 }

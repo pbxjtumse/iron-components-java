@@ -7,10 +7,19 @@ import com.xjtu.iron.distributed.lock.spi.protocol.release.LockReleaseStatus;
 /** Core 对 release 动作的解释结果。 */
 public final class LockReleaseOutcome {
 
+    /** Core 对一次释放动作的最终分类。 */
     public enum Type {
+
+        /** 底层锁已由当前 owner 成功释放。 */
         RELEASED,
+
+        /** 锁已不存在或 owner 不再匹配，当前执行者已失锁。 */
         LOCK_LOST,
+
+        /** Provider 在释放锁时发生不可忽略的失败。 */
         RELEASE_FAILED,
+
+        /** 当前 handle 已尝试过释放，本次调用不再重复执行。 */
         ALREADY_ATTEMPTED
     }
 
