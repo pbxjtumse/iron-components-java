@@ -18,8 +18,10 @@ public final class MessageConsumeTransactionContext {
     private final ConsumeContext consumeContext;
     private final MessageConsumeTransactionOptions options;
 
-    public MessageConsumeTransactionContext(ConsumerDefinition<?> definition, ConsumeContext consumeContext,
-        MessageConsumeTransactionOptions options) {
+    public MessageConsumeTransactionContext(
+            ConsumerDefinition<?> definition,
+            ConsumeContext consumeContext,
+            MessageConsumeTransactionOptions options) {
         this.definition = Objects.requireNonNull(definition, "definition must not be null");
         this.consumeContext = Objects.requireNonNull(consumeContext, "consumeContext must not be null");
         this.options = options == null ? MessageConsumeTransactionOptions.disabled() : options;

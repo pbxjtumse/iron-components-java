@@ -23,8 +23,7 @@ public final class LockHandleFactory {
     private final LockMetricsFacade metricsFacade;
     private final LockWatchdog watchdog;
 
-    public LockHandleFactory(LockEventPublisher eventPublisher, LockEventFactory eventFactory, LockMetricsFacade metricsFacade,
-        LockWatchdog watchdog) {
+    public LockHandleFactory(LockEventPublisher eventPublisher, LockEventFactory eventFactory, LockMetricsFacade metricsFacade, LockWatchdog watchdog) {
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher must not be null");
         this.eventFactory = Objects.requireNonNull(eventFactory, "eventFactory must not be null");
         this.metricsFacade = Objects.requireNonNull(metricsFacade, "metricsFacade must not be null");
@@ -40,8 +39,7 @@ public final class LockHandleFactory {
      */
     public DefaultLockHandle create(LockProvider provider, LockLease lease, LockOptions options) {
         DefaultLockHandle handle = new DefaultLockHandle(Objects.requireNonNull(provider, "provider must not be null"),
-            Objects.requireNonNull(lease, "lease must not be null"), new LockRuntimeState(), eventPublisher, eventFactory, metricsFacade,
-            watchdog);
+                Objects.requireNonNull(lease, "lease must not be null"), new LockRuntimeState(), eventPublisher, eventFactory, metricsFacade, watchdog);
         if (Objects.requireNonNull(options, "options must not be null").isAutoRenew()) {
             watchdog.start(handle, options);
         }

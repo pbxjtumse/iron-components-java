@@ -9,7 +9,6 @@ import com.xjtu.iron.retry.api.policy.RetryDecision;
 import com.xjtu.iron.retry.api.policy.RetryFailureCategory;
 
 import java.util.Objects;
-
 /**
  * 消息发送专用的重试分类器，用来把 Provider 层结果转换成 retry-component 能理解的动作。
  *
@@ -42,7 +41,9 @@ public final class MessageSendRetryClassifier implements RetryClassifier {
         }
         Object result = attempt.getResult();
         if (!(result instanceof ProviderSendResult providerResult)) {
-            return RetryDecision.abort("message send operation returned non ProviderSendResult", "MESSAGE_SEND_INVALID_RESULT");
+            return RetryDecision.abort(
+                    "message send operation returned non ProviderSendResult",
+                    "MESSAGE_SEND_INVALID_RESULT");
         }
         return classifyProviderResult(providerResult);
     }
@@ -52,36 +53,50 @@ public final class MessageSendRetryClassifier implements RetryClassifier {
             return RetryDecision.success("message send confirmed by provider");
         }
         if (result.status() == SendStatus.REJECTED) {
-            return RetryDecision.stop("message send rejected by provider", failureCode(result), RetryFailureCategory.NON_RETRYABLE);
+            return RetryDecision.stop(
+                    "message send rejected by provider",
+                    failureCode(result),
+                    RetryFailureCategory.NON_RETRYABLE);
         }
         if (result.status() == SendStatus.UNKNOWN) {
             // UNKNOWN 表示 Broker 状态不确定。V1 默认停止，只有显式打开 retryWhenUnknown 才冒重复风险继续重试。
             if (retryWhenUnknown) {
-                return RetryDecision.retry("message send outcome is unknown but retryWhenUnknown is enabled", failureCode(result),
-                    RetryFailureCategory.UNKNOWN);
+                return RetryDecision.retry(
+                        "message send outcome is unknown but retryWhenUnknown is enabled",
+                        failureCode(result),
+                        RetryFailureCategory.UNKNOWN);
             }
-            return RetryDecision.stop("message send outcome is unknown, stop to avoid duplicate message", failureCode(result),
-                RetryFailureCategory.UNKNOWN);
+            return RetryDecision.stop(
+                    "message send outcome is unknown, stop to avoid duplicate message",
+                    failureCode(result),
+                    RetryFailureCategory.UNKNOWN);
         }
         // 只有“明确失败且失败类型可重试”的结果才进入 retry，状态不确定的 UNKNOWN 不走这里。
         if (isRetryableFailure(result.failureType())) {
-            return RetryDecision.retry("message send failed with retryable failure type", failureCode(result),
-                retryCategory(result.failureType()));
+            return RetryDecision.retry(
+                    "message send failed with retryable failure type",
+                    failureCode(result),
+                    retryCategory(result.failureType()));
         }
-        return RetryDecision.stop("message send failed with non retryable failure type", failureCode(result),
-            RetryFailureCategory.NON_RETRYABLE);
+        return RetryDecision.stop(
+                "message send failed with non retryable failure type",
+                failureCode(result),
+                RetryFailureCategory.NON_RETRYABLE);
     }
 
     private RetryDecision classifyThrowable(Throwable throwable) {
         if (throwable instanceof InterruptedException) {
             return RetryDecision.abort("message send interrupted", "MESSAGE_SEND_INTERRUPTED");
         }
-        return RetryDecision.stop(throwable == null ? "unknown message send exception" : throwable.getMessage(), "MESSAGE_SEND_EXCEPTION",
-            RetryFailureCategory.UNKNOWN);
+        return RetryDecision.stop(
+                throwable == null ? "unknown message send exception" : throwable.getMessage(),
+                "MESSAGE_SEND_EXCEPTION",
+                RetryFailureCategory.UNKNOWN);
     }
 
     private static boolean isRetryableFailure(SendFailureType failureType) {
-        return failureType == SendFailureType.NETWORK_ERROR || failureType == SendFailureType.CLIENT_ERROR;
+        return failureType == SendFailureType.NETWORK_ERROR
+                || failureType == SendFailureType.CLIENT_ERROR;
     }
 
     private static RetryFailureCategory retryCategory(SendFailureType failureType) {

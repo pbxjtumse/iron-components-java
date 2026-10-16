@@ -7,7 +7,8 @@ import java.util.Objects;
 /** Snowflake 节点、纪元、时钟回拨与序列耗尽配置。 */
 public final class SnowflakeOptions {
 
-    public static final long DEFAULT_EPOCH_MILLIS = Instant.parse("2024-01-01T00:00:00Z").toEpochMilli();
+    public static final long DEFAULT_EPOCH_MILLIS =
+            Instant.parse("2024-01-01T00:00:00Z").toEpochMilli();
     public static final Duration DEFAULT_SEQUENCE_WAIT_TIMEOUT = Duration.ofMillis(10L);
 
     /** Snowflake 时间差计算使用的自定义纪元。 */
@@ -35,13 +36,19 @@ public final class SnowflakeOptions {
         if (builder.maxBackwardMillis < 0L) {
             throw new IllegalArgumentException("maxBackwardMillis must not be negative");
         }
-        Duration actualWaitTimeout = Objects.requireNonNull(builder.sequenceWaitTimeout, "sequenceWaitTimeout must not be null");
+        Duration actualWaitTimeout = Objects.requireNonNull(
+                builder.sequenceWaitTimeout,
+                "sequenceWaitTimeout must not be null"
+        );
         if (actualWaitTimeout.isNegative()) {
             throw new IllegalArgumentException("sequenceWaitTimeout must not be negative");
         }
         this.epochMillis = builder.epochMillis;
         this.workerId = builder.workerId;
-        this.clockRollbackStrategy = Objects.requireNonNull(builder.clockRollbackStrategy, "clockRollbackStrategy must not be null");
+        this.clockRollbackStrategy = Objects.requireNonNull(
+                builder.clockRollbackStrategy,
+                "clockRollbackStrategy must not be null"
+        );
         this.maxBackwardMillis = builder.maxBackwardMillis;
         this.sequenceWaitTimeout = actualWaitTimeout;
     }
@@ -74,7 +81,8 @@ public final class SnowflakeOptions {
 
         private final long workerId;
         private long epochMillis = DEFAULT_EPOCH_MILLIS;
-        private ClockRollbackStrategy clockRollbackStrategy = ClockRollbackStrategy.FAIL_FAST;
+        private ClockRollbackStrategy clockRollbackStrategy =
+                ClockRollbackStrategy.FAIL_FAST;
         private long maxBackwardMillis;
         private Duration sequenceWaitTimeout = DEFAULT_SEQUENCE_WAIT_TIMEOUT;
 
@@ -87,7 +95,8 @@ public final class SnowflakeOptions {
             return this;
         }
 
-        public Builder clockRollbackStrategy(ClockRollbackStrategy clockRollbackStrategy) {
+        public Builder clockRollbackStrategy(
+                ClockRollbackStrategy clockRollbackStrategy) {
             this.clockRollbackStrategy = clockRollbackStrategy;
             return this;
         }

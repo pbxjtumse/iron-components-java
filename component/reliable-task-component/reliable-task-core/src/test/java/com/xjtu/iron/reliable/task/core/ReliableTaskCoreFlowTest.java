@@ -40,26 +40,30 @@ class ReliableTaskCoreFlowTest {
         AtomicInteger calls = new AtomicInteger();
         ReliableTaskHandler handler = new ReliableTaskHandler() {
             @Override
-            public String taskType() {
-                return "demo";
-            }
+            public String taskType() { return "demo"; }
 
             @Override
             public ReliableTaskExecutionResult execute(com.xjtu.iron.reliable.task.api.execution.ReliableTaskExecutionContext context) {
-                return calls.incrementAndGet() == 1 ?
-                    ReliableTaskExecutionResult.retryAfter(Duration.ofSeconds(30), "TEMPORARY", "try later") :
-                    ReliableTaskExecutionResult.success();
+                return calls.incrementAndGet() == 1
+                        ? ReliableTaskExecutionResult.retryAfter(Duration.ofSeconds(30), "TEMPORARY", "try later")
+                        : ReliableTaskExecutionResult.success();
             }
         };
         ReliableTaskRuntimePolicy policy = new ReliableTaskRuntimePolicy(3, 8, Duration.ofSeconds(10), Duration.ofSeconds(30));
-        ReliableTaskEngine engine =
-            new ReliableTaskEngine(repository, new DefaultReliableTaskHandlerRegistry(List.of(handler)), policy, clock, "owner-a");
+        ReliableTaskEngine engine = new ReliableTaskEngine(
+                repository,
+                new DefaultReliableTaskHandlerRegistry(List.of(handler)),
+                policy,
+                clock,
+                "owner-a"
+        );
         StringIdGenerator ids = () -> "generated-id";
         ReliableTaskClient client = new DefaultReliableTaskClient(repository, engine, policy, ids, clock);
         ReliableTaskScanner scanner = new DefaultReliableTaskScanner(repository, engine, clock);
 
-        ReliableTaskSubmitResult submitted =
-            client.submit(ReliableTaskSubmission.builder("demo", "{}").taskId("task-1").scanBucket(2).build());
+        ReliableTaskSubmitResult submitted = client.submit(
+                ReliableTaskSubmission.builder("demo", "{}").taskId("task-1").scanBucket(2).build()
+        );
         ReliableTaskRunResult first = client.runNow(submitted.getTask().getKey());
 
         assertThat(first.getStatus()).isEqualTo(ReliableTaskRunStatus.EXECUTED);
@@ -70,7 +74,8 @@ class ReliableTaskCoreFlowTest {
         ReliableTaskScanReport report = scanner.scan(new ReliableTaskScanRequest("default", 2, 10));
 
         assertThat(report.getExecuted()).isEqualTo(1);
-        assertThat(client.find(submitted.getTask().getKey()).orElseThrow().getStatus()).isEqualTo(ReliableTaskStatus.SUCCEEDED);
+        assertThat(client.find(submitted.getTask().getKey()).orElseThrow().getStatus())
+                .isEqualTo(ReliableTaskStatus.SUCCEEDED);
         assertThat(calls).hasValue(2);
     }
 
@@ -79,8 +84,13 @@ class ReliableTaskCoreFlowTest {
         MutableClock clock = new MutableClock(Instant.parse("2026-10-09T00:00:00Z"));
         InMemoryRepository repository = new InMemoryRepository();
         ReliableTaskRuntimePolicy policy = ReliableTaskRuntimePolicy.defaults();
-        ReliableTaskEngine engine =
-            new ReliableTaskEngine(repository, new DefaultReliableTaskHandlerRegistry(List.of()), policy, clock, "owner-a");
+        ReliableTaskEngine engine = new ReliableTaskEngine(
+                repository,
+                new DefaultReliableTaskHandlerRegistry(List.of()),
+                policy,
+                clock,
+                "owner-a"
+        );
         ReliableTaskClient client = new DefaultReliableTaskClient(repository, engine, policy, () -> "task-2", clock);
 
         ReliableTask task = client.submit(ReliableTaskSubmission.builder("unknown", "{}").build()).getTask();
@@ -95,11 +105,17 @@ class ReliableTaskCoreFlowTest {
         MutableClock clock = new MutableClock(Instant.parse("2026-10-09T00:00:00Z"));
         InMemoryRepository repository = new InMemoryRepository();
         ReliableTaskRuntimePolicy policy = ReliableTaskRuntimePolicy.defaults();
-        ReliableTaskEngine engine =
-            new ReliableTaskEngine(repository, new DefaultReliableTaskHandlerRegistry(List.of()), policy, clock, "owner-a");
+        ReliableTaskEngine engine = new ReliableTaskEngine(
+                repository,
+                new DefaultReliableTaskHandlerRegistry(List.of()),
+                policy,
+                clock,
+                "owner-a"
+        );
         ReliableTaskClient client = new DefaultReliableTaskClient(repository, engine, policy, () -> "task-3", clock);
-        ReliableTask manual =
-            client.runNow(client.submit(ReliableTaskSubmission.builder("unknown", "{}").build()).getTask().getKey()).getFinalTask();
+        ReliableTask manual = client.runNow(
+                client.submit(ReliableTaskSubmission.builder("unknown", "{}").build()).getTask().getKey()
+        ).getFinalTask();
 
         DefaultReliableTaskAdminClient admin = new DefaultReliableTaskAdminClient(repository, clock);
         ReliableTaskAdminResult stale = admin.requeue(manual.getKey(), manual.getVersion() - 1, clock.instant());
@@ -114,29 +130,11 @@ class ReliableTaskCoreFlowTest {
     private static final class MutableClock extends Clock {
         /** 测试用的可变当前时间。 */
         private Instant now;
-
-        private MutableClock(Instant now) {
-            this.now = now;
-        }
-
-        void advance(Duration duration) {
-            now = now.plus(duration);
-        }
-
-        @Override
-        public ZoneId getZone() {
-            return ZoneOffset.UTC;
-        }
-
-        @Override
-        public Clock withZone(ZoneId zone) {
-            return this;
-        }
-
-        @Override
-        public Instant instant() {
-            return now;
-        }
+        private MutableClock(Instant now) { this.now = now; }
+        void advance(Duration duration) { now = now.plus(duration); }
+        @Override public ZoneId getZone() { return ZoneOffset.UTC; }
+        @Override public Clock withZone(ZoneId zone) { return this; }
+        @Override public Instant instant() { return now; }
     }
 
     private static final class InMemoryRepository implements ReliableTaskRepository {
@@ -145,8 +143,8 @@ class ReliableTaskCoreFlowTest {
 
         @Override
         public synchronized ReliableTaskCreateResult create(ReliableTask task) {
-            return tasks.putIfAbsent(task.getKey(), task) == null ? ReliableTaskCreateResult.CREATED :
-                ReliableTaskCreateResult.ALREADY_EXISTS;
+            return tasks.putIfAbsent(task.getKey(), task) == null
+                    ? ReliableTaskCreateResult.CREATED : ReliableTaskCreateResult.ALREADY_EXISTS;
         }
 
         @Override
@@ -156,23 +154,35 @@ class ReliableTaskCoreFlowTest {
 
         @Override
         public synchronized List<ReliableTask> findDue(ReliableTaskScanQuery query) {
-            return tasks.values().stream().filter(task -> task.getStoreName().equals(query.getStoreName()))
-                .filter(task -> task.getScanBucket() == query.getScanBucket()).filter(task -> isDue(task, query.getNow()))
-                .limit(query.getLimit()).toList();
+            return tasks.values().stream()
+                    .filter(task -> task.getStoreName().equals(query.getStoreName()))
+                    .filter(task -> task.getScanBucket() == query.getScanBucket())
+                    .filter(task -> isDue(task, query.getNow()))
+                    .limit(query.getLimit())
+                    .toList();
         }
 
         @Override
         public synchronized ReliableTaskClaimResult tryClaim(ReliableTaskClaimCommand command) {
             ReliableTask candidate = command.getCandidate();
             ReliableTask current = tasks.get(candidate.getKey());
-            if (current == null || current.getVersion() != candidate.getVersion() || current.getStatus() != candidate.getStatus() ||
-                !isDue(current, command.getNow())) {
+            if (current == null || current.getVersion() != candidate.getVersion()
+                    || current.getStatus() != candidate.getStatus() || !isDue(current, command.getNow())) {
                 return ReliableTaskClaimResult.missed();
             }
-            ReliableTask claimed =
-                copy(current, ReliableTaskStatus.RUNNING, Math.min(current.getAttemptCount() + 1, current.getMaxAttempts()), null,
-                    command.getOwnerId(), command.getLeaseUntil(), current.getVersion() + 1, current.getLastErrorCode(),
-                    current.getLastErrorMessage(), command.getNow(), null);
+            ReliableTask claimed = copy(
+                    current,
+                    ReliableTaskStatus.RUNNING,
+                    Math.min(current.getAttemptCount() + 1, current.getMaxAttempts()),
+                    null,
+                    command.getOwnerId(),
+                    command.getLeaseUntil(),
+                    current.getVersion() + 1,
+                    current.getLastErrorCode(),
+                    current.getLastErrorMessage(),
+                    command.getNow(),
+                    null
+            );
             tasks.put(claimed.getKey(), claimed);
             return ReliableTaskClaimResult.claimed(claimed, current.getStatus());
         }
@@ -180,13 +190,24 @@ class ReliableTaskCoreFlowTest {
         @Override
         public synchronized boolean transition(ReliableTaskTransitionCommand command) {
             ReliableTask current = tasks.get(command.getKey());
-            if (current == null || current.getStatus() != ReliableTaskStatus.RUNNING ||
-                !Objects.equals(current.getOwnerId(), command.getOwnerId()) || current.getVersion() != command.getExpectedVersion()) {
+            if (current == null || current.getStatus() != ReliableTaskStatus.RUNNING
+                    || !Objects.equals(current.getOwnerId(), command.getOwnerId())
+                    || current.getVersion() != command.getExpectedVersion()) {
                 return false;
             }
-            ReliableTask next = copy(current, command.getTargetStatus(), current.getAttemptCount(), command.getNextExecuteAt(), null, null,
-                current.getVersion() + 1, command.getErrorCode(), command.getErrorMessage(), command.getNow(),
-                command.getTargetStatus().isTerminal() ? command.getNow() : null);
+            ReliableTask next = copy(
+                    current,
+                    command.getTargetStatus(),
+                    current.getAttemptCount(),
+                    command.getNextExecuteAt(),
+                    null,
+                    null,
+                    current.getVersion() + 1,
+                    command.getErrorCode(),
+                    command.getErrorMessage(),
+                    command.getNow(),
+                    command.getTargetStatus().isTerminal() ? command.getNow() : null
+            );
             tasks.put(next.getKey(), next);
             return true;
         }
@@ -194,27 +215,40 @@ class ReliableTaskCoreFlowTest {
         @Override
         public synchronized boolean renewLease(ReliableTaskLeaseRenewCommand command) {
             ReliableTask current = tasks.get(command.getKey());
-            if (current == null || current.getStatus() != ReliableTaskStatus.RUNNING ||
-                !Objects.equals(current.getOwnerId(), command.getOwnerId()) || current.getVersion() != command.getExpectedVersion() ||
-                !current.getLeaseUntil().isAfter(command.getNow()) || !command.getLeaseUntil().isAfter(current.getLeaseUntil())) {
+            if (current == null || current.getStatus() != ReliableTaskStatus.RUNNING
+                    || !Objects.equals(current.getOwnerId(), command.getOwnerId())
+                    || current.getVersion() != command.getExpectedVersion()
+                    || !current.getLeaseUntil().isAfter(command.getNow())
+                    || !command.getLeaseUntil().isAfter(current.getLeaseUntil())) {
                 return false;
             }
-            tasks.put(current.getKey(),
-                copy(current, current.getStatus(), current.getAttemptCount(), null, current.getOwnerId(), command.getLeaseUntil(),
-                    current.getVersion(), current.getLastErrorCode(), current.getLastErrorMessage(), command.getNow(), null));
+            tasks.put(current.getKey(), copy(
+                    current, current.getStatus(), current.getAttemptCount(), null,
+                    current.getOwnerId(), command.getLeaseUntil(), current.getVersion(),
+                    current.getLastErrorCode(), current.getLastErrorMessage(), command.getNow(), null));
             return true;
         }
 
         @Override
         public synchronized boolean adminTransition(ReliableTaskAdminTransitionCommand command) {
             ReliableTask current = tasks.get(command.getKey());
-            if (current == null || current.getStatus() != command.getExpectedStatus() ||
-                current.getVersion() != command.getExpectedVersion()) {
+            if (current == null || current.getStatus() != command.getExpectedStatus()
+                    || current.getVersion() != command.getExpectedVersion()) {
                 return false;
             }
-            ReliableTask updated = copy(current, command.getTargetStatus(), command.isResetAttempts() ? 0 : current.getAttemptCount(),
-                command.getNextExecuteAt(), null, null, current.getVersion() + 1, null, null, command.getNow(),
-                command.getTargetStatus().isTerminal() ? command.getNow() : null);
+            ReliableTask updated = copy(
+                    current,
+                    command.getTargetStatus(),
+                    command.isResetAttempts() ? 0 : current.getAttemptCount(),
+                    command.getNextExecuteAt(),
+                    null,
+                    null,
+                    current.getVersion() + 1,
+                    null,
+                    null,
+                    command.getNow(),
+                    command.getTargetStatus().isTerminal() ? command.getNow() : null
+            );
             tasks.put(updated.getKey(), updated);
             return true;
         }
@@ -223,14 +257,26 @@ class ReliableTaskCoreFlowTest {
             if (task.getStatus().isScheduledCandidate()) {
                 return task.getNextExecuteAt() != null && !task.getNextExecuteAt().isAfter(now);
             }
-            return task.getStatus() == ReliableTaskStatus.RUNNING && task.getLeaseUntil() != null && !task.getLeaseUntil().isAfter(now);
+            return task.getStatus() == ReliableTaskStatus.RUNNING
+                    && task.getLeaseUntil() != null && !task.getLeaseUntil().isAfter(now);
         }
 
-        private static ReliableTask copy(ReliableTask source, ReliableTaskStatus status, int attempts, Instant nextExecuteAt, String owner,
-            Instant lease, long version, String errorCode, String errorMessage, Instant updatedAt, Instant completedAt) {
-            return new ReliableTask(source.getKey(), source.getTaskType(), source.getBusinessKey(), source.getPayload(),
-                source.getRouteKey(), source.getScanBucket(), status, attempts, source.getMaxAttempts(), nextExecuteAt, owner, lease,
-                version, errorCode, errorMessage, source.getCreatedAt(), updatedAt, completedAt);
+        private static ReliableTask copy(
+                ReliableTask source,
+                ReliableTaskStatus status,
+                int attempts,
+                Instant nextExecuteAt,
+                String owner,
+                Instant lease,
+                long version,
+                String errorCode,
+                String errorMessage,
+                Instant updatedAt,
+                Instant completedAt) {
+            return new ReliableTask(
+                    source.getKey(), source.getTaskType(), source.getBusinessKey(), source.getPayload(), source.getRouteKey(),
+                    source.getScanBucket(), status, attempts, source.getMaxAttempts(), nextExecuteAt, owner, lease, version,
+                    errorCode, errorMessage, source.getCreatedAt(), updatedAt, completedAt);
         }
     }
 }

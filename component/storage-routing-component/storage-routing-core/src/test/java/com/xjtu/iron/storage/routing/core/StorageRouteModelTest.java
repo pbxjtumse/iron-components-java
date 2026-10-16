@@ -40,10 +40,12 @@ class StorageRouteModelTest {
 
     @Test
     void mixedBuilderMethodsShouldKeepOnePhysicalLocation() {
-        StorageRoute route =
-            StorageRoute.builder().physicalLocation(PhysicalStorageLocation.of("db_05", "order_56")).tableName("idempotency_56").build();
+        StorageRoute route = StorageRoute.builder()
+                .physicalLocation(PhysicalStorageLocation.of("db_05", "order_56"))
+                .tableName("idempotency_56")
+                .build();
         StorageRoute replacement = StorageRoute.builder().dataSourceKey("old-db").tableName("old-table")
-            .physicalLocation(PhysicalStorageLocation.of("db_05", "order_56")).build();
+                .physicalLocation(PhysicalStorageLocation.of("db_05", "order_56")).build();
 
         assertThat(route.physicalLocation()).isEqualTo(PhysicalStorageLocation.of("db_05", "idempotency_56"));
         assertThat(replacement.dataSourceKey()).isEqualTo("db_05");
@@ -53,12 +55,14 @@ class StorageRouteModelTest {
     @Test
     void shouldRejectIncompleteDirectLocationsAtBuildTime() {
         assertThatThrownBy(() -> StorageRoute.builder().build()).isInstanceOf(StorageRoutingException.class);
-        assertThatThrownBy(() -> StorageRoute.builder().tableName("order_56").build()).isInstanceOf(StorageRoutingException.class)
-            .hasMessageContaining("dataSourceKey");
-        assertThatThrownBy(() -> StorageRoute.builder().dataSourceKey("db_05").build()).isInstanceOf(StorageRoutingException.class)
-            .hasMessageContaining("tableName");
-        assertThatThrownBy(() -> PhysicalStorageLocation.of(" ", "order_56")).isInstanceOf(StorageRoutingException.class);
-        assertThatThrownBy(() -> PhysicalStorageLocation.of("db_05", null)).isInstanceOf(StorageRoutingException.class);
+        assertThatThrownBy(() -> StorageRoute.builder().tableName("order_56").build())
+                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("dataSourceKey");
+        assertThatThrownBy(() -> StorageRoute.builder().dataSourceKey("db_05").build())
+                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("tableName");
+        assertThatThrownBy(() -> PhysicalStorageLocation.of(" ", "order_56"))
+                .isInstanceOf(StorageRoutingException.class);
+        assertThatThrownBy(() -> PhysicalStorageLocation.of("db_05", null))
+                .isInstanceOf(StorageRoutingException.class);
     }
 
     @Test
@@ -66,27 +70,31 @@ class StorageRouteModelTest {
         Map<String, Object> source = new LinkedHashMap<>(Map.of("tenantId", "tenant-1"));
         RouteContext.Builder contextBuilder = RouteContext.builder().attributes(source).attribute("traceId", "trace-1");
         source.put("tenantId", "tenant-2");
-        StorageRoute route = StorageRoute.builder().dataSourceKey("db_05").tableName("order_56").context(contextBuilder.build()).build();
+        StorageRoute route = StorageRoute.builder().dataSourceKey("db_05").tableName("order_56")
+                .context(contextBuilder.build()).build();
         contextBuilder.attribute("traceId", "trace-2");
 
         assertThat(source).doesNotContainKey("traceId");
         assertThat(route.context().attributes()).containsEntry("tenantId", "tenant-1").containsEntry("traceId", "trace-1");
-        assertThatThrownBy(() -> route.context().attributes().put("tenantId", "changed")).isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(() -> route.context().attributes().put("tenantId", "changed"))
+                .isInstanceOf(UnsupportedOperationException.class);
         assertThat(contextBuilder.build().attribute("traceId")).isEqualTo("trace-2");
     }
 
     @ParameterizedTest
     @EnumSource(value = StorageRouteMode.class, names = {"SHARDING_SPHERE_JDBC", "PROXY"})
     void delegatedModesShouldNotPretendLogicalTableIsPhysical(StorageRouteMode mode) {
-        StorageRoute route = StorageRoute.middleware(mode, RouteContext.builder().logicalTable("business_order").build(), null);
+        StorageRoute route = StorageRoute.middleware(
+                mode, RouteContext.builder().logicalTable("business_order").build(), null);
 
         assertThat(route.logicalTable()).isEqualTo("business_order");
         assertThat(route.physicalLocation()).isNull();
         assertThat(route.dataSourceKey()).isNull();
         assertThat(route.tableName()).isNull();
-        assertThatThrownBy(route::requireShardInfo).isInstanceOf(StorageRoutingException.class).hasMessageContaining("shardInfo");
+        assertThatThrownBy(route::requireShardInfo).isInstanceOf(StorageRoutingException.class)
+                .hasMessageContaining("shardInfo");
         assertThatThrownBy(route::requirePhysicalLocation).isInstanceOf(StorageRoutingException.class)
-            .hasMessageContaining("physicalLocation");
+                .hasMessageContaining("physicalLocation");
     }
 
     @Test
@@ -97,7 +105,10 @@ class StorageRouteModelTest {
 
         StorageRoute fixed = StorageRoute.fixedDirect(context, physicalLocation);
         StorageRoute sharded = StorageRoute.shardedDirect(context, shardInfo, physicalLocation);
-        StorageRoute overridden = StorageRoute.builder().physicalLocation(physicalLocation).tableName("business_order_57").build();
+        StorageRoute overridden = StorageRoute.builder()
+                .physicalLocation(physicalLocation)
+                .tableName("business_order_57")
+                .build();
 
         assertThat(fixed.shardInfo()).isNull();
         assertThat(fixed.requirePhysicalLocation()).isSameAs(physicalLocation);
@@ -105,8 +116,8 @@ class StorageRouteModelTest {
         assertThat(sharded.requirePhysicalLocation()).isSameAs(physicalLocation);
         assertThat(overridden.dataSourceKey()).isEqualTo("db_05");
         assertThat(overridden.tableName()).isEqualTo("business_order_57");
-        assertThatThrownBy(() -> StorageRoute.middleware(StorageRouteMode.DIRECT_DATASOURCE, context, shardInfo)).isInstanceOf(
-            StorageRoutingException.class).hasMessageContaining("must not be DIRECT_DATASOURCE");
+        assertThatThrownBy(() -> StorageRoute.middleware(StorageRouteMode.DIRECT_DATASOURCE, context, shardInfo))
+                .isInstanceOf(StorageRoutingException.class).hasMessageContaining("must not be DIRECT_DATASOURCE");
     }
 
     @Test

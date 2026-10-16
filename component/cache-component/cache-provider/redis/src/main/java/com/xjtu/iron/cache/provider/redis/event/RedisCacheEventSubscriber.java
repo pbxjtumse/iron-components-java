@@ -22,7 +22,10 @@ public class RedisCacheEventSubscriber implements MessageListener {
 
     private final CacheEventHandler eventHandler;
 
-    public RedisCacheEventSubscriber(RedisCacheEventSerializer serializer, CacheEventHandler eventHandler) {
+    public RedisCacheEventSubscriber(
+            RedisCacheEventSerializer serializer,
+            CacheEventHandler eventHandler
+    ) {
         this.serializer = serializer;
         this.eventHandler = eventHandler;
     }

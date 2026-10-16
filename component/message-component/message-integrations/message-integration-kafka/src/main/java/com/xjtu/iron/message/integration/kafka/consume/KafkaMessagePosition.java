@@ -16,17 +16,9 @@ public final class KafkaMessagePosition implements ProviderMessagePosition {
         this.offset = offset;
     }
 
-    public String topic() {
-        return topic;
-    }
-
-    public int partition() {
-        return partition;
-    }
-
-    public long offset() {
-        return offset;
-    }
+    public String topic() { return topic; }
+    public int partition() { return partition; }
+    public long offset() { return offset; }
 
     @Override
     public Map<String, String> attributes() {

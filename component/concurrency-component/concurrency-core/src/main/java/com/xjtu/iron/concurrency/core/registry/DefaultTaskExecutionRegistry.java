@@ -23,12 +23,14 @@ import java.util.concurrent.atomic.AtomicLong;
  * 一期用于当前 JVM 的最近任务诊断。后续跨节点任务状态查询应替换为 Redis、DB 或独立任务中心。
  * </p>
  */
-public final class DefaultTaskExecutionRegistry implements TaskExecutionRegistry {
+public final class DefaultTaskExecutionRegistry
+        implements TaskExecutionRegistry {
 
     /**
      * taskId 到最新版本快照的映射。
      */
-    private final ConcurrentMap<String, VersionedSnapshot> snapshots = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, VersionedSnapshot> snapshots =
+            new ConcurrentHashMap<>();
 
     /**
      * 最近更新时间索引，队首是最新版本。
@@ -37,7 +39,8 @@ public final class DefaultTaskExecutionRegistry implements TaskExecutionRegistry
      * 同一个 taskId 多次更新会留下旧索引；查询和淘汰通过版本号过滤，后台压缩负责清理积累的旧索引。
      * </p>
      */
-    private final ConcurrentLinkedDeque<IndexEntry> updateOrder = new ConcurrentLinkedDeque<>();
+    private final ConcurrentLinkedDeque<IndexEntry> updateOrder =
+            new ConcurrentLinkedDeque<>();
 
     /**
      * 单调递增版本号。
@@ -68,7 +71,10 @@ public final class DefaultTaskExecutionRegistry implements TaskExecutionRegistry
 
     @Override
     public void update(TaskExecutionSnapshot snapshot) {
-        if (snapshot == null || snapshot.getTask() == null || snapshot.getTaskId() == null || snapshot.getTaskId().isBlank()) {
+        if (snapshot == null
+                || snapshot.getTask() == null
+                || snapshot.getTaskId() == null
+                || snapshot.getTaskId().isBlank()) {
             return;
         }
 
@@ -91,12 +97,16 @@ public final class DefaultTaskExecutionRegistry implements TaskExecutionRegistry
         }
 
         VersionedSnapshot versioned = snapshots.get(taskId);
-        return versioned == null ? Optional.empty() : Optional.of(versioned.snapshot());
+        return versioned == null
+                ? Optional.empty()
+                : Optional.of(versioned.snapshot());
     }
 
     @Override
     public List<TaskExecutionSnapshot> recent(int limit) {
-        int actualLimit = limit <= 0 ? Math.min(100, maxSize) : Math.min(limit, maxSize);
+        int actualLimit = limit <= 0
+                ? Math.min(100, maxSize)
+                : Math.min(limit, maxSize);
         List<TaskExecutionSnapshot> result = new ArrayList<>(actualLimit);
 
         for (IndexEntry entry : updateOrder) {
@@ -134,7 +144,11 @@ public final class DefaultTaskExecutionRegistry implements TaskExecutionRegistry
             }
             indexSize.decrementAndGet();
 
-            snapshots.computeIfPresent(oldest.taskId(), (taskId, current) -> current.version() == oldest.version() ? null : current);
+            snapshots.computeIfPresent(oldest.taskId(), (taskId, current) ->
+                    current.version() == oldest.version()
+                            ? null
+                            : current
+            );
         }
     }
 
@@ -172,12 +186,18 @@ public final class DefaultTaskExecutionRegistry implements TaskExecutionRegistry
     /**
      * Map 中保存的最新版本快照。
      */
-    private record VersionedSnapshot(long version, TaskExecutionSnapshot snapshot) {
+    private record VersionedSnapshot(
+            long version,
+            TaskExecutionSnapshot snapshot
+    ) {
     }
 
     /**
      * 最近更新时间索引项。
      */
-    private record IndexEntry(String taskId, long version) {
+    private record IndexEntry(
+            String taskId,
+            long version
+    ) {
     }
 }

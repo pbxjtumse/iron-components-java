@@ -43,8 +43,12 @@ public final class ReliableTaskEngine {
     /** 当前执行实例的所有者标识。 */
     private final String ownerId;
 
-    public ReliableTaskEngine(ReliableTaskRepository repository, ReliableTaskHandlerRegistry handlerRegistry,
-        ReliableTaskRuntimePolicy policy, Clock clock, String ownerId) {
+    public ReliableTaskEngine(
+            ReliableTaskRepository repository,
+            ReliableTaskHandlerRegistry handlerRegistry,
+            ReliableTaskRuntimePolicy policy,
+            Clock clock,
+            String ownerId) {
         this.repository = Objects.requireNonNull(repository, "repository must not be null");
         this.handlerRegistry = Objects.requireNonNull(handlerRegistry, "handlerRegistry must not be null");
         this.policy = Objects.requireNonNull(policy, "policy must not be null");
@@ -59,8 +63,12 @@ public final class ReliableTaskEngine {
     public ReliableTaskRunResult runCandidate(ReliableTask candidate) {
         Objects.requireNonNull(candidate, "candidate must not be null");
         Instant claimTime = clock.instant();
-        ReliableTaskClaimResult claim =
-            repository.tryClaim(new ReliableTaskClaimCommand(candidate, ownerId, claimTime, claimTime.plus(policy.getLeaseDuration())));
+        ReliableTaskClaimResult claim = repository.tryClaim(new ReliableTaskClaimCommand(
+                candidate,
+                ownerId,
+                claimTime,
+                claimTime.plus(policy.getLeaseDuration())
+        ));
         if (!claim.isClaimed()) {
             return new ReliableTaskRunResult(ReliableTaskRunStatus.NOT_CLAIMED, null, null);
         }
@@ -68,61 +76,96 @@ public final class ReliableTaskEngine {
         ReliableTask task = claim.getTask();
         // 允许扫描器抢占“Lease 已过期且次数已经耗尽”的遗留 RUNNING 记录，
         // 但该次抢占只负责收口为 DEAD，不再调用业务 Handler。
-        ReliableTaskExecutionResult executionResult = candidate.getAttemptCount() >= candidate.getMaxAttempts() ?
-            ReliableTaskExecutionResult.dead(MAX_ATTEMPTS, "maximum durable execution attempts reached before claim") :
-            executeHandler(task, claim.getClaimedFromStatus());
+        ReliableTaskExecutionResult executionResult = candidate.getAttemptCount() >= candidate.getMaxAttempts()
+                ? ReliableTaskExecutionResult.dead(
+                        MAX_ATTEMPTS,
+                        "maximum durable execution attempts reached before claim"
+                )
+                : executeHandler(task, claim.getClaimedFromStatus());
         ReliableTaskTransitionCommand transition = transitionOf(task, executionResult, clock.instant());
         boolean updated = repository.transition(transition);
         ReliableTask finalTask = repository.find(task.getKey()).orElse(null);
-        return new ReliableTaskRunResult(updated ? ReliableTaskRunStatus.EXECUTED : ReliableTaskRunStatus.STALE_COMPLETION, task,
-            finalTask);
+        return new ReliableTaskRunResult(
+                updated ? ReliableTaskRunStatus.EXECUTED : ReliableTaskRunStatus.STALE_COMPLETION,
+                task,
+                finalTask
+        );
     }
 
-    private ReliableTaskExecutionResult executeHandler(ReliableTask task, ReliableTaskStatus claimedFromStatus) {
+    private ReliableTaskExecutionResult executeHandler(
+            ReliableTask task,
+            ReliableTaskStatus claimedFromStatus) {
         ReliableTaskHandler handler = handlerRegistry.find(task.getTaskType()).orElse(null);
         if (handler == null) {
-            return ReliableTaskExecutionResult.manual(MISSING_HANDLER,
-                "no ReliableTaskHandler registered for taskType=" + task.getTaskType());
+            return ReliableTaskExecutionResult.manual(
+                    MISSING_HANDLER,
+                    "no ReliableTaskHandler registered for taskType=" + task.getTaskType()
+            );
         }
 
         AtomicReference<Instant> trackedLeaseUntil = new AtomicReference<>(task.getLeaseUntil());
-        ReliableTaskExecutionContext context =
-            new ReliableTaskExecutionContext(task, claimedFromStatus, extension -> renewLease(task, extension, trackedLeaseUntil));
+        ReliableTaskExecutionContext context = new ReliableTaskExecutionContext(
+                task,
+                claimedFromStatus,
+                extension -> renewLease(task, extension, trackedLeaseUntil)
+        );
         try {
             ReliableTaskExecutionResult result = handler.execute(context);
-            return result == null ? ReliableTaskExecutionResult.dead("NULL_HANDLER_RESULT", "handler returned null") : result;
+            return result == null
+                    ? ReliableTaskExecutionResult.dead("NULL_HANDLER_RESULT", "handler returned null")
+                    : result;
         } catch (InterruptedException interrupted) {
             Thread.currentThread().interrupt();
-            return ReliableTaskExecutionResult.retryAfter(policy.getFailureRetryDelay(), "INTERRUPTED", safeMessage(interrupted));
+            return ReliableTaskExecutionResult.retryAfter(
+                    policy.getFailureRetryDelay(),
+                    "INTERRUPTED",
+                    safeMessage(interrupted)
+            );
         } catch (Exception failure) {
-            return ReliableTaskExecutionResult.retryAfter(policy.getFailureRetryDelay(), UNHANDLED_EXCEPTION, safeMessage(failure));
+            return ReliableTaskExecutionResult.retryAfter(
+                    policy.getFailureRetryDelay(),
+                    UNHANDLED_EXCEPTION,
+                    safeMessage(failure)
+            );
         }
     }
 
-    private boolean renewLease(ReliableTask task, Duration extension, AtomicReference<Instant> trackedLeaseUntil) {
+    private boolean renewLease(
+            ReliableTask task,
+            Duration extension,
+            AtomicReference<Instant> trackedLeaseUntil) {
         Instant now = clock.instant();
         Instant currentLeaseUntil = trackedLeaseUntil.get();
         if (currentLeaseUntil == null || !currentLeaseUntil.isAfter(now)) {
             return false;
         }
         Instant newLeaseUntil = currentLeaseUntil.plus(extension);
-        boolean renewed = repository.renewLease(
-            new ReliableTaskLeaseRenewCommand(task.getKey(), task.getOwnerId(), task.getVersion(), now, newLeaseUntil));
+        boolean renewed = repository.renewLease(new ReliableTaskLeaseRenewCommand(
+                task.getKey(),
+                task.getOwnerId(),
+                task.getVersion(),
+                now,
+                newLeaseUntil
+        ));
         if (renewed) {
             trackedLeaseUntil.set(newLeaseUntil);
         }
         return renewed;
     }
 
-    private ReliableTaskTransitionCommand transitionOf(ReliableTask task, ReliableTaskExecutionResult result, Instant now) {
+    private ReliableTaskTransitionCommand transitionOf(
+            ReliableTask task,
+            ReliableTaskExecutionResult result,
+            Instant now) {
         ReliableTaskExecutionOutcome outcome = result.getOutcome();
         ReliableTaskStatus target;
         Instant next = null;
         String code = result.getCode();
         String message = result.getMessage();
 
-        if ((outcome == ReliableTaskExecutionOutcome.RETRY || outcome == ReliableTaskExecutionOutcome.RECONCILE) &&
-            task.getAttemptCount() >= task.getMaxAttempts()) {
+        if ((outcome == ReliableTaskExecutionOutcome.RETRY
+                || outcome == ReliableTaskExecutionOutcome.RECONCILE)
+                && task.getAttemptCount() >= task.getMaxAttempts()) {
             target = ReliableTaskStatus.DEAD;
             code = MAX_ATTEMPTS;
             message = "maximum durable execution attempts reached; last=" + safeText(result.getMessage());
@@ -143,7 +186,16 @@ public final class ReliableTaskEngine {
             }
         }
 
-        return new ReliableTaskTransitionCommand(task.getKey(), task.getOwnerId(), task.getVersion(), target, next, code, message, now);
+        return new ReliableTaskTransitionCommand(
+                task.getKey(),
+                task.getOwnerId(),
+                task.getVersion(),
+                target,
+                next,
+                code,
+                message,
+                now
+        );
     }
 
     private static String safeMessage(Throwable failure) {

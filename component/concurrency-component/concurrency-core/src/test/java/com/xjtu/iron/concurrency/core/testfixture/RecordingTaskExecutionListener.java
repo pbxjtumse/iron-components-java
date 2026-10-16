@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public final class RecordingTaskExecutionListener implements TaskExecutionListener {
+public final class RecordingTaskExecutionListener
+        implements TaskExecutionListener {
 
-    private final List<TaskExecutionEvent> events = new CopyOnWriteArrayList<>();
+    private final List<TaskExecutionEvent> events =
+            new CopyOnWriteArrayList<>();
 
     @Override
     public void onSubmitted(TaskExecutionEvent event) {
@@ -72,6 +74,8 @@ public final class RecordingTaskExecutionListener implements TaskExecutionListen
     }
 
     public List<AsyncTaskStatus> statuses() {
-        return events.stream().map(TaskExecutionEvent::getStatus).toList();
+        return events.stream()
+                .map(TaskExecutionEvent::getStatus)
+                .toList();
     }
 }

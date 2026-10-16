@@ -104,8 +104,9 @@ public final class IronCollections {
         if (values == null || values.isEmpty()) {
             return Collections.emptyMap();
         }
-        Map<K, List<T>> grouped =
-            values.stream().filter(Objects::nonNull).collect(Collectors.groupingBy(keyMapper, LinkedHashMap::new, Collectors.toList()));
+        Map<K, List<T>> grouped = values.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(keyMapper, LinkedHashMap::new, Collectors.toList()));
         Map<K, List<T>> result = new LinkedHashMap<>();
         grouped.forEach((key, list) -> result.put(key, List.copyOf(list)));
         return Collections.unmodifiableMap(result);
@@ -160,8 +161,9 @@ public final class IronCollections {
     }
 
     /** 按 Key 计算新旧集合差异。 */
-    public static <T, K> CollectionDiff<T> difference(Collection<T> oldValues, Collection<T> newValues,
-        Function<? super T, ? extends K> keyMapper) {
+    public static <T, K> CollectionDiff<T> difference(Collection<T> oldValues,
+                                                      Collection<T> newValues,
+                                                      Function<? super T, ? extends K> keyMapper) {
         Objects.requireNonNull(keyMapper, "keyMapper must not be null");
         Map<K, T> oldMap = toMap(emptyIfNull(oldValues), keyMapper);
         Map<K, T> newMap = toMap(emptyIfNull(newValues), keyMapper);

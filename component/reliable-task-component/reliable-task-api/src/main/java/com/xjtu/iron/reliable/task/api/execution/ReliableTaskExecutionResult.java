@@ -15,7 +15,11 @@ public final class ReliableTaskExecutionResult {
     /** 供监控和排障使用的业务结果说明。 */
     private final String message;
 
-    private ReliableTaskExecutionResult(ReliableTaskExecutionOutcome outcome, Duration delay, String code, String message) {
+    private ReliableTaskExecutionResult(
+            ReliableTaskExecutionOutcome outcome,
+            Duration delay,
+            String code,
+            String message) {
         this.outcome = Objects.requireNonNull(outcome, "outcome must not be null");
         if (delay != null && delay.isNegative()) {
             throw new IllegalArgumentException("delay must not be negative");
@@ -23,7 +27,8 @@ public final class ReliableTaskExecutionResult {
         this.delay = delay;
         this.code = normalize(code);
         this.message = normalize(message);
-        if ((outcome == ReliableTaskExecutionOutcome.RETRY || outcome == ReliableTaskExecutionOutcome.RECONCILE) && delay == null) {
+        if ((outcome == ReliableTaskExecutionOutcome.RETRY || outcome == ReliableTaskExecutionOutcome.RECONCILE)
+                && delay == null) {
             throw new IllegalArgumentException(outcome + " requires delay");
         }
     }
@@ -48,21 +53,10 @@ public final class ReliableTaskExecutionResult {
         return new ReliableTaskExecutionResult(ReliableTaskExecutionOutcome.DEAD, null, code, message);
     }
 
-    public ReliableTaskExecutionOutcome getOutcome() {
-        return outcome;
-    }
-
-    public Duration getDelay() {
-        return delay;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
+    public ReliableTaskExecutionOutcome getOutcome() { return outcome; }
+    public Duration getDelay() { return delay; }
+    public String getCode() { return code; }
+    public String getMessage() { return message; }
 
     private static String normalize(String value) {
         return value == null || value.isBlank() ? null : value.trim();

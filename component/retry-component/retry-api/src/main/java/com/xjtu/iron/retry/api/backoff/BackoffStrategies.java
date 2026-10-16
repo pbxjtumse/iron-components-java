@@ -15,7 +15,8 @@ import java.util.random.RandomGenerator;
 public final class BackoffStrategies {
 
     /** 共享的无退避策略。 */
-    private static final BackoffStrategy NO_BACKOFF = (attempt, decision) -> RetryDelay.none();
+    private static final BackoffStrategy NO_BACKOFF =
+            (attempt, decision) -> RetryDelay.none();
 
     private BackoffStrategies() {
     }
@@ -28,17 +29,37 @@ public final class BackoffStrategies {
     /** 创建固定退避策略。 */
     public static BackoffStrategy fixed(Duration delay) {
         Duration actualDelay = requireNonNegative(delay, "delay");
-        return (attempt, decision) -> RetryDelay.of(actualDelay, RetryDelaySource.FIXED, "fixed backoff");
+        return (attempt, decision) -> RetryDelay.of(
+                actualDelay,
+                RetryDelaySource.FIXED,
+                "fixed backoff"
+        );
     }
 
     /** 创建不带随机抖动的指数退避策略。 */
-    public static BackoffStrategy exponential(Duration initialDelay, Duration maxDelay, double multiplier) {
-        return new ExponentialBackoffStrategy(initialDelay, maxDelay, multiplier, null);
+    public static BackoffStrategy exponential(
+            Duration initialDelay,
+            Duration maxDelay,
+            double multiplier) {
+        return new ExponentialBackoffStrategy(
+                initialDelay,
+                maxDelay,
+                multiplier,
+                null
+        );
     }
 
     /** 使用 ThreadLocalRandom 创建全抖动指数退避策略。 */
-    public static BackoffStrategy exponentialWithFullJitter(Duration initialDelay, Duration maxDelay, double multiplier) {
-        return exponentialWithFullJitter(initialDelay, maxDelay, multiplier, ThreadLocalRandom.current());
+    public static BackoffStrategy exponentialWithFullJitter(
+            Duration initialDelay,
+            Duration maxDelay,
+            double multiplier) {
+        return exponentialWithFullJitter(
+                initialDelay,
+                maxDelay,
+                multiplier,
+                ThreadLocalRandom.current()
+        );
     }
 
     /**
@@ -46,27 +67,54 @@ public final class BackoffStrategies {
      *
      * <p>该重载使随机退避可以在单元测试中使用固定种子重现。</p>
      */
-    public static BackoffStrategy exponentialWithFullJitter(Duration initialDelay, Duration maxDelay, double multiplier,
-        RandomGenerator randomGenerator) {
-        return new ExponentialBackoffStrategy(initialDelay, maxDelay, multiplier,
-            Objects.requireNonNull(randomGenerator, "randomGenerator must not be null"));
+    public static BackoffStrategy exponentialWithFullJitter(
+            Duration initialDelay,
+            Duration maxDelay,
+            double multiplier,
+            RandomGenerator randomGenerator) {
+        return new ExponentialBackoffStrategy(
+                initialDelay,
+                maxDelay,
+                multiplier,
+                Objects.requireNonNull(randomGenerator, "randomGenerator must not be null")
+        );
     }
 
     /** 按失败类别选择委托退避策略，未匹配时使用默认策略。 */
-    public static BackoffStrategy categoryAware(Map<RetryFailureCategory, BackoffStrategy> strategies, BackoffStrategy defaultStrategy) {
+    public static BackoffStrategy categoryAware(
+            Map<RetryFailureCategory, BackoffStrategy> strategies,
+            BackoffStrategy defaultStrategy) {
         Objects.requireNonNull(strategies, "strategies must not be null");
-        BackoffStrategy actualDefault = Objects.requireNonNull(defaultStrategy, "defaultStrategy must not be null");
-        Map<RetryFailureCategory, BackoffStrategy> copiedStrategies = new EnumMap<>(RetryFailureCategory.class);
-        strategies.forEach((category, strategy) -> copiedStrategies.put(Objects.requireNonNull(category, "category must not be null"),
-            Objects.requireNonNull(strategy, "strategy must not be null")));
+        BackoffStrategy actualDefault = Objects.requireNonNull(
+                defaultStrategy,
+                "defaultStrategy must not be null"
+        );
+        Map<RetryFailureCategory, BackoffStrategy> copiedStrategies =
+                new EnumMap<>(RetryFailureCategory.class);
+        strategies.forEach((category, strategy) -> copiedStrategies.put(
+                Objects.requireNonNull(category, "category must not be null"),
+                Objects.requireNonNull(strategy, "strategy must not be null")
+        ));
         return (attempt, decision) -> {
-            RetryDecision actualDecision = Objects.requireNonNull(decision, "decision must not be null");
-            BackoffStrategy selectedStrategy = copiedStrategies.getOrDefault(actualDecision.getFailureCategory(), actualDefault);
-            RetryDelay selectedDelay =
-                Objects.requireNonNull(selectedStrategy.nextDelay(attempt, actualDecision), "selected strategy returned null");
-            return RetryDelay.of(selectedDelay.getDuration(), selectedDelay.getSource(),
-                "category=" + actualDecision.getFailureCategory() + ", delegatedSource=" + selectedDelay.getSource() +
-                    ", delegatedReason=" + selectedDelay.getReason());
+            RetryDecision actualDecision = Objects.requireNonNull(
+                    decision,
+                    "decision must not be null"
+            );
+            BackoffStrategy selectedStrategy = copiedStrategies.getOrDefault(
+                    actualDecision.getFailureCategory(),
+                    actualDefault
+            );
+            RetryDelay selectedDelay = Objects.requireNonNull(
+                    selectedStrategy.nextDelay(attempt, actualDecision),
+                    "selected strategy returned null"
+            );
+            return RetryDelay.of(
+                    selectedDelay.getDuration(),
+                    selectedDelay.getSource(),
+                    "category=" + actualDecision.getFailureCategory()
+                            + ", delegatedSource=" + selectedDelay.getSource()
+                            + ", delegatedReason=" + selectedDelay.getReason()
+            );
         };
     }
 
@@ -82,14 +130,22 @@ public final class BackoffStrategies {
         /** 可选随机源；为空表示不使用抖动。 */
         private final RandomGenerator randomGenerator;
 
-        private ExponentialBackoffStrategy(Duration initialDelay, Duration maxDelay, double multiplier, RandomGenerator randomGenerator) {
+        private ExponentialBackoffStrategy(
+                Duration initialDelay,
+                Duration maxDelay,
+                double multiplier,
+                RandomGenerator randomGenerator) {
             Duration actualInitial = requireNonNegative(initialDelay, "initialDelay");
             Duration actualMax = requireNonNegative(maxDelay, "maxDelay");
             if (actualInitial.compareTo(actualMax) > 0) {
-                throw new IllegalArgumentException("initialDelay must not be greater than maxDelay");
+                throw new IllegalArgumentException(
+                        "initialDelay must not be greater than maxDelay"
+                );
             }
             if (!Double.isFinite(multiplier) || multiplier < 1.0D) {
-                throw new IllegalArgumentException("multiplier must be finite and greater than or equal to 1.0");
+                throw new IllegalArgumentException(
+                        "multiplier must be finite and greater than or equal to 1.0"
+                );
             }
             this.initialDelayNanos = toNanosExact(actualInitial, "initialDelay");
             this.maxDelayNanos = toNanosExact(actualMax, "maxDelay");
@@ -100,14 +156,25 @@ public final class BackoffStrategies {
         /** 根据已完成尝试编号计算下一次等待时间。 */
         @Override
         public RetryDelay nextDelay(RetryAttempt<?> attempt, RetryDecision decision) {
-            RetryAttempt<?> actualAttempt = Objects.requireNonNull(attempt, "attempt must not be null");
+            RetryAttempt<?> actualAttempt = Objects.requireNonNull(
+                    attempt,
+                    "attempt must not be null"
+            );
             Objects.requireNonNull(decision, "decision must not be null");
             long upperBound = calculateUpperBound(actualAttempt.getAttemptNumber());
             if (randomGenerator == null || upperBound == 0L) {
-                return RetryDelay.of(Duration.ofNanos(upperBound), RetryDelaySource.EXPONENTIAL, "exponential backoff");
+                return RetryDelay.of(
+                        Duration.ofNanos(upperBound),
+                        RetryDelaySource.EXPONENTIAL,
+                        "exponential backoff"
+                );
             }
             long randomizedDelay = randomInclusive(randomGenerator, upperBound);
-            return RetryDelay.of(Duration.ofNanos(randomizedDelay), RetryDelaySource.FULL_JITTER, "full jitter exponential backoff");
+            return RetryDelay.of(
+                    Duration.ofNanos(randomizedDelay),
+                    RetryDelaySource.FULL_JITTER,
+                    "full jitter exponential backoff"
+            );
         }
 
         /** 计算并限制当前指数退避上限。 */

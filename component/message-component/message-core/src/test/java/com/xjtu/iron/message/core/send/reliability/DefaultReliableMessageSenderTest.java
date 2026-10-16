@@ -40,8 +40,8 @@ class DefaultReliableMessageSenderTest {
     @Test
     void shouldRetryWhenProviderReturnsNetworkErrorAndThenConfirmed() {
         ScriptedFakeMessageProvider provider = ScriptedFakeMessageProvider.scripted(
-            returning(ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.NETWORK_ERROR, "network")),
-            returning(ProviderSendResult.confirmed("provider-message-1")));
+                returning(ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.NETWORK_ERROR, "network")),
+                returning(ProviderSendResult.confirmed("provider-message-1")));
 
         SendResult result = sender(defaultOptions()).send(prepared(provider));
 
@@ -56,9 +56,9 @@ class DefaultReliableMessageSenderTest {
     @Test
     void shouldReturnRetryExhaustedWhenProviderKeepsReturningNetworkError() {
         ScriptedFakeMessageProvider provider = ScriptedFakeMessageProvider.scripted(
-            returning(ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.NETWORK_ERROR, "network-1")),
-            returning(ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.NETWORK_ERROR, "network-2")),
-            returning(ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.NETWORK_ERROR, "network-3")));
+                returning(ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.NETWORK_ERROR, "network-1")),
+                returning(ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.NETWORK_ERROR, "network-2")),
+                returning(ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.NETWORK_ERROR, "network-3")));
 
         SendResult result = sender(defaultOptions()).send(prepared(provider));
 
@@ -66,14 +66,15 @@ class DefaultReliableMessageSenderTest {
         assertEquals(SendStage.RETRY, result.stage());
         assertEquals(SendFailureType.RETRY_EXHAUSTED, result.failureType());
         assertEquals(3, provider.sendCount());
-        assertReliability(result.reliabilityInfo(), "EXHAUSTED", 3, "MESSAGE_SEND_NETWORK_ERROR", "DEPENDENCY_UNAVAILABLE");
+        assertReliability(result.reliabilityInfo(), "EXHAUSTED", 3,
+                "MESSAGE_SEND_NETWORK_ERROR", "DEPENDENCY_UNAVAILABLE");
     }
 
     @Test
     void shouldStopWithoutRetryWhenOutcomeIsUnknownByDefault() {
         ScriptedFakeMessageProvider provider = ScriptedFakeMessageProvider.scripted(
-            returning(ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.TIMEOUT, "timeout")),
-            returning(ProviderSendResult.confirmed("should-not-send")));
+                returning(ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.TIMEOUT, "timeout")),
+                returning(ProviderSendResult.confirmed("should-not-send")));
 
         SendResult result = sender(defaultOptions()).send(prepared(provider));
 
@@ -81,16 +82,18 @@ class DefaultReliableMessageSenderTest {
         assertEquals(SendStage.CONFIRM, result.stage());
         assertEquals(SendFailureType.TIMEOUT, result.failureType());
         assertEquals(1, provider.sendCount());
-        assertReliability(result.reliabilityInfo(), "NOT_RETRYABLE", 1, "MESSAGE_SEND_TIMEOUT", "UNKNOWN");
+        assertReliability(result.reliabilityInfo(), "NOT_RETRYABLE", 1,
+                "MESSAGE_SEND_TIMEOUT", "UNKNOWN");
     }
 
     @Test
     void shouldRetryUnknownWhenRetryWhenUnknownIsExplicitlyEnabled() {
         ScriptedFakeMessageProvider provider = ScriptedFakeMessageProvider.scripted(
-            returning(ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.TIMEOUT, "timeout")),
-            returning(ProviderSendResult.confirmed("provider-message-after-unknown")));
+                returning(ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.TIMEOUT, "timeout")),
+                returning(ProviderSendResult.confirmed("provider-message-after-unknown")));
 
-        SendResult result = sender(new MessageSendReliabilityOptions(true, "message-send", true, true)).send(prepared(provider));
+        SendResult result = sender(new MessageSendReliabilityOptions(true, "message-send", true, true))
+                .send(prepared(provider));
 
         assertEquals(SendStatus.CONFIRMED, result.status());
         assertEquals(2, provider.sendCount());
@@ -100,8 +103,8 @@ class DefaultReliableMessageSenderTest {
     @Test
     void shouldStopWithoutRetryWhenProviderRejectsMessage() {
         ScriptedFakeMessageProvider provider = ScriptedFakeMessageProvider.scripted(
-            returning(ProviderSendResult.failed(SendStatus.REJECTED, SendFailureType.ROUTING_ERROR, "invalid topic")),
-            returning(ProviderSendResult.confirmed("should-not-send")));
+                returning(ProviderSendResult.failed(SendStatus.REJECTED, SendFailureType.ROUTING_ERROR, "invalid topic")),
+                returning(ProviderSendResult.confirmed("should-not-send")));
 
         SendResult result = sender(defaultOptions()).send(prepared(provider));
 
@@ -109,13 +112,15 @@ class DefaultReliableMessageSenderTest {
         assertEquals(SendStage.SEND, result.stage());
         assertEquals(SendFailureType.ROUTING_ERROR, result.failureType());
         assertEquals(1, provider.sendCount());
-        assertReliability(result.reliabilityInfo(), "NOT_RETRYABLE", 1, "MESSAGE_SEND_ROUTING_ERROR", "NON_RETRYABLE");
+        assertReliability(result.reliabilityInfo(), "NOT_RETRYABLE", 1,
+                "MESSAGE_SEND_ROUTING_ERROR", "NON_RETRYABLE");
     }
 
     @Test
     void shouldRetryWhenProviderFutureFailsWithIOExceptionAndThenConfirmed() {
-        ScriptedFakeMessageProvider provider = ScriptedFakeMessageProvider.scripted(failing(new IOException("connection reset")),
-            returning(ProviderSendResult.confirmed("provider-message-after-io")));
+        ScriptedFakeMessageProvider provider = ScriptedFakeMessageProvider.scripted(
+                failing(new IOException("connection reset")),
+                returning(ProviderSendResult.confirmed("provider-message-after-io")));
 
         SendResult result = sender(defaultOptions()).send(prepared(provider));
 
@@ -126,8 +131,9 @@ class DefaultReliableMessageSenderTest {
 
     @Test
     void shouldTreatNullCompletionStageAsRetryableClientError() {
-        ScriptedFakeMessageProvider provider =
-            ScriptedFakeMessageProvider.scripted(nullStage(), returning(ProviderSendResult.confirmed("provider-message-after-null-stage")));
+        ScriptedFakeMessageProvider provider = ScriptedFakeMessageProvider.scripted(
+                nullStage(),
+                returning(ProviderSendResult.confirmed("provider-message-after-null-stage")));
 
         SendResult result = sender(defaultOptions()).send(prepared(provider));
 
@@ -138,8 +144,8 @@ class DefaultReliableMessageSenderTest {
 
     @Test
     void shouldOmitReliabilityFailureFieldsWhenFinalResultIsSuccess() {
-        ScriptedFakeMessageProvider provider =
-            ScriptedFakeMessageProvider.scripted(returning(ProviderSendResult.confirmed("provider-message-1")));
+        ScriptedFakeMessageProvider provider = ScriptedFakeMessageProvider.scripted(
+                returning(ProviderSendResult.confirmed("provider-message-1")));
 
         SendResult result = sender(defaultOptions()).send(prepared(provider));
 
@@ -149,10 +155,17 @@ class DefaultReliableMessageSenderTest {
     }
 
     private static DefaultReliableMessageSender sender(MessageSendReliabilityOptions options) {
-        RetryPolicy policy = RetryPolicy.builder("message-send").maxAttempts(3).maxDuration(Duration.ofSeconds(5))
-            .classifier(new MessageSendRetryClassifier(options.retryWhenUnknown())).build();
-        return new DefaultReliableMessageSender(new InlineRetryExecutor(), new InMemoryRetryPolicyRegistry(policy), options,
-            Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC), Runnable::run);
+        RetryPolicy policy = RetryPolicy.builder("message-send")
+                .maxAttempts(3)
+                .maxDuration(Duration.ofSeconds(5))
+                .classifier(new MessageSendRetryClassifier(options.retryWhenUnknown()))
+                .build();
+        return new DefaultReliableMessageSender(
+                new InlineRetryExecutor(),
+                new InMemoryRetryPolicyRegistry(policy),
+                options,
+                Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC),
+                Runnable::run);
     }
 
     private static MessageSendReliabilityOptions defaultOptions() {
@@ -162,15 +175,32 @@ class DefaultReliableMessageSenderTest {
     private static PreparedMessageSend prepared(MessageProvider provider) {
         MessageDestination destination = MessageDestination.of("demo", "message").withProviderHint("fake");
         ProviderDestination providerDestination = new ProviderDestination("fake", "fake-topic", Map.of());
-        MessageEnvelope<String> message =
-            MessageEnvelope.builder("DemoMessage", "payload").messageId("message-1").messageKey("order-1").build();
-        ProviderSendRequest request = new ProviderSendRequest(providerDestination, "message-1", "order-1", Map.of(), new byte[]{1});
-        return new PreparedMessageSend(destination, message, providerDestination, provider, request, Duration.ofMillis(100),
-            Instant.parse("2026-01-01T00:00:00Z"));
+        MessageEnvelope<String> message = MessageEnvelope.builder("DemoMessage", "payload")
+                .messageId("message-1")
+                .messageKey("order-1")
+                .build();
+        ProviderSendRequest request = new ProviderSendRequest(
+                providerDestination,
+                "message-1",
+                "order-1",
+                Map.of(),
+                new byte[]{1});
+        return new PreparedMessageSend(
+                destination,
+                message,
+                providerDestination,
+                provider,
+                request,
+                Duration.ofMillis(100),
+                Instant.parse("2026-01-01T00:00:00Z"));
     }
 
-    private static void assertReliability(SendReliabilityInfo reliabilityInfo, String retryStatus, int attempts, String lastFailureCode,
-        String lastFailureCategory) {
+    private static void assertReliability(
+            SendReliabilityInfo reliabilityInfo,
+            String retryStatus,
+            int attempts,
+            String lastFailureCode,
+            String lastFailureCategory) {
         assertEquals(true, reliabilityInfo.enabled());
         assertEquals("message-send", reliabilityInfo.retryPolicy());
         assertEquals(retryStatus, reliabilityInfo.retryStatus());
@@ -199,37 +229,60 @@ class DefaultReliableMessageSenderTest {
                 T result = null;
                 Throwable failure = null;
                 try {
-                    RetryContext context = new RetryContext(retryId, operation, policy.getPolicyName(), attemptNumber, now, Duration.ZERO,
-                        policy.getMaxDuration(), lastAttempt, execution.getAttributes(), execution.getCancellationToken());
+                    RetryContext context = new RetryContext(
+                            retryId,
+                            operation,
+                            policy.getPolicyName(),
+                            attemptNumber,
+                            now,
+                            Duration.ZERO,
+                            policy.getMaxDuration(),
+                            lastAttempt,
+                            execution.getAttributes(),
+                            execution.getCancellationToken());
                     result = execution.getOperation().execute(context);
                 } catch (Exception exception) {
                     failure = exception;
                 }
-                lastAttempt = new RetryAttempt<>(retryId, operation, policy.getPolicyName(), attemptNumber, now, now, now, Duration.ZERO,
-                    Duration.ZERO, policy.getMaxDuration(), result, failure, execution.getAttributes());
+                lastAttempt = new RetryAttempt<>(
+                        retryId,
+                        operation,
+                        policy.getPolicyName(),
+                        attemptNumber,
+                        now,
+                        now,
+                        now,
+                        Duration.ZERO,
+                        Duration.ZERO,
+                        policy.getMaxDuration(),
+                        result,
+                        failure,
+                        execution.getAttributes());
                 lastDecision = policy.getRetryClassifier().classify(lastAttempt);
                 if (lastDecision.getType() == RetryDecisionType.SUCCESS) {
-                    return RetryResult.of(retryId, operation, policy.getPolicyName(), RetryStatus.SUCCESS, result, null, attemptNumber,
-                        Duration.ZERO, lastAttempt, lastDecision);
+                    return RetryResult.of(retryId, operation, policy.getPolicyName(), RetryStatus.SUCCESS,
+                            result, null, attemptNumber, Duration.ZERO, lastAttempt, lastDecision);
                 }
                 if (lastDecision.getType() == RetryDecisionType.STOP) {
-                    return RetryResult.of(retryId, operation, policy.getPolicyName(), RetryStatus.NOT_RETRYABLE, result, failure,
-                        attemptNumber, Duration.ZERO, lastAttempt, lastDecision);
+                    return RetryResult.of(retryId, operation, policy.getPolicyName(), RetryStatus.NOT_RETRYABLE,
+                            result, failure, attemptNumber, Duration.ZERO, lastAttempt, lastDecision);
                 }
                 if (lastDecision.getType() == RetryDecisionType.ABORT) {
-                    return RetryResult.of(retryId, operation, policy.getPolicyName(), RetryStatus.ABORTED, result, failure, attemptNumber,
-                        Duration.ZERO, lastAttempt, lastDecision);
+                    return RetryResult.of(retryId, operation, policy.getPolicyName(), RetryStatus.ABORTED,
+                            result, failure, attemptNumber, Duration.ZERO, lastAttempt, lastDecision);
                 }
             }
             T lastValue = lastAttempt == null ? null : lastAttempt.getResult();
             Throwable lastFailure = lastAttempt == null ? null : lastAttempt.getFailure();
-            return RetryResult.of(retryId, operation, policy.getPolicyName(), RetryStatus.EXHAUSTED, lastValue, lastFailure,
-                policy.getMaxAttempts(), Duration.ZERO, lastAttempt, lastDecision);
+            return RetryResult.of(retryId, operation, policy.getPolicyName(), RetryStatus.EXHAUSTED,
+                    lastValue, lastFailure, policy.getMaxAttempts(), Duration.ZERO, lastAttempt, lastDecision);
         }
 
         @Override
-        public <T> RetryResult<T> execute(String operationName, Map<String, Object> attributes,
-            com.xjtu.iron.retry.api.execution.RetryOperation<T> operation, String policyName) {
+        public <T> RetryResult<T> execute(String operationName,
+                                          Map<String, Object> attributes,
+                                          com.xjtu.iron.retry.api.execution.RetryOperation<T> operation,
+                                          String policyName) {
             throw new UnsupportedOperationException("named policy lookup is not needed in message sender tests");
         }
     }

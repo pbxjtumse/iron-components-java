@@ -12,12 +12,7 @@ public final class SequentialIdGenerator implements IdGenerator {
     private final String prefix;
     private final AtomicLong sequence = new AtomicLong();
 
-    public SequentialIdGenerator(String prefix) {
-        this.prefix = prefix == null ? "" : prefix;
-    }
+    public SequentialIdGenerator(String prefix) { this.prefix = prefix == null ? "" : prefix; }
 
-    @Override
-    public String nextId() {
-        return prefix + sequence.incrementAndGet();
-    }
+    @Override public String nextId() { return prefix + sequence.incrementAndGet(); }
 }

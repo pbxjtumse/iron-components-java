@@ -41,9 +41,20 @@ public final class RetryAttempt<T> {
     /** 调用方提供的只读上下文属性。 */
     private final Map<String, Object> attributes;
 
-    public RetryAttempt(String retryId, String operationName, String policyName, int attemptNumber, Instant executionStartTime,
-        Instant attemptStartTime, Instant completedAt, Duration attemptDuration, Duration totalElapsedTime, Duration remainingDuration,
-        T result, Throwable failure, Map<String, Object> attributes) {
+    public RetryAttempt(
+            String retryId,
+            String operationName,
+            String policyName,
+            int attemptNumber,
+            Instant executionStartTime,
+            Instant attemptStartTime,
+            Instant completedAt,
+            Duration attemptDuration,
+            Duration totalElapsedTime,
+            Duration remainingDuration,
+            T result,
+            Throwable failure,
+            Map<String, Object> attributes) {
         this.retryId = requireText(retryId, "retryId");
         this.operationName = requireText(operationName, "operationName");
         this.policyName = requireText(policyName, "policyName");
@@ -51,14 +62,25 @@ public final class RetryAttempt<T> {
             throw new IllegalArgumentException("attemptNumber must be greater than or equal to 1");
         }
         this.attemptNumber = attemptNumber;
-        this.executionStartTime = Objects.requireNonNull(executionStartTime, "executionStartTime must not be null");
-        this.attemptStartTime = Objects.requireNonNull(attemptStartTime, "attemptStartTime must not be null");
+        this.executionStartTime = Objects.requireNonNull(
+                executionStartTime,
+                "executionStartTime must not be null"
+        );
+        this.attemptStartTime = Objects.requireNonNull(
+                attemptStartTime,
+                "attemptStartTime must not be null"
+        );
         this.completedAt = Objects.requireNonNull(completedAt, "completedAt must not be null");
         this.attemptDuration = requireNonNegative(attemptDuration, "attemptDuration");
         this.totalElapsedTime = requireNonNegative(totalElapsedTime, "totalElapsedTime");
-        this.remainingDuration = requireNonNegative(remainingDuration, "remainingDuration");
+        this.remainingDuration = requireNonNegative(
+                remainingDuration,
+                "remainingDuration"
+        );
         if (this.totalElapsedTime.compareTo(this.attemptDuration) < 0) {
-            throw new IllegalArgumentException("totalElapsedTime must not be shorter than attemptDuration");
+            throw new IllegalArgumentException(
+                    "totalElapsedTime must not be shorter than attemptDuration"
+            );
         }
         if (result != null && failure != null) {
             throw new IllegalArgumentException("result and failure cannot both be non-null");

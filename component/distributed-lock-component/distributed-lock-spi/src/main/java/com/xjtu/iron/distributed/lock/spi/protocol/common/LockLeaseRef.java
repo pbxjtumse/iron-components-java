@@ -21,31 +21,22 @@ public final class LockLeaseRef {
         this.ownerToken = requireText(builder.ownerToken, "ownerToken");
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
+    public static Builder builder() { return new Builder(); }
 
     public static LockLeaseRef fromLease(LockLease lease) {
         Objects.requireNonNull(lease, "lease must not be null");
-        return builder().namespace(lease.getNamespace()).lockName(lease.getLockName()).lockKey(lease.getLockKey())
-            .ownerToken(lease.getOwnerToken()).build();
+        return builder()
+                .namespace(lease.getNamespace())
+                .lockName(lease.getLockName())
+                .lockKey(lease.getLockKey())
+                .ownerToken(lease.getOwnerToken())
+                .build();
     }
 
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public String getLockName() {
-        return lockName;
-    }
-
-    public String getLockKey() {
-        return lockKey;
-    }
-
-    public String getOwnerToken() {
-        return ownerToken;
-    }
+    public String getNamespace() { return namespace; }
+    public String getLockName() { return lockName; }
+    public String getLockKey() { return lockKey; }
+    public String getOwnerToken() { return ownerToken; }
 
     private static String requireText(String value, String fieldName) {
         if (value == null || value.trim().isEmpty()) {
@@ -59,32 +50,11 @@ public final class LockLeaseRef {
         private String lockName;
         private String lockKey;
         private String ownerToken;
-
-        private Builder() {
-        }
-
-        public Builder namespace(String namespace) {
-            this.namespace = namespace;
-            return this;
-        }
-
-        public Builder lockName(String lockName) {
-            this.lockName = lockName;
-            return this;
-        }
-
-        public Builder lockKey(String lockKey) {
-            this.lockKey = lockKey;
-            return this;
-        }
-
-        public Builder ownerToken(String ownerToken) {
-            this.ownerToken = ownerToken;
-            return this;
-        }
-
-        public LockLeaseRef build() {
-            return new LockLeaseRef(this);
-        }
+        private Builder() {}
+        public Builder namespace(String namespace) { this.namespace = namespace; return this; }
+        public Builder lockName(String lockName) { this.lockName = lockName; return this; }
+        public Builder lockKey(String lockKey) { this.lockKey = lockKey; return this; }
+        public Builder ownerToken(String ownerToken) { this.ownerToken = ownerToken; return this; }
+        public LockLeaseRef build() { return new LockLeaseRef(this); }
     }
 }

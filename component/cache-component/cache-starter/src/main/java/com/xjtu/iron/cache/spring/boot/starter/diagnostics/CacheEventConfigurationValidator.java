@@ -60,10 +60,14 @@ public class CacheEventConfigurationValidator implements SmartInitializingSingle
      */
     private final ObjectProvider<LocalCacheInvalidator> localCacheInvalidatorProvider;
 
-    public CacheEventConfigurationValidator(ApplicationContext applicationContext, XjtuIronCacheProperties properties,
-        ObjectProvider<CacheEventPublisher> cacheEventPublisherProvider, ObjectProvider<RedisCacheEventSubscriber> subscriberProvider,
-        ObjectProvider<RedisMessageListenerContainer> listenerContainerProvider,
-        ObjectProvider<LocalCacheInvalidator> localCacheInvalidatorProvider) {
+    public CacheEventConfigurationValidator(
+            ApplicationContext applicationContext,
+            XjtuIronCacheProperties properties,
+            ObjectProvider<CacheEventPublisher> cacheEventPublisherProvider,
+            ObjectProvider<RedisCacheEventSubscriber> subscriberProvider,
+            ObjectProvider<RedisMessageListenerContainer> listenerContainerProvider,
+            ObjectProvider<LocalCacheInvalidator> localCacheInvalidatorProvider
+    ) {
         this.applicationContext = applicationContext;
         this.properties = properties;
         this.cacheEventPublisherProvider = cacheEventPublisherProvider;
@@ -85,25 +89,33 @@ public class CacheEventConfigurationValidator implements SmartInitializingSingle
 
         if (!(eventPublisher instanceof RedisCacheEventPublisher)) {
             throw new IllegalStateException(
-                "xjtu.iron.cache.event.enabled=true, but CacheEventPublisher is not RedisCacheEventPublisher. " + "Actual=" +
-                    className(eventPublisher));
+                    "xjtu.iron.cache.event.enabled=true, but CacheEventPublisher is not RedisCacheEventPublisher. " +
+                            "Actual=" + className(eventPublisher)
+            );
         }
 
         if (subscriber == null) {
-            throw new IllegalStateException("xjtu.iron.cache.event.enabled=true, but RedisCacheEventSubscriber is missing.");
+            throw new IllegalStateException(
+                    "xjtu.iron.cache.event.enabled=true, but RedisCacheEventSubscriber is missing."
+            );
         }
 
         if (listenerContainer == null) {
-            throw new IllegalStateException("xjtu.iron.cache.event.enabled=true, but RedisMessageListenerContainer is missing.");
+            throw new IllegalStateException(
+                    "xjtu.iron.cache.event.enabled=true, but RedisMessageListenerContainer is missing."
+            );
         }
 
         if (!applicationContext.containsBean("ironRedisCacheEventListenerContainer")) {
             throw new IllegalStateException(
-                "xjtu.iron.cache.event.enabled=true, but bean named ironRedisCacheEventListenerContainer is missing.");
+                    "xjtu.iron.cache.event.enabled=true, but bean named ironRedisCacheEventListenerContainer is missing."
+            );
         }
 
         if (localCacheInvalidator == null) {
-            throw new IllegalStateException("xjtu.iron.cache.event.enabled=true, but LocalCacheInvalidator is missing.");
+            throw new IllegalStateException(
+                    "xjtu.iron.cache.event.enabled=true, but LocalCacheInvalidator is missing."
+            );
         }
     }
 

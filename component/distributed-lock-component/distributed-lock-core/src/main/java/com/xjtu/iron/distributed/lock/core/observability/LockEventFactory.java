@@ -10,24 +10,49 @@ import com.xjtu.iron.distributed.lock.spi.protocol.common.LockLease;
 public final class LockEventFactory {
 
     public LockEvent fromLease(LockLease lease, LockEventType type, LockStage stage, LockStatus status, Throwable error) {
-        return LockEvent.builder().eventType(type).stage(stage).status(status).namespace(lease.getNamespace()).lockName(lease.getLockName())
-            .lockKey(lease.getLockKey()).providerName(lease.getProviderName()).ownerToken(lease.getOwnerToken())
-            .fencingToken(lease.fencingToken().isPresent() ? lease.fencingToken().getAsLong() : null)
-            .fencingTokenProviderName(lease.fencingTokenProviderName().orElse(null)).error(error).build();
+        return LockEvent.builder()
+                .eventType(type)
+                .stage(stage)
+                .status(status)
+                .namespace(lease.getNamespace())
+                .lockName(lease.getLockName())
+                .lockKey(lease.getLockKey())
+                .providerName(lease.getProviderName())
+                .ownerToken(lease.getOwnerToken())
+                .fencingToken(lease.fencingToken().isPresent() ? lease.fencingToken().getAsLong() : null)
+                .fencingTokenProviderName(lease.fencingTokenProviderName().orElse(null))
+                .error(error)
+                .build();
     }
 
-    public LockEvent fromAcquireRequest(LockProvider provider, LockAcquireRequest request, LockEventType type, LockStage stage,
-        LockStatus status, Throwable error) {
-        return LockEvent.builder().eventType(type).stage(stage).status(status).namespace(request.getNamespace())
-            .lockName(request.getLockName()).providerName(provider.providerName()).ownerToken(request.getOwnerToken()).error(error).build();
+    public LockEvent fromAcquireRequest(LockProvider provider, LockAcquireRequest request, LockEventType type, LockStage stage, LockStatus status,
+            Throwable error) {
+        return LockEvent.builder()
+                .eventType(type)
+                .stage(stage)
+                .status(status)
+                .namespace(request.getNamespace())
+                .lockName(request.getLockName())
+                .providerName(provider.providerName())
+                .ownerToken(request.getOwnerToken())
+                .error(error)
+                .build();
     }
-
     /** 创建 fencing 阶段事件，并允许在尚未拿到 token 时记录计划使用的发号 Provider。 */
     public LockEvent fromFencing(LockLease lease, LockEventType type, LockStatus status, String fencingTokenProviderName, Throwable error) {
-        return LockEvent.builder().eventType(type).stage(LockStage.FENCING).status(status).namespace(lease.getNamespace())
-            .lockName(lease.getLockName()).lockKey(lease.getLockKey()).providerName(lease.getProviderName())
-            .ownerToken(lease.getOwnerToken()).fencingToken(lease.fencingToken().isPresent() ? lease.fencingToken().getAsLong() : null)
-            .fencingTokenProviderName(fencingTokenProviderName).error(error).build();
+        return LockEvent.builder()
+                .eventType(type)
+                .stage(LockStage.FENCING)
+                .status(status)
+                .namespace(lease.getNamespace())
+                .lockName(lease.getLockName())
+                .lockKey(lease.getLockKey())
+                .providerName(lease.getProviderName())
+                .ownerToken(lease.getOwnerToken())
+                .fencingToken(lease.fencingToken().isPresent() ? lease.fencingToken().getAsLong() : null)
+                .fencingTokenProviderName(fencingTokenProviderName)
+                .error(error)
+                .build();
     }
 
 }

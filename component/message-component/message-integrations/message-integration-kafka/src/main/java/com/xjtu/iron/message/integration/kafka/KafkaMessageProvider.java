@@ -28,7 +28,6 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 /**
  * Kafka Provider 实现，负责把 message-component 的统一 SPI 请求适配到 Kafka Producer/Consumer。
  *
@@ -99,8 +98,13 @@ public final class KafkaMessageProvider implements MessageProvider {
     @Override
     public Set<MessageCapability> capabilities() {
         // Kafka Provider 支持普通发布和普通消费。
-        return Set.of(MessageCapability.BASIC_PUBLISH, MessageCapability.BASIC_CONSUME, MessageCapability.OFFSET_COMMIT,
-            MessageCapability.REDELIVERY, MessageCapability.ORDERED_CONSUME, MessageCapability.BATCH_CONSUME);
+        return Set.of(
+                MessageCapability.BASIC_PUBLISH,
+                MessageCapability.BASIC_CONSUME,
+                MessageCapability.OFFSET_COMMIT,
+                MessageCapability.REDELIVERY,
+                MessageCapability.ORDERED_CONSUME,
+                MessageCapability.BATCH_CONSUME);
     }
 
     /**
@@ -111,14 +115,21 @@ public final class KafkaMessageProvider implements MessageProvider {
         // Provider 关闭后返回明确本地失败。
         if (closed.get()) {
             // 不再调用已关闭 Producer。
-            return CompletableFuture.completedFuture(
-                ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.CLIENT_ERROR, "Kafka provider is closed"));
+            return CompletableFuture.completedFuture(ProviderSendResult.failed(
+                    SendStatus.FAILED,
+                    SendFailureType.CLIENT_ERROR,
+                    "Kafka provider is closed"));
         }
         // 创建 Kafka ProducerRecord。
-        ProducerRecord<String, byte[]> record =
-            new ProducerRecord<>(request.destination().physicalName(), request.messageKey(), request.body());
+        ProducerRecord<String, byte[]> record = new ProducerRecord<>(
+                request.destination().physicalName(),
+                request.messageKey(),
+                request.body());
         // 将线级字符串消息头编码为 UTF-8 Kafka Header。
-        request.headers().forEach((name, value) -> record.headers().add(name, value.getBytes(StandardCharsets.UTF_8)));
+        request.headers().forEach((name, value) ->
+                record.headers().add(
+                        name,
+                        value.getBytes(StandardCharsets.UTF_8)));
         // 创建公共结果 Future。
         CompletableFuture<ProviderSendResult> resultFuture = new CompletableFuture<>();
         // 发起 Kafka 异步发送。
@@ -131,13 +142,20 @@ public final class KafkaMessageProvider implements MessageProvider {
                 return;
             }
             // 组合 Topic、Partition 和 Offset 作为原生位置标识。
-            String providerMessageId = metadata.topic() + "-" + metadata.partition() + "@" + metadata.offset();
+            String providerMessageId = metadata.topic()
+                    + "-"
+                    + metadata.partition()
+                    + "@"
+                    + metadata.offset();
             // 构造诊断元数据。
-            Map<String, String> resultMetadata =
-                Map.of(KafkaMetadataKeys.TOPIC, metadata.topic(), KafkaMetadataKeys.PARTITION, Integer.toString(metadata.partition()),
+            Map<String, String> resultMetadata = Map.of(
+                    KafkaMetadataKeys.TOPIC, metadata.topic(),
+                    KafkaMetadataKeys.PARTITION, Integer.toString(metadata.partition()),
                     KafkaMetadataKeys.OFFSET, Long.toString(metadata.offset()));
             // Broker 返回 RecordMetadata 后标记明确确认。
-            resultFuture.complete(ProviderSendResult.confirmed(providerMessageId, resultMetadata));
+            resultFuture.complete(ProviderSendResult.confirmed(
+                    providerMessageId,
+                    resultMetadata));
         });
         // 返回异步结果。
         return resultFuture;
@@ -185,35 +203,68 @@ public final class KafkaMessageProvider implements MessageProvider {
      * 分类 Kafka 发送异常。
      */
     private static ProviderSendResult classifySendFailure(Exception exception) {
-        Map<String, String> metadata = Map.of("exceptionType", exception.getClass().getName());
+        Map<String, String> metadata = Map.of(
+                "exceptionType", exception.getClass().getName());
         // 认证失败属于明确拒绝。
         if (exception instanceof AuthenticationException) {
-            return ProviderSendResult.failed(SendStatus.REJECTED, SendFailureType.AUTHENTICATION_ERROR, exception.getMessage(), metadata);
+            return ProviderSendResult.failed(
+                    SendStatus.REJECTED,
+                    SendFailureType.AUTHENTICATION_ERROR,
+                    exception.getMessage(),
+                    metadata);
         }
         // 授权失败属于明确拒绝。
         if (exception instanceof AuthorizationException) {
-            return ProviderSendResult.failed(SendStatus.REJECTED, SendFailureType.AUTHORIZATION_ERROR, exception.getMessage(), metadata);
+            return ProviderSendResult.failed(
+                    SendStatus.REJECTED,
+                    SendFailureType.AUTHORIZATION_ERROR,
+                    exception.getMessage(),
+                    metadata);
         }
         // 序列化异常、非法 Topic、超大记录都不是重试能够修复的问题。
         if (exception instanceof SerializationException) {
-            return ProviderSendResult.failed(SendStatus.REJECTED, SendFailureType.SERIALIZATION_ERROR, exception.getMessage(), metadata);
+            return ProviderSendResult.failed(
+                    SendStatus.REJECTED,
+                    SendFailureType.SERIALIZATION_ERROR,
+                    exception.getMessage(),
+                    metadata);
         }
         if (exception instanceof InvalidTopicException) {
-            return ProviderSendResult.failed(SendStatus.REJECTED, SendFailureType.ROUTING_ERROR, exception.getMessage(), metadata);
+            return ProviderSendResult.failed(
+                    SendStatus.REJECTED,
+                    SendFailureType.ROUTING_ERROR,
+                    exception.getMessage(),
+                    metadata);
         }
         if (exception instanceof RecordTooLargeException) {
-            return ProviderSendResult.failed(SendStatus.REJECTED, SendFailureType.BROKER_REJECTED, exception.getMessage(), metadata);
+            return ProviderSendResult.failed(
+                    SendStatus.REJECTED,
+                    SendFailureType.BROKER_REJECTED,
+                    exception.getMessage(),
+                    metadata);
         }
         // Kafka TimeoutException 很可能已经进入发送流程但没有拿到确认，保守标记 UNKNOWN。
         if (exception instanceof TimeoutException) {
-            return ProviderSendResult.failed(SendStatus.UNKNOWN, SendFailureType.TIMEOUT, exception.getMessage(), metadata);
+            return ProviderSendResult.failed(
+                    SendStatus.UNKNOWN,
+                    SendFailureType.TIMEOUT,
+                    exception.getMessage(),
+                    metadata);
         }
         // 连接类、网络类可重试异常按明确临时失败处理，让可靠发送层触发 retry。
         if (exception instanceof NetworkException || exception instanceof RetriableException) {
-            return ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.NETWORK_ERROR, exception.getMessage(), metadata);
+            return ProviderSendResult.failed(
+                    SendStatus.FAILED,
+                    SendFailureType.NETWORK_ERROR,
+                    exception.getMessage(),
+                    metadata);
         }
         // 其他异常按明确客户端失败处理。
-        return ProviderSendResult.failed(SendStatus.FAILED, SendFailureType.CLIENT_ERROR, exception.getMessage(), metadata);
+        return ProviderSendResult.failed(
+                SendStatus.FAILED,
+                SendFailureType.CLIENT_ERROR,
+                exception.getMessage(),
+                metadata);
     }
 
     /**
@@ -225,7 +276,9 @@ public final class KafkaMessageProvider implements MessageProvider {
         // 遍历 Kafka Header。
         for (Header header : record.headers()) {
             // null 字节值按空字符串处理。
-            String value = header.value() == null ? "" : new String(header.value(), StandardCharsets.UTF_8);
+            String value = header.value() == null
+                    ? ""
+                    : new String(header.value(), StandardCharsets.UTF_8);
             // 写入统一字符串消息头。
             headers.put(header.key(), value);
         }
@@ -270,7 +323,9 @@ public final class KafkaMessageProvider implements MessageProvider {
             // 写入业务消费组。
             properties.put(ConsumerConfig.GROUP_ID_CONFIG, request.consumerGroup());
             // 为每个 Worker 生成独立 clientId。
-            properties.put(ConsumerConfig.CLIENT_ID_CONFIG, config.clientIdPrefix() + "-consumer-" + workerId);
+            properties.put(
+                    ConsumerConfig.CLIENT_ID_CONFIG,
+                    config.clientIdPrefix() + "-consumer-" + workerId);
             // Kafka Record Key 还原为统一 messageKey，因此强制使用 StringDeserializer。
             properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
             // 强制 value 保持 byte[] 交给 core 反序列化。
@@ -319,13 +374,19 @@ public final class KafkaMessageProvider implements MessageProvider {
                                 break;
                             }
                             // 构造 Provider 入站元数据。
-                            Map<String, String> metadata = Map.of(KafkaMetadataKeys.TOPIC, record.topic(), KafkaMetadataKeys.PARTITION,
-                                Integer.toString(record.partition()), KafkaMetadataKeys.OFFSET, Long.toString(record.offset()),
-                                KafkaMetadataKeys.TIMESTAMP, Long.toString(record.timestamp()));
+                            Map<String, String> metadata = Map.of(
+                                    KafkaMetadataKeys.TOPIC, record.topic(),
+                                    KafkaMetadataKeys.PARTITION, Integer.toString(record.partition()),
+                                    KafkaMetadataKeys.OFFSET, Long.toString(record.offset()),
+                                    KafkaMetadataKeys.TIMESTAMP, Long.toString(record.timestamp()));
                             // 构造统一 Provider 入站消息。
-                            ProviderInboundMessage inbound =
-                                new ProviderInboundMessage(record.topic() + "-" + record.partition() + "@" + record.offset(), record.key(),
-                                    toHeaders(record), record.value(), Instant.now(), metadata);
+                            ProviderInboundMessage inbound = new ProviderInboundMessage(
+                                    record.topic() + "-" + record.partition() + "@" + record.offset(),
+                                    record.key(),
+                                    toHeaders(record),
+                                    record.value(),
+                                    Instant.now(),
+                                    metadata);
                             // 默认 RETRY，防止监听器异常误提交 offset。
                             ConsumeDecision decision = ConsumeDecision.RETRY;
                             // 调用 core 监听器。

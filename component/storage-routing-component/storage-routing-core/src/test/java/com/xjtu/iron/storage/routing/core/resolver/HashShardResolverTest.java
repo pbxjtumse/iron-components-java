@@ -8,12 +8,10 @@ import com.xjtu.iron.storage.routing.api.route.RouteContext;
 import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
 import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.UUID;
 import java.util.stream.Stream;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -32,17 +30,18 @@ class HashShardResolverTest {
 
         assertThat(actual.shardId()).isEqualTo(expectedShard);
         StorageRoute route = ShardIdHashStorageRouteResolver.builder().databaseCount(10).tablesPerDatabase(10).build()
-            .resolve(RouteContext.builder().logicalTable("order").shardKey(key).build());
+                .resolve(RouteContext.builder().logicalTable("order").shardKey(key).build());
         assertThat(route.shardInfo()).isEqualTo(actual);
         assertThat(route.context().shardKey()).isEqualTo(key);
     }
 
     static Stream<Arguments> singleFieldCompatibilityVectors() {
         // 固定期望值，防止外层路由器与底层分片器共用错误实现时相互验证而漏掉回归。
-        return Stream.of(Arguments.of("8", 56), Arguments.of((byte) 8, 56), Arguments.of((short) 8, 56), Arguments.of(8, 56),
-            Arguments.of(8L, 56), Arguments.of(new BigInteger("8"), 56), Arguments.of(new BigDecimal("1.00"), 1), Arguments.of(" 8 ", 20),
-            Arguments.of("", 0), Arguments.of("polygenelubricants", 52),
-            Arguments.of(UUID.fromString("00000000-0000-0000-0000-000000000008"), 96));
+        return Stream.of(Arguments.of("8", 56), Arguments.of((byte) 8, 56), Arguments.of((short) 8, 56),
+                Arguments.of(8, 56), Arguments.of(8L, 56), Arguments.of(new BigInteger("8"), 56),
+                Arguments.of(new BigDecimal("1.00"), 1), Arguments.of(" 8 ", 20), Arguments.of("", 0),
+                Arguments.of("polygenelubricants", 52),
+                Arguments.of(UUID.fromString("00000000-0000-0000-0000-000000000008"), 96));
     }
 
     @Test
@@ -51,7 +50,7 @@ class HashShardResolverTest {
         RouteContext context = RouteContext.builder().routeName("order-create").logicalTable("order").shardKey(key).build();
         StorageRoute global = ShardIdHashStorageRouteResolver.builder().databaseCount(10).tablesPerDatabase(10).build().resolve(context);
         StorageRoute local = ShardIdHashStorageRouteResolver.builder().databaseCount(10).tablesPerDatabase(10)
-            .tableIndexMode(TableIndexMode.LOCAL_TABLE_INDEX).build().resolve(context);
+                .tableIndexMode(TableIndexMode.LOCAL_TABLE_INDEX).build().resolve(context);
 
         assertThat(global.context()).isSameAs(context);
         assertThat(global.shardInfo()).isEqualTo(new ShardRouteInfo(42, 4, 2, 100));
@@ -65,14 +64,13 @@ class HashShardResolverTest {
         CompositeShardKey key = CompositeShardKey.of(ShardKey.of("tenant_id", 42L), ShardKey.of("order_id", "8"));
         HashShardResolver shardResolver = new HashShardResolver(10, 10);
         DefaultStorageRouteResolver orders = new DefaultStorageRouteResolver(shardResolver,
-            new RouteMappingStrategyFactory("db_", "order", 2).create(TableIndexMode.GLOBAL_TABLE_INDEX));
+                new RouteMappingStrategyFactory("db_", "order", 2).create(TableIndexMode.GLOBAL_TABLE_INDEX));
         DefaultStorageRouteResolver outbox = new DefaultStorageRouteResolver(shardResolver,
-            new RouteMappingStrategyFactory("db_", "outbox", 2).create(TableIndexMode.GLOBAL_TABLE_INDEX));
-        StorageRoute order = orders.resolve(
-            RouteContext.builder().routeName("order-create").logicalTable("order").shardKey(key).attribute("tenant_id", "ignored-metadata")
-                .build());
-        StorageRoute event = outbox.resolve(
-            RouteContext.builder().routeName("outbox-save").logicalTable("outbox").shardKey(key).attribute("traceId", "different").build());
+                new RouteMappingStrategyFactory("db_", "outbox", 2).create(TableIndexMode.GLOBAL_TABLE_INDEX));
+        StorageRoute order = orders.resolve(RouteContext.builder().routeName("order-create").logicalTable("order")
+                .shardKey(key).attribute("tenant_id", "ignored-metadata").build());
+        StorageRoute event = outbox.resolve(RouteContext.builder().routeName("outbox-save").logicalTable("outbox")
+                .shardKey(key).attribute("traceId", "different").build());
 
         assertThat(order.shardInfo()).isEqualTo(event.shardInfo());
         assertThat(order.physicalLocation()).isEqualTo(PhysicalStorageLocation.of("db_04", "order_42"));

@@ -45,9 +45,25 @@ public final class ReliableTask {
     /** 任务成功完成时间；未完成时为空。 */
     private final Instant completedAt;
 
-    public ReliableTask(ReliableTaskKey key, String taskType, String businessKey, String payload, String routeKey, int scanBucket,
-        ReliableTaskStatus status, int attemptCount, int maxAttempts, Instant nextExecuteAt, String ownerId, Instant leaseUntil,
-        long version, String lastErrorCode, String lastErrorMessage, Instant createdAt, Instant updatedAt, Instant completedAt) {
+    public ReliableTask(
+            ReliableTaskKey key,
+            String taskType,
+            String businessKey,
+            String payload,
+            String routeKey,
+            int scanBucket,
+            ReliableTaskStatus status,
+            int attemptCount,
+            int maxAttempts,
+            Instant nextExecuteAt,
+            String ownerId,
+            Instant leaseUntil,
+            long version,
+            String lastErrorCode,
+            String lastErrorMessage,
+            Instant createdAt,
+            Instant updatedAt,
+            Instant completedAt) {
         this.key = Objects.requireNonNull(key, "key must not be null");
         this.taskType = requireText(taskType, "taskType");
         this.businessKey = normalize(businessKey);
@@ -90,89 +106,27 @@ public final class ReliableTask {
         }
     }
 
-    public ReliableTaskKey getKey() {
-        return key;
-    }
-
-    public String getStoreName() {
-        return key.getStoreName();
-    }
-
-    public String getNamespace() {
-        return key.getNamespace();
-    }
-
-    public String getTaskId() {
-        return key.getTaskId();
-    }
-
-    public String getTaskType() {
-        return taskType;
-    }
-
-    public String getBusinessKey() {
-        return businessKey;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    public String getRouteKey() {
-        return routeKey;
-    }
-
-    public int getScanBucket() {
-        return scanBucket;
-    }
-
-    public ReliableTaskStatus getStatus() {
-        return status;
-    }
-
-    public int getAttemptCount() {
-        return attemptCount;
-    }
-
-    public int getMaxAttempts() {
-        return maxAttempts;
-    }
-
-    public Instant getNextExecuteAt() {
-        return nextExecuteAt;
-    }
-
-    public String getOwnerId() {
-        return ownerId;
-    }
-
-    public Instant getLeaseUntil() {
-        return leaseUntil;
-    }
-
-    public long getVersion() {
-        return version;
-    }
-
-    public String getLastErrorCode() {
-        return lastErrorCode;
-    }
-
-    public String getLastErrorMessage() {
-        return lastErrorMessage;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public Instant getCompletedAt() {
-        return completedAt;
-    }
+    public ReliableTaskKey getKey() { return key; }
+    public String getStoreName() { return key.getStoreName(); }
+    public String getNamespace() { return key.getNamespace(); }
+    public String getTaskId() { return key.getTaskId(); }
+    public String getTaskType() { return taskType; }
+    public String getBusinessKey() { return businessKey; }
+    public String getPayload() { return payload; }
+    public String getRouteKey() { return routeKey; }
+    public int getScanBucket() { return scanBucket; }
+    public ReliableTaskStatus getStatus() { return status; }
+    public int getAttemptCount() { return attemptCount; }
+    public int getMaxAttempts() { return maxAttempts; }
+    public Instant getNextExecuteAt() { return nextExecuteAt; }
+    public String getOwnerId() { return ownerId; }
+    public Instant getLeaseUntil() { return leaseUntil; }
+    public long getVersion() { return version; }
+    public String getLastErrorCode() { return lastErrorCode; }
+    public String getLastErrorMessage() { return lastErrorMessage; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public Instant getCompletedAt() { return completedAt; }
 
     private static String requireText(String value, String name) {
         String normalized = normalize(value);

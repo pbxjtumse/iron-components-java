@@ -102,93 +102,29 @@ public final class IdempotencyRecord {
         this.completedAt = builder.completedAt;
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
+    public static Builder builder() { return new Builder(); }
 
-    public String getStoreName() {
-        return storeName;
-    }
-
-    public int getScanBucket() {
-        return scanBucket;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public String getRouteKey() {
-        return routeKey;
-    }
-
-    public String getRequestHash() {
-        return requestHash;
-    }
-
-    public IdempotencyStatus getStatus() {
-        return status;
-    }
-
-    public String getOwnerToken() {
-        return ownerToken;
-    }
-
-    public long getVersion() {
-        return version;
-    }
-
-    public String getResultPayload() {
-        return resultPayload;
-    }
-
-    public String getFailureCode() {
-        return failureCode;
-    }
-
-    public String getFailureMessage() {
-        return failureMessage;
-    }
-
-    public boolean isFailureRetryable() {
-        return failureRetryable;
-    }
-
-    public IdempotencyRecoveryMode getRecoveryMode() {
-        return recoveryMode;
-    }
-
-    public IdempotencyWindowPolicy getWindowPolicy() {
-        return windowPolicy;
-    }
-
-    public Instant getProcessingExpireAt() {
-        return processingExpireAt;
-    }
-
-    public Instant getWindowExpireAt() {
-        return windowExpireAt;
-    }
-
-    public Instant getRetentionExpireAt() {
-        return retentionExpireAt;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public Instant getCompletedAt() {
-        return completedAt;
-    }
+    public String getStoreName() { return storeName; }
+    public int getScanBucket() { return scanBucket; }
+    public String getNamespace() { return namespace; }
+    public String getKey() { return key; }
+    public String getRouteKey() { return routeKey; }
+    public String getRequestHash() { return requestHash; }
+    public IdempotencyStatus getStatus() { return status; }
+    public String getOwnerToken() { return ownerToken; }
+    public long getVersion() { return version; }
+    public String getResultPayload() { return resultPayload; }
+    public String getFailureCode() { return failureCode; }
+    public String getFailureMessage() { return failureMessage; }
+    public boolean isFailureRetryable() { return failureRetryable; }
+    public IdempotencyRecoveryMode getRecoveryMode() { return recoveryMode; }
+    public IdempotencyWindowPolicy getWindowPolicy() { return windowPolicy; }
+    public Instant getProcessingExpireAt() { return processingExpireAt; }
+    public Instant getWindowExpireAt() { return windowExpireAt; }
+    public Instant getRetentionExpireAt() { return retentionExpireAt; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public Instant getCompletedAt() { return completedAt; }
 
     public IdempotencyStorageContext storageContext() {
         return IdempotencyStorageContext.of(storeName == null ? IdempotencyStorageContext.DEFAULT_STORE_NAME : storeName, scanBucket);
@@ -217,110 +153,27 @@ public final class IdempotencyRecord {
         private Instant updatedAt;
         private Instant completedAt;
 
-        public Builder storeName(String value) {
-            this.storeName = value;
-            return this;
-        }
-
-        public Builder scanBucket(int value) {
-            this.scanBucket = value;
-            return this;
-        }
-
-        public Builder namespace(String value) {
-            this.namespace = value;
-            return this;
-        }
-
-        public Builder key(String value) {
-            this.key = value;
-            return this;
-        }
-
-        public Builder routeKey(String value) {
-            this.routeKey = value;
-            return this;
-        }
-
-        public Builder requestHash(String value) {
-            this.requestHash = value;
-            return this;
-        }
-
-        public Builder status(IdempotencyStatus value) {
-            this.status = value;
-            return this;
-        }
-
-        public Builder ownerToken(String value) {
-            this.ownerToken = value;
-            return this;
-        }
-
-        public Builder version(long value) {
-            this.version = value;
-            return this;
-        }
-
-        public Builder resultPayload(String value) {
-            this.resultPayload = value;
-            return this;
-        }
-
-        public Builder failureCode(String value) {
-            this.failureCode = value;
-            return this;
-        }
-
-        public Builder failureMessage(String value) {
-            this.failureMessage = value;
-            return this;
-        }
-
-        public Builder failureRetryable(boolean value) {
-            this.failureRetryable = value;
-            return this;
-        }
-
-        public Builder recoveryMode(IdempotencyRecoveryMode value) {
-            this.recoveryMode = value;
-            return this;
-        }
-
-        public Builder windowPolicy(IdempotencyWindowPolicy value) {
-            this.windowPolicy = value;
-            return this;
-        }
-
-        public Builder processingExpireAt(Instant value) {
-            this.processingExpireAt = value;
-            return this;
-        }
-
-        public Builder windowExpireAt(Instant value) {
-            this.windowExpireAt = value;
-            return this;
-        }
-
-        public Builder retentionExpireAt(Instant value) {
-            this.retentionExpireAt = value;
-            return this;
-        }
-
-        public Builder createdAt(Instant value) {
-            this.createdAt = value;
-            return this;
-        }
-
-        public Builder updatedAt(Instant value) {
-            this.updatedAt = value;
-            return this;
-        }
-
-        public Builder completedAt(Instant value) {
-            this.completedAt = value;
-            return this;
-        }
+        public Builder storeName(String value) { this.storeName = value; return this; }
+        public Builder scanBucket(int value) { this.scanBucket = value; return this; }
+        public Builder namespace(String value) { this.namespace = value; return this; }
+        public Builder key(String value) { this.key = value; return this; }
+        public Builder routeKey(String value) { this.routeKey = value; return this; }
+        public Builder requestHash(String value) { this.requestHash = value; return this; }
+        public Builder status(IdempotencyStatus value) { this.status = value; return this; }
+        public Builder ownerToken(String value) { this.ownerToken = value; return this; }
+        public Builder version(long value) { this.version = value; return this; }
+        public Builder resultPayload(String value) { this.resultPayload = value; return this; }
+        public Builder failureCode(String value) { this.failureCode = value; return this; }
+        public Builder failureMessage(String value) { this.failureMessage = value; return this; }
+        public Builder failureRetryable(boolean value) { this.failureRetryable = value; return this; }
+        public Builder recoveryMode(IdempotencyRecoveryMode value) { this.recoveryMode = value; return this; }
+        public Builder windowPolicy(IdempotencyWindowPolicy value) { this.windowPolicy = value; return this; }
+        public Builder processingExpireAt(Instant value) { this.processingExpireAt = value; return this; }
+        public Builder windowExpireAt(Instant value) { this.windowExpireAt = value; return this; }
+        public Builder retentionExpireAt(Instant value) { this.retentionExpireAt = value; return this; }
+        public Builder createdAt(Instant value) { this.createdAt = value; return this; }
+        public Builder updatedAt(Instant value) { this.updatedAt = value; return this; }
+        public Builder completedAt(Instant value) { this.completedAt = value; return this; }
 
         public IdempotencyRecord build() {
             if (scanBucket < 0) {

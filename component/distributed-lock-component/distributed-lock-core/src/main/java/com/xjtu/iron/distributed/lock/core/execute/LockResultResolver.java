@@ -15,7 +15,7 @@ import java.time.Duration;
 public final class LockResultResolver {
 
     public <T> LockResult<T> resolve(ExecutionOutcome<T> executionOutcome, LockReleaseOutcome releaseOutcome, DefaultLockHandle handle,
-        Duration waitDuration, Duration holdDuration, LockOptions options) {
+            Duration waitDuration, Duration holdDuration, LockOptions options) {
         LockStatus finalStatus = executionOutcome.getStatus();
         LockStage finalStage = executionOutcome.getStage();
         Throwable finalError = executionOutcome.getError();
@@ -36,11 +36,20 @@ public final class LockResultResolver {
             }
         }
 
-        return LockResult.<T>builder().status(finalStatus).stage(finalStage).acquired(true)
-            .value(finalStatus == LockStatus.SUCCESS ? executionOutcome.getValue() : null).handle(handle).error(finalError)
-            .lockName(handle.lockName()).lockKey(handle.lockKey()).ownerToken(handle.ownerToken())
-            .fencingToken(handle.fencingToken().isPresent() ? handle.fencingToken().getAsLong() : null)
-            .fencingTokenProviderName(handle.fencingTokenProviderName().orElse(null)).waitDuration(waitDuration).holdDuration(holdDuration)
-            .build();
+        return LockResult.<T>builder()
+                .status(finalStatus)
+                .stage(finalStage)
+                .acquired(true)
+                .value(finalStatus == LockStatus.SUCCESS ? executionOutcome.getValue() : null)
+                .handle(handle)
+                .error(finalError)
+                .lockName(handle.lockName())
+                .lockKey(handle.lockKey())
+                .ownerToken(handle.ownerToken())
+                .fencingToken(handle.fencingToken().isPresent() ? handle.fencingToken().getAsLong() : null)
+                .fencingTokenProviderName(handle.fencingTokenProviderName().orElse(null))
+                .waitDuration(waitDuration)
+                .holdDuration(holdDuration)
+                .build();
     }
 }

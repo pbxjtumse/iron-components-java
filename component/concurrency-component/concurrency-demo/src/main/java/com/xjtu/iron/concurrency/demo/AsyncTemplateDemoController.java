@@ -63,7 +63,11 @@ public class AsyncTemplateDemoController {
         //join() 会阻塞当前执行的线程
         List<String> values = asyncTemplate.allOf(List.of(userFuture, accountFuture)).join();
 
-        return Map.of("api", "AsyncTemplate.allOf", "meaning", "所有任务都成功才整体成功", "values", values);
+        return Map.of(
+                "api", "AsyncTemplate.allOf",
+                "meaning", "所有任务都成功才整体成功",
+                "values", values
+        );
     }
 
     /**
@@ -78,14 +82,23 @@ public class AsyncTemplateDemoController {
             throw new IllegalStateException("coupon service error");
         });
 
-        AsyncBatchResult<String> result =
-            asyncTemplate.allOfOutcome(List.of(NamedFuture.of("queryUser", successFuture), NamedFuture.of("queryCoupon", failureFuture)))
-                .join();
+        AsyncBatchResult<String> result = asyncTemplate.allOfOutcome(List.of(
+                NamedFuture.of("queryUser", successFuture),
+                NamedFuture.of("queryCoupon", failureFuture)
+        )).join();
 
-        List<String> failureNames = result.failures().stream().map(AsyncTaskOutcome::getTaskName).collect(Collectors.toList());
+        List<String> failureNames = result.failures()
+                .stream()
+                .map(AsyncTaskOutcome::getTaskName)
+                .collect(Collectors.toList());
 
-        return Map.of("api", "AsyncTemplate.allOfOutcome", "meaning", "等待所有任务完成，成功失败都收集起来", "allSuccess",
-            result.isAllSuccess(), "successValues", result.successValues(), "failures", failureNames);
+        return Map.of(
+                "api", "AsyncTemplate.allOfOutcome",
+                "meaning", "等待所有任务完成，成功失败都收集起来",
+                "allSuccess", result.isAllSuccess(),
+                "successValues", result.successValues(),
+                "failures", failureNames
+        );
     }
 
     /**
@@ -107,8 +120,12 @@ public class AsyncTemplateDemoController {
             asyncTemplate.allOfFailFast(List.of(slowFuture, failureFuture)).join();
             return Map.of("api", "AsyncTemplate.allOfFailFast", "success", true);
         } catch (CompletionException ex) {
-            return Map.of("api", "AsyncTemplate.allOfFailFast", "meaning", "任意一个失败，整体尽快失败", "success", false, "error",
-                rootMessage(ex));
+            return Map.of(
+                    "api", "AsyncTemplate.allOfFailFast",
+                    "meaning", "任意一个失败，整体尽快失败",
+                    "success", false,
+                    "error", rootMessage(ex)
+            );
         }
     }
 
@@ -127,7 +144,11 @@ public class AsyncTemplateDemoController {
 
         String value = asyncTemplate.anyOf(List.of(fastFuture, slowFuture)).join();
 
-        return Map.of("api", "AsyncTemplate.anyOf", "meaning", "第一个完成的任务决定结果，不等全部任务", "value", value);
+        return Map.of(
+                "api", "AsyncTemplate.anyOf",
+                "meaning", "第一个完成的任务决定结果，不等全部任务",
+                "value", value
+        );
     }
 
     /**
@@ -146,8 +167,12 @@ public class AsyncTemplateDemoController {
             asyncTemplate.withTimeout(slowFuture, Duration.ofMillis(100)).join();
             return Map.of("api", "AsyncTemplate.withTimeout", "timeout", false);
         } catch (CompletionException ex) {
-            return Map.of("api", "AsyncTemplate.withTimeout", "meaning", "CompletableFuture 超时只代表结果层超时，不保证底层线程已经中断",
-                "timeout", true, "error", rootMessage(ex));
+            return Map.of(
+                    "api", "AsyncTemplate.withTimeout",
+                    "meaning", "CompletableFuture 超时只代表结果层超时，不保证底层线程已经中断",
+                    "timeout", true,
+                    "error", rootMessage(ex)
+            );
         }
     }
 
@@ -164,7 +189,11 @@ public class AsyncTemplateDemoController {
 
         String value = asyncTemplate.withFallback(failureFuture, ex -> "fallback-value").join();
 
-        return Map.of("api", "AsyncTemplate.withFallback", "meaning", "任务失败后返回降级值", "value", value);
+        return Map.of(
+                "api", "AsyncTemplate.withFallback",
+                "meaning", "任务失败后返回降级值",
+                "value", value
+        );
     }
 
     /**

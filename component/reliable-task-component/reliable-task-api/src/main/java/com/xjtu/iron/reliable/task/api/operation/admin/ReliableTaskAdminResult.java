@@ -44,6 +44,9 @@ public final class ReliableTaskAdminResult {
 
     @Override
     public String toString() {
-        return "ReliableTaskAdminResult{" + "status=" + status + ", task=" + task + '}';
+        return "ReliableTaskAdminResult{" +
+                "status=" + status +
+                ", task=" + task +
+                '}';
     }
 }

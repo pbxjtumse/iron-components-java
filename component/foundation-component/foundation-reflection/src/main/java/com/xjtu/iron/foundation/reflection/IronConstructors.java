@@ -7,8 +7,7 @@ import java.lang.reflect.Constructor;
  */
 public final class IronConstructors {
 
-    private IronConstructors() {
-    }
+    private IronConstructors() {}
 
     public static <T> T newInstance(Class<T> type) {
         try {

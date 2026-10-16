@@ -7,8 +7,7 @@ import java.util.Objects;
  */
 public final class IronClasses {
 
-    private IronClasses() {
-    }
+    private IronClasses() {}
 
     public static Class<?> loadClass(String className, ClassLoader classLoader) {
         try {

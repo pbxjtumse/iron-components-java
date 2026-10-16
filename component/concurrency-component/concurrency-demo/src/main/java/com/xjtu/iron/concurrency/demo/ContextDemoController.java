@@ -49,10 +49,17 @@ public class ContextDemoController {
         MDC.put("traceId", traceId);
 
         try {
-            CompletableFuture<String> future = asyncExecutor.supply(DEFAULT_EXECUTOR, "readMdcTraceId", () -> MDC.get("traceId"));
+            CompletableFuture<String> future = asyncExecutor.supply(
+                    DEFAULT_EXECUTOR,
+                    "readMdcTraceId",
+                    () -> MDC.get("traceId")
+            );
 
-            return Map.of("api", "ContextAwareTaskDecorator + MdcContextPropagator", "mainThreadTraceId", traceId, "asyncThreadTraceId",
-                future.join());
+            return Map.of(
+                    "api", "ContextAwareTaskDecorator + MdcContextPropagator",
+                    "mainThreadTraceId", traceId,
+                    "asyncThreadTraceId", future.join()
+            );
         } finally {
             MDC.remove("traceId");
         }

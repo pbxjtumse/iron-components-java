@@ -45,38 +45,44 @@ public class MybatisTransactionDemoService {
 
     public void outerRollbackInnerRequiresNew() {
         // 1. 内层事务明确使用 REQUIRES_NEW，用于验证“独立提交的小事务”。
-        TransactionOptions innerOptions =
-            TransactionOptions.builder().name("mybatis-inner-requires-new").propagation(TransactionPropagation.REQUIRES_NEW).build();
+        TransactionOptions innerOptions = TransactionOptions.builder()
+                .name("mybatis-inner-requires-new")
+                .propagation(TransactionPropagation.REQUIRES_NEW)
+                .build();
 
         // 2. 外层默认 REQUIRED 创建 Tx-A。
-        transactionExecutor.executeWithoutResult(TransactionOptions.builder().name("mybatis-outer").build(), outer -> {
-            // 3. outer 数据写入 Tx-A，此时还没有提交。
-            mapper.insert(new DemoRecord(1001L, "outer"));
+        transactionExecutor.executeWithoutResult(
+                TransactionOptions.builder().name("mybatis-outer").build(),
+                outer -> {
+                    // 3. outer 数据写入 Tx-A，此时还没有提交。
+                    mapper.insert(new DemoRecord(1001L, "outer"));
 
-            // 4. 内层 REQUIRES_NEW：Spring 挂起 Tx-A，创建 Tx-B。
-            transactionExecutor.executeWithoutResult(innerOptions, inner -> {
-                // 5. inner 数据写入 Tx-B；inner callback 正常结束后 Tx-B 独立 COMMIT。
-                mapper.insert(new DemoRecord(1002L, "inner"));
-            });
+                    // 4. 内层 REQUIRES_NEW：Spring 挂起 Tx-A，创建 Tx-B。
+                    transactionExecutor.executeWithoutResult(innerOptions, inner -> {
+                        // 5. inner 数据写入 Tx-B；inner callback 正常结束后 Tx-B 独立 COMMIT。
+                        mapper.insert(new DemoRecord(1002L, "inner"));
+                    });
 
-            // 6. 恢复 Tx-A 后故意失败，最终只回滚 outer 的 1001，已经提交的 1002 保留。
-            throw new IllegalStateException("rollback outer only");
-        });
+                    // 6. 恢复 Tx-A 后故意失败，最终只回滚 outer 的 1001，已经提交的 1002 保留。
+                    throw new IllegalStateException("rollback outer only");
+                });
     }
 
     public void outerRollbackInnerRequired() {
         // 1. 外层 REQUIRED 创建 Tx-A。
-        transactionExecutor.executeWithoutResult(TransactionOptions.builder().name("mybatis-outer-required").build(), outer -> {
-            mapper.insert(new DemoRecord(1101L, "outer-required"));
+        transactionExecutor.executeWithoutResult(
+                TransactionOptions.builder().name("mybatis-outer-required").build(),
+                outer -> {
+                    mapper.insert(new DemoRecord(1101L, "outer-required"));
 
-            // 2. 内层仍是默认 REQUIRED，因此只加入 Tx-A，没有产生新的物理事务。
-            transactionExecutor.executeWithoutResult(inner -> {
-                mapper.insert(new DemoRecord(1102L, "inner-required"));
-            });
+                    // 2. 内层仍是默认 REQUIRED，因此只加入 Tx-A，没有产生新的物理事务。
+                    transactionExecutor.executeWithoutResult(inner -> {
+                        mapper.insert(new DemoRecord(1102L, "inner-required"));
+                    });
 
-            // 3. 外层失败时 Tx-A 整体回滚，所以 1101、1102 都不会留下。
-            throw new IllegalStateException("rollback same physical transaction");
-        });
+                    // 3. 外层失败时 Tx-A 整体回滚，所以 1101、1102 都不会留下。
+                    throw new IllegalStateException("rollback same physical transaction");
+                });
     }
 
     public void rollbackOnly(long id) {

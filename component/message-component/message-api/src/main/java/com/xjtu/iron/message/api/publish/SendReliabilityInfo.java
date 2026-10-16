@@ -1,7 +1,6 @@
 package com.xjtu.iron.message.api.publish;
 
 import java.util.Objects;
-
 /**
  * 发送可靠性执行信息，用来承载 retry-component 的执行摘要。
  *
@@ -34,8 +33,14 @@ public final class SendReliabilityInfo {
     /** 最后一次分类失败分类。 */
     private final String lastFailureCategory;
 
-    public SendReliabilityInfo(boolean enabled, String retryId, String retryPolicy, String retryStatus, int attempts,
-        String lastFailureCode, String lastFailureCategory) {
+    public SendReliabilityInfo(
+            boolean enabled,
+            String retryId,
+            String retryPolicy,
+            String retryStatus,
+            int attempts,
+            String lastFailureCode,
+            String lastFailureCategory) {
         if (attempts < 0) {
             throw new IllegalArgumentException("attempts must not be negative");
         }
@@ -68,9 +73,21 @@ public final class SendReliabilityInfo {
      * @param lastFailureCategory 最后失败分类
      * @return 可靠性信息
      */
-    public static SendReliabilityInfo enabled(String retryId, String retryPolicy, String retryStatus, int attempts, String lastFailureCode,
-        String lastFailureCategory) {
-        return new SendReliabilityInfo(true, retryId, retryPolicy, retryStatus, attempts, lastFailureCode, lastFailureCategory);
+    public static SendReliabilityInfo enabled(
+            String retryId,
+            String retryPolicy,
+            String retryStatus,
+            int attempts,
+            String lastFailureCode,
+            String lastFailureCategory) {
+        return new SendReliabilityInfo(
+                true,
+                retryId,
+                retryPolicy,
+                retryStatus,
+                attempts,
+                lastFailureCode,
+                lastFailureCategory);
     }
 
     public boolean enabled() {
@@ -110,20 +127,37 @@ public final class SendReliabilityInfo {
             return false;
         }
         SendReliabilityInfo other = (SendReliabilityInfo) object;
-        return enabled == other.enabled && attempts == other.attempts && Objects.equals(retryId, other.retryId) &&
-            Objects.equals(retryPolicy, other.retryPolicy) && Objects.equals(retryStatus, other.retryStatus) &&
-            Objects.equals(lastFailureCode, other.lastFailureCode) && Objects.equals(lastFailureCategory, other.lastFailureCategory);
+        return enabled == other.enabled
+                && attempts == other.attempts
+                && Objects.equals(retryId, other.retryId)
+                && Objects.equals(retryPolicy, other.retryPolicy)
+                && Objects.equals(retryStatus, other.retryStatus)
+                && Objects.equals(lastFailureCode, other.lastFailureCode)
+                && Objects.equals(lastFailureCategory, other.lastFailureCategory);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(enabled, retryId, retryPolicy, retryStatus, attempts, lastFailureCode, lastFailureCategory);
+        return Objects.hash(
+                enabled,
+                retryId,
+                retryPolicy,
+                retryStatus,
+                attempts,
+                lastFailureCode,
+                lastFailureCategory);
     }
 
     @Override
     public String toString() {
-        return "SendReliabilityInfo{" + "enabled=" + enabled + ", retryId='" + retryId + '\'' + ", retryPolicy='" + retryPolicy + '\'' +
-            ", retryStatus='" + retryStatus + '\'' + ", attempts=" + attempts + ", lastFailureCode='" + lastFailureCode + '\'' +
-            ", lastFailureCategory='" + lastFailureCategory + '\'' + '}';
+        return "SendReliabilityInfo{"
+                + "enabled=" + enabled
+                + ", retryId='" + retryId + '\''
+                + ", retryPolicy='" + retryPolicy + '\''
+                + ", retryStatus='" + retryStatus + '\''
+                + ", attempts=" + attempts
+                + ", lastFailureCode='" + lastFailureCode + '\''
+                + ", lastFailureCategory='" + lastFailureCategory + '\''
+                + '}';
     }
 }

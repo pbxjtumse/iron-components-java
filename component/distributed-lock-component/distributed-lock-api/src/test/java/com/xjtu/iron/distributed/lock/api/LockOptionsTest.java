@@ -27,7 +27,9 @@ class LockOptionsTest {
 
     @Test
     void invalidRenewIntervalShouldFail() {
-        assertThrows(RuntimeException.class,
-            () -> LockOptions.builder().leaseTime(Duration.ofSeconds(10)).renewInterval(Duration.ofSeconds(10)).build());
+        assertThrows(RuntimeException.class, () -> LockOptions.builder()
+                .leaseTime(Duration.ofSeconds(10))
+                .renewInterval(Duration.ofSeconds(10))
+                .build());
     }
 }

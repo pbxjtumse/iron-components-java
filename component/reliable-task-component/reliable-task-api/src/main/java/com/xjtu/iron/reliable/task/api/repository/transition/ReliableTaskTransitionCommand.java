@@ -33,8 +33,15 @@ public final class ReliableTaskTransitionCommand {
     /** 完成本次状态迁移时的当前时间。 */
     private final Instant now;
 
-    public ReliableTaskTransitionCommand(ReliableTaskKey key, String ownerId, long expectedVersion, ReliableTaskStatus targetStatus,
-        Instant nextExecuteAt, String errorCode, String errorMessage, Instant now) {
+    public ReliableTaskTransitionCommand(
+            ReliableTaskKey key,
+            String ownerId,
+            long expectedVersion,
+            ReliableTaskStatus targetStatus,
+            Instant nextExecuteAt,
+            String errorCode,
+            String errorMessage,
+            Instant now) {
         if (key == null) {
             throw new IllegalArgumentException("key must not be null");
         }
@@ -44,10 +51,14 @@ public final class ReliableTaskTransitionCommand {
         if (expectedVersion < 1) {
             throw new IllegalArgumentException("expectedVersion must be positive");
         }
-        if (targetStatus == null || targetStatus == ReliableTaskStatus.RUNNING || targetStatus == ReliableTaskStatus.READY) {
+        if (targetStatus == null
+                || targetStatus == ReliableTaskStatus.RUNNING
+                || targetStatus == ReliableTaskStatus.READY) {
             throw new IllegalArgumentException("invalid completion target status");
         }
-        if ((targetStatus == ReliableTaskStatus.RETRY_WAIT || targetStatus == ReliableTaskStatus.WAIT_RECONCILE) && nextExecuteAt == null) {
+        if ((targetStatus == ReliableTaskStatus.RETRY_WAIT
+                || targetStatus == ReliableTaskStatus.WAIT_RECONCILE)
+                && nextExecuteAt == null) {
             throw new IllegalArgumentException(targetStatus + " requires nextExecuteAt");
         }
         if (now == null) {
@@ -103,20 +114,41 @@ public final class ReliableTaskTransitionCommand {
         if (!(object instanceof ReliableTaskTransitionCommand that)) {
             return false;
         }
-        return expectedVersion == that.expectedVersion && key.equals(that.key) && ownerId.equals(that.ownerId) &&
-            targetStatus == that.targetStatus && Objects.equals(nextExecuteAt, that.nextExecuteAt) &&
-            Objects.equals(errorCode, that.errorCode) && Objects.equals(errorMessage, that.errorMessage) && now.equals(that.now);
+        return expectedVersion == that.expectedVersion
+                && key.equals(that.key)
+                && ownerId.equals(that.ownerId)
+                && targetStatus == that.targetStatus
+                && Objects.equals(nextExecuteAt, that.nextExecuteAt)
+                && Objects.equals(errorCode, that.errorCode)
+                && Objects.equals(errorMessage, that.errorMessage)
+                && now.equals(that.now);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, ownerId, expectedVersion, targetStatus, nextExecuteAt, errorCode, errorMessage, now);
+        return Objects.hash(
+                key,
+                ownerId,
+                expectedVersion,
+                targetStatus,
+                nextExecuteAt,
+                errorCode,
+                errorMessage,
+                now
+        );
     }
 
     @Override
     public String toString() {
-        return "ReliableTaskTransitionCommand{" + "key=" + key + ", ownerId='" + ownerId + '\'' + ", expectedVersion=" + expectedVersion +
-            ", targetStatus=" + targetStatus + ", nextExecuteAt=" + nextExecuteAt + ", errorCode='" + errorCode + '\'' +
-            ", errorMessage='" + errorMessage + '\'' + ", now=" + now + '}';
+        return "ReliableTaskTransitionCommand{" +
+                "key=" + key +
+                ", ownerId='" + ownerId + '\'' +
+                ", expectedVersion=" + expectedVersion +
+                ", targetStatus=" + targetStatus +
+                ", nextExecuteAt=" + nextExecuteAt +
+                ", errorCode='" + errorCode + '\'' +
+                ", errorMessage='" + errorMessage + '\'' +
+                ", now=" + now +
+                '}';
     }
 }

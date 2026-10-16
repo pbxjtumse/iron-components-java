@@ -23,23 +23,31 @@ public class XjtuIronConcurrencyDiagnosticsAutoConfiguration {
     @Bean(name = "ironConcurrencyHealthIndicator")
     @ConditionalOnClass(HealthIndicator.class)
     @ConditionalOnMissingBean(name = "ironConcurrencyHealthIndicator")
-    public HealthIndicator ironConcurrencyHealthIndicator(ThreadPoolManager threadPoolManager, XjtuIronConcurrencyProperties properties) {
+    public HealthIndicator ironConcurrencyHealthIndicator(
+            ThreadPoolManager threadPoolManager,
+            XjtuIronConcurrencyProperties properties
+    ) {
         return () -> {
             Map<String, ThreadPoolSnapshot> snapshots = threadPoolManager.snapshots();
             boolean busy = false;
             for (ThreadPoolSnapshot snapshot : snapshots.values()) {
-                boolean currentBusy = snapshot.getActiveUsageRatio() >= properties.getDiagnostics().getActiveUsageWarnThreshold() ||
-                    snapshot.getQueueUsageRatio() >= properties.getDiagnostics().getQueueUsageWarnThreshold();
+                boolean currentBusy = snapshot.getActiveUsageRatio() >= properties.getDiagnostics().getActiveUsageWarnThreshold()
+                        || snapshot.getQueueUsageRatio() >= properties.getDiagnostics().getQueueUsageWarnThreshold();
                 snapshot.setBusy(currentBusy);
                 busy = busy || currentBusy;
             }
 
-            Health.Builder builder = busy && properties.getDiagnostics().isDownWhenBusy() ? Health.down() : Health.up();
+            Health.Builder builder = busy && properties.getDiagnostics().isDownWhenBusy()
+                    ? Health.down()
+                    : Health.up();
 
-            return builder.withDetail("component", "xjtu-iron-concurrency").withDetail("busy", busy)
-                .withDetail("activeUsageWarnThreshold", properties.getDiagnostics().getActiveUsageWarnThreshold())
-                .withDetail("queueUsageWarnThreshold", properties.getDiagnostics().getQueueUsageWarnThreshold())
-                .withDetail("threadPools", snapshots).build();
+            return builder
+                    .withDetail("component", "xjtu-iron-concurrency")
+                    .withDetail("busy", busy)
+                    .withDetail("activeUsageWarnThreshold", properties.getDiagnostics().getActiveUsageWarnThreshold())
+                    .withDetail("queueUsageWarnThreshold", properties.getDiagnostics().getQueueUsageWarnThreshold())
+                    .withDetail("threadPools", snapshots)
+                    .build();
         };
     }
 }

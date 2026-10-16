@@ -24,32 +24,20 @@ public final class ContextKey<T> {
         return new ContextKey<>(name, type);
     }
 
-    public String getName() {
-        return name;
-    }
+    public String getName() { return name; }
 
-    public Class<T> getType() {
-        return type;
-    }
+    public Class<T> getType() { return type; }
 
     @Override
     public boolean equals(Object other) {
-        if (this == other) {
-            return true;
-        }
-        if (!(other instanceof ContextKey<?> that)) {
-            return false;
-        }
+        if (this == other) { return true; }
+        if (!(other instanceof ContextKey<?> that)) { return false; }
         return name.equals(that.name);
     }
 
     @Override
-    public int hashCode() {
-        return name.hashCode();
-    }
+    public int hashCode() { return name.hashCode(); }
 
     @Override
-    public String toString() {
-        return name;
-    }
+    public String toString() { return name; }
 }

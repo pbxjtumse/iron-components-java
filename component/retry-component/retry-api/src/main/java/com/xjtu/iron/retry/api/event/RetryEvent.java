@@ -65,20 +65,38 @@ public final class RetryEvent {
         this.maxAttempts = builder.maxAttempts;
         this.occurredAt = Objects.requireNonNull(builder.occurredAt, "occurredAt must not be null");
         this.elapsedTime = requireNonNegative(builder.elapsedTime, "elapsedTime");
-        this.attemptDuration = requireNonNegative(builder.attemptDuration, "attemptDuration");
+        this.attemptDuration = requireNonNegative(
+                builder.attemptDuration,
+                "attemptDuration"
+        );
         this.decisionType = builder.decisionType;
         this.decisionReason = normalize(builder.decisionReason);
         this.failureCode = normalize(builder.failureCode);
-        this.failureCategory = Objects.requireNonNull(builder.failureCategory, "failureCategory must not be null");
+        this.failureCategory = Objects.requireNonNull(
+                builder.failureCategory,
+                "failureCategory must not be null"
+        );
         this.retryDelay = Objects.requireNonNull(builder.retryDelay, "retryDelay must not be null");
         this.finalStatus = builder.finalStatus;
         this.failure = builder.failure;
     }
 
     /** 创建事件构建器。 */
-    public static Builder builder(RetryEventType eventType, String retryId, String operationName, String policyName, int maxAttempts,
-        Instant occurredAt) {
-        return new Builder(eventType, retryId, operationName, policyName, maxAttempts, occurredAt);
+    public static Builder builder(
+            RetryEventType eventType,
+            String retryId,
+            String operationName,
+            String policyName,
+            int maxAttempts,
+            Instant occurredAt) {
+        return new Builder(
+                eventType,
+                retryId,
+                operationName,
+                policyName,
+                maxAttempts,
+                occurredAt
+        );
     }
 
     public RetryEventType getEventType() {
@@ -189,8 +207,13 @@ public final class RetryEvent {
         /** 可选失败对象。 */
         private Throwable failure;
 
-        private Builder(RetryEventType eventType, String retryId, String operationName, String policyName, int maxAttempts,
-            Instant occurredAt) {
+        private Builder(
+                RetryEventType eventType,
+                String retryId,
+                String operationName,
+                String policyName,
+                int maxAttempts,
+                Instant occurredAt) {
             this.eventType = eventType;
             this.retryId = retryId;
             this.operationName = operationName;
@@ -226,7 +249,10 @@ public final class RetryEvent {
             return this;
         }
 
-        public Builder notice(String reason, String failureCode, RetryFailureCategory failureCategory) {
+        public Builder notice(
+                String reason,
+                String failureCode,
+                RetryFailureCategory failureCategory) {
             this.decisionReason = reason;
             this.failureCode = failureCode;
             this.failureCategory = failureCategory;

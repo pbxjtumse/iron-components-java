@@ -11,7 +11,8 @@ public interface FencingTokenFlowRegistry {
     Optional<FencingTokenFlow> findFlow(FencingTokenMode mode);
 
     default FencingTokenFlow getRequired(FencingTokenMode mode) {
-        return findFlow(mode).orElseThrow(() -> new IllegalArgumentException("fencing token flow not found: " + mode));
+        return findFlow(mode)
+                .orElseThrow(() -> new IllegalArgumentException("fencing token flow not found: " + mode));
     }
 
     Set<FencingTokenMode> modes();

@@ -33,7 +33,9 @@ class ThreadPoolSpecValidationTest {
         ThreadPoolSpec spec = new ThreadPoolSpec();
         spec.setName(" ");
 
-        assertThatThrownBy(spec::validate).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("name");
+        assertThatThrownBy(spec::validate)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("name");
     }
 
     @Test
@@ -44,7 +46,9 @@ class ThreadPoolSpecValidationTest {
         spec.setCorePoolSize(4);
         spec.setMaxPoolSize(2);
 
-        assertThatThrownBy(spec::validate).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("maxPoolSize");
+        assertThatThrownBy(spec::validate)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("maxPoolSize");
     }
 
     @Test
@@ -55,7 +59,9 @@ class ThreadPoolSpecValidationTest {
         spec.setQueueType(QueueType.BOUNDED_LINKED_BLOCKING_QUEUE);
         spec.setQueueCapacity(0);
 
-        assertThatThrownBy(spec::validate).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("queueCapacity");
+        assertThatThrownBy(spec::validate)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("queueCapacity");
     }
 
     @Test
@@ -79,6 +85,8 @@ class ThreadPoolSpecValidationTest {
         spec.setRejectionPolicy(RejectionPolicy.BLOCKING_WAIT);
         spec.setRejectionWaitTime(Duration.ZERO);
 
-        assertThatThrownBy(spec::validate).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("rejectionWaitTime");
+        assertThatThrownBy(spec::validate)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("rejectionWaitTime");
     }
 }

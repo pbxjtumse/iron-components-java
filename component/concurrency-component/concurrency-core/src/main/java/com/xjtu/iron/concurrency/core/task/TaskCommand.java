@@ -27,7 +27,8 @@ import java.util.concurrent.TimeoutException;
  *
  * @param <T> 任务返回值类型
  */
-public final class TaskCommand<T> implements Runnable, RejectedTaskAware, CallerRunsAware, ShutdownAbortAware {
+public final class TaskCommand<T>
+        implements Runnable, RejectedTaskAware, CallerRunsAware, ShutdownAbortAware {
 
     /**
      * 本次任务执行上下文，是任务定义、装饰后执行逻辑、Future 和运行时状态的唯一数据来源。
@@ -49,8 +50,12 @@ public final class TaskCommand<T> implements Runnable, RejectedTaskAware, Caller
      */
     private final AsyncUncaughtExceptionHandler uncaughtExceptionHandler;
 
-    public TaskCommand(TaskExecutionContext<T> context, TaskLifecyclePublisher lifecyclePublisher, AsyncErrorClassifier errorClassifier,
-        AsyncUncaughtExceptionHandler uncaughtExceptionHandler) {
+    public TaskCommand(
+            TaskExecutionContext<T> context,
+            TaskLifecyclePublisher lifecyclePublisher,
+            AsyncErrorClassifier errorClassifier,
+            AsyncUncaughtExceptionHandler uncaughtExceptionHandler
+    ) {
         this.context = Objects.requireNonNull(context, "context must not be null");
         this.lifecyclePublisher = Objects.requireNonNull(lifecyclePublisher, "lifecyclePublisher must not be null");
         this.errorClassifier = Objects.requireNonNull(errorClassifier, "errorClassifier must not be null");
@@ -94,9 +99,13 @@ public final class TaskCommand<T> implements Runnable, RejectedTaskAware, Caller
             return;
         }
 
-        lifecyclePublisher.publish(context.event(AsyncTaskStatus.RUNNING, AsyncError.none(),
-            runtime.getExecutionMode() == TaskExecutionMode.CALLER_THREAD ? "Task started in caller thread" :
-                "Task started in pool thread"));
+        lifecyclePublisher.publish(context.event(
+                AsyncTaskStatus.RUNNING,
+                AsyncError.none(),
+                runtime.getExecutionMode() == TaskExecutionMode.CALLER_THREAD
+                        ? "Task started in caller thread"
+                        : "Task started in pool thread"
+        ));
 
         try {
             T value = context.getExecutable().get();
@@ -125,11 +134,16 @@ public final class TaskCommand<T> implements Runnable, RejectedTaskAware, Caller
         if (!runtime.tryResolveBaseOutcome(AsyncTaskStatus.REJECTED)) {
             return;
         }
-        Throwable rejectedCause =
-            throwable instanceof RejectedExecutionException ? throwable : new RejectedExecutionException("Task rejected", throwable);
+        Throwable rejectedCause = throwable instanceof RejectedExecutionException
+                ? throwable
+                : new RejectedExecutionException("Task rejected", throwable);
         AsyncError error = errorClassifier.classify(context.getMetadata(), rejectedCause, AsyncErrorStage.SUBMIT);
-        ConcurrencyRejectedException rejectedException =
-            new ConcurrencyRejectedException(context.getTask().getExecutorName(), context.getTask().getTaskName(), error, rejectedCause);
+        ConcurrencyRejectedException rejectedException = new ConcurrencyRejectedException(
+                context.getTask().getExecutorName(),
+                context.getTask().getTaskName(),
+                error,
+                rejectedCause
+        );
 
         TaskExecutionEvent event = context.event(AsyncTaskStatus.REJECTED, error, "Task rejected");
         lifecyclePublisher.publish(event);
@@ -152,12 +166,21 @@ public final class TaskCommand<T> implements Runnable, RejectedTaskAware, Caller
         }
         AsyncErrorStage actualStage = stage == null ? AsyncErrorStage.WAIT_RESULT : stage;
         AsyncError error = errorClassifier.classify(context.getMetadata(), throwable, actualStage);
-        AsyncTaskException timeoutException =
-            new AsyncTaskException(context.getTask().getExecutorName(), context.getTask().getTaskName(), context.getTask().getTaskId(),
-                error, throwable);
+        AsyncTaskException timeoutException = new AsyncTaskException(
+                context.getTask().getExecutorName(),
+                context.getTask().getTaskName(),
+                context.getTask().getTaskId(),
+                error,
+                throwable
+        );
 
-        TaskExecutionEvent event = context.event(AsyncTaskStatus.TIMEOUT, error,
-            actualStage == AsyncErrorStage.QUEUE ? "Task queue timeout" : "Task result timeout");
+        TaskExecutionEvent event = context.event(
+                AsyncTaskStatus.TIMEOUT,
+                error,
+                actualStage == AsyncErrorStage.QUEUE
+                        ? "Task queue timeout"
+                        : "Task result timeout"
+        );
         lifecyclePublisher.publish(event);
         finalizeWhenNoFallback(event);
         context.getBaseFuture().completeExceptionally(timeoutException);
@@ -229,7 +252,8 @@ public final class TaskCommand<T> implements Runnable, RejectedTaskAware, Caller
         }
 
         runtime.tryFinalize(AsyncTaskStatus.SUCCESS);
-        TaskExecutionEvent event = context.event(AsyncTaskStatus.SUCCESS, AsyncError.none(), "Task success");
+        TaskExecutionEvent event = context.event(AsyncTaskStatus.SUCCESS, AsyncError.none(), "Task success"
+        );
         lifecyclePublisher.publish(event);
         lifecyclePublisher.publishCompleted(event);
         context.getBaseFuture().complete(value);
@@ -245,9 +269,13 @@ public final class TaskCommand<T> implements Runnable, RejectedTaskAware, Caller
         }
 
         AsyncError error = errorClassifier.classify(context.getMetadata(), throwable, AsyncErrorStage.RUN);
-        AsyncTaskException taskException =
-            new AsyncTaskException(context.getTask().getExecutorName(), context.getTask().getTaskName(), context.getTask().getTaskId(),
-                error, throwable);
+        AsyncTaskException taskException = new AsyncTaskException(
+                context.getTask().getExecutorName(),
+                context.getTask().getTaskName(),
+                context.getTask().getTaskId(),
+                error,
+                throwable
+        );
         TaskExecutionEvent event = context.event(AsyncTaskStatus.FAILED, error, "Task failed");
 
         lifecyclePublisher.publish(event);
@@ -268,8 +296,11 @@ public final class TaskCommand<T> implements Runnable, RejectedTaskAware, Caller
         }
 
         if (context.getRuntime().tryFinalize(baseTerminalEvent.getStatus())) {
-            TaskExecutionEvent finalEvent =
-                context.event(baseTerminalEvent.getStatus(), baseTerminalEvent.getError(), baseTerminalEvent.getMessage());
+            TaskExecutionEvent finalEvent = context.event(
+                    baseTerminalEvent.getStatus(),
+                    baseTerminalEvent.getError(),
+                    baseTerminalEvent.getMessage()
+            );
             lifecyclePublisher.publishCompleted(finalEvent);
         }
     }

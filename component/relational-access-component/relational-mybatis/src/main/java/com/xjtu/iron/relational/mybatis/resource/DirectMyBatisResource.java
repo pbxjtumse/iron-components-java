@@ -27,7 +27,8 @@ import java.util.Objects;
 public final class DirectMyBatisResource {
 
     /** Iron 技术组件拥有的全部 MyBatis XML；兼容 mapper 与领域子目录。 */
-    private static final String MAPPER_LOCATION_PATTERN = "classpath*:com/xjtu/iron/**/mybatis/**/*.xml";
+    private static final String MAPPER_LOCATION_PATTERN =
+            "classpath*:com/xjtu/iron/**/mybatis/**/*.xml";
 
     /** 物理数据源标识。 */
     private final String dataSourceKey;
@@ -58,7 +59,9 @@ public final class DirectMyBatisResource {
         this.dataSource = Objects.requireNonNull(dataSource, "dataSource must not be null");
         Objects.requireNonNull(factoryCustomizer, "factoryCustomizer must not be null");
         this.transactionManager = new DirectTransactionManager(dataSource);
-        TransactionExecutor delegate = new DefaultTransactionExecutor(new SpringTransactionProvider(transactionManager));
+        TransactionExecutor delegate = new DefaultTransactionExecutor(
+                new SpringTransactionProvider(transactionManager)
+        );
         this.transactionExecutor = new TransactionExecutor() {
             @Override
             public <T> T execute(TransactionOptions options, TransactionCallback<T> callback) {
@@ -66,8 +69,9 @@ public final class DirectMyBatisResource {
                 return delegate.execute(options, callback);
             }
         };
-        this.myBatisAccess =
-            new SpringMyBatisAccess(dataSource, createSqlSessionTemplate(this.dataSourceKey, dataSource, factoryCustomizer),
+        this.myBatisAccess = new SpringMyBatisAccess(
+                dataSource,
+                createSqlSessionTemplate(this.dataSourceKey, dataSource, factoryCustomizer),
                 transactionExecutor, listener);
     }
 
@@ -89,9 +93,12 @@ public final class DirectMyBatisResource {
 
     /** 外层事务存在时，必须确认它就是当前物理数据源的本地事务。 */
     public void assertCompatibleTransaction() {
-        if (TransactionSynchronizationManager.isActualTransactionActive() && !transactionManager.hasBoundTransaction()) {
+        if (TransactionSynchronizationManager.isActualTransactionActive()
+                && !transactionManager.hasBoundTransaction()) {
             throw new IllegalStateException(
-                "active transaction belongs to another resource; bind route before transaction: " + dataSourceKey);
+                    "active transaction belongs to another resource; bind route before transaction: "
+                            + dataSourceKey
+            );
         }
     }
 
@@ -100,13 +107,21 @@ public final class DirectMyBatisResource {
         try {
             SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
             factoryBean.setDataSource(dataSource);
-            factoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources(MAPPER_LOCATION_PATTERN));
+            factoryBean.setMapperLocations(
+                    new PathMatchingResourcePatternResolver().getResources(
+                            MAPPER_LOCATION_PATTERN
+                    ));
             customizer.customize(dataSourceKey, factoryBean);
             factoryBean.afterPropertiesSet();
-            SqlSessionFactory factory = Objects.requireNonNull(factoryBean.getObject(), "SqlSessionFactoryBean returned null");
+            SqlSessionFactory factory = Objects.requireNonNull(
+                    factoryBean.getObject(),
+                    "SqlSessionFactoryBean returned null"
+            );
             return new SqlSessionTemplate(factory);
         } catch (Exception failure) {
-            throw new IllegalStateException("failed to create MyBatis runtime for direct dataSourceKey=" + dataSourceKey, failure);
+            throw new IllegalStateException("failed to create MyBatis runtime for direct dataSourceKey=" + dataSourceKey,
+                    failure
+            );
         }
     }
 

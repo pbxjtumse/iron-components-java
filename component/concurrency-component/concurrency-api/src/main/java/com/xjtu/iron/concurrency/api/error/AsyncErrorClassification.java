@@ -32,7 +32,11 @@ public class AsyncErrorClassification {
         return of(AsyncErrorCategory.NONE, AsyncErrorReason.NONE, AsyncErrorStage.NONE);
     }
 
-    public static AsyncErrorClassification of(AsyncErrorCategory category, AsyncErrorReason reason, AsyncErrorStage stage) {
+    public static AsyncErrorClassification of(
+            AsyncErrorCategory category,
+            AsyncErrorReason reason,
+            AsyncErrorStage stage
+    ) {
         AsyncErrorClassification classification = new AsyncErrorClassification();
         classification.setCategory(category);
         classification.setReason(reason);

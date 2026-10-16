@@ -29,9 +29,9 @@ public final class DefaultLockProviderRegistry implements LockProviderRegistry {
                 throw new IllegalArgumentException("duplicate lock provider: " + name);
             }
         }
-        String normalizedDefaultName =
-            defaultProviderName == null || defaultProviderName.trim().isEmpty() ? map.keySet().iterator().next() :
-                normalize(defaultProviderName);
+        String normalizedDefaultName = defaultProviderName == null || defaultProviderName.trim().isEmpty()
+                ? map.keySet().iterator().next()
+                : normalize(defaultProviderName);
         if (!map.containsKey(normalizedDefaultName)) {
             throw new IllegalArgumentException("default provider not found: " + normalizedDefaultName);
         }

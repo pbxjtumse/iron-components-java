@@ -17,7 +17,8 @@ import java.util.Objects;
 public final class UlidStringIdGenerator implements StringIdGenerator {
 
     private static final long MAX_TIMESTAMP = 0x0000FFFFFFFFFFFFL;
-    private static final char[] ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ".toCharArray();
+    private static final char[] ALPHABET =
+            "0123456789ABCDEFGHJKMNPQRSTVWXYZ".toCharArray();
 
     /** 提供 ULID 的毫秒时间部分。 */
     private final Clock clock;
@@ -37,7 +38,10 @@ public final class UlidStringIdGenerator implements StringIdGenerator {
 
     public UlidStringIdGenerator(Clock clock, SecureRandom secureRandom) {
         this.clock = Objects.requireNonNull(clock, "clock must not be null");
-        this.secureRandom = Objects.requireNonNull(secureRandom, "secureRandom must not be null");
+        this.secureRandom = Objects.requireNonNull(
+                secureRandom,
+                "secureRandom must not be null"
+        );
     }
 
     @Override

@@ -16,8 +16,13 @@ public class TransactionExecutionException extends RuntimeException {
     private final TransactionStage stage;
     private final TransactionOutcome outcome;
 
-    public TransactionExecutionException(String message, String executionId, String transactionName, TransactionStage stage,
-        TransactionOutcome outcome, Throwable cause) {
+    public TransactionExecutionException(
+            String message,
+            String executionId,
+            String transactionName,
+            TransactionStage stage,
+            TransactionOutcome outcome,
+            Throwable cause) {
         super(message, cause);
         this.executionId = executionId;
         this.transactionName = transactionName;
@@ -25,19 +30,8 @@ public class TransactionExecutionException extends RuntimeException {
         this.outcome = outcome;
     }
 
-    public String executionId() {
-        return executionId;
-    }
-
-    public String transactionName() {
-        return transactionName;
-    }
-
-    public TransactionStage stage() {
-        return stage;
-    }
-
-    public TransactionOutcome outcome() {
-        return outcome;
-    }
+    public String executionId() { return executionId; }
+    public String transactionName() { return transactionName; }
+    public TransactionStage stage() { return stage; }
+    public TransactionOutcome outcome() { return outcome; }
 }

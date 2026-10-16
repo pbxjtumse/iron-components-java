@@ -38,8 +38,8 @@ public final class LockExecutionTemplate {
     private final Clock clock;
     private final LockResultResolver resultResolver;
 
-    public LockExecutionTemplate(LockAcquisitionService acquisitionService, LockEventPublisher eventPublisher,
-        LockEventFactory eventFactory, LockMetricsFacade metricsFacade, Clock clock, LockResultResolver resultResolver) {
+    public LockExecutionTemplate(LockAcquisitionService acquisitionService, LockEventPublisher eventPublisher, LockEventFactory eventFactory,
+            LockMetricsFacade metricsFacade, Clock clock, LockResultResolver resultResolver) {
         this.acquisitionService = Objects.requireNonNull(acquisitionService, "acquisitionService must not be null");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher must not be null");
         this.eventFactory = Objects.requireNonNull(eventFactory, "eventFactory must not be null");
@@ -63,42 +63,33 @@ public final class LockExecutionTemplate {
         LockReleaseOutcome releaseOutcome = handle.releaseWithOutcome();
 
         Duration holdDuration = Duration.between(handle.acquiredAt(), Instant.now(clock));
-        LockResult<T> result =
-            resultResolver.resolve(executionOutcome, releaseOutcome, handle, acquireResult.waitDuration(), holdDuration, actualOptions);
+        LockResult<T> result = resultResolver.resolve(executionOutcome, releaseOutcome, handle, acquireResult.waitDuration(), holdDuration, actualOptions);
 
         metricsFacade.recordHold(handle.lease(), result.status(), holdDuration);
         if (result.status() == LockStatus.SUCCESS) {
-            eventPublisher.publish(
-                eventFactory.fromLease(handle.lease(), LockEventType.EXECUTION_SUCCESS, LockStage.EXECUTE, LockStatus.SUCCESS, null));
+            eventPublisher.publish(eventFactory.fromLease(handle.lease(), LockEventType.EXECUTION_SUCCESS, LockStage.EXECUTE, LockStatus.SUCCESS, null));
         }
         return result;
     }
 
-    private <T> ExecutionOutcome<T> invokeCallback(String lockName, DefaultLockHandle handle, LockOptions options,
-        LockCallback<T> callback) {
+    private <T> ExecutionOutcome<T> invokeCallback(String lockName, DefaultLockHandle handle, LockOptions options, LockCallback<T> callback) {
         try {
             eventPublisher.publish(eventFactory.fromLease(handle.lease(), LockEventType.EXECUTION_STARTED, LockStage.EXECUTE, null, null));
             T value = callback.doWithLock(handle);
 
             // callback 没抛异常不代表锁一定仍然有效。watchdog 或业务主动 check 可能已经把 handle 标记为 lost。
             if (handle.isLost() && options.isFailOnLockLost()) {
-                return ExecutionOutcome.failure(LockStatus.LOCK_LOST, LockStage.RENEW,
-                    new LockLostException("lock lost during execution: " + lockName));
+                return ExecutionOutcome.failure(LockStatus.LOCK_LOST, LockStage.RENEW, new LockLostException("lock lost during execution: " + lockName));
             }
             return ExecutionOutcome.success(value);
         } catch (FencingTokenRejectedException error) {
-            eventPublisher.publish(
-                eventFactory.fromLease(handle.lease(), LockEventType.FENCING_REJECTED, LockStage.FENCING, LockStatus.FENCING_REJECTED,
-                    error));
+            eventPublisher.publish(eventFactory.fromLease(handle.lease(), LockEventType.FENCING_REJECTED, LockStage.FENCING, LockStatus.FENCING_REJECTED, error));
             return ExecutionOutcome.failure(LockStatus.FENCING_REJECTED, LockStage.FENCING, error);
         } catch (LockLostException error) {
-            eventPublisher.publish(
-                eventFactory.fromLease(handle.lease(), LockEventType.LOCK_LOST, LockStage.CHECK, LockStatus.LOCK_LOST, error));
+            eventPublisher.publish(eventFactory.fromLease(handle.lease(), LockEventType.LOCK_LOST, LockStage.CHECK, LockStatus.LOCK_LOST, error));
             return ExecutionOutcome.failure(LockStatus.LOCK_LOST, LockStage.CHECK, error);
         } catch (Throwable error) {
-            eventPublisher.publish(
-                eventFactory.fromLease(handle.lease(), LockEventType.EXECUTION_FAILED, LockStage.EXECUTE, LockStatus.EXECUTION_FAILED,
-                    error));
+            eventPublisher.publish(eventFactory.fromLease(handle.lease(), LockEventType.EXECUTION_FAILED, LockStage.EXECUTE, LockStatus.EXECUTION_FAILED, error));
             return ExecutionOutcome.failure(LockStatus.EXECUTION_FAILED, LockStage.EXECUTE, error);
         }
     }
@@ -106,17 +97,15 @@ public final class LockExecutionTemplate {
     private DefaultLockHandle requireDefaultHandle(LockResult<LockHandle> acquireResult) {
         LockHandle handle = acquireResult.handle().orElseThrow(() -> new IllegalStateException("acquired result has no handle"));
         if (!(handle instanceof DefaultLockHandle)) {
-            throw new IllegalStateException(
-                "acquired handle is not managed by DefaultDistributedLockClient: " + handle.getClass().getName());
+            throw new IllegalStateException("acquired handle is not managed by DefaultDistributedLockClient: " + handle.getClass().getName());
         }
         return (DefaultLockHandle) handle;
     }
 
     private <T> LockResult<T> copyAcquireFailure(LockResult<LockHandle> acquireResult) {
         return LockResult.<T>builder().status(acquireResult.status()).stage(acquireResult.stage()).acquired(acquireResult.acquired())
-            .error(acquireResult.error().orElse(null)).lockName(acquireResult.lockName()).lockKey(acquireResult.lockKey())
-            .ownerToken(acquireResult.ownerToken()).fencingToken(acquireResult.fencingToken().orElse(null))
-            .fencingTokenProviderName(acquireResult.fencingTokenProviderName().orElse(null)).waitDuration(acquireResult.waitDuration())
-            .build();
+                .error(acquireResult.error().orElse(null)).lockName(acquireResult.lockName()).lockKey(acquireResult.lockKey())
+                .ownerToken(acquireResult.ownerToken()).fencingToken(acquireResult.fencingToken().orElse(null))
+                .fencingTokenProviderName(acquireResult.fencingTokenProviderName().orElse(null)).waitDuration(acquireResult.waitDuration()).build();
     }
 }

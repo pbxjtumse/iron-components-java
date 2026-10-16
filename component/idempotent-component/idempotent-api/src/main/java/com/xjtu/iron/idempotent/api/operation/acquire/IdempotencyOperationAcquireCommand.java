@@ -41,37 +41,15 @@ public final class IdempotencyOperationAcquireCommand {
         this.policy = builder.policy;
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
+    public static Builder builder() { return new Builder(); }
 
-    public String getKey() {
-        return key;
-    }
-
-    public String getRequestHash() {
-        return requestHash;
-    }
-
-    public String getRouteKey() {
-        return routeKey;
-    }
-
-    public IdempotencyStorageContext getStorageContext() {
-        return storageContext;
-    }
-
-    public String getOwnerToken() {
-        return ownerToken;
-    }
-
-    public String getPolicyName() {
-        return policyName;
-    }
-
-    public IdempotencyPolicy getPolicy() {
-        return policy;
-    }
+    public String getKey() { return key; }
+    public String getRequestHash() { return requestHash; }
+    public String getRouteKey() { return routeKey; }
+    public IdempotencyStorageContext getStorageContext() { return storageContext; }
+    public String getOwnerToken() { return ownerToken; }
+    public String getPolicyName() { return policyName; }
+    public IdempotencyPolicy getPolicy() { return policy; }
 
     public static final class Builder {
         /** 逻辑幂等 Key。 */
@@ -95,43 +73,13 @@ public final class IdempotencyOperationAcquireCommand {
         /** 内联 Policy。 */
         private IdempotencyPolicy policy;
 
-        public Builder key(String value) {
-            this.key = value;
-            return this;
-        }
-
-        public Builder requestHash(String value) {
-            this.requestHash = value;
-            return this;
-        }
-
-        public Builder routeKey(String value) {
-            this.routeKey = value;
-            return this;
-        }
-
-        public Builder storageContext(IdempotencyStorageContext value) {
-            this.storageContext = value;
-            return this;
-        }
-
-        public Builder ownerToken(String value) {
-            this.ownerToken = value;
-            return this;
-        }
-
-        public Builder policyName(String value) {
-            this.policyName = value;
-            return this;
-        }
-
-        public Builder policy(IdempotencyPolicy value) {
-            this.policy = value;
-            return this;
-        }
-
-        public IdempotencyOperationAcquireCommand build() {
-            return new IdempotencyOperationAcquireCommand(this);
-        }
+        public Builder key(String value) { this.key = value; return this; }
+        public Builder requestHash(String value) { this.requestHash = value; return this; }
+        public Builder routeKey(String value) { this.routeKey = value; return this; }
+        public Builder storageContext(IdempotencyStorageContext value) { this.storageContext = value; return this; }
+        public Builder ownerToken(String value) { this.ownerToken = value; return this; }
+        public Builder policyName(String value) { this.policyName = value; return this; }
+        public Builder policy(IdempotencyPolicy value) { this.policy = value; return this; }
+        public IdempotencyOperationAcquireCommand build() { return new IdempotencyOperationAcquireCommand(this); }
     }
 }

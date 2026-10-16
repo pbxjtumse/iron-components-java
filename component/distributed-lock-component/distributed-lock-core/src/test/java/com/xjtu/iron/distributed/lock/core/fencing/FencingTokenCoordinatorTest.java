@@ -34,8 +34,8 @@ class FencingTokenCoordinatorTest {
     @Test
     void explicitLockProviderNameShouldChooseNativeFencing() {
         FencingTokenCoordinator coordinator = new FencingTokenCoordinator(new DefaultFencingTokenProviderRegistry(List.of()));
-        FencingTokenPlan plan =
-            coordinator.plan(lockProvider(true), LockOptions.builder().fencingRequired(true).fencingTokenProviderName("lock").build());
+        FencingTokenPlan plan = coordinator.plan(lockProvider(true),
+                LockOptions.builder().fencingRequired(true) .fencingTokenProviderName("lock").build());
         assertThat(plan.mode()).isEqualTo(FencingTokenMode.NATIVE);
     }
 
@@ -44,7 +44,7 @@ class FencingTokenCoordinatorTest {
         com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider external = provider("mybatis-sequence", 10L);
         FencingTokenCoordinator coordinator = new FencingTokenCoordinator(new DefaultFencingTokenProviderRegistry(List.of(external)));
         FencingTokenPlan plan = coordinator.plan(lockProvider(true),
-            LockOptions.builder().fencingRequired(true).fencingTokenProviderName("mybatis-sequence").build());
+                LockOptions.builder().fencingRequired(true) .fencingTokenProviderName("mybatis-sequence").build());
         assertThat(plan.mode()).isEqualTo(FencingTokenMode.EXTERNAL);
         assertThat(plan.externalProvider()).contains(external);
     }
@@ -52,8 +52,10 @@ class FencingTokenCoordinatorTest {
     @Test
     void shouldFailFastWhenNoFencingSourceAvailable() {
         FencingTokenCoordinator coordinator = new FencingTokenCoordinator(new DefaultFencingTokenProviderRegistry(List.of()));
-        assertThatThrownBy(() -> coordinator.plan(lockProvider(false), LockOptions.builder().fencingRequired(true).build())).isInstanceOf(
-            IllegalArgumentException.class).hasMessageContaining("configure fencingTokenProviderName explicitly");
+        assertThatThrownBy(() -> coordinator.plan(lockProvider(false),
+                LockOptions.builder().fencingRequired(true).build()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("configure fencingTokenProviderName explicitly");
     }
 
     @Test
@@ -61,25 +63,17 @@ class FencingTokenCoordinatorTest {
         com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider external = provider("mybatis-sequence", 10L);
         FencingTokenCoordinator coordinator = new FencingTokenCoordinator(new DefaultFencingTokenProviderRegistry(List.of(external)));
 
-        assertThatThrownBy(() -> coordinator.plan(lockProvider(false), LockOptions.builder().fencingRequired(true).build())).isInstanceOf(
-            IllegalArgumentException.class).hasMessageContaining("configure fencingTokenProviderName explicitly");
+        assertThatThrownBy(() -> coordinator.plan(lockProvider(false),
+                LockOptions.builder().fencingRequired(true).build()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("configure fencingTokenProviderName explicitly");
     }
 
     private com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider provider(String name, long token) {
         return new com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenProvider() {
-            @Override
-            public String providerName() {
-                return name;
-            }
-
-            @Override
-            public boolean supports(com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenRequest request) {
-                return true;
-            }
-
-            @Override
-            public com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenResponse nextToken(
-                com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenRequest request) {
+            @Override public String providerName() { return name; }
+            @Override public boolean supports(com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenRequest request) { return true; }
+            @Override public com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenResponse nextToken(com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenRequest request) {
                 return com.xjtu.iron.distributed.lock.spi.fencing.FencingTokenResponse.issued(token);
             }
         };
@@ -87,33 +81,12 @@ class FencingTokenCoordinatorTest {
 
     private LockProvider lockProvider(boolean nativeFencing) {
         return new LockProvider() {
-            @Override
-            public String providerName() {
-                return "lock";
-            }
-
-            @Override
-            public LockAcquireResponse acquire(LockAcquireRequest request) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public LockReleaseResponse release(LockReleaseRequest request) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public LockRenewResponse renew(LockRenewRequest request) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public LockCheckResponse check(LockCheckRequest request) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public LockProviderCapabilities capabilities() {
+            @Override public String providerName() { return "lock"; }
+            @Override public LockAcquireResponse acquire(LockAcquireRequest request) { throw new UnsupportedOperationException(); }
+            @Override public LockReleaseResponse release(LockReleaseRequest request) { throw new UnsupportedOperationException(); }
+            @Override public LockRenewResponse renew(LockRenewRequest request) { throw new UnsupportedOperationException(); }
+            @Override public LockCheckResponse check(LockCheckRequest request) { throw new UnsupportedOperationException(); }
+            @Override public LockProviderCapabilities capabilities() {
                 return LockProviderCapabilities.builder().fencingTokenSupported(nativeFencing).build();
             }
         };

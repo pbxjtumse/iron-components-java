@@ -47,7 +47,8 @@ public final class MyBatisReliableTaskRepository implements ReliableTaskReposito
             execute("reliable-task.create", mapper -> mapper.insert(tableName, task));
             return ReliableTaskCreateResult.CREATED;
         } catch (RuntimeException failure) {
-            if (MyBatisConstraintViolationDetector.isConstraintViolation(failure) && find(task.getKey()).isPresent()) {
+            if (MyBatisConstraintViolationDetector.isConstraintViolation(failure)
+                    && find(task.getKey()).isPresent()) {
                 return ReliableTaskCreateResult.ALREADY_EXISTS;
             }
             throw failure;
@@ -57,17 +58,27 @@ public final class MyBatisReliableTaskRepository implements ReliableTaskReposito
     @Override
     public Optional<ReliableTask> find(ReliableTaskKey key) {
         Objects.requireNonNull(key, "key must not be null");
-        ReliableTaskRow row =
-            execute("reliable-task.find", mapper -> mapper.find(tableName, key.getStoreName(), key.getNamespace(), key.getTaskId()));
+        ReliableTaskRow row = execute("reliable-task.find", mapper -> mapper.find(
+                tableName,
+                key.getStoreName(),
+                key.getNamespace(),
+                key.getTaskId()
+        ));
         return row == null ? Optional.empty() : Optional.of(row.toDomain());
     }
 
     @Override
     public List<ReliableTask> findDue(ReliableTaskScanQuery query) {
         Objects.requireNonNull(query, "query must not be null");
-        return execute("reliable-task.find-due",
-            mapper -> mapper.findDue(tableName, query.getStoreName(), query.getScanBucket(), query.getNow(), query.getLimit())).stream()
-            .map(ReliableTaskRow::toDomain).toList();
+        return execute("reliable-task.find-due", mapper -> mapper.findDue(
+                        tableName,
+                        query.getStoreName(),
+                        query.getScanBucket(),
+                        query.getNow(),
+                        query.getLimit()
+                )).stream()
+                .map(ReliableTaskRow::toDomain)
+                .toList();
     }
 
     @Override
@@ -75,9 +86,14 @@ public final class MyBatisReliableTaskRepository implements ReliableTaskReposito
         Objects.requireNonNull(command, "command must not be null");
         ReliableTask candidate = command.getCandidate();
         boolean expiredRunning = candidate.getStatus() == ReliableTaskStatus.RUNNING;
-        int affectedRows = execute("reliable-task.claim",
-            mapper -> mapper.tryClaim(tableName, candidate, command.getOwnerId(), command.getNow(), command.getLeaseUntil(),
-                expiredRunning));
+        int affectedRows = execute("reliable-task.claim", mapper -> mapper.tryClaim(
+                tableName,
+                candidate,
+                command.getOwnerId(),
+                command.getNow(),
+                command.getLeaseUntil(),
+                expiredRunning
+        ));
         if (affectedRows != 1) {
             return ReliableTaskClaimResult.missed();
         }
@@ -90,33 +106,60 @@ public final class MyBatisReliableTaskRepository implements ReliableTaskReposito
     public boolean transition(ReliableTaskTransitionCommand command) {
         Objects.requireNonNull(command, "command must not be null");
         Instant completedAt = command.getTargetStatus().isTerminal() ? command.getNow() : null;
-        return execute("reliable-task.transition",
-            mapper -> mapper.transition(tableName, command.getKey().getStoreName(), command.getKey().getNamespace(),
-                command.getKey().getTaskId(), command.getOwnerId(), command.getExpectedVersion(), command.getTargetStatus().name(),
-                command.getNextExecuteAt(), command.getErrorCode(), command.getErrorMessage(), command.getNow(), completedAt)) == 1;
+        return execute("reliable-task.transition", mapper -> mapper.transition(
+                tableName,
+                command.getKey().getStoreName(),
+                command.getKey().getNamespace(),
+                command.getKey().getTaskId(),
+                command.getOwnerId(),
+                command.getExpectedVersion(),
+                command.getTargetStatus().name(),
+                command.getNextExecuteAt(),
+                command.getErrorCode(),
+                command.getErrorMessage(),
+                command.getNow(),
+                completedAt
+        )) == 1;
     }
 
     @Override
     public boolean renewLease(ReliableTaskLeaseRenewCommand command) {
         Objects.requireNonNull(command, "command must not be null");
-        return execute("reliable-task.renew-lease",
-            mapper -> mapper.renewLease(tableName, command.getKey().getStoreName(), command.getKey().getNamespace(),
-                command.getKey().getTaskId(), command.getOwnerId(), command.getExpectedVersion(), command.getNow(),
-                command.getLeaseUntil())) == 1;
+        return execute("reliable-task.renew-lease", mapper -> mapper.renewLease(
+                tableName,
+                command.getKey().getStoreName(),
+                command.getKey().getNamespace(),
+                command.getKey().getTaskId(),
+                command.getOwnerId(),
+                command.getExpectedVersion(),
+                command.getNow(),
+                command.getLeaseUntil()
+        )) == 1;
     }
 
     @Override
     public boolean adminTransition(ReliableTaskAdminTransitionCommand command) {
         Objects.requireNonNull(command, "command must not be null");
         Instant completedAt = command.getTargetStatus().isTerminal() ? command.getNow() : null;
-        return execute("reliable-task.admin-transition",
-            mapper -> mapper.adminTransition(tableName, command.getKey().getStoreName(), command.getKey().getNamespace(),
-                command.getKey().getTaskId(), command.getExpectedStatus().name(), command.getExpectedVersion(),
-                command.getTargetStatus().name(), command.getNextExecuteAt(), command.isResetAttempts(), command.getNow(), completedAt)) ==
-            1;
+        return execute("reliable-task.admin-transition", mapper -> mapper.adminTransition(
+                tableName,
+                command.getKey().getStoreName(),
+                command.getKey().getNamespace(),
+                command.getKey().getTaskId(),
+                command.getExpectedStatus().name(),
+                command.getExpectedVersion(),
+                command.getTargetStatus().name(),
+                command.getNextExecuteAt(),
+                command.isResetAttempts(),
+                command.getNow(),
+                completedAt
+        )) == 1;
     }
 
-    private <T> T execute(String operationName, MyBatisMapperWork<ReliableTaskMapper, T> work) {
+    private <T> T execute(
+            String operationName,
+            MyBatisMapperWork<ReliableTaskMapper, T> work
+    ) {
         try {
             return access.execute(operationName, ReliableTaskMapper.class, work);
         } catch (RuntimeException failure) {
@@ -126,11 +169,28 @@ public final class MyBatisReliableTaskRepository implements ReliableTaskReposito
         }
     }
 
-    private static ReliableTask claimedSnapshot(ReliableTask candidate, ReliableTaskClaimCommand command) {
-        return new ReliableTask(candidate.getKey(), candidate.getTaskType(), candidate.getBusinessKey(), candidate.getPayload(),
-            candidate.getRouteKey(), candidate.getScanBucket(), ReliableTaskStatus.RUNNING,
-            Math.min(candidate.getAttemptCount() + 1, candidate.getMaxAttempts()), candidate.getMaxAttempts(), null, command.getOwnerId(),
-            command.getLeaseUntil(), candidate.getVersion() + 1, candidate.getLastErrorCode(), candidate.getLastErrorMessage(),
-            candidate.getCreatedAt(), command.getNow(), null);
+    private static ReliableTask claimedSnapshot(
+            ReliableTask candidate,
+            ReliableTaskClaimCommand command) {
+        return new ReliableTask(
+                candidate.getKey(),
+                candidate.getTaskType(),
+                candidate.getBusinessKey(),
+                candidate.getPayload(),
+                candidate.getRouteKey(),
+                candidate.getScanBucket(),
+                ReliableTaskStatus.RUNNING,
+                Math.min(candidate.getAttemptCount() + 1, candidate.getMaxAttempts()),
+                candidate.getMaxAttempts(),
+                null,
+                command.getOwnerId(),
+                command.getLeaseUntil(),
+                candidate.getVersion() + 1,
+                candidate.getLastErrorCode(),
+                candidate.getLastErrorMessage(),
+                candidate.getCreatedAt(),
+                command.getNow(),
+                null
+        );
     }
 }

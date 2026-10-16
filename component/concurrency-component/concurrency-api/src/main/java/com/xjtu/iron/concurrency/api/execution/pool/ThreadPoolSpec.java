@@ -99,7 +99,10 @@ public class ThreadPoolSpec {
                 throw new IllegalArgumentException("queueCapacity must be >= 0 for DIRECT_HANDOFF");
             }
         } else if (queueCapacity <= 0) {
-            throw new IllegalArgumentException("queueCapacity must be greater than zero " + "for bounded queue type " + queueType);
+            throw new IllegalArgumentException("queueCapacity must be greater than zero "
+                            + "for bounded queue type "
+                            + queueType
+            );
         }
 
         if (keepAliveTime == null || keepAliveTime.isNegative()) {
@@ -116,14 +119,17 @@ public class ThreadPoolSpec {
 
         if (rejectionPolicy == RejectionPolicy.BLOCKING_WAIT) {
             if (rejectionWaitTime == null || rejectionWaitTime.isZero() || rejectionWaitTime.isNegative()) {
-                throw new IllegalArgumentException("rejectionWaitTime must be greater than zero when rejectionPolicy=BLOCKING_WAIT");
+                throw new IllegalArgumentException(
+                        "rejectionWaitTime must be greater than zero when rejectionPolicy=BLOCKING_WAIT");
             }
         }
 
         if (waitForTasksToCompleteOnShutdown) {
             if (awaitTermination == null || awaitTermination.isZero() || awaitTermination.isNegative()) {
                 throw new IllegalArgumentException(
-                    "awaitTermination must be greater than zero " + "when waitForTasksToCompleteOnShutdown=true");
+                        "awaitTermination must be greater than zero "
+                                + "when waitForTasksToCompleteOnShutdown=true"
+                );
             }
         }
 

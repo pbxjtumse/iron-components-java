@@ -34,8 +34,11 @@ public final class DefaultTaskLifecyclePublisher implements TaskLifecyclePublish
      */
     private final TaskExecutionListener taskExecutionListener;
 
-    public DefaultTaskLifecyclePublisher(ConcurrencyMetricsRecorder metricsRecorder, TaskExecutionRegistry taskExecutionRegistry,
-        TaskExecutionListener taskExecutionListener) {
+    public DefaultTaskLifecyclePublisher(
+            ConcurrencyMetricsRecorder metricsRecorder,
+            TaskExecutionRegistry taskExecutionRegistry,
+            TaskExecutionListener taskExecutionListener
+    ) {
         this.metricsRecorder = Objects.requireNonNull(metricsRecorder, "metricsRecorder must not be null");
         this.taskExecutionRegistry = Objects.requireNonNull(taskExecutionRegistry, "taskExecutionRegistry must not be null");
         this.taskExecutionListener = Objects.requireNonNull(taskExecutionListener, "taskExecutionListener must not be null");

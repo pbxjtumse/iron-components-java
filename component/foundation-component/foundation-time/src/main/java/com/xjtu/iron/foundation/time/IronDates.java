@@ -11,8 +11,7 @@ import java.util.List;
  */
 public final class IronDates {
 
-    private IronDates() {
-    }
+    private IronDates() {}
 
     public static LocalDate firstDayOfMonth(LocalDate date) {
         return YearMonth.from(date).atDay(1);

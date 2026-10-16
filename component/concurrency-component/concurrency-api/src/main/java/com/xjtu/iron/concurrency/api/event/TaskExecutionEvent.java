@@ -66,16 +66,32 @@ public final class TaskExecutionEvent {
      */
     private final Instant occurredAt;
 
-    public TaskExecutionEvent(TaskMetadata task, AsyncTaskStatus status, TaskResultMode resultMode, TaskExecutionMode executionMode,
-        TaskTimingSnapshot timing, AsyncError error, String message, Instant occurredAt) {
+    public TaskExecutionEvent(
+            TaskMetadata task,
+            AsyncTaskStatus status,
+            TaskResultMode resultMode,
+            TaskExecutionMode executionMode,
+            TaskTimingSnapshot timing,
+            AsyncError error,
+            String message,
+            Instant occurredAt
+    ) {
         this.task = task;
         this.status = status;
         this.resultMode = resultMode;
-        this.executionMode = executionMode == null ? TaskExecutionMode.UNASSIGNED : executionMode;
-        this.timing = timing == null ? TaskTimingSnapshot.empty() : timing;
-        this.error = error == null ? AsyncError.none() : error.copy();
+        this.executionMode = executionMode == null
+                ? TaskExecutionMode.UNASSIGNED
+                : executionMode;
+        this.timing = timing == null
+                ? TaskTimingSnapshot.empty()
+                : timing;
+        this.error = error == null
+                ? AsyncError.none()
+                : error.copy();
         this.message = message;
-        this.occurredAt = occurredAt == null ? Instant.now() : occurredAt;
+        this.occurredAt = occurredAt == null
+                ? Instant.now()
+                : occurredAt;
     }
 
     /**
@@ -84,7 +100,16 @@ public final class TaskExecutionEvent {
      * @return 独立事件副本
      */
     public TaskExecutionEvent copy() {
-        return new TaskExecutionEvent(task, status, resultMode, executionMode, timing, error, message, occurredAt);
+        return new TaskExecutionEvent(
+                task,
+                status,
+                resultMode,
+                executionMode,
+                timing,
+                error,
+                message,
+                occurredAt
+        );
     }
 
     public TaskMetadata getTask() {

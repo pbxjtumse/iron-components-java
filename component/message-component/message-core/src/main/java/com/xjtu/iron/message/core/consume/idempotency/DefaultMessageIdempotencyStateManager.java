@@ -30,7 +30,10 @@ public final class DefaultMessageIdempotencyStateManager implements MessageIdemp
 
     @Override
     public void markFailed(MessageIdempotencyContext context, Throwable throwable) {
-        operations.markFailed(context, "CONSUME_FAILED", throwable == null ? null : throwable.getMessage(),
-            throwable == null ? null : throwable.getClass().getName());
+        operations.markFailed(
+                context,
+                "CONSUME_FAILED",
+                throwable == null ? null : throwable.getMessage(),
+                throwable == null ? null : throwable.getClass().getName());
     }
 }

@@ -10,14 +10,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DistributedLockAutoConfigurationTest {
 
     /** 被测自动配置上下文。 */
-    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
-        AutoConfigurations.of(RedisDistributedLockAutoConfiguration.class, RedissonDistributedLockAutoConfiguration.class,
-            MyBatisFencingTokenAutoConfiguration.class, DistributedLockAutoConfiguration.class,
-            DistributedLockActuatorAutoConfiguration.class));
+    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+            .withConfiguration(AutoConfigurations.of(
+                    RedisDistributedLockAutoConfiguration.class,
+                    RedissonDistributedLockAutoConfiguration.class,
+                    MyBatisFencingTokenAutoConfiguration.class,
+                    DistributedLockAutoConfiguration.class,
+                    DistributedLockActuatorAutoConfiguration.class
+            ));
 
     @Test
     void shouldNotCreateClientWhenNoLockProviderExists() {
-        contextRunner.run(
-            context -> assertThat(context).doesNotHaveBean(com.xjtu.iron.distributed.lock.api.client.DistributedLockClient.class));
+        contextRunner.run(context -> assertThat(context)
+                .doesNotHaveBean(com.xjtu.iron.distributed.lock.api.client.DistributedLockClient.class));
     }
 }

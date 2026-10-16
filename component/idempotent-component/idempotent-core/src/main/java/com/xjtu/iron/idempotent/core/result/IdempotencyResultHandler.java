@@ -32,31 +32,32 @@ public final class IdempotencyResultHandler {
     public <T> IdempotencyResult<T> replay(IdempotencyRecord record, IdempotencyResultPolicy<T> resultPolicy, boolean lockFallback) {
         IdempotencyResultPolicy<T> resolved = resultPolicy == null ? IdempotencyResultPolicies.none() : resultPolicy;
         if (resolved.type() == IdempotencyResultPolicyType.NONE) {
-            return IdempotencyResult.<T>builder().status(IdempotencyResultStatus.REPLAYED).stage(IdempotencyStage.REPLAY).record(record)
-                .lockFallback(lockFallback).build();
+            return IdempotencyResult.<T>builder().status(IdempotencyResultStatus.REPLAYED).stage(IdempotencyStage.REPLAY)
+                    .record(record).lockFallback(lockFallback).build();
         }
 
         String payload = record == null ? null : record.getResultPayload();
         if (payload == null || payload.isBlank()) {
-            return IdempotencyResult.<T>builder().status(IdempotencyResultStatus.RESULT_REPLAY_UNAVAILABLE).stage(IdempotencyStage.REPLAY)
-                .record(record)
-                .error(new IllegalStateException("historical SUCCESS has no stored result for " + resolved.type() + " replay"))
-                .lockFallback(lockFallback).build();
+            return IdempotencyResult.<T>builder().status(IdempotencyResultStatus.RESULT_REPLAY_UNAVAILABLE)
+                    .stage(IdempotencyStage.REPLAY).record(record)
+                    .error(new IllegalStateException("historical SUCCESS has no stored result for " + resolved.type() + " replay"))
+                    .lockFallback(lockFallback).build();
         }
 
         try {
             StoredResultEnvelope.Decoded decoded = StoredResultEnvelope.decode(payload);
             if (decoded.type() != resolved.type()) {
-                return IdempotencyResult.<T>builder().status(IdempotencyResultStatus.RESULT_POLICY_MISMATCH).stage(IdempotencyStage.REPLAY)
-                    .record(record).error(new IllegalStateException(
-                        "stored result policy is " + decoded.type() + " but current request uses " + resolved.type()))
-                    .lockFallback(lockFallback).build();
+                return IdempotencyResult.<T>builder().status(IdempotencyResultStatus.RESULT_POLICY_MISMATCH)
+                        .stage(IdempotencyStage.REPLAY).record(record)
+                        .error(new IllegalStateException("stored result policy is " + decoded.type()
+                                + " but current request uses " + resolved.type()))
+                        .lockFallback(lockFallback).build();
             }
             return IdempotencyResult.<T>builder().status(IdempotencyResultStatus.REPLAYED).stage(IdempotencyStage.REPLAY)
-                .value(resolved.replay(decoded.value())).record(record).lockFallback(lockFallback).build();
+                    .value(resolved.replay(decoded.value())).record(record).lockFallback(lockFallback).build();
         } catch (Exception error) {
             return IdempotencyResult.<T>builder().status(IdempotencyResultStatus.RESULT_POLICY_ERROR).stage(IdempotencyStage.REPLAY)
-                .record(record).error(error).lockFallback(lockFallback).build();
+                    .record(record).error(error).lockFallback(lockFallback).build();
         }
     }
 

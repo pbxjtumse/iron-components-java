@@ -39,8 +39,9 @@ public final class DistributedLockHealthIndicator implements HealthIndicator {
     private final RedissonDistributedLockProperties redissonProperties;
 
     public DistributedLockHealthIndicator(LockProviderRegistry providerRegistry, FencingTokenProviderRegistry fencingRegistry,
-        DistributedLockProperties properties, RedisDistributedLockProperties redisProperties,
-        MyBatisFencingTokenProperties myBatisFencingProperties, RedissonDistributedLockProperties redissonProperties) {
+            DistributedLockProperties properties, RedisDistributedLockProperties redisProperties,
+            MyBatisFencingTokenProperties myBatisFencingProperties,
+            RedissonDistributedLockProperties redissonProperties) {
         this.providerRegistry = providerRegistry;
         this.fencingRegistry = fencingRegistry;
         this.properties = properties;
@@ -52,8 +53,10 @@ public final class DistributedLockHealthIndicator implements HealthIndicator {
     @Override
     public Health health() {
         if (!properties.isEnabled()) {
-            return Health.up().withDetail("enabled", false).withDetail("message", "distributed lock auto configuration is disabled")
-                .build();
+            return Health.up()
+                    .withDetail("enabled", false)
+                    .withDetail("message", "distributed lock auto configuration is disabled")
+                    .build();
         }
 
         String configuredLockProvider = properties.getDefaultProvider();
@@ -61,8 +64,11 @@ public final class DistributedLockHealthIndicator implements HealthIndicator {
             LockProvider lockProvider = providerRegistry.getDefaultProvider();
             LockProviderCapabilities capabilities = lockProvider.capabilities();
             String configuredFencingProvider = trimToNull(properties.getFencingTokenProviderName());
-            boolean myBatisEnabled = myBatisFencingProperties != null && myBatisFencingProperties.isEnabled();
-            boolean myBatisProviderRegistered = fencingRegistry.findProvider(MyBatisFencingTokenConstants.PROVIDER_NAME).isPresent();
+            boolean myBatisEnabled = myBatisFencingProperties != null
+                    && myBatisFencingProperties.isEnabled();
+            boolean myBatisProviderRegistered = fencingRegistry.findProvider(
+                    MyBatisFencingTokenConstants.PROVIDER_NAME
+            ).isPresent();
             boolean fencingReady = isFencingReady(lockProvider, capabilities, configuredFencingProvider);
             boolean myBatisConfigurationReady = !myBatisEnabled || myBatisProviderRegistered;
 
@@ -72,30 +78,41 @@ public final class DistributedLockHealthIndicator implements HealthIndicator {
             boolean redissonProviderRegistered = providerRegistry.containsProvider(RedissonLockConstants.PROVIDER_NAME);
             boolean redissonConfigurationReady = !redissonEnabled || redissonProviderRegistered;
 
-            Health.Builder builder = fencingReady && myBatisConfigurationReady && redissonConfigurationReady ? Health.up() : Health.down();
+            Health.Builder builder = fencingReady && myBatisConfigurationReady && redissonConfigurationReady
+                    ? Health.up()
+                    : Health.down();
 
-            return builder.withDetail("enabled", true).withDetail("defaultProvider", configuredLockProvider)
-                .withDetail("actualProvider", lockProvider.providerName())
-                .withDetail("redisEnabled", redisProperties == null || redisProperties.isEnabled())
-                .withDetail("keyPrefix", redisProperties == null ? null : redisProperties.getKeyPrefix())
-                .withDetail("fencingRequiredByDefault", properties.isFencingRequired())
-                .withDetail("configuredFencingProvider", configuredFencingProvider)
-                .withDetail("nativeFencingSupported", capabilities.isFencingTokenSupported())
-                .withDetail("externalFencingProviders", fencingRegistry.providerNames()).withDetail("fencingReady", fencingReady)
-                .withDetail("mybatisFencingEnabled", myBatisEnabled)
-                .withDetail("mybatisFencingProviderRegistered", myBatisProviderRegistered)
-                .withDetail("mybatisFencingTable", myBatisFencingProperties == null ? null : myBatisFencingProperties.getTableName())
-                .withDetail("autoRenewSupported", capabilities.isAutoRenewSupported())
-                .withDetail("autoRenewMode", capabilities.getAutoRenewMode().name())
-                .withDetail("manualRenewSupported", capabilities.isManualRenewSupported()).withDetail("redissonEnabled", redissonEnabled)
-                .withDetail("redissonProviderRegistered", redissonProviderRegistered)
-                .withDetail("redissonConfigurationReady", redissonConfigurationReady)
-                .withDetail("redissonWatchdogTimeout", redissonProperties == null ? null : redissonProperties.getWatchdogTimeout())
-                .withDetail("nativeWaitSupported", capabilities.isNativeWaitSupported())
-                .withDetail("fairLockSupported", capabilities.isFairLockSupported())
-                .withDetail("reentrantSupported", capabilities.isReentrantSupported()).build();
+            return builder
+                    .withDetail("enabled", true)
+                    .withDetail("defaultProvider", configuredLockProvider)
+                    .withDetail("actualProvider", lockProvider.providerName())
+                    .withDetail("redisEnabled", redisProperties == null || redisProperties.isEnabled())
+                    .withDetail("keyPrefix", redisProperties == null ? null : redisProperties.getKeyPrefix())
+                    .withDetail("fencingRequiredByDefault", properties.isFencingRequired())
+                    .withDetail("configuredFencingProvider", configuredFencingProvider)
+                    .withDetail("nativeFencingSupported", capabilities.isFencingTokenSupported())
+                    .withDetail("externalFencingProviders", fencingRegistry.providerNames())
+                    .withDetail("fencingReady", fencingReady)
+                    .withDetail("mybatisFencingEnabled", myBatisEnabled)
+                    .withDetail("mybatisFencingProviderRegistered", myBatisProviderRegistered)
+                    .withDetail("mybatisFencingTable", myBatisFencingProperties == null
+                            ? null : myBatisFencingProperties.getTableName())
+                    .withDetail("autoRenewSupported", capabilities.isAutoRenewSupported())
+                    .withDetail("autoRenewMode", capabilities.getAutoRenewMode().name())
+                    .withDetail("manualRenewSupported", capabilities.isManualRenewSupported())
+                    .withDetail("redissonEnabled", redissonEnabled)
+                    .withDetail("redissonProviderRegistered", redissonProviderRegistered)
+                    .withDetail("redissonConfigurationReady", redissonConfigurationReady)
+                    .withDetail("redissonWatchdogTimeout", redissonProperties == null ? null : redissonProperties.getWatchdogTimeout())
+                    .withDetail("nativeWaitSupported", capabilities.isNativeWaitSupported())
+                    .withDetail("fairLockSupported", capabilities.isFairLockSupported())
+                    .withDetail("reentrantSupported", capabilities.isReentrantSupported())
+                    .build();
         } catch (Throwable ex) {
-            return Health.down(ex).withDetail("enabled", true).withDetail("defaultProvider", configuredLockProvider).build();
+            return Health.down(ex)
+                    .withDetail("enabled", true)
+                    .withDetail("defaultProvider", configuredLockProvider)
+                    .build();
         }
     }
 

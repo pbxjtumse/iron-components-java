@@ -47,9 +47,9 @@ public final class IdempotencyFailureRequest {
     /** Core 传入的统一当前时间。 */
     private final Instant now;
 
-    public IdempotencyFailureRequest(IdempotencyStorageContext storageContext, String namespace, String key, String ownerToken,
-        long version, IdempotencyFailureInfo failure, IdempotencyMode mode, Duration idempotencyWindow,
-        IdempotencyWindowPolicy windowPolicy, Duration recordRetentionTtl, Instant now) {
+    public IdempotencyFailureRequest(IdempotencyStorageContext storageContext, String namespace, String key, String ownerToken, long version,
+                                     IdempotencyFailureInfo failure, IdempotencyMode mode, Duration idempotencyWindow,
+                                     IdempotencyWindowPolicy windowPolicy, Duration recordRetentionTtl, Instant now) {
         this.storageContext = storageContext;
         this.namespace = namespace;
         this.key = key;
@@ -63,47 +63,15 @@ public final class IdempotencyFailureRequest {
         this.now = now;
     }
 
-    public IdempotencyStorageContext getStorageContext() {
-        return storageContext;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public String getOwnerToken() {
-        return ownerToken;
-    }
-
-    public long getVersion() {
-        return version;
-    }
-
-    public IdempotencyFailureInfo getFailure() {
-        return failure;
-    }
-
-    public IdempotencyMode getMode() {
-        return mode;
-    }
-
-    public Duration getIdempotencyWindow() {
-        return idempotencyWindow;
-    }
-
-    public IdempotencyWindowPolicy getWindowPolicy() {
-        return windowPolicy;
-    }
-
-    public Duration getRecordRetentionTtl() {
-        return recordRetentionTtl;
-    }
-
-    public Instant getNow() {
-        return now;
-    }
+    public IdempotencyStorageContext getStorageContext() { return storageContext; }
+    public String getNamespace() { return namespace; }
+    public String getKey() { return key; }
+    public String getOwnerToken() { return ownerToken; }
+    public long getVersion() { return version; }
+    public IdempotencyFailureInfo getFailure() { return failure; }
+    public IdempotencyMode getMode() { return mode; }
+    public Duration getIdempotencyWindow() { return idempotencyWindow; }
+    public IdempotencyWindowPolicy getWindowPolicy() { return windowPolicy; }
+    public Duration getRecordRetentionTtl() { return recordRetentionTtl; }
+    public Instant getNow() { return now; }
 }

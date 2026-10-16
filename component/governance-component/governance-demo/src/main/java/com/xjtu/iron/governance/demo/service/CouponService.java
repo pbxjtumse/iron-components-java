@@ -14,8 +14,12 @@ public class CouponService {
         this.mockCouponClient = mockCouponClient;
     }
 
-    @GovernedCall(name = "internal.coupon.queryUserCoupon", downstream = "coupon-service", operation = "queryUserCoupon",
-        fallbackMethod = "queryCouponFallback")
+    @GovernedCall(
+            name = "internal.coupon.queryUserCoupon",
+            downstream = "coupon-service",
+            operation = "queryUserCoupon",
+            fallbackMethod = "queryCouponFallback"
+    )
     public String queryCoupon(Long userId) {
         return mockCouponClient.queryCoupon(userId);
     }
@@ -24,8 +28,12 @@ public class CouponService {
         return "empty-coupon-list, reason=" + throwable.getClass().getSimpleName();
     }
 
-    @GovernedCall(name = "internal.coupon.slowQuery", downstream = "coupon-service", operation = "slowQuery",
-        fallbackMethod = "slowQueryFallback")
+    @GovernedCall(
+            name = "internal.coupon.slowQuery",
+            downstream = "coupon-service",
+            operation = "slowQuery",
+            fallbackMethod = "slowQueryFallback"
+    )
     public String slowQuery(Long userId) {
         return mockCouponClient.slowQuery(userId);
     }

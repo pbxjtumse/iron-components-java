@@ -41,8 +41,7 @@ public class CacheResult<T> {
 
     /** 根据 Provider 命中的 CacheValue 构造结果。 */
     public static <T> CacheResult<T> hit(CacheValue<T> cacheValue, long costMillis) {
-        return new CacheResult<>(cacheValue.getValue(), CacheResultStatus.HIT, cacheValue.getLevel(), true, cacheValue.isNullValue(),
-            costMillis);
+        return new CacheResult<>(cacheValue.getValue(), CacheResultStatus.HIT, cacheValue.getLevel(), true, cacheValue.isNullValue(), costMillis);
     }
 
     /** 构造 miss 后从源数据加载成功的结果。 */
@@ -56,32 +55,20 @@ public class CacheResult<T> {
     }
 
     /** 返回业务值。 */
-    public T getValue() {
-        return value;
-    }
+    public T getValue() { return value; }
 
     /** 返回访问状态。 */
-    public CacheResultStatus getStatus() {
-        return status;
-    }
+    public CacheResultStatus getStatus() { return status; }
 
     /** 返回命中层级。 */
-    public CacheLevel getLevel() {
-        return level;
-    }
+    public CacheLevel getLevel() { return level; }
 
     /** 返回是否命中缓存。 */
-    public boolean isHit() {
-        return hit;
-    }
+    public boolean isHit() { return hit; }
 
     /** 返回是否为空值结果。 */
-    public boolean isNullValue() {
-        return nullValue;
-    }
+    public boolean isNullValue() { return nullValue; }
 
     /** 返回耗时毫秒数。 */
-    public long getCostMillis() {
-        return costMillis;
-    }
+    public long getCostMillis() { return costMillis; }
 }

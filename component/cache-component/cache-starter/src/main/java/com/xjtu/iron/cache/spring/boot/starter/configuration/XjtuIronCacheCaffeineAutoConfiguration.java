@@ -25,7 +25,12 @@ import org.springframework.context.annotation.Bean;
  * <p>CaffeineCacheProvider 是一期 L1 本地缓存实现。</p>
  */
 @AutoConfiguration(after = XjtuIronCacheAutoConfiguration.class)
-@ConditionalOnProperty(prefix = "xjtu.iron.cache", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+        prefix = "xjtu.iron.cache",
+        name = "enabled",
+        havingValue = "true",
+        matchIfMissing = true
+)
 public class XjtuIronCacheCaffeineAutoConfiguration {
 
     /**
@@ -35,7 +40,12 @@ public class XjtuIronCacheCaffeineAutoConfiguration {
      * @return Caffeine 缓存管理器
      */
     @Bean("ironCaffeineLocalCacheManager")
-    @ConditionalOnProperty(prefix = "xjtu.iron.cache.caffeine", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(
+            prefix = "xjtu.iron.cache.caffeine",
+            name = "enabled",
+            havingValue = "true",
+            matchIfMissing = true
+    )
     public CaffeineLocalCacheManager caffeineCacheManager(XjtuIronCacheProperties properties) {
         return new CaffeineLocalCacheManager(properties.getCaffeine().getDefaultMaximumSize());
     }
@@ -49,7 +59,8 @@ public class XjtuIronCacheCaffeineAutoConfiguration {
     @Bean("ironCaffeineCacheProvider")
     @ConditionalOnBean(name = "ironCaffeineLocalCacheManager")
     public CaffeineCacheProvider caffeineCacheProvider(
-        @Qualifier("ironCaffeineLocalCacheManager") CaffeineLocalCacheManager caffeineLocalCacheManager) {
+            @Qualifier("ironCaffeineLocalCacheManager") CaffeineLocalCacheManager caffeineLocalCacheManager
+    ) {
         return new CaffeineCacheProvider(caffeineLocalCacheManager);
     }
 
@@ -57,7 +68,8 @@ public class XjtuIronCacheCaffeineAutoConfiguration {
     @ConditionalOnBean(name = "ironCaffeineLocalCacheManager")
     @ConditionalOnMissingBean
     public LocalCacheInvalidator localCacheInvalidator(
-        @Qualifier("ironCaffeineLocalCacheManager") CaffeineLocalCacheManager caffeineCacheManager) {
+            @Qualifier("ironCaffeineLocalCacheManager") CaffeineLocalCacheManager caffeineCacheManager
+    ) {
         return new CaffeineLocalCacheInvalidator(caffeineCacheManager);
     }
 }

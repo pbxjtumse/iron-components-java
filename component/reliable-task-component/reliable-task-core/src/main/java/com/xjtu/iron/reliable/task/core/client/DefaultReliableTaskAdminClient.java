@@ -19,10 +19,15 @@ import java.util.Set;
 public final class DefaultReliableTaskAdminClient implements ReliableTaskAdminClient {
 
     /** 允许通过人工操作重新入队的任务状态集合。 */
-    private static final Set<ReliableTaskStatus> REQUEUEABLE = EnumSet.of(ReliableTaskStatus.MANUAL, ReliableTaskStatus.DEAD);
+    private static final Set<ReliableTaskStatus> REQUEUEABLE =
+            EnumSet.of(ReliableTaskStatus.MANUAL, ReliableTaskStatus.DEAD);
     /** 允许通过人工操作取消的任务状态集合。 */
-    private static final Set<ReliableTaskStatus> CANCELLABLE =
-        EnumSet.of(ReliableTaskStatus.READY, ReliableTaskStatus.RETRY_WAIT, ReliableTaskStatus.WAIT_RECONCILE, ReliableTaskStatus.MANUAL);
+    private static final Set<ReliableTaskStatus> CANCELLABLE = EnumSet.of(
+            ReliableTaskStatus.READY,
+            ReliableTaskStatus.RETRY_WAIT,
+            ReliableTaskStatus.WAIT_RECONCILE,
+            ReliableTaskStatus.MANUAL
+    );
 
     /** 任务持久化仓储。 */
     private final ReliableTaskRepository repository;
@@ -45,8 +50,13 @@ public final class DefaultReliableTaskAdminClient implements ReliableTaskAdminCl
         return transition(key, expectedVersion, CANCELLABLE, ReliableTaskStatus.CANCELLED, null, false);
     }
 
-    private ReliableTaskAdminResult transition(ReliableTaskKey key, long expectedVersion, Set<ReliableTaskStatus> allowed,
-        ReliableTaskStatus target, Instant executeAt, boolean resetAttempts) {
+    private ReliableTaskAdminResult transition(
+            ReliableTaskKey key,
+            long expectedVersion,
+            Set<ReliableTaskStatus> allowed,
+            ReliableTaskStatus target,
+            Instant executeAt,
+            boolean resetAttempts) {
         ReliableTask current = repository.find(Objects.requireNonNull(key, "key must not be null")).orElse(null);
         if (current == null) {
             return new ReliableTaskAdminResult(ReliableTaskAdminStatus.NOT_FOUND, null);
@@ -58,10 +68,19 @@ public final class DefaultReliableTaskAdminClient implements ReliableTaskAdminCl
             return new ReliableTaskAdminResult(ReliableTaskAdminStatus.STALE_VERSION, current);
         }
 
-        boolean updated = repository.adminTransition(
-            new ReliableTaskAdminTransitionCommand(key, current.getStatus(), expectedVersion, target, executeAt, resetAttempts,
-                clock.instant()));
+        boolean updated = repository.adminTransition(new ReliableTaskAdminTransitionCommand(
+                key,
+                current.getStatus(),
+                expectedVersion,
+                target,
+                executeAt,
+                resetAttempts,
+                clock.instant()
+        ));
         ReliableTask latest = repository.find(key).orElse(current);
-        return new ReliableTaskAdminResult(updated ? ReliableTaskAdminStatus.UPDATED : ReliableTaskAdminStatus.STALE_VERSION, latest);
+        return new ReliableTaskAdminResult(
+                updated ? ReliableTaskAdminStatus.UPDATED : ReliableTaskAdminStatus.STALE_VERSION,
+                latest
+        );
     }
 }

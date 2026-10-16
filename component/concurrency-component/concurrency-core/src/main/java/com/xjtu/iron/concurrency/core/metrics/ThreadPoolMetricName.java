@@ -24,8 +24,7 @@ public enum ThreadPoolMetricName {
     QUEUE_SIZE("xjtu.iron.concurrency.thread.pool.queue.size", "Current queue size", executor -> executor.getQueue().size()),
 
     /** 任务队列当前剩余的可用容量。 */
-    QUEUE_REMAINING("xjtu.iron.concurrency.thread.pool.queue.remaining", "Queue remaining capacity",
-        executor -> executor.getQueue().remainingCapacity()),
+    QUEUE_REMAINING("xjtu.iron.concurrency.thread.pool.queue.remaining", "Queue remaining capacity", executor -> executor.getQueue().remainingCapacity()),
 
     /** 线程池历史上已完成的任务总数。 */
     COMPLETED_COUNT("xjtu.iron.concurrency.thread.pool.completed", "Completed task count", ThreadPoolExecutor::getCompletedTaskCount),

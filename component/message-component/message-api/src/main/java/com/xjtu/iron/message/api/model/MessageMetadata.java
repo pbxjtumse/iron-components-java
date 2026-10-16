@@ -37,13 +37,18 @@ public final class MessageMetadata {
 
 
     /** 标准化字符串并校验消息类型。 */
-    public MessageMetadata(String messageId, String messageType, String schemaVersion, String messageKey, Instant occurredAt,
+    public MessageMetadata(
+        String messageId,
+        String messageType,
+        String schemaVersion,
+        String messageKey,
+        Instant occurredAt,
         Instant createdAt) {
         messageId = normalize(messageId);
         messageType = requireText(messageType, "messageType");
         schemaVersion = normalize(schemaVersion);
         messageKey = normalize(messageKey);
-
+    
         // 保存完成校验和标准化后的 messageId。
         this.messageId = messageId;
         // 保存完成校验和标准化后的 messageType。
@@ -64,10 +69,18 @@ public final class MessageMetadata {
     }
 
     /** 返回替换 core 管理字段后的新元数据。 */
-    public MessageMetadata enriched(String enrichedMessageId, String enrichedSchemaVersion, Instant enrichedOccurredAt,
-        Instant enrichedCreatedAt) {
-        return new MessageMetadata(enrichedMessageId, messageType, enrichedSchemaVersion, messageKey, enrichedOccurredAt,
-            enrichedCreatedAt);
+    public MessageMetadata enriched(
+            String enrichedMessageId,
+            String enrichedSchemaVersion,
+            Instant enrichedOccurredAt,
+            Instant enrichedCreatedAt) {
+        return new MessageMetadata(
+                enrichedMessageId,
+                messageType,
+                enrichedSchemaVersion,
+                messageKey,
+                enrichedOccurredAt,
+                enrichedCreatedAt);
     }
 
     private static String requireText(String value, String fieldName) {
@@ -85,7 +98,6 @@ public final class MessageMetadata {
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
     }
-
     /**
      * 返回消息实例唯一标识；发送前允许为空，由 core 生成。
      *
@@ -164,9 +176,12 @@ public final class MessageMetadata {
         }
         // 转换为当前类型后逐字段比较。
         MessageMetadata other = (MessageMetadata) object;
-        return Objects.equals(messageId, other.messageId) && Objects.equals(messageType, other.messageType) &&
-            Objects.equals(schemaVersion, other.schemaVersion) && Objects.equals(messageKey, other.messageKey) &&
-            Objects.equals(occurredAt, other.occurredAt) && Objects.equals(createdAt, other.createdAt);
+        return Objects.equals(messageId, other.messageId)
+                && Objects.equals(messageType, other.messageType)
+                && Objects.equals(schemaVersion, other.schemaVersion)
+                && Objects.equals(messageKey, other.messageKey)
+                && Objects.equals(occurredAt, other.occurredAt)
+                && Objects.equals(createdAt, other.createdAt);
     }
 
     /**
@@ -188,8 +203,14 @@ public final class MessageMetadata {
     @Override
     public String toString() {
         // 拼接全部字段，保持值对象可诊断。
-        return "MessageMetadata{" + "messageId=" + messageId + ", messageType=" + messageType + ", schemaVersion=" + schemaVersion +
-            ", messageKey=" + messageKey + ", occurredAt=" + occurredAt + ", createdAt=" + createdAt + '}';
+        return "MessageMetadata{" +
+                "messageId=" + messageId +
+                ", messageType=" + messageType +
+                ", schemaVersion=" + schemaVersion +
+                ", messageKey=" + messageKey +
+                ", occurredAt=" + occurredAt +
+                ", createdAt=" + createdAt +
+                '}';
     }
 
 }

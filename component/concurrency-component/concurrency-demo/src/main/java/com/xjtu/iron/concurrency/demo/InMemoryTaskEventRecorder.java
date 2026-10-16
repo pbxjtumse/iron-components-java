@@ -157,7 +157,9 @@ public class InMemoryTaskEventRecorder implements TaskExecutionListener, AsyncUn
         row.put("totalCostMillis", event.getTiming().getTotalCostMillis());
         row.put("message", event.getMessage());
         row.put("error", event.getError());
-        if (event.getError() != null && event.getError().getException() != null && event.getError().getException().getThrowable() != null) {
+        if (event.getError() != null
+                && event.getError().getException() != null
+                && event.getError().getException().getThrowable() != null) {
             Throwable throwable = event.getError().getException().getThrowable();
             row.put("throwable", throwable.getClass().getSimpleName() + ": " + throwable.getMessage());
         }

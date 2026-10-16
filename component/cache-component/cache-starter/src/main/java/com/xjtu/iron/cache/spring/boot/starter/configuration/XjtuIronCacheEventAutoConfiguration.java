@@ -50,7 +50,11 @@ public class XjtuIronCacheEventAutoConfiguration {
      * Redis 事件序列化器。
      */
     @Bean
-    @ConditionalOnProperty(prefix = "xjtu.iron.cache.event", name = "enabled", havingValue = "true")
+    @ConditionalOnProperty(
+            prefix = "xjtu.iron.cache.event",
+            name = "enabled",
+            havingValue = "true"
+    )
     @ConditionalOnMissingBean
     public RedisCacheEventSerializer redisCacheEventSerializer(ObjectMapper objectMapper) {
         log.info("[CACHE-EVENT-AUTO-CONFIG] create RedisCacheEventSerializer");
@@ -64,12 +68,24 @@ public class XjtuIronCacheEventAutoConfiguration {
      */
     @Bean
     @Primary
-    @ConditionalOnProperty(prefix = "xjtu.iron.cache.event", name = "enabled", havingValue = "true")
-    public CacheEventPublisher redisCacheEventPublisher(StringRedisTemplate stringRedisTemplate, RedisCacheEventSerializer serializer,
-        XjtuIronCacheProperties properties) {
-        log.info("[CACHE-EVENT-AUTO-CONFIG] create RedisCacheEventPublisher, channel={}", properties.getEvent().getChannel());
+    @ConditionalOnProperty(
+            prefix = "xjtu.iron.cache.event",
+            name = "enabled",
+            havingValue = "true"
+    )
+    public CacheEventPublisher redisCacheEventPublisher(
+            StringRedisTemplate stringRedisTemplate,
+            RedisCacheEventSerializer serializer,
+            XjtuIronCacheProperties properties
+    ) {
+        log.info("[CACHE-EVENT-AUTO-CONFIG] create RedisCacheEventPublisher, channel={}",
+                properties.getEvent().getChannel());
 
-        return new RedisCacheEventPublisher(stringRedisTemplate, serializer, properties.getEvent().getChannel());
+        return new RedisCacheEventPublisher(
+                stringRedisTemplate,
+                serializer,
+                properties.getEvent().getChannel()
+        );
     }
 
     /**
@@ -78,21 +94,39 @@ public class XjtuIronCacheEventAutoConfiguration {
      * <p>收到其他实例的 EVICT_KEY 事件后，删除当前实例本地 Caffeine。</p>
      */
     @Bean
-    @ConditionalOnProperty(prefix = "xjtu.iron.cache.event", name = "enabled", havingValue = "true")
+    @ConditionalOnProperty(
+            prefix = "xjtu.iron.cache.event",
+            name = "enabled",
+            havingValue = "true"
+    )
     @ConditionalOnMissingBean
-    public CacheEventHandler cacheEventHandler(LocalCacheInvalidator localCacheInvalidator, XjtuIronCacheProperties properties) {
-        log.info("[CACHE-EVENT-AUTO-CONFIG] create CacheEventHandler, currentInstanceId={}", properties.getApplication().getInstanceId());
+    public CacheEventHandler cacheEventHandler(
+            LocalCacheInvalidator localCacheInvalidator,
+            XjtuIronCacheProperties properties
+    ) {
+        log.info("[CACHE-EVENT-AUTO-CONFIG] create CacheEventHandler, currentInstanceId={}",
+                properties.getApplication().getInstanceId());
 
-        return new DefaultCacheEventHandler(localCacheInvalidator, properties.getApplication().getInstanceId());
+        return new DefaultCacheEventHandler(
+                localCacheInvalidator,
+                properties.getApplication().getInstanceId()
+        );
     }
 
     /**
      * Redis Pub/Sub 订阅器。
      */
     @Bean
-    @ConditionalOnProperty(prefix = "xjtu.iron.cache.event", name = "enabled", havingValue = "true")
+    @ConditionalOnProperty(
+            prefix = "xjtu.iron.cache.event",
+            name = "enabled",
+            havingValue = "true"
+    )
     @ConditionalOnMissingBean
-    public RedisCacheEventSubscriber redisCacheEventSubscriber(RedisCacheEventSerializer serializer, CacheEventHandler eventHandler) {
+    public RedisCacheEventSubscriber redisCacheEventSubscriber(
+            RedisCacheEventSerializer serializer,
+            CacheEventHandler eventHandler
+    ) {
         log.info("[CACHE-EVENT-AUTO-CONFIG] create RedisCacheEventSubscriber");
         return new RedisCacheEventSubscriber(serializer, eventHandler);
     }
@@ -103,13 +137,21 @@ public class XjtuIronCacheEventAutoConfiguration {
      * <p>这个 Bean 真正负责向 Redis 订阅 channel。</p>
      */
     @Bean
-    @ConditionalOnProperty(prefix = "xjtu.iron.cache.event", name = "enabled", havingValue = "true")
+    @ConditionalOnProperty(
+            prefix = "xjtu.iron.cache.event",
+            name = "enabled",
+            havingValue = "true"
+    )
     @ConditionalOnMissingBean(name = "ironRedisCacheEventListenerContainer")
-    public RedisMessageListenerContainer ironRedisCacheEventListenerContainer(RedisConnectionFactory redisConnectionFactory,
-        RedisCacheEventSubscriber subscriber, XjtuIronCacheProperties properties) {
+    public RedisMessageListenerContainer ironRedisCacheEventListenerContainer(
+            RedisConnectionFactory redisConnectionFactory,
+            RedisCacheEventSubscriber subscriber,
+            XjtuIronCacheProperties properties
+    ) {
         String channel = properties.getEvent().getChannel();
 
-        log.info("[CACHE-EVENT-AUTO-CONFIG] create RedisMessageListenerContainer, subscribe channel={}", channel);
+        log.info("[CACHE-EVENT-AUTO-CONFIG] create RedisMessageListenerContainer, subscribe channel={}",
+                channel);
 
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(redisConnectionFactory);

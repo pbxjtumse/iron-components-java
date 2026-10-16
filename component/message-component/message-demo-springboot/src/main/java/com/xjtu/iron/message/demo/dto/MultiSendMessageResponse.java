@@ -30,13 +30,19 @@ public final class MultiSendMessageResponse {
     /** 各 Provider 明细。 */
     private final List<SendMessageResponse> results;
 
-    public MultiSendMessageResponse(String batchId, Instant startedAt, Instant completedAt, List<SendMessageResponse> results) {
+    public MultiSendMessageResponse(
+            String batchId,
+            Instant startedAt,
+            Instant completedAt,
+            List<SendMessageResponse> results) {
         this.batchId = batchId;
         this.startedAt = startedAt;
         this.completedAt = completedAt;
         this.results = results == null ? List.of() : new ArrayList<>(results);
         this.total = this.results.size();
-        this.confirmed = (int) this.results.stream().filter(result -> "CONFIRMED".equals(result.getStatus())).count();
+        this.confirmed = (int) this.results.stream()
+                .filter(result -> "CONFIRMED".equals(result.getStatus()))
+                .count();
         this.failed = this.total - this.confirmed;
     }
 

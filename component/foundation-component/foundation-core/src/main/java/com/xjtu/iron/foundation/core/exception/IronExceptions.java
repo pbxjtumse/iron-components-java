@@ -21,8 +21,9 @@ public final class IronExceptions {
         if (failure == null) {
             return null;
         }
-        return org.apache.commons.lang3.exception.ExceptionUtils.getRootCause(failure) == null ? failure :
-            org.apache.commons.lang3.exception.ExceptionUtils.getRootCause(failure);
+        return org.apache.commons.lang3.exception.ExceptionUtils.getRootCause(failure) == null
+                ? failure
+                : org.apache.commons.lang3.exception.ExceptionUtils.getRootCause(failure);
     }
 
     public static boolean contains(Throwable failure, Class<? extends Throwable> type) {
@@ -55,7 +56,9 @@ public final class IronExceptions {
      * @param exception 中断异常
      * @return 原始中断异常
      */
-    public static InterruptedException restoreInterrupt(InterruptedException exception) {
+    public static InterruptedException restoreInterrupt(
+            InterruptedException exception
+    ) {
         Thread.currentThread().interrupt();
         return exception;
     }

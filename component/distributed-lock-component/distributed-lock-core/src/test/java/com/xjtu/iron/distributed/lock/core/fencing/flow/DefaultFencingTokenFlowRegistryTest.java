@@ -21,16 +21,18 @@ class DefaultFencingTokenFlowRegistryTest {
 
     @Test
     void shouldRejectDuplicateMode() {
-        assertThatThrownBy(
-            () -> new DefaultFencingTokenFlowRegistry(List.of(new NoFencingTokenFlow(), new NoFencingTokenFlow()))).isInstanceOf(
-            IllegalArgumentException.class).hasMessageContaining("duplicate fencing token flow");
+        assertThatThrownBy(() -> new DefaultFencingTokenFlowRegistry(List.of(
+                new NoFencingTokenFlow(), new NoFencingTokenFlow())))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("duplicate fencing token flow");
     }
 
     @Test
     void getRequiredShouldFailFastWhenModeMissing() {
         DefaultFencingTokenFlowRegistry registry = new DefaultFencingTokenFlowRegistry(List.of());
 
-        assertThatThrownBy(() -> registry.getRequired(FencingTokenMode.NATIVE)).isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("fencing token flow not found");
+        assertThatThrownBy(() -> registry.getRequired(FencingTokenMode.NATIVE))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("fencing token flow not found");
     }
 }

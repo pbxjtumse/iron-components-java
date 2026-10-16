@@ -15,7 +15,11 @@ public final class ReliableTaskRuntimePolicy {
     /** 处理器抛出未处理异常后的默认重试等待时长。 */
     private final Duration failureRetryDelay;
 
-    public ReliableTaskRuntimePolicy(int defaultMaxAttempts, int scanBucketCount, Duration leaseDuration, Duration failureRetryDelay) {
+    public ReliableTaskRuntimePolicy(
+            int defaultMaxAttempts,
+            int scanBucketCount,
+            Duration leaseDuration,
+            Duration failureRetryDelay) {
         if (defaultMaxAttempts < 1) {
             throw new IllegalArgumentException("defaultMaxAttempts must be greater than zero");
         }
@@ -32,21 +36,10 @@ public final class ReliableTaskRuntimePolicy {
         return new ReliableTaskRuntimePolicy(10, 64, Duration.ofMinutes(1), Duration.ofMinutes(1));
     }
 
-    public int getDefaultMaxAttempts() {
-        return defaultMaxAttempts;
-    }
-
-    public int getScanBucketCount() {
-        return scanBucketCount;
-    }
-
-    public Duration getLeaseDuration() {
-        return leaseDuration;
-    }
-
-    public Duration getFailureRetryDelay() {
-        return failureRetryDelay;
-    }
+    public int getDefaultMaxAttempts() { return defaultMaxAttempts; }
+    public int getScanBucketCount() { return scanBucketCount; }
+    public Duration getLeaseDuration() { return leaseDuration; }
+    public Duration getFailureRetryDelay() { return failureRetryDelay; }
 
     private static Duration requirePositive(Duration value, String name) {
         Objects.requireNonNull(value, name + " must not be null");

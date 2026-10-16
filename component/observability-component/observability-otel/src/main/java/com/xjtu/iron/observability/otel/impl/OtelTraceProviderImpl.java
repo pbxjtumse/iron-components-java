@@ -15,7 +15,10 @@ public class OtelTraceProviderImpl implements TraceProvider {
 
     @Override
     public ITraceService createTraceService(TraceProviderContext context) {
-        return new OtelTraceServiceImpl(context.getInstrumentationScopeName(), context.getErrorResolvers());
+        return new OtelTraceServiceImpl(
+                context.getInstrumentationScopeName(),
+                context.getErrorResolvers()
+        );
     }
 
 }

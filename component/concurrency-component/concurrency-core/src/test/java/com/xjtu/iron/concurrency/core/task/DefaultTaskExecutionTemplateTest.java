@@ -30,7 +30,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class DefaultTaskExecutionTemplateTest {
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private final ThreadPoolExecutor fallbackExecutor = new ThreadPoolExecutor(1, 1, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
+    private final ThreadPoolExecutor fallbackExecutor = new ThreadPoolExecutor(
+            1,
+            1,
+            60L,
+            TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(10)
+    );
     private final DefaultThreadPoolRegistry registry = new DefaultThreadPoolRegistry();
     private final TaskControlRegistry controlRegistry = new DefaultTaskControlRegistry();
     private final RecordingPublisher publisher = new RecordingPublisher();
@@ -61,9 +67,10 @@ class DefaultTaskExecutionTemplateTest {
         registerPool("default", 1, 1, RejectionPolicy.ABORT);
         DefaultTaskExecutionTemplate template = newTemplate();
 
-        CompletableFuture<String> future = template.submit(AsyncTask.<String>of("default", "fallback", () -> {
-            throw new IllegalStateException("bad");
-        }).fallback(error -> "fallback"));
+        CompletableFuture<String> future = template.submit(
+                AsyncTask.<String>of("default", "fallback", () -> { throw new IllegalStateException("bad"); })
+                        .fallback(error -> "fallback")
+        );
 
         assertEquals("fallback", future.get(1, TimeUnit.SECONDS));
         assertTrue(publisher.events.contains(AsyncTaskStatus.FAILED));
@@ -76,12 +83,10 @@ class DefaultTaskExecutionTemplateTest {
         ThreadPoolExecutor executor = registerPool("discard", 1, 1, RejectionPolicy.DISCARD);
         CountDownLatch release = new CountDownLatch(1);
         executor.execute(() -> await(release));
-        assertTrue(executor.getQueue().offer(() -> {
-        }));
+        assertTrue(executor.getQueue().offer(() -> { }));
         DefaultTaskExecutionTemplate template = newTemplate();
 
-        boolean accepted = template.tryExecute("discard", "discard-task", () -> {
-        });
+        boolean accepted = template.tryExecute("discard", "discard-task", () -> { });
 
         assertFalse(accepted);
         release.countDown();
@@ -105,9 +110,16 @@ class DefaultTaskExecutionTemplateTest {
 
     private DefaultTaskExecutionTemplate newTemplate() {
         DefaultTaskCancellationManager cancellationManager = new DefaultTaskCancellationManager(controlRegistry);
-        return new DefaultTaskExecutionTemplate(registry, new DefaultContextAwareTaskDecorator(new NoopContextPropagator()), publisher,
-            new DefaultTaskResultPipeline(classifier, publisher, scheduler, fallbackExecutor), classifier, (event, throwable) -> {
-        }, controlRegistry, cancellationManager);
+        return new DefaultTaskExecutionTemplate(
+                registry,
+                new DefaultContextAwareTaskDecorator(new NoopContextPropagator()),
+                publisher,
+                new DefaultTaskResultPipeline(classifier, publisher, scheduler, fallbackExecutor),
+                classifier,
+                (event, throwable) -> { },
+                controlRegistry,
+                cancellationManager
+        );
     }
 
     private ThreadPoolExecutor registerPool(String name, int core, int queueCapacity, RejectionPolicy policy) {

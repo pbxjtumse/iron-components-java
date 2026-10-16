@@ -52,9 +52,18 @@ public final class RocketMqMessageProviderConfig {
     /**
      * 校验并复制 RocketMQ 配置。
      */
-    public RocketMqMessageProviderConfig(String nameServer, String producerGroup, Set<String> topics, Duration sendTimeout,
-        int retryTimesWhenSendFailed, int retryTimesWhenSendAsyncFailed, boolean vipChannelEnabled, String consumeFromWhere,
-        String tagExpression, String accessKey, String secretKey) {
+    public RocketMqMessageProviderConfig(
+            String nameServer,
+            String producerGroup,
+            Set<String> topics,
+            Duration sendTimeout,
+            int retryTimesWhenSendFailed,
+            int retryTimesWhenSendAsyncFailed,
+            boolean vipChannelEnabled,
+            String consumeFromWhere,
+            String tagExpression,
+            String accessKey,
+            String secretKey) {
         if (nameServer == null || nameServer.isBlank()) {
             throw new IllegalArgumentException("nameServer must not be blank");
         }
@@ -108,8 +117,18 @@ public final class RocketMqMessageProviderConfig {
 
     /** 创建无鉴权默认配置。 */
     public static RocketMqMessageProviderConfig defaults(String nameServer, Set<String> topics) {
-        return new RocketMqMessageProviderConfig(nameServer, "message-producer-group", topics, Duration.ofSeconds(3), 2, 2, false,
-            "CONSUME_FROM_LAST_OFFSET", "*", null, null);
+        return new RocketMqMessageProviderConfig(
+                nameServer,
+                "message-producer-group",
+                topics,
+                Duration.ofSeconds(3),
+                2,
+                2,
+                false,
+                "CONSUME_FROM_LAST_OFFSET",
+                "*",
+                null,
+                null);
     }
 
     private static String normalizeOrDefault(String value, String defaultValue) {
@@ -172,25 +191,48 @@ public final class RocketMqMessageProviderConfig {
             return false;
         }
         RocketMqMessageProviderConfig other = (RocketMqMessageProviderConfig) object;
-        return retryTimesWhenSendFailed == other.retryTimesWhenSendFailed &&
-            retryTimesWhenSendAsyncFailed == other.retryTimesWhenSendAsyncFailed && vipChannelEnabled == other.vipChannelEnabled &&
-            Objects.equals(nameServer, other.nameServer) && Objects.equals(producerGroup, other.producerGroup) &&
-            Objects.equals(topics, other.topics) && Objects.equals(sendTimeout, other.sendTimeout) &&
-            Objects.equals(consumeFromWhere, other.consumeFromWhere) && Objects.equals(tagExpression, other.tagExpression) &&
-            Objects.equals(accessKey, other.accessKey) && Objects.equals(secretKey, other.secretKey);
+        return retryTimesWhenSendFailed == other.retryTimesWhenSendFailed
+                && retryTimesWhenSendAsyncFailed == other.retryTimesWhenSendAsyncFailed
+                && vipChannelEnabled == other.vipChannelEnabled
+                && Objects.equals(nameServer, other.nameServer)
+                && Objects.equals(producerGroup, other.producerGroup)
+                && Objects.equals(topics, other.topics)
+                && Objects.equals(sendTimeout, other.sendTimeout)
+                && Objects.equals(consumeFromWhere, other.consumeFromWhere)
+                && Objects.equals(tagExpression, other.tagExpression)
+                && Objects.equals(accessKey, other.accessKey)
+                && Objects.equals(secretKey, other.secretKey);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(nameServer, producerGroup, topics, sendTimeout, retryTimesWhenSendFailed, retryTimesWhenSendAsyncFailed,
-            vipChannelEnabled, consumeFromWhere, tagExpression, accessKey, secretKey);
+        return Objects.hash(
+                nameServer,
+                producerGroup,
+                topics,
+                sendTimeout,
+                retryTimesWhenSendFailed,
+                retryTimesWhenSendAsyncFailed,
+                vipChannelEnabled,
+                consumeFromWhere,
+                tagExpression,
+                accessKey,
+                secretKey);
     }
 
     @Override
     public String toString() {
-        return "RocketMqMessageProviderConfig{" + "nameServer=" + nameServer + ", producerGroup=" + producerGroup + ", topics=" + topics +
-            ", sendTimeout=" + sendTimeout + ", retryTimesWhenSendFailed=" + retryTimesWhenSendFailed + ", retryTimesWhenSendAsyncFailed=" +
-            retryTimesWhenSendAsyncFailed + ", vipChannelEnabled=" + vipChannelEnabled + ", consumeFromWhere=" + consumeFromWhere +
-            ", tagExpression=" + tagExpression + ", authenticationConfigured=" + (accessKey != null) + '}';
+        return "RocketMqMessageProviderConfig{" +
+                "nameServer=" + nameServer +
+                ", producerGroup=" + producerGroup +
+                ", topics=" + topics +
+                ", sendTimeout=" + sendTimeout +
+                ", retryTimesWhenSendFailed=" + retryTimesWhenSendFailed +
+                ", retryTimesWhenSendAsyncFailed=" + retryTimesWhenSendAsyncFailed +
+                ", vipChannelEnabled=" + vipChannelEnabled +
+                ", consumeFromWhere=" + consumeFromWhere +
+                ", tagExpression=" + tagExpression +
+                ", authenticationConfigured=" + (accessKey != null) +
+                '}';
     }
 }

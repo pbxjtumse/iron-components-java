@@ -13,11 +13,7 @@ public enum SerializationFormat {
 
     private final String contentType;
 
-    SerializationFormat(String contentType) {
-        this.contentType = contentType;
-    }
+    SerializationFormat(String contentType) { this.contentType = contentType; }
 
-    public String getContentType() {
-        return contentType;
-    }
+    public String getContentType() { return contentType; }
 }

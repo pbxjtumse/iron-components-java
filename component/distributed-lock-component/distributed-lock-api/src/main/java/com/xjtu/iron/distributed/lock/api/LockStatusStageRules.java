@@ -25,8 +25,7 @@ public final class LockStatusStageRules {
         Objects.requireNonNull(status, "status must not be null");
         Objects.requireNonNull(stage, "stage must not be null");
         if (!isValid(status, stage, acquired)) {
-            throw new IllegalArgumentException(
-                "invalid LockResult combination: status=" + status + ", stage=" + stage + ", acquired=" + acquired);
+            throw new IllegalArgumentException("invalid LockResult combination: status=" + status + ", stage=" + stage + ", acquired=" + acquired);
         }
     }
 

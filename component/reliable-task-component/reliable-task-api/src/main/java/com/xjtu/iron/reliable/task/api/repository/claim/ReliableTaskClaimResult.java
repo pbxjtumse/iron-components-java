@@ -17,7 +17,10 @@ public final class ReliableTaskClaimResult {
     /** 本次抢占前候选任务所处的状态；抢占失败时为空。 */
     private final ReliableTaskStatus claimedFromStatus;
 
-    public ReliableTaskClaimResult(boolean claimed, ReliableTask task, ReliableTaskStatus claimedFromStatus) {
+    public ReliableTaskClaimResult(
+            boolean claimed,
+            ReliableTask task,
+            ReliableTaskStatus claimedFromStatus) {
         this.claimed = claimed;
         this.task = task;
         this.claimedFromStatus = claimedFromStatus;
@@ -51,7 +54,9 @@ public final class ReliableTaskClaimResult {
         if (!(object instanceof ReliableTaskClaimResult that)) {
             return false;
         }
-        return claimed == that.claimed && Objects.equals(task, that.task) && claimedFromStatus == that.claimedFromStatus;
+        return claimed == that.claimed
+                && Objects.equals(task, that.task)
+                && claimedFromStatus == that.claimedFromStatus;
     }
 
     @Override
@@ -61,6 +66,10 @@ public final class ReliableTaskClaimResult {
 
     @Override
     public String toString() {
-        return "ReliableTaskClaimResult{" + "claimed=" + claimed + ", task=" + task + ", claimedFromStatus=" + claimedFromStatus + '}';
+        return "ReliableTaskClaimResult{" +
+                "claimed=" + claimed +
+                ", task=" + task +
+                ", claimedFromStatus=" + claimedFromStatus +
+                '}';
     }
 }

@@ -12,25 +12,14 @@ public final class FileSystemResource implements Resource {
 
     private final Path path;
 
-    public FileSystemResource(Path path) {
-        this.path = path;
-    }
+    public FileSystemResource(Path path) { this.path = path; }
 
-    @Override
-    public String getLocation() {
-        return "file:" + path;
-    }
+    @Override public String getLocation() { return "file:" + path; }
 
-    @Override
-    public boolean exists() {
-        return Files.exists(path);
-    }
+    @Override public boolean exists() { return Files.exists(path); }
 
-    @Override
-    public InputStream openStream() throws IOException {
-        if (!exists()) {
-            throw new ResourceNotFoundException(getLocation());
-        }
+    @Override public InputStream openStream() throws IOException {
+        if (!exists()) { throw new ResourceNotFoundException(getLocation()); }
         return Files.newInputStream(path);
     }
 }

@@ -28,7 +28,8 @@ import java.util.Set;
  *
  * <p>当前实现面向 RocketMQ 4.x Remoting 客户端，读取 nameServer、producerGroup、consumerGroup、vipChannel 等配置，
  * 创建 {@code RocketMqMessageProvider} 并交给统一 ProviderRegistry 管理。</p>
- */ public class RocketMqMessageAutoConfiguration {
+ */
+public class RocketMqMessageAutoConfiguration {
 
     /**
      * 创建 RocketMQ Provider 配置快照。
@@ -38,7 +39,8 @@ import java.util.Set;
      */
     @Bean
     @ConditionalOnMissingBean
-    public RocketMqMessageProviderConfig rocketMqMessageProviderConfig(RocketMqMessageProperties properties) {
+    public RocketMqMessageProviderConfig rocketMqMessageProviderConfig(
+            RocketMqMessageProperties properties) {
         Set<String> topics = new LinkedHashSet<>();
         if (properties.getTopics() != null) {
             for (String topic : properties.getTopics()) {
@@ -47,10 +49,18 @@ import java.util.Set;
                 }
             }
         }
-        return new RocketMqMessageProviderConfig(properties.getNameServer(), properties.getProducerGroup(), topics,
-            properties.getSendTimeout(), properties.getRetryTimesWhenSendFailed(), properties.getRetryTimesWhenSendAsyncFailed(),
-            properties.isVipChannelEnabled(), properties.getConsumeFromWhere(), properties.getTagExpression(), properties.getAccessKey(),
-            properties.getSecretKey());
+        return new RocketMqMessageProviderConfig(
+                properties.getNameServer(),
+                properties.getProducerGroup(),
+                topics,
+                properties.getSendTimeout(),
+                properties.getRetryTimesWhenSendFailed(),
+                properties.getRetryTimesWhenSendAsyncFailed(),
+                properties.isVipChannelEnabled(),
+                properties.getConsumeFromWhere(),
+                properties.getTagExpression(),
+                properties.getAccessKey(),
+                properties.getSecretKey());
     }
 
     /**

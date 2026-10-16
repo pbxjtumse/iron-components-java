@@ -14,21 +14,20 @@ public final class DefaultTransactionContext implements TransactionContext {
     private final String transactionName;
     private final ProviderTransactionContext providerContext;
 
-    public DefaultTransactionContext(String executionId, String transactionName, ProviderTransactionContext providerContext) {
+    public DefaultTransactionContext(
+            String executionId,
+            String transactionName,
+            ProviderTransactionContext providerContext) {
         this.executionId = Objects.requireNonNull(executionId, "executionId");
         this.transactionName = Objects.requireNonNull(transactionName, "transactionName");
         this.providerContext = Objects.requireNonNull(providerContext, "providerContext");
     }
 
     @Override
-    public String executionId() {
-        return executionId;
-    }
+    public String executionId() { return executionId; }
 
     @Override
-    public String transactionName() {
-        return transactionName;
-    }
+    public String transactionName() { return transactionName; }
 
     @Override
     public boolean isRollbackOnly() {

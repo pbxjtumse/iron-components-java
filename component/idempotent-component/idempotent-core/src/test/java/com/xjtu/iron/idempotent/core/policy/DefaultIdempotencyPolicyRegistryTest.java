@@ -12,11 +12,19 @@ class DefaultIdempotencyPolicyRegistryTest {
 
     @Test
     void namedPolicyShouldResolveAndCanonicalizeWindowedLifecycle() {
-        IdempotencyPolicy windowed = IdempotencyPolicy.builder().name("api-submit").mode(IdempotencyMode.WINDOWED).build();
+        IdempotencyPolicy windowed = IdempotencyPolicy.builder()
+                .name("api-submit")
+                .mode(IdempotencyMode.WINDOWED)
+                .build();
 
-        DefaultIdempotencyPolicyRegistry registry = new DefaultIdempotencyPolicyRegistry(List.of(windowed), "api-submit");
+        DefaultIdempotencyPolicyRegistry registry =
+                new DefaultIdempotencyPolicyRegistry(
+                        List.of(windowed),
+                        "api-submit");
 
-        assertThat(registry.resolve("api-submit", null).getMode()).isEqualTo(IdempotencyMode.WINDOWED);
-        assertThat(registry.resolve(null, null).getName()).isEqualTo("api-submit");
+        assertThat(registry.resolve("api-submit", null).getMode())
+                .isEqualTo(IdempotencyMode.WINDOWED);
+        assertThat(registry.resolve(null, null).getName())
+                .isEqualTo("api-submit");
     }
 }

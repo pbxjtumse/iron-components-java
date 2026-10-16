@@ -25,19 +25,8 @@ public final class ExecutionOutcome<T> {
         return new ExecutionOutcome<>(null, status, stage, error);
     }
 
-    public T getValue() {
-        return value;
-    }
-
-    public LockStatus getStatus() {
-        return status;
-    }
-
-    public LockStage getStage() {
-        return stage;
-    }
-
-    public Throwable getError() {
-        return error;
-    }
+    public T getValue() { return value; }
+    public LockStatus getStatus() { return status; }
+    public LockStage getStage() { return stage; }
+    public Throwable getError() { return error; }
 }

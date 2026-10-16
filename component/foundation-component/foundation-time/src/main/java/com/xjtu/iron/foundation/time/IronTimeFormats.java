@@ -9,8 +9,7 @@ import java.time.format.DateTimeFormatter;
  */
 public final class IronTimeFormats {
 
-    private IronTimeFormats() {
-    }
+    private IronTimeFormats() {}
 
     public static String formatIsoInstant(Instant instant) {
         return instant == null ? null : DateTimeFormatter.ISO_INSTANT.format(instant);

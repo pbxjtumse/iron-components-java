@@ -21,7 +21,10 @@ public final class PrefixedStringIdGenerator implements StringIdGenerator {
         this(prefix, "", delegate);
     }
 
-    public PrefixedStringIdGenerator(String prefix, String separator, StringIdGenerator delegate) {
+    public PrefixedStringIdGenerator(
+            String prefix,
+            String separator,
+            StringIdGenerator delegate) {
         if (prefix == null || prefix.isBlank()) {
             throw new IllegalArgumentException("prefix must not be blank");
         }

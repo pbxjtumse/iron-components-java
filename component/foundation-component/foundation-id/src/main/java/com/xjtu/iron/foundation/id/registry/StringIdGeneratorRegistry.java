@@ -15,8 +15,10 @@ public final class StringIdGeneratorRegistry {
             throw new IllegalArgumentException("generators must not be empty");
         }
         LinkedHashMap<String, StringIdGenerator> copy = new LinkedHashMap<>();
-        generators.forEach(
-            (name, generator) -> copy.put(validateName(name), Objects.requireNonNull(generator, "generator must not be null")));
+        generators.forEach((name, generator) -> copy.put(
+                validateName(name),
+                Objects.requireNonNull(generator, "generator must not be null")
+        ));
         this.generators = Collections.unmodifiableMap(copy);
     }
 
@@ -34,7 +36,10 @@ public final class StringIdGeneratorRegistry {
         String actualName = validateName(name);
         StringIdGenerator generator = generators.get(actualName);
         if (generator == null) {
-            throw new IllegalArgumentException("unknown string id generator '" + actualName + "', available names: " + generators.keySet());
+            throw new IllegalArgumentException(
+                    "unknown string id generator '" + actualName
+                            + "', available names: " + generators.keySet()
+            );
         }
         return generator;
     }
@@ -66,7 +71,9 @@ public final class StringIdGeneratorRegistry {
             throw new IllegalArgumentException("generator name must not be blank");
         }
         if (!name.equals(name.trim())) {
-            throw new IllegalArgumentException("generator name must not contain leading or trailing whitespace");
+            throw new IllegalArgumentException(
+                    "generator name must not contain leading or trailing whitespace"
+            );
         }
         return name;
     }
@@ -80,7 +87,9 @@ public final class StringIdGeneratorRegistry {
             String actualName = validateName(name);
             Objects.requireNonNull(generator, "generator must not be null");
             if (generators.putIfAbsent(actualName, generator) != null) {
-                throw new IllegalArgumentException("duplicate string id generator name: " + actualName);
+                throw new IllegalArgumentException(
+                        "duplicate string id generator name: " + actualName
+                );
             }
             return this;
         }

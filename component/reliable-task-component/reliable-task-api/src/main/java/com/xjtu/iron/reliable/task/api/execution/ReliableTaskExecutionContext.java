@@ -16,19 +16,17 @@ public final class ReliableTaskExecutionContext {
     /** 长任务主动续租时使用的租约续期器。 */
     private final ReliableTaskLeaseRenewer leaseRenewer;
 
-    public ReliableTaskExecutionContext(ReliableTask task, ReliableTaskStatus claimedFromStatus, ReliableTaskLeaseRenewer leaseRenewer) {
+    public ReliableTaskExecutionContext(
+            ReliableTask task,
+            ReliableTaskStatus claimedFromStatus,
+            ReliableTaskLeaseRenewer leaseRenewer) {
         this.task = Objects.requireNonNull(task, "task must not be null");
         this.claimedFromStatus = Objects.requireNonNull(claimedFromStatus, "claimedFromStatus must not be null");
         this.leaseRenewer = Objects.requireNonNull(leaseRenewer, "leaseRenewer must not be null");
     }
 
-    public ReliableTask getTask() {
-        return task;
-    }
-
-    public ReliableTaskStatus getClaimedFromStatus() {
-        return claimedFromStatus;
-    }
+    public ReliableTask getTask() { return task; }
+    public ReliableTaskStatus getClaimedFromStatus() { return claimedFromStatus; }
 
     public boolean renewLease(Duration extension) {
         Objects.requireNonNull(extension, "extension must not be null");

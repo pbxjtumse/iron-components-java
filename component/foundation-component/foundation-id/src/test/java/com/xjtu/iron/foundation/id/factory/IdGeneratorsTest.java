@@ -30,7 +30,10 @@ class IdGeneratorsTest {
     @Test
     void shouldCreateDecoratedGenerators() {
         StringIdGenerator prefixed = IdGenerators.prefixed("retry_", () -> "1");
-        StringIdGenerator composite = IdGenerators.composite(List.of(() -> "cn", () -> "1"), "-");
+        StringIdGenerator composite = IdGenerators.composite(
+                List.of(() -> "cn", () -> "1"),
+                "-"
+        );
 
         assertEquals("retry_1", prefixed.nextId());
         assertEquals("cn-1", composite.nextId());

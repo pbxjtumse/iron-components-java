@@ -35,7 +35,11 @@ public final class ProviderSendRequest {
 
 
     /** 校验请求并防御性复制。 */
-    public ProviderSendRequest(ProviderDestination destination, String messageId, String messageKey, Map<String, String> headers,
+    public ProviderSendRequest(
+        ProviderDestination destination,
+        String messageId,
+        String messageKey,
+        Map<String, String> headers,
         byte[] body) {
         destination = Objects.requireNonNull(destination, "destination must not be null");
         if (messageId == null || messageId.isBlank()) {
@@ -43,9 +47,11 @@ public final class ProviderSendRequest {
         }
         messageId = messageId.trim();
         messageKey = normalize(messageKey);
-        headers = headers == null || headers.isEmpty() ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(headers));
+        headers = headers == null || headers.isEmpty()
+                ? Map.of()
+                : Collections.unmodifiableMap(new LinkedHashMap<>(headers));
         body = Objects.requireNonNull(body, "body must not be null").clone();
-
+    
         // 保存完成校验和标准化后的 destination。
         this.destination = destination;
         // 保存完成校验和标准化后的 messageId。
@@ -69,7 +75,6 @@ public final class ProviderSendRequest {
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
     }
-
     /**
      * 返回已解析物理目的地。
      *
@@ -128,8 +133,11 @@ public final class ProviderSendRequest {
         }
         // 转换为当前类型后逐字段比较。
         ProviderSendRequest other = (ProviderSendRequest) object;
-        return Objects.equals(destination, other.destination) && Objects.equals(messageId, other.messageId) &&
-            Objects.equals(messageKey, other.messageKey) && Objects.equals(headers, other.headers) && Objects.equals(body, other.body);
+        return Objects.equals(destination, other.destination)
+                && Objects.equals(messageId, other.messageId)
+                && Objects.equals(messageKey, other.messageKey)
+                && Objects.equals(headers, other.headers)
+                && Objects.equals(body, other.body);
     }
 
     /**
@@ -151,8 +159,13 @@ public final class ProviderSendRequest {
     @Override
     public String toString() {
         // 拼接全部字段，保持值对象可诊断。
-        return "ProviderSendRequest{" + "destination=" + destination + ", messageId=" + messageId + ", messageKey=" + messageKey +
-            ", headers=" + headers + ", body=" + body + '}';
+        return "ProviderSendRequest{" +
+                "destination=" + destination +
+                ", messageId=" + messageId +
+                ", messageKey=" + messageKey +
+                ", headers=" + headers +
+                ", body=" + body +
+                '}';
     }
 
 }

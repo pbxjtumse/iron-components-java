@@ -15,13 +15,25 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Order(100)
-public final class DemoCompletedTaskExecutionListener implements TaskExecutionListener {
+public final class DemoCompletedTaskExecutionListener
+        implements TaskExecutionListener {
 
     @Override
     public void onCompleted(TaskExecutionEvent event) {
-        System.out.println("[demo-listener] completed taskId=" + event.getTaskId() + ", taskName=" + event.getTaskName() + ", status=" +
-            event.getStatus() + ", executionMode=" + event.getExecutionMode() + ", queueCost=" + event.getTiming().getQueueCostMillis() +
-            ", runCost=" + event.getTiming().getRunCostMillis());
+        System.out.println(
+                "[demo-listener] completed taskId="
+                        + event.getTaskId()
+                        + ", taskName="
+                        + event.getTaskName()
+                        + ", status="
+                        + event.getStatus()
+                        + ", executionMode="
+                        + event.getExecutionMode()
+                        + ", queueCost="
+                        + event.getTiming().getQueueCostMillis()
+                        + ", runCost="
+                        + event.getTiming().getRunCostMillis()
+        );
     }
 }
 

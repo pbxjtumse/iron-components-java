@@ -4,18 +4,13 @@ import com.xjtu.iron.transaction.api.definition.TransactionOptions;
 import com.xjtu.iron.transaction.api.execution.TransactionCallback;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutor;
 import org.junit.jupiter.api.Test;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class TransactionExecutorResolverTest {
     private final TransactionExecutor executor = new TransactionExecutor() {
-        @Override
-        public <T> T execute(TransactionOptions options, TransactionCallback<T> callback) {
-            return callback.execute(null);
-        }
+        @Override public <T> T execute(TransactionOptions options, TransactionCallback<T> callback) { return callback.execute(null); }
     };
 
     @Test
@@ -28,8 +23,7 @@ class TransactionExecutorResolverTest {
         assertThrows(IllegalArgumentException.class, () -> resolver.resolve(null));
         assertThrows(IllegalArgumentException.class, () -> resolver.resolve(" "));
         assertThrows(IllegalArgumentException.class, () -> new RoutingTransactionExecutorResolver(Map.of()));
-        assertThrows(IllegalArgumentException.class,
-            () -> new RoutingTransactionExecutorResolver(Map.of("db_00", executor, " db_00 ", executor)));
+        assertThrows(IllegalArgumentException.class, () -> new RoutingTransactionExecutorResolver(Map.of("db_00", executor, " db_00 ", executor)));
     }
 
     @Test

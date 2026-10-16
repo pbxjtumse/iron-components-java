@@ -21,12 +21,18 @@ public final class DefaultMessageIdempotencyContextFactory implements MessageIde
     private final Clock clock;
 
     public DefaultMessageIdempotencyContextFactory() {
-        this(new DefaultMessageIdempotencySceneResolver(), new DefaultMessageIdempotencyKeyResolver(),
-            new MessageIdempotencyOwnerTokenGenerator(), Clock.systemUTC());
+        this(
+                new DefaultMessageIdempotencySceneResolver(),
+                new DefaultMessageIdempotencyKeyResolver(),
+                new MessageIdempotencyOwnerTokenGenerator(),
+                Clock.systemUTC());
     }
 
-    public DefaultMessageIdempotencyContextFactory(MessageIdempotencySceneResolver sceneResolver, MessageIdempotencyKeyResolver keyResolver,
-        MessageIdempotencyOwnerTokenGenerator ownerTokenGenerator, Clock clock) {
+    public DefaultMessageIdempotencyContextFactory(
+            MessageIdempotencySceneResolver sceneResolver,
+            MessageIdempotencyKeyResolver keyResolver,
+            MessageIdempotencyOwnerTokenGenerator ownerTokenGenerator,
+            Clock clock) {
         this.sceneResolver = Objects.requireNonNull(sceneResolver);
         this.keyResolver = Objects.requireNonNull(keyResolver);
         this.ownerTokenGenerator = Objects.requireNonNull(ownerTokenGenerator);
@@ -34,13 +40,26 @@ public final class DefaultMessageIdempotencyContextFactory implements MessageIde
     }
 
     @Override
-    public MessageIdempotencyContext create(MessageEnvelope<?> message, ConsumeContext context, MessageIdempotencyOptions options) {
+    public MessageIdempotencyContext create(
+            MessageEnvelope<?> message,
+            ConsumeContext context,
+            MessageIdempotencyOptions options) {
         String scene = sceneResolver.resolve(message, context, options);
         String key = keyResolver.resolve(message, context, options);
         Instant now = clock.instant();
-        return new MessageIdempotencyContext(options.namespace(), scene, key, positiveCrc32(options.namespace() + ':' + scene + ':' + key),
-            ownerTokenGenerator.nextToken(), options.storeName(), options.maxAttempts(), now.plus(options.processingTimeout()),
-            now.plus(options.recordRetention()), message, context.withIdempotency(scene, key, options.mode()), options);
+        return new MessageIdempotencyContext(
+                options.namespace(),
+                scene,
+                key,
+                positiveCrc32(options.namespace() + ':' + scene + ':' + key),
+                ownerTokenGenerator.nextToken(),
+                options.storeName(),
+                options.maxAttempts(),
+                now.plus(options.processingTimeout()),
+                now.plus(options.recordRetention()),
+                message,
+                context.withIdempotency(scene, key, options.mode()),
+                options);
     }
 
     private static long positiveCrc32(String value) {

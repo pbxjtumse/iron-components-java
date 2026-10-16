@@ -13,8 +13,9 @@ public class Resilience4jExceptionMapper implements GovernanceExceptionMapper {
 
     @Override
     public boolean supports(Throwable throwable) {
-        return throwable instanceof CallNotPermittedException || throwable instanceof BulkheadFullException ||
-            throwable instanceof RequestNotPermitted;
+        return throwable instanceof CallNotPermittedException
+                || throwable instanceof BulkheadFullException
+                || throwable instanceof RequestNotPermitted;
     }
 
     @Override

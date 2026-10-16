@@ -20,22 +20,13 @@ public final class ClassPathResource implements Resource {
         this.classLoader = classLoader == null ? ClassPathResource.class.getClassLoader() : classLoader;
     }
 
-    @Override
-    public String getLocation() {
-        return "classpath:" + path;
-    }
+    @Override public String getLocation() { return "classpath:" + path; }
 
-    @Override
-    public boolean exists() {
-        return classLoader.getResource(path) != null;
-    }
+    @Override public boolean exists() { return classLoader.getResource(path) != null; }
 
-    @Override
-    public InputStream openStream() throws IOException {
+    @Override public InputStream openStream() throws IOException {
         InputStream input = classLoader.getResourceAsStream(path);
-        if (input == null) {
-            throw new ResourceNotFoundException(getLocation());
-        }
+        if (input == null) { throw new ResourceNotFoundException(getLocation()); }
         return input;
     }
 }

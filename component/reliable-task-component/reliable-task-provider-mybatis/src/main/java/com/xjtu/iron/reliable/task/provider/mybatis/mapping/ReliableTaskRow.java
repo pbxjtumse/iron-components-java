@@ -51,168 +51,66 @@ public final class ReliableTaskRow {
     private Instant completedAt;
 
     public ReliableTask toDomain() {
-        return new ReliableTask(new ReliableTaskKey(storeName, namespace, taskId), taskType, businessKey, payload, routeKey, scanBucket,
-            status, attemptCount, maxAttempts, nextExecuteAt, ownerId, leaseUntil, version, lastErrorCode, lastErrorMessage, createdAt,
-            updatedAt, completedAt);
+        return new ReliableTask(
+                new ReliableTaskKey(storeName, namespace, taskId),
+                taskType,
+                businessKey,
+                payload,
+                routeKey,
+                scanBucket,
+                status,
+                attemptCount,
+                maxAttempts,
+                nextExecuteAt,
+                ownerId,
+                leaseUntil,
+                version,
+                lastErrorCode,
+                lastErrorMessage,
+                createdAt,
+                updatedAt,
+                completedAt
+        );
     }
 
-    public String getStoreName() {
-        return storeName;
-    }
-
-    public void setStoreName(String storeName) {
-        this.storeName = storeName;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
-
-    public String getTaskId() {
-        return taskId;
-    }
-
-    public void setTaskId(String taskId) {
-        this.taskId = taskId;
-    }
-
-    public String getTaskType() {
-        return taskType;
-    }
-
-    public void setTaskType(String taskType) {
-        this.taskType = taskType;
-    }
-
-    public String getBusinessKey() {
-        return businessKey;
-    }
-
-    public void setBusinessKey(String businessKey) {
-        this.businessKey = businessKey;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    public void setPayload(String payload) {
-        this.payload = payload;
-    }
-
-    public String getRouteKey() {
-        return routeKey;
-    }
-
-    public void setRouteKey(String routeKey) {
-        this.routeKey = routeKey;
-    }
-
-    public int getScanBucket() {
-        return scanBucket;
-    }
-
-    public void setScanBucket(int scanBucket) {
-        this.scanBucket = scanBucket;
-    }
-
-    public ReliableTaskStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ReliableTaskStatus status) {
-        this.status = status;
-    }
-
-    public int getAttemptCount() {
-        return attemptCount;
-    }
-
-    public void setAttemptCount(int attemptCount) {
-        this.attemptCount = attemptCount;
-    }
-
-    public int getMaxAttempts() {
-        return maxAttempts;
-    }
-
-    public void setMaxAttempts(int maxAttempts) {
-        this.maxAttempts = maxAttempts;
-    }
-
-    public Instant getNextExecuteAt() {
-        return nextExecuteAt;
-    }
-
-    public void setNextExecuteAt(Instant nextExecuteAt) {
-        this.nextExecuteAt = nextExecuteAt;
-    }
-
-    public String getOwnerId() {
-        return ownerId;
-    }
-
-    public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
-    }
-
-    public Instant getLeaseUntil() {
-        return leaseUntil;
-    }
-
-    public void setLeaseUntil(Instant leaseUntil) {
-        this.leaseUntil = leaseUntil;
-    }
-
-    public long getVersion() {
-        return version;
-    }
-
-    public void setVersion(long version) {
-        this.version = version;
-    }
-
-    public String getLastErrorCode() {
-        return lastErrorCode;
-    }
-
-    public void setLastErrorCode(String lastErrorCode) {
-        this.lastErrorCode = lastErrorCode;
-    }
-
-    public String getLastErrorMessage() {
-        return lastErrorMessage;
-    }
-
-    public void setLastErrorMessage(String lastErrorMessage) {
-        this.lastErrorMessage = lastErrorMessage;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public Instant getCompletedAt() {
-        return completedAt;
-    }
-
-    public void setCompletedAt(Instant completedAt) {
-        this.completedAt = completedAt;
-    }
+    public String getStoreName() { return storeName; }
+    public void setStoreName(String storeName) { this.storeName = storeName; }
+    public String getNamespace() { return namespace; }
+    public void setNamespace(String namespace) { this.namespace = namespace; }
+    public String getTaskId() { return taskId; }
+    public void setTaskId(String taskId) { this.taskId = taskId; }
+    public String getTaskType() { return taskType; }
+    public void setTaskType(String taskType) { this.taskType = taskType; }
+    public String getBusinessKey() { return businessKey; }
+    public void setBusinessKey(String businessKey) { this.businessKey = businessKey; }
+    public String getPayload() { return payload; }
+    public void setPayload(String payload) { this.payload = payload; }
+    public String getRouteKey() { return routeKey; }
+    public void setRouteKey(String routeKey) { this.routeKey = routeKey; }
+    public int getScanBucket() { return scanBucket; }
+    public void setScanBucket(int scanBucket) { this.scanBucket = scanBucket; }
+    public ReliableTaskStatus getStatus() { return status; }
+    public void setStatus(ReliableTaskStatus status) { this.status = status; }
+    public int getAttemptCount() { return attemptCount; }
+    public void setAttemptCount(int attemptCount) { this.attemptCount = attemptCount; }
+    public int getMaxAttempts() { return maxAttempts; }
+    public void setMaxAttempts(int maxAttempts) { this.maxAttempts = maxAttempts; }
+    public Instant getNextExecuteAt() { return nextExecuteAt; }
+    public void setNextExecuteAt(Instant nextExecuteAt) { this.nextExecuteAt = nextExecuteAt; }
+    public String getOwnerId() { return ownerId; }
+    public void setOwnerId(String ownerId) { this.ownerId = ownerId; }
+    public Instant getLeaseUntil() { return leaseUntil; }
+    public void setLeaseUntil(Instant leaseUntil) { this.leaseUntil = leaseUntil; }
+    public long getVersion() { return version; }
+    public void setVersion(long version) { this.version = version; }
+    public String getLastErrorCode() { return lastErrorCode; }
+    public void setLastErrorCode(String lastErrorCode) { this.lastErrorCode = lastErrorCode; }
+    public String getLastErrorMessage() { return lastErrorMessage; }
+    public void setLastErrorMessage(String lastErrorMessage) { this.lastErrorMessage = lastErrorMessage; }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+    public Instant getCompletedAt() { return completedAt; }
+    public void setCompletedAt(Instant completedAt) { this.completedAt = completedAt; }
 }

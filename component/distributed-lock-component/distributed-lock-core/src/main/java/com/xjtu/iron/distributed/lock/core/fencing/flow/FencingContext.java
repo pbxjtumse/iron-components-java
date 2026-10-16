@@ -25,29 +25,13 @@ public final class FencingContext {
         this.waitDuration = builder.waitDuration == null ? Duration.ZERO : builder.waitDuration;
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
+    public static Builder builder() { return new Builder(); }
 
-    public LockProvider lockProvider() {
-        return lockProvider;
-    }
-
-    public LockOptions options() {
-        return options;
-    }
-
-    public FencingTokenPlan plan() {
-        return plan;
-    }
-
-    public LockLease lease() {
-        return lease;
-    }
-
-    public Duration waitDuration() {
-        return waitDuration;
-    }
+    public LockProvider lockProvider() { return lockProvider; }
+    public LockOptions options() { return options; }
+    public FencingTokenPlan plan() { return plan; }
+    public LockLease lease() { return lease; }
+    public Duration waitDuration() { return waitDuration; }
 
     public static final class Builder {
         private LockProvider lockProvider;
@@ -56,36 +40,13 @@ public final class FencingContext {
         private LockLease lease;
         private Duration waitDuration;
 
-        private Builder() {
-        }
+        private Builder() {}
 
-        public Builder lockProvider(LockProvider lockProvider) {
-            this.lockProvider = lockProvider;
-            return this;
-        }
-
-        public Builder options(LockOptions options) {
-            this.options = options;
-            return this;
-        }
-
-        public Builder plan(FencingTokenPlan plan) {
-            this.plan = plan;
-            return this;
-        }
-
-        public Builder lease(LockLease lease) {
-            this.lease = lease;
-            return this;
-        }
-
-        public Builder waitDuration(Duration waitDuration) {
-            this.waitDuration = waitDuration;
-            return this;
-        }
-
-        public FencingContext build() {
-            return new FencingContext(this);
-        }
+        public Builder lockProvider(LockProvider lockProvider) { this.lockProvider = lockProvider; return this; }
+        public Builder options(LockOptions options) { this.options = options; return this; }
+        public Builder plan(FencingTokenPlan plan) { this.plan = plan; return this; }
+        public Builder lease(LockLease lease) { this.lease = lease; return this; }
+        public Builder waitDuration(Duration waitDuration) { this.waitDuration = waitDuration; return this; }
+        public FencingContext build() { return new FencingContext(this); }
     }
 }

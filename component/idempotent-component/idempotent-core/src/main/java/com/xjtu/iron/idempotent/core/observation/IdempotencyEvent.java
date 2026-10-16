@@ -20,8 +20,13 @@ public final class IdempotencyEvent {
     private final Instant occurredAt;
     private final Throwable error;
 
-    public IdempotencyEvent(IdempotencyEventType type, IdempotencyStage stage, IdempotencyMode mode, String repository, Instant occurredAt,
-        Throwable error) {
+    public IdempotencyEvent(
+            IdempotencyEventType type,
+            IdempotencyStage stage,
+            IdempotencyMode mode,
+            String repository,
+            Instant occurredAt,
+            Throwable error) {
         this.type = type;
         this.stage = stage;
         this.mode = mode;
@@ -30,27 +35,10 @@ public final class IdempotencyEvent {
         this.error = error;
     }
 
-    public IdempotencyEventType getType() {
-        return type;
-    }
-
-    public IdempotencyStage getStage() {
-        return stage;
-    }
-
-    public IdempotencyMode getMode() {
-        return mode;
-    }
-
-    public String getRepository() {
-        return repository;
-    }
-
-    public Instant getOccurredAt() {
-        return occurredAt;
-    }
-
-    public Throwable getError() {
-        return error;
-    }
+    public IdempotencyEventType getType() { return type; }
+    public IdempotencyStage getStage() { return stage; }
+    public IdempotencyMode getMode() { return mode; }
+    public String getRepository() { return repository; }
+    public Instant getOccurredAt() { return occurredAt; }
+    public Throwable getError() { return error; }
 }

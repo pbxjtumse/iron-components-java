@@ -37,7 +37,12 @@ public class RecoveryHint {
         return of(AsyncRecoveryAction.NONE, false, false, false);
     }
 
-    public static RecoveryHint of(AsyncRecoveryAction action, boolean retryable, boolean compensable, boolean alertRequired) {
+    public static RecoveryHint of(
+            AsyncRecoveryAction action,
+            boolean retryable,
+            boolean compensable,
+            boolean alertRequired
+    ) {
         RecoveryHint hint = new RecoveryHint();
         hint.action = action == null ? AsyncRecoveryAction.NONE : action;
         hint.retryable = retryable;

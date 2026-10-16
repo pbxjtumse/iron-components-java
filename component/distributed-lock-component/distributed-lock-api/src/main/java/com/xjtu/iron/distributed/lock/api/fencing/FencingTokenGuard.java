@@ -23,8 +23,9 @@ public final class FencingTokenGuard {
 
     public static long requireToken(LockHandle handle) {
         Objects.requireNonNull(handle, "handle must not be null");
-        return handle.fencingToken()
-            .orElseThrow(() -> new IllegalStateException("fencing token is required but missing for lock: " + handle.lockName()));
+        return handle.fencingToken().orElseThrow(() ->
+                new IllegalStateException("fencing token is required but missing for lock: "
+                        + handle.lockName()));
     }
 
     public static void requireAccepted(LockHandle handle, LongPredicate conditionalWrite) {
@@ -32,8 +33,7 @@ public final class FencingTokenGuard {
         long token = requireToken(handle);
         boolean accepted = conditionalWrite.test(token);
         if (!accepted) {
-            throw new FencingTokenRejectedException(
-                "business resource rejected stale fencing token: lock=" + handle.lockName() + ", token=" + token);
+            throw new FencingTokenRejectedException("business resource rejected stale fencing token: lock=" + handle.lockName() + ", token=" + token);
         }
     }
 }

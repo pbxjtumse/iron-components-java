@@ -8,8 +8,7 @@ import java.util.Optional;
  */
 public final class IronFields {
 
-    private IronFields() {
-    }
+    private IronFields() {}
 
     public static Optional<Field> findField(Class<?> type, String fieldName) {
         Field field = org.apache.commons.lang3.reflect.FieldUtils.getField(type, fieldName, true);

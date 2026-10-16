@@ -19,46 +19,20 @@ public final class SerializationContext {
         this.attributes = Collections.unmodifiableMap(new LinkedHashMap<>(builder.attributes));
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
+    public static Builder builder() { return new Builder(); }
 
-    public String getContentType() {
-        return contentType;
-    }
-
-    public String getSchemaVersion() {
-        return schemaVersion;
-    }
-
-    public Map<String, String> getAttributes() {
-        return attributes;
-    }
+    public String getContentType() { return contentType; }
+    public String getSchemaVersion() { return schemaVersion; }
+    public Map<String, String> getAttributes() { return attributes; }
 
     public static final class Builder {
         private String contentType = SerializationFormat.JSON.getContentType();
         private String schemaVersion;
         private final Map<String, String> attributes = new LinkedHashMap<>();
 
-        public Builder contentType(String contentType) {
-            this.contentType = contentType;
-            return this;
-        }
-
-        public Builder schemaVersion(String schemaVersion) {
-            this.schemaVersion = schemaVersion;
-            return this;
-        }
-
-        public Builder attribute(String name, String value) {
-            if (name != null && value != null) {
-                attributes.put(name, value);
-            }
-            return this;
-        }
-
-        public SerializationContext build() {
-            return new SerializationContext(this);
-        }
+        public Builder contentType(String contentType) { this.contentType = contentType; return this; }
+        public Builder schemaVersion(String schemaVersion) { this.schemaVersion = schemaVersion; return this; }
+        public Builder attribute(String name, String value) { if (name != null && value != null) { attributes.put(name, value); } return this; }
+        public SerializationContext build() { return new SerializationContext(this); }
     }
 }

@@ -36,7 +36,10 @@ public class DefaultAsyncTemplate implements AsyncTemplate {
     public <T> CompletableFuture<List<T>> allOf(Collection<CompletableFuture<T>> futures) {
         CompletableFuture<?>[] array = futures.toArray(new CompletableFuture[0]);
 
-        return CompletableFuture.allOf(array).thenApply(ignored -> futures.stream().map(CompletableFuture::join).toList());
+        return CompletableFuture.allOf(array)
+                        .thenApply(ignored -> futures.stream()
+                        .map(CompletableFuture::join)
+                        .toList());
     }
 
     @Override
@@ -45,18 +48,22 @@ public class DefaultAsyncTemplate implements AsyncTemplate {
 
         for (NamedFuture<T> namedFuture : futures) {
             CompletableFuture<AsyncTaskOutcome<T>> outcomeFuture =
-                namedFuture.getFuture().thenApply(value -> AsyncTaskOutcome.success(namedFuture.getTaskName(), value))
-                    .exceptionally(ex -> AsyncTaskOutcome.failure(namedFuture.getTaskName(), CompletableFutureExceptionUtils.unwrap(ex)));
+                    namedFuture.getFuture()
+                            .thenApply(value -> AsyncTaskOutcome.success(namedFuture.getTaskName(), value))
+                            .exceptionally(ex -> AsyncTaskOutcome.failure(namedFuture.getTaskName(), CompletableFutureExceptionUtils.unwrap(ex)));
             wrapped.add(outcomeFuture);
         }
 
         CompletableFuture<?>[] array = wrapped.toArray(new CompletableFuture[0]);
 
-        return CompletableFuture.allOf(array).thenApply(ignored -> {
-            List<AsyncTaskOutcome<T>> outcomes = wrapped.stream().map(CompletableFuture::join).toList();
+        return CompletableFuture.allOf(array)
+                .thenApply(ignored -> {
+                    List<AsyncTaskOutcome<T>> outcomes = wrapped.stream()
+                            .map(CompletableFuture::join)
+                            .toList();
 
-            return new AsyncBatchResult<>(outcomes);
-        });
+                    return new AsyncBatchResult<>(outcomes);
+                });
     }
 
     @Override
@@ -78,14 +85,17 @@ public class DefaultAsyncTemplate implements AsyncTemplate {
             });
         }
         CompletableFuture<?>[] array = futures.toArray(new CompletableFuture[0]);
-        CompletableFuture.allOf(array).thenApply(ignored -> futures.stream().map(CompletableFuture::join).toList())
-            .whenComplete((values, error) -> {
-                if (error != null) {
-                    result.completeExceptionally(CompletableFutureExceptionUtils.unwrap(error));
-                } else {
-                    result.complete(values);
-                }
-            });
+        CompletableFuture.allOf(array)
+                .thenApply(ignored -> futures.stream()
+                        .map(CompletableFuture::join)
+                        .toList())
+                .whenComplete((values, error) -> {
+                    if (error != null) {
+                        result.completeExceptionally(CompletableFutureExceptionUtils.unwrap(error));
+                    } else {
+                        result.complete(values);
+                    }
+                });
         return result;
     }
 
@@ -149,9 +159,11 @@ public class DefaultAsyncTemplate implements AsyncTemplate {
 
         CompletableFuture<T> result = new CompletableFuture<>();
 
-        ScheduledFuture<?> timeoutFuture = timeoutScheduler.schedule(
-            () -> result.completeExceptionally(new TimeoutException("Future timeout after " + timeout.toMillis() + " ms")),
-            timeout.toMillis(), TimeUnit.MILLISECONDS);
+        ScheduledFuture<?> timeoutFuture = timeoutScheduler.schedule(() -> result.completeExceptionally(
+                                new TimeoutException("Future timeout after " + timeout.toMillis() + " ms")),
+                        timeout.toMillis(),
+                        TimeUnit.MILLISECONDS
+                );
 
         source.whenComplete((value, throwable) -> {
             boolean won;
@@ -159,7 +171,9 @@ public class DefaultAsyncTemplate implements AsyncTemplate {
             if (throwable == null) {
                 won = result.complete(value);
             } else {
-                won = result.completeExceptionally(CompletableFutureExceptionUtils.unwrap(throwable));
+                won = result.completeExceptionally(
+                        CompletableFutureExceptionUtils.unwrap(throwable)
+                );
             }
 
             if (won) {
@@ -171,7 +185,10 @@ public class DefaultAsyncTemplate implements AsyncTemplate {
     }
 
     @Override
-    public <T> CompletableFuture<T> withFallback(CompletableFuture<T> future, Function<Throwable, T> fallback) {
+    public <T> CompletableFuture<T> withFallback(
+            CompletableFuture<T> future,
+            Function<Throwable, T> fallback
+    ) {
         if (fallback == null) {
             return future;
         }

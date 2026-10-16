@@ -33,10 +33,8 @@ public final class NativeFencingTokenFlow implements FencingTokenFlow {
         LockProvider lockProvider = context.lockProvider();
         LockLease lease = context.lease();
         if (lease.fencingToken().isEmpty()) {
-            FencingTokenResponse response =
-                FencingTokenResponse.failed(new LockProviderException("native fencing token is missing: " + lockProvider.providerName()));
-            return FencingCompletion.failure(
-                support.fencingFailure(lockProvider, lease, context.waitDuration(), lockProvider.providerName(), response, Duration.ZERO));
+            FencingTokenResponse response = FencingTokenResponse.failed(new LockProviderException("native fencing token is missing: " + lockProvider.providerName()));
+            return FencingCompletion.failure(support.fencingFailure(lockProvider, lease, context.waitDuration(), lockProvider.providerName(), response, Duration.ZERO));
         }
         support.recordFencingSuccess(lockProvider, lease, lockProvider.providerName(), Duration.ZERO);
         return FencingCompletion.success(lease);

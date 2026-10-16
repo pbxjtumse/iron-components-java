@@ -1,6 +1,7 @@
 package com.xjtu.iron.concurrency.api.error;
 
 
+
 /**
  * Java 异常信息。
  *

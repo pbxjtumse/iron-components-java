@@ -30,9 +30,15 @@ public class DefaultThreadPoolFactory implements ThreadPoolFactory {
             ThreadFactory threadFactory = new NamedThreadFactory(spec.getThreadNamePrefix());
             RejectedExecutionHandler rejectedExecutionHandler = rejectedExecutionHandlerFactory.create(spec);
 
-            ThreadPoolExecutor executor =
-                new ThreadPoolExecutor(spec.getCorePoolSize(), spec.getMaxPoolSize(), spec.getKeepAliveTime().toMillis(),
-                    TimeUnit.MILLISECONDS, queue, threadFactory, rejectedExecutionHandler);
+            ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                    spec.getCorePoolSize(),
+                    spec.getMaxPoolSize(),
+                    spec.getKeepAliveTime().toMillis(),
+                    TimeUnit.MILLISECONDS,
+                    queue,
+                    threadFactory,
+                    rejectedExecutionHandler
+            );
 
             executor.allowCoreThreadTimeOut(spec.isAllowCoreThreadTimeout());
             return executor;

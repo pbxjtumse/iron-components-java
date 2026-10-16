@@ -10,7 +10,6 @@ import com.xjtu.iron.message.spi.ProviderSendRequest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
-
 /**
  * 一次发送在进入执行器之前的不可变快照。
  *
@@ -44,8 +43,14 @@ public final class PreparedMessageSend {
     /** 整个发送调用开始时间。 */
     private final Instant startedAt;
 
-    public PreparedMessageSend(MessageDestination destination, MessageEnvelope<?> message, ProviderDestination providerDestination,
-        MessageProvider provider, ProviderSendRequest request, Duration confirmTimeout, Instant startedAt) {
+    public PreparedMessageSend(
+            MessageDestination destination,
+            MessageEnvelope<?> message,
+            ProviderDestination providerDestination,
+            MessageProvider provider,
+            ProviderSendRequest request,
+            Duration confirmTimeout,
+            Instant startedAt) {
         this.destination = Objects.requireNonNull(destination, "destination must not be null");
         this.message = Objects.requireNonNull(message, "message must not be null");
         this.providerDestination = Objects.requireNonNull(providerDestination, "providerDestination must not be null");

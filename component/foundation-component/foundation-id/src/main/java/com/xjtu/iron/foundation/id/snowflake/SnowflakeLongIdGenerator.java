@@ -44,7 +44,10 @@ public final class SnowflakeLongIdGenerator implements LongIdGenerator {
         try {
             this.sequenceWaitTimeoutNanos = options.getSequenceWaitTimeout().toNanos();
         } catch (ArithmeticException exception) {
-            throw new IllegalArgumentException("sequenceWaitTimeout is too large", exception);
+            throw new IllegalArgumentException(
+                    "sequenceWaitTimeout is too large",
+                    exception
+            );
         }
     }
 
@@ -69,7 +72,9 @@ public final class SnowflakeLongIdGenerator implements LongIdGenerator {
         }
 
         lastTimestamp = timestamp;
-        return (timestampDelta << TIMESTAMP_SHIFT) | (options.getWorkerId() << WORKER_ID_SHIFT) | sequence;
+        return (timestampDelta << TIMESTAMP_SHIFT)
+                | (options.getWorkerId() << WORKER_ID_SHIFT)
+                | sequence;
     }
 
     private long resolveTimestamp(long currentTimestamp) {
@@ -78,8 +83,11 @@ public final class SnowflakeLongIdGenerator implements LongIdGenerator {
         }
 
         long backwardMillis = lastTimestamp - currentTimestamp;
-        if (options.getClockRollbackStrategy() == ClockRollbackStrategy.FAIL_FAST || backwardMillis > options.getMaxBackwardMillis()) {
-            throw new IdGenerationException("clock moved backwards by " + backwardMillis + " ms");
+        if (options.getClockRollbackStrategy() == ClockRollbackStrategy.FAIL_FAST
+                || backwardMillis > options.getMaxBackwardMillis()) {
+            throw new IdGenerationException(
+                    "clock moved backwards by " + backwardMillis + " ms"
+            );
         }
         return lastTimestamp;
     }
@@ -93,7 +101,9 @@ public final class SnowflakeLongIdGenerator implements LongIdGenerator {
         long timestamp = clock.millis();
         while (timestamp <= currentLastTimestamp) {
             if (System.nanoTime() - startedAt >= sequenceWaitTimeoutNanos) {
-                throw new IdGenerationException("Snowflake sequence exhausted before clock advanced");
+                throw new IdGenerationException(
+                        "Snowflake sequence exhausted before clock advanced"
+                );
             }
             Thread.onSpinWait();
             timestamp = clock.millis();

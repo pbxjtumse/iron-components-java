@@ -20,7 +20,7 @@ public class CampaignRuleController {
 
     /** 普通查询接口，只返回 DTO。 */
     @GetMapping("/{campaignId}")
-    public CampaignRuleDTO query(@PathVariable("campaignId") Long campaignId) {
+    public CampaignRuleDTO query(@PathVariable("campaignId")  Long campaignId) {
         return campaignRuleQueryService.queryRule(campaignId);
     }
 
@@ -32,7 +32,7 @@ public class CampaignRuleController {
 
     /** 删除指定活动规则缓存。 */
     @DeleteMapping("/{campaignId}/cache")
-    public String evict(@PathVariable("campaignId") Long campaignId) {
+    public String evict(@PathVariable("campaignId")  Long campaignId) {
         campaignRuleQueryService.evictRule(campaignId);
         return "OK";
     }

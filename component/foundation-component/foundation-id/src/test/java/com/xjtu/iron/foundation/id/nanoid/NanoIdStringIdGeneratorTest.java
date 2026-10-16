@@ -12,8 +12,12 @@ class NanoIdStringIdGeneratorTest {
 
     @Test
     void shouldGenerateIdsUsingConfiguredAlphabetAndSize() {
-        NanoIdOptions options = NanoIdOptions.builder().alphabet("abc123").size(16).build();
-        NanoIdStringIdGenerator generator = new NanoIdStringIdGenerator(options, new SecureRandom(new byte[]{7, 8, 9}));
+        NanoIdOptions options = NanoIdOptions.builder()
+                .alphabet("abc123")
+                .size(16)
+                .build();
+        NanoIdStringIdGenerator generator =
+                new NanoIdStringIdGenerator(options, new SecureRandom(new byte[]{7, 8, 9}));
         Set<String> ids = new HashSet<>();
 
         for (int index = 0; index < 1_000; index++) {
@@ -26,13 +30,19 @@ class NanoIdStringIdGeneratorTest {
 
     @Test
     void shouldSupportSingleCharacterAlphabet() {
-        NanoIdOptions options = NanoIdOptions.builder().alphabet("x").size(5).build();
+        NanoIdOptions options = NanoIdOptions.builder()
+                .alphabet("x")
+                .size(5)
+                .build();
 
         assertEquals("xxxxx", new NanoIdStringIdGenerator(options).nextId());
     }
 
     @Test
     void shouldRejectDuplicateAlphabetCharacters() {
-        assertThrows(IllegalArgumentException.class, () -> NanoIdOptions.builder().alphabet("aabc").build());
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> NanoIdOptions.builder().alphabet("aabc").build()
+        );
     }
 }

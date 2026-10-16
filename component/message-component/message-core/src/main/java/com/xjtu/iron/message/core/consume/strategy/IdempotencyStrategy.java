@@ -14,6 +14,5 @@ import com.xjtu.iron.message.core.consume.ConsumeInvocation;
  */
 public interface IdempotencyStrategy {
 
-    ConsumeDecision execute(ConsumerDefinition<?> definition, MessageEnvelope<?> message, ConsumeContext context,
-        ConsumeInvocation invocation);
+    ConsumeDecision execute(ConsumerDefinition<?> definition, MessageEnvelope<?> message, ConsumeContext context, ConsumeInvocation invocation);
 }

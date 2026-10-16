@@ -31,7 +31,10 @@ public final class ErrorClassificationDemoController {
      */
     private final TaskExecutionRegistry taskExecutionRegistry;
 
-    public ErrorClassificationDemoController(AsyncExecutor asyncExecutor, TaskExecutionRegistry taskExecutionRegistry) {
+    public ErrorClassificationDemoController(
+            AsyncExecutor asyncExecutor,
+            TaskExecutionRegistry taskExecutionRegistry
+    ) {
         this.asyncExecutor = asyncExecutor;
         this.taskExecutionRegistry = taskExecutionRegistry;
     }
@@ -44,9 +47,17 @@ public final class ErrorClassificationDemoController {
         String taskId = "domain-" + UUID.randomUUID();
 
         try {
-            asyncExecutor.submit(AsyncTask.of("default", "domainError", () -> {
-                throw new DemoDomainException("ACCOUNT_STATUS_INVALID", "PAYMENT_POSTING", "账户状态非法");
-            }).taskId(taskId).bizKey("accountId=10001")).join();
+            asyncExecutor.submit(
+                    AsyncTask.of("default", "domainError", () -> {
+                                throw new DemoDomainException(
+                                        "ACCOUNT_STATUS_INVALID",
+                                        "PAYMENT_POSTING",
+                                        "账户状态非法"
+                                );
+                            })
+                            .taskId(taskId)
+                            .bizKey("accountId=10001")
+            ).join();
         } catch (CompletionException ignored) {
             // Demo 通过任务注册表观察结构化错误，不在 Controller 继续抛出。
         }
@@ -62,9 +73,16 @@ public final class ErrorClassificationDemoController {
         String taskId = "rpc-" + UUID.randomUUID();
 
         try {
-            asyncExecutor.submit(AsyncTask.of("default", "rpcError", () -> {
-                throw new DemoRpcException("user-service", "远程用户服务调用失败");
-            }).taskId(taskId).bizKey("userId=10001")).join();
+            asyncExecutor.submit(
+                    AsyncTask.of("default", "rpcError", () -> {
+                                throw new DemoRpcException(
+                                        "user-service",
+                                        "远程用户服务调用失败"
+                                );
+                            })
+                            .taskId(taskId)
+                            .bizKey("userId=10001")
+            ).join();
         } catch (CompletionException ignored) {
             // Demo 通过任务注册表观察结构化错误，不在 Controller 继续抛出。
         }

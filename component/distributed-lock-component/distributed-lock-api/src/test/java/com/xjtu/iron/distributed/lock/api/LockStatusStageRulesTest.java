@@ -20,8 +20,11 @@ class LockStatusStageRulesTest {
     void invalidCombinationsShouldFail() {
         assertFalse(LockStatusStageRules.isValid(LockStatus.SUCCESS, LockStage.RELEASE, true));
         assertFalse(LockStatusStageRules.isValid(LockStatus.PROVIDER_ERROR, LockStage.RELEASE, true));
-        assertThrows(IllegalArgumentException.class,
-            () -> LockResult.builder().status(LockStatus.SUCCESS).stage(LockStage.ACQUIRE).acquired(true).build());
+        assertThrows(IllegalArgumentException.class, () -> LockResult.builder()
+                .status(LockStatus.SUCCESS)
+                .stage(LockStage.ACQUIRE)
+                .acquired(true)
+                .build());
     }
 
     @Test

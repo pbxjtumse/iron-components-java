@@ -14,7 +14,7 @@ public enum ExecutorSpec {
     ORDER("order-executor", new HashSet<>(Arrays.asList("order", "api"))),
 
     /** 处理支付标签任务的线程池。 */
-    PAY("pay-executor", new HashSet<>(Arrays.asList("pay")));
+    PAY("pay-executor",  new HashSet<>(Arrays.asList("pay")));
 
     private final String poolName;
     private final Set<String> tags;
@@ -24,13 +24,8 @@ public enum ExecutorSpec {
         this.tags = tags;
     }
 
-    public String poolName() {
-        return poolName;
-    }
-
-    public Set<String> tags() {
-        return tags;
-    }
+    public String poolName() { return poolName; }
+    public Set<String> tags() { return tags; }
 }
 
 

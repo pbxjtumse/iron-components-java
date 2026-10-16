@@ -33,7 +33,7 @@ public class IdempotencyDemoController {
     private final JdbcTemplate jdbcTemplate;
 
     public IdempotencyDemoController(IdempotencyExecutor executor, IdempotencyRequestHasher hasher,
-        IdempotencySnapshotPolicyFactory snapshotPolicyFactory, JdbcTemplate jdbcTemplate) {
+                                     IdempotencySnapshotPolicyFactory snapshotPolicyFactory, JdbcTemplate jdbcTemplate) {
         this.executor = executor;
         this.hasher = hasher;
         this.snapshotPolicyFactory = snapshotPolicyFactory;
@@ -48,15 +48,18 @@ public class IdempotencyDemoController {
      */
     @PostMapping("/windowed/{key}")
     public IdempotencyResult<String> windowed(@PathVariable String key, @RequestParam(defaultValue = "payload") String payload) {
-        IdempotencyRequest request =
-            IdempotencyRequest.builder().key(key).requestHash(hasher.hash(Map.of("payload", payload))).routeKey("demo-windowed")
-                .policyName("demo-windowed").build();
+        IdempotencyRequest request = IdempotencyRequest.builder()
+                .key(key)
+                .requestHash(hasher.hash(Map.of("payload", payload)))
+                .routeKey("demo-windowed")
+                .policyName("demo-windowed")
+                .build();
 
-        IdempotencyResultPolicy<String> snapshot = snapshotPolicyFactory.snapshot(new IdempotencyTypeRef<String>() {
-        });
+        IdempotencyResultPolicy<String> snapshot =
+                snapshotPolicyFactory.snapshot(new IdempotencyTypeRef<String>() { });
 
         return executor.execute(request, snapshot,
-            context -> "windowed executed, version=" + context.getVersion() + ", payload=" + payload);
+                context -> "windowed executed, version=" + context.getVersion() + ", payload=" + payload);
     }
 
     /**
@@ -66,26 +69,31 @@ public class IdempotencyDemoController {
      * failAfterBusinessWrite=true 用来验证：业务 SQL 已执行后抛异常，Tx-B 会 rollback，随后 Tx-C 独立记录 FAILED。</p>
      */
     @PostMapping("/durable/{key}")
-    public IdempotencyResult<String> durable(@PathVariable String key, @RequestParam(defaultValue = "payload") String payload,
-        @RequestParam(defaultValue = "merchant-10001") String routeKey,
-        @RequestParam(defaultValue = "false") boolean failAfterBusinessWrite) {
-        IdempotencyRequest request = IdempotencyRequest.builder().key(key).routeKey(routeKey)
-            .requestHash(hasher.hash(Map.of("payload", payload, "routeKey", routeKey))).policyName("demo-durable").build();
+    public IdempotencyResult<String> durable(@PathVariable String key,
+                                              @RequestParam(defaultValue = "payload") String payload,
+                                              @RequestParam(defaultValue = "merchant-10001") String routeKey,
+                                              @RequestParam(defaultValue = "false") boolean failAfterBusinessWrite) {
+        IdempotencyRequest request = IdempotencyRequest.builder()
+                .key(key)
+                .routeKey(routeKey)
+                .requestHash(hasher.hash(Map.of("payload", payload, "routeKey", routeKey)))
+                .policyName("demo-durable")
+                .build();
 
-        IdempotencyResultPolicy<String> snapshot = snapshotPolicyFactory.snapshot(new IdempotencyTypeRef<String>() {
-        });
+        IdempotencyResultPolicy<String> snapshot =
+                snapshotPolicyFactory.snapshot(new IdempotencyTypeRef<String>() { });
 
         return executor.execute(request, snapshot, context -> {
             // 这条 SQL 就是“Business”。transaction-aware JDBC 下，它与 markSuccess 使用同一个业务事务。
-            jdbcTemplate.update("INSERT INTO demo_business_record(idempotency_key,payload,created_at) VALUES (?,?,?)", key, payload,
-                Timestamp.from(Instant.now()));
+            jdbcTemplate.update("INSERT INTO demo_business_record(idempotency_key,payload,created_at) VALUES (?,?,?)",
+                    key, payload, Timestamp.from(Instant.now()));
 
             if (failAfterBusinessWrite) {
                 throw new IllegalStateException("demo business failure after INSERT");
             }
 
-            return "durable executed, generationVersion=" + context.getGenerationVersion() + ", routeKey=" + context.getRouteKey() +
-                ", payload=" + payload;
+            return "durable executed, generationVersion=" + context.getGenerationVersion()
+                    + ", routeKey=" + context.getRouteKey() + ", payload=" + payload;
         });
     }
 
@@ -97,9 +105,12 @@ public class IdempotencyDemoController {
      */
     @PostMapping("/durable-reference/{key}")
     public IdempotencyResult<String> durableReference(@PathVariable String key, @RequestParam(defaultValue = "payload") String payload) {
-        IdempotencyRequest request =
-            IdempotencyRequest.builder().key(key).routeKey("merchant-10001").requestHash(hasher.hash(Map.of("payload", payload)))
-                .policyName("demo-durable").build();
+        IdempotencyRequest request = IdempotencyRequest.builder()
+                .key(key)
+                .routeKey("merchant-10001")
+                .requestHash(hasher.hash(Map.of("payload", payload)))
+                .policyName("demo-durable")
+                .build();
 
         IdempotencyResultPolicy<String> reference = IdempotencyResultPolicies.reference(new IdempotencyResultReference<>() {
             @Override
@@ -110,16 +121,16 @@ public class IdempotencyDemoController {
 
             @Override
             public String resolve(String referenceKey) {
-                String currentPayload =
-                    jdbcTemplate.queryForObject("SELECT payload FROM demo_business_record WHERE idempotency_key=? ORDER BY id DESC LIMIT 1",
+                String currentPayload = jdbcTemplate.queryForObject(
+                        "SELECT payload FROM demo_business_record WHERE idempotency_key=? ORDER BY id DESC LIMIT 1",
                         String.class, referenceKey);
                 return "resolved by reference, key=" + referenceKey + ", payload=" + currentPayload;
             }
         });
 
         return executor.execute(request, reference, context -> {
-            jdbcTemplate.update("INSERT INTO demo_business_record(idempotency_key,payload,created_at) VALUES (?,?,?)", key, payload,
-                Timestamp.from(Instant.now()));
+            jdbcTemplate.update("INSERT INTO demo_business_record(idempotency_key,payload,created_at) VALUES (?,?,?)",
+                    key, payload, Timestamp.from(Instant.now()));
             return "created, key=" + key + ", payload=" + payload;
         });
     }
@@ -129,8 +140,8 @@ public class IdempotencyDemoController {
      */
     @GetMapping("/durable/{key}/business-count")
     public Map<String, Object> durableBusinessCount(@PathVariable String key) {
-        Integer count =
-            jdbcTemplate.queryForObject("SELECT COUNT(*) FROM demo_business_record WHERE idempotency_key=?", Integer.class, key);
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM demo_business_record WHERE idempotency_key=?", Integer.class, key);
         return Map.of("key", key, "businessCount", count == null ? 0 : count);
     }
 }

@@ -92,12 +92,23 @@ public class CacheEvent {
      */
     private String spanId;
 
-    public static CacheEvent evictKey(CacheKey key, String sourceApp, String sourceInstanceId, String reason) {
+    public static CacheEvent evictKey(
+            CacheKey key,
+            String sourceApp,
+            String sourceInstanceId,
+            String reason
+    ) {
         return evictKey(key, sourceApp, sourceInstanceId, reason, null, null);
     }
 
-    public static CacheEvent evictKey(CacheKey key, String sourceApp, String sourceInstanceId, String reason, String traceId,
-        String spanId) {
+    public static CacheEvent evictKey(
+            CacheKey key,
+            String sourceApp,
+            String sourceInstanceId,
+            String reason,
+            String traceId,
+            String spanId
+    ) {
         CacheEvent event = new CacheEvent();
         event.setEventVersion(1);
         event.setEventId(UUID.randomUUID().toString());

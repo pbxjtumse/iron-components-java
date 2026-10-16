@@ -50,7 +50,9 @@ public final class ReliableTaskKey {
         if (!(object instanceof ReliableTaskKey that)) {
             return false;
         }
-        return storeName.equals(that.storeName) && namespace.equals(that.namespace) && taskId.equals(that.taskId);
+        return storeName.equals(that.storeName)
+                && namespace.equals(that.namespace)
+                && taskId.equals(that.taskId);
     }
 
     @Override
@@ -60,8 +62,11 @@ public final class ReliableTaskKey {
 
     @Override
     public String toString() {
-        return "ReliableTaskKey{" + "storeName='" + storeName + '\'' + ", namespace='" + namespace + '\'' + ", taskId='" + taskId + '\'' +
-            '}';
+        return "ReliableTaskKey{" +
+                "storeName='" + storeName + '\'' +
+                ", namespace='" + namespace + '\'' +
+                ", taskId='" + taskId + '\'' +
+                '}';
     }
 
     private static String requireText(String value, String name) {

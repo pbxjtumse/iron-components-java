@@ -19,13 +19,14 @@ public final class MessageConsumerDefinitionValidator {
         if (requiresReliableAck(definition.reliabilityMode()) && !hasReliableAckCapability(provider)) {
             throw new IllegalStateException("provider does not support reliable consume acknowledgement: " + provider.name());
         }
-        if (definition.reliabilityMode() == ConsumerReliabilityMode.EFFECTIVELY_ONCE && !definition.idempotencyOptions().enabled()) {
+        if (definition.reliabilityMode() == ConsumerReliabilityMode.EFFECTIVELY_ONCE
+                && !definition.idempotencyOptions().enabled()) {
             throw new IllegalStateException("EFFECTIVELY_ONCE requires idempotency.enabled=true: " + definition.consumerId());
         }
-        if (definition.reliabilityMode() == ConsumerReliabilityMode.EFFECTIVELY_ONCE && definition.transactionOptions().required() &&
-            !definition.transactionOptions().enabled()) {
-            throw new IllegalStateException(
-                "EFFECTIVELY_ONCE requires transaction when transaction.required=true: " + definition.consumerId());
+        if (definition.reliabilityMode() == ConsumerReliabilityMode.EFFECTIVELY_ONCE
+                && definition.transactionOptions().required()
+                && !definition.transactionOptions().enabled()) {
+            throw new IllegalStateException("EFFECTIVELY_ONCE requires transaction when transaction.required=true: " + definition.consumerId());
         }
     }
 
@@ -34,8 +35,8 @@ public final class MessageConsumerDefinitionValidator {
     }
 
     private static boolean hasReliableAckCapability(MessageProvider provider) {
-        return provider.capabilities().contains(MessageCapability.OFFSET_COMMIT) ||
-            provider.capabilities().contains(MessageCapability.MANUAL_ACK) ||
-            provider.capabilities().contains(MessageCapability.RETURN_CONSUME_STATUS);
+        return provider.capabilities().contains(MessageCapability.OFFSET_COMMIT)
+                || provider.capabilities().contains(MessageCapability.MANUAL_ACK)
+                || provider.capabilities().contains(MessageCapability.RETURN_CONSUME_STATUS);
     }
 }

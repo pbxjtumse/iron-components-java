@@ -60,7 +60,9 @@ public class XjtuIronConcurrencyExecutionAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ThreadPoolSpecResolver threadPoolSpecResolver(XjtuIronConcurrencyProperties properties) {
+    public ThreadPoolSpecResolver threadPoolSpecResolver(
+            XjtuIronConcurrencyProperties properties
+    ) {
         return new PropertiesThreadPoolSpecResolver(properties);
     }
 
@@ -72,14 +74,19 @@ public class XjtuIronConcurrencyExecutionAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ThreadPoolFactory threadPoolFactory(RejectedExecutionHandlerFactory rejectedExecutionHandlerFactory) {
+    public ThreadPoolFactory threadPoolFactory(
+            RejectedExecutionHandlerFactory rejectedExecutionHandlerFactory
+    ) {
         return new DefaultThreadPoolFactory(rejectedExecutionHandlerFactory);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public ThreadPoolRegistry threadPoolRegistry(ThreadPoolSpecResolver threadPoolSpecResolver, ThreadPoolFactory threadPoolFactory,
-        XjtuIronConcurrencyProperties properties) {
+    public ThreadPoolRegistry threadPoolRegistry(
+            ThreadPoolSpecResolver threadPoolSpecResolver,
+            ThreadPoolFactory threadPoolFactory,
+            XjtuIronConcurrencyProperties properties
+    ) {
         Map<String, ThreadPoolSpec> specs = threadPoolSpecResolver.resolveAll();
 
         if (!specs.containsKey(properties.getDefaultExecutor())) {
@@ -87,21 +94,32 @@ public class XjtuIronConcurrencyExecutionAutoConfiguration {
         }
 
         DefaultThreadPoolRegistry registry = new DefaultThreadPoolRegistry();
-        specs.forEach((poolName, spec) -> registry.register(poolName, threadPoolFactory.create(spec)));
+        specs.forEach((poolName, spec) ->
+                registry.register(poolName, threadPoolFactory.create(spec))
+        );
         return registry;
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public ThreadPoolManager threadPoolManager(ThreadPoolRegistry threadPoolRegistry,
-        RejectedExecutionHandlerFactory rejectedExecutionHandlerFactory) {
-        return new DefaultThreadPoolManager(threadPoolRegistry, rejectedExecutionHandlerFactory);
+    public ThreadPoolManager threadPoolManager(
+            ThreadPoolRegistry threadPoolRegistry,
+            RejectedExecutionHandlerFactory rejectedExecutionHandlerFactory
+    ) {
+        return new DefaultThreadPoolManager(
+                threadPoolRegistry,
+                rejectedExecutionHandlerFactory
+        );
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public TaskExecutionRegistry taskExecutionRegistry(XjtuIronConcurrencyProperties properties) {
-        return new DefaultTaskExecutionRegistry(properties.getTaskRegistry().getMaxSize());
+    public TaskExecutionRegistry taskExecutionRegistry(
+            XjtuIronConcurrencyProperties properties
+    ) {
+        return new DefaultTaskExecutionRegistry(
+                properties.getTaskRegistry().getMaxSize()
+        );
     }
 
     /**
@@ -152,11 +170,18 @@ public class XjtuIronConcurrencyExecutionAutoConfiguration {
     @Bean(name = "ironAsyncErrorClassifier")
     @Primary
     @ConditionalOnMissingBean(name = "ironAsyncErrorClassifier")
-    public AsyncErrorClassifier ironAsyncErrorClassifier(ObjectProvider<AsyncErrorClassificationRule> ruleProvider,
-        @Qualifier("ironDefaultAsyncErrorClassifier") AsyncErrorClassifier fallbackClassifier) {
-        List<AsyncErrorClassificationRule> rules = ruleProvider.orderedStream().toList();
+    public AsyncErrorClassifier ironAsyncErrorClassifier(
+            ObjectProvider<AsyncErrorClassificationRule> ruleProvider,
+            @Qualifier("ironDefaultAsyncErrorClassifier")
+            AsyncErrorClassifier fallbackClassifier
+    ) {
+        List<AsyncErrorClassificationRule> rules =
+                ruleProvider.orderedStream().toList();
 
-        return new CompositeAsyncErrorClassifier(rules, fallbackClassifier);
+        return new CompositeAsyncErrorClassifier(
+                rules,
+                fallbackClassifier
+        );
     }
 
     /**
@@ -169,36 +194,68 @@ public class XjtuIronConcurrencyExecutionAutoConfiguration {
          * 不在创建 AsyncExecutor 的阶段立即实例化全部业务监听器，
          * 避免 Listener Bean 间接依赖 AsyncExecutor 时形成循环依赖。
          */
-        return new CompositeTaskExecutionListener(
-            () -> listeners.orderedStream().filter(listener -> !(listener instanceof CompositeTaskExecutionListener)).toList());
+        return new CompositeTaskExecutionListener(() ->
+                listeners.orderedStream()
+                        .filter(listener -> !(listener instanceof CompositeTaskExecutionListener))
+                        .toList()
+        );
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public TaskLifecyclePublisher taskLifecyclePublisher(ConcurrencyMetricsRecorder concurrencyMetricsRecorder,
-        TaskExecutionRegistry taskExecutionRegistry, @Qualifier("ironTaskExecutionListener") TaskExecutionListener taskExecutionListener) {
-        return new DefaultTaskLifecyclePublisher(concurrencyMetricsRecorder, taskExecutionRegistry, taskExecutionListener);
+    public TaskLifecyclePublisher taskLifecyclePublisher(
+            ConcurrencyMetricsRecorder concurrencyMetricsRecorder,
+            TaskExecutionRegistry taskExecutionRegistry,
+            @Qualifier("ironTaskExecutionListener")
+            TaskExecutionListener taskExecutionListener
+    ) {
+        return new DefaultTaskLifecyclePublisher(
+                concurrencyMetricsRecorder,
+                taskExecutionRegistry,
+                taskExecutionListener
+        );
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public TaskResultPipeline taskResultPipeline(@Qualifier("ironAsyncErrorClassifier") AsyncErrorClassifier asyncErrorClassifier,
-        TaskLifecyclePublisher taskLifecyclePublisher,
-        @Qualifier("ironConcurrencyTimeoutScheduler") ScheduledExecutorService timeoutScheduler,
-        @Qualifier("ironConcurrencyFallbackExecutor") Executor fallbackExecutor) {
-        return new DefaultTaskResultPipeline(asyncErrorClassifier, taskLifecyclePublisher, timeoutScheduler, fallbackExecutor);
+    public TaskResultPipeline taskResultPipeline(
+            @Qualifier("ironAsyncErrorClassifier")
+            AsyncErrorClassifier asyncErrorClassifier,
+            TaskLifecyclePublisher taskLifecyclePublisher,
+            @Qualifier("ironConcurrencyTimeoutScheduler")
+            ScheduledExecutorService timeoutScheduler,
+            @Qualifier("ironConcurrencyFallbackExecutor")
+            Executor fallbackExecutor
+    ) {
+        return new DefaultTaskResultPipeline(
+                asyncErrorClassifier,
+                taskLifecyclePublisher,
+                timeoutScheduler,
+                fallbackExecutor
+        );
     }
+
+
 
 
     @Bean(name = "ironConcurrencyTimeoutScheduler")
     @ConditionalOnMissingBean(name = "ironConcurrencyTimeoutScheduler")
-    public ScheduledExecutorService ironConcurrencyTimeoutScheduler(XjtuIronConcurrencyProperties properties) {
-        XjtuIronConcurrencyProperties.PipelineProperties pipeline = properties.getPipeline();
+    public ScheduledExecutorService ironConcurrencyTimeoutScheduler(
+            XjtuIronConcurrencyProperties properties
+    ) {
+        XjtuIronConcurrencyProperties.PipelineProperties pipeline =
+                properties.getPipeline();
         pipeline.validate();
 
-        ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(pipeline.getTimeoutSchedulerSize(),
-            new NamedThreadFactory(pipeline.getTimeoutThreadNamePrefix(), pipeline.isTimeoutDaemon()),
-            new ThreadPoolExecutor.AbortPolicy());
+        ScheduledThreadPoolExecutor scheduler =
+                new ScheduledThreadPoolExecutor(
+                        pipeline.getTimeoutSchedulerSize(),
+                        new NamedThreadFactory(
+                                pipeline.getTimeoutThreadNamePrefix(),
+                                pipeline.isTimeoutDaemon()
+                        ),
+                        new ThreadPoolExecutor.AbortPolicy()
+                );
 
         scheduler.setRemoveOnCancelPolicy(true);
         scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
@@ -216,18 +273,31 @@ public class XjtuIronConcurrencyExecutionAutoConfiguration {
      */
     @Bean(name = "ironConcurrencyFallbackExecutor")
     @ConditionalOnMissingBean(name = "ironConcurrencyFallbackExecutor")
-    public ThreadPoolExecutor ironConcurrencyFallbackExecutor(XjtuIronConcurrencyProperties properties) {
-        XjtuIronConcurrencyProperties.PipelineProperties pipeline = properties.getPipeline();
+    public ThreadPoolExecutor ironConcurrencyFallbackExecutor(
+            XjtuIronConcurrencyProperties properties
+    ) {
+        XjtuIronConcurrencyProperties.PipelineProperties pipeline =
+                properties.getPipeline();
         pipeline.validate();
 
         RejectedExecutionHandler rejectedExecutionHandler =
-            pipeline.getFallbackRejectionPolicy() == com.xjtu.iron.concurrency.api.enums.RejectionPolicy.CALLER_RUNS ?
-                new CallerRunsRejectedExecutionHandler() : new AwareAbortRejectedExecutionHandler();
+                pipeline.getFallbackRejectionPolicy()
+                        == com.xjtu.iron.concurrency.api.enums.RejectionPolicy.CALLER_RUNS
+                        ? new CallerRunsRejectedExecutionHandler()
+                        : new AwareAbortRejectedExecutionHandler();
 
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(pipeline.getFallbackCorePoolSize(), pipeline.getFallbackMaxPoolSize(),
-            pipeline.getFallbackKeepAliveTime().toMillis(), TimeUnit.MILLISECONDS,
-            new ArrayBlockingQueue<>(pipeline.getFallbackQueueCapacity()),
-            new NamedThreadFactory(pipeline.getFallbackThreadNamePrefix(), pipeline.isFallbackDaemon()), rejectedExecutionHandler);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                pipeline.getFallbackCorePoolSize(),
+                pipeline.getFallbackMaxPoolSize(),
+                pipeline.getFallbackKeepAliveTime().toMillis(),
+                TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(pipeline.getFallbackQueueCapacity()),
+                new NamedThreadFactory(
+                        pipeline.getFallbackThreadNamePrefix(),
+                        pipeline.isFallbackDaemon()
+                ),
+                rejectedExecutionHandler
+        );
 
         executor.allowCoreThreadTimeOut(true);
         return executor;
@@ -236,26 +306,49 @@ public class XjtuIronConcurrencyExecutionAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public TaskExecutionTemplate taskExecutionTemplate(ThreadPoolRegistry threadPoolRegistry,
-        ContextAwareTaskDecorator contextAwareTaskDecorator, TaskLifecyclePublisher taskLifecyclePublisher,
-        TaskResultPipeline taskResultPipeline, @Qualifier("ironAsyncErrorClassifier") AsyncErrorClassifier asyncErrorClassifier,
-        AsyncUncaughtExceptionHandler asyncUncaughtExceptionHandler, TaskControlRegistry taskControlRegistry,
-        TaskCancellationManager taskCancellationManager) {
-        return new DefaultTaskExecutionTemplate(threadPoolRegistry, contextAwareTaskDecorator, taskLifecyclePublisher, taskResultPipeline,
-            asyncErrorClassifier, asyncUncaughtExceptionHandler, taskControlRegistry, taskCancellationManager);
+    public TaskExecutionTemplate taskExecutionTemplate(
+            ThreadPoolRegistry threadPoolRegistry,
+            ContextAwareTaskDecorator contextAwareTaskDecorator,
+            TaskLifecyclePublisher taskLifecyclePublisher,
+            TaskResultPipeline taskResultPipeline,
+            @Qualifier("ironAsyncErrorClassifier")
+            AsyncErrorClassifier asyncErrorClassifier,
+            AsyncUncaughtExceptionHandler asyncUncaughtExceptionHandler,
+            TaskControlRegistry taskControlRegistry,
+            TaskCancellationManager taskCancellationManager
+    ) {
+        return new DefaultTaskExecutionTemplate(
+                threadPoolRegistry,
+                contextAwareTaskDecorator,
+                taskLifecyclePublisher,
+                taskResultPipeline,
+                asyncErrorClassifier,
+                asyncUncaughtExceptionHandler,
+                taskControlRegistry,
+                taskCancellationManager
+        );
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public AsyncExecutor asyncExecutor(TaskExecutionTemplate taskExecutionTemplate, TaskCancellationManager taskCancellationManager) {
-        return new DefaultAsyncExecutor(taskExecutionTemplate, taskCancellationManager);
+    public AsyncExecutor asyncExecutor(
+            TaskExecutionTemplate taskExecutionTemplate,
+            TaskCancellationManager taskCancellationManager
+    ) {
+        return new DefaultAsyncExecutor(
+                taskExecutionTemplate,
+                taskCancellationManager
+        );
     }
 
     /**
      * 应用关闭时按照每个线程池配置执行优雅停机。
      */
     @Bean
-    public DisposableBean threadPoolShutdownHook(ThreadPoolRegistry threadPoolRegistry, ThreadPoolSpecResolver threadPoolSpecResolver) {
+    public DisposableBean threadPoolShutdownHook(
+            ThreadPoolRegistry threadPoolRegistry,
+            ThreadPoolSpecResolver threadPoolSpecResolver
+    ) {
         return () -> {
             Map<String, ThreadPoolSpec> specs = threadPoolSpecResolver.resolveAll();
 
@@ -297,7 +390,9 @@ public class XjtuIronConcurrencyExecutionAutoConfiguration {
     private void shutdownNowAndAbortPending(String poolName, ThreadPoolExecutor executor) {
         List<Runnable> pendingTasks = executor.shutdownNow();
 
-        RuntimeException cause = new RuntimeException("Executor shutdown before queued task started: " + poolName);
+        RuntimeException cause = new RuntimeException(
+                "Executor shutdown before queued task started: " + poolName
+        );
 
         for (Runnable runnable : pendingTasks) {
             if (runnable instanceof ShutdownAbortAware abortAware) {
@@ -323,8 +418,10 @@ public class XjtuIronConcurrencyExecutionAutoConfiguration {
      * </p>
      */
     @Bean
-    public DisposableBean fallbackExecutorShutdownHook(@Qualifier("ironConcurrencyFallbackExecutor") Executor fallbackExecutor,
-        XjtuIronConcurrencyProperties properties) {
+    public DisposableBean fallbackExecutorShutdownHook(
+            @Qualifier("ironConcurrencyFallbackExecutor") Executor fallbackExecutor,
+            XjtuIronConcurrencyProperties properties
+    ) {
         return () -> {
             if (!(fallbackExecutor instanceof ThreadPoolExecutor executor)) {
                 return;
@@ -335,7 +432,10 @@ public class XjtuIronConcurrencyExecutionAutoConfiguration {
 
             executor.shutdown();
             try {
-                if (!executor.awaitTermination(pipeline.getFallbackAwaitTermination().toMillis(), TimeUnit.MILLISECONDS)) {
+                if (!executor.awaitTermination(
+                        pipeline.getFallbackAwaitTermination().toMillis(),
+                        TimeUnit.MILLISECONDS
+                )) {
                     shutdownNowAndAbortPendingFallback(executor);
                 }
             } catch (InterruptedException ex) {
@@ -350,7 +450,9 @@ public class XjtuIronConcurrencyExecutionAutoConfiguration {
      */
     private void shutdownNowAndAbortPendingFallback(ThreadPoolExecutor executor) {
         List<Runnable> pendingTasks = executor.shutdownNow();
-        RuntimeException cause = new RuntimeException("Fallback executor shutdown before queued fallback task started");
+        RuntimeException cause = new RuntimeException(
+                "Fallback executor shutdown before queued fallback task started"
+        );
 
         for (Runnable runnable : pendingTasks) {
             if (runnable instanceof ShutdownAbortAware abortAware) {
@@ -369,7 +471,8 @@ public class XjtuIronConcurrencyExecutionAutoConfiguration {
      */
     @Bean
     public DisposableBean timeoutSchedulerShutdownHook(
-        @Qualifier("ironConcurrencyTimeoutScheduler") ScheduledExecutorService timeoutScheduler) {
+            @Qualifier("ironConcurrencyTimeoutScheduler") ScheduledExecutorService timeoutScheduler
+    ) {
         return timeoutScheduler::shutdownNow;
     }
 

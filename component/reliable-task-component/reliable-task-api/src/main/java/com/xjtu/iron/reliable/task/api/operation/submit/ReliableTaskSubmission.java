@@ -51,45 +51,16 @@ public final class ReliableTaskSubmission {
         return new Builder(taskType, payload);
     }
 
-    public String getTaskId() {
-        return taskId;
-    }
-
-    public String getStoreName() {
-        return storeName;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public String getTaskType() {
-        return taskType;
-    }
-
-    public String getBusinessKey() {
-        return businessKey;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    public String getRouteKey() {
-        return routeKey;
-    }
-
-    public Integer getScanBucket() {
-        return scanBucket;
-    }
-
-    public Integer getMaxAttempts() {
-        return maxAttempts;
-    }
-
-    public Instant getFirstExecuteAt() {
-        return firstExecuteAt;
-    }
+    public String getTaskId() { return taskId; }
+    public String getStoreName() { return storeName; }
+    public String getNamespace() { return namespace; }
+    public String getTaskType() { return taskType; }
+    public String getBusinessKey() { return businessKey; }
+    public String getPayload() { return payload; }
+    public String getRouteKey() { return routeKey; }
+    public Integer getScanBucket() { return scanBucket; }
+    public Integer getMaxAttempts() { return maxAttempts; }
+    public Instant getFirstExecuteAt() { return firstExecuteAt; }
 
     public static final class Builder {
         /** 调用方指定的任务 ID。 */
@@ -118,49 +89,15 @@ public final class ReliableTaskSubmission {
             this.payload = payload;
         }
 
-        public Builder taskId(String taskId) {
-            this.taskId = taskId;
-            return this;
-        }
-
-        public Builder storeName(String storeName) {
-            this.storeName = storeName;
-            return this;
-        }
-
-        public Builder namespace(String namespace) {
-            this.namespace = namespace;
-            return this;
-        }
-
-        public Builder businessKey(String businessKey) {
-            this.businessKey = businessKey;
-            return this;
-        }
-
-        public Builder routeKey(String routeKey) {
-            this.routeKey = routeKey;
-            return this;
-        }
-
-        public Builder scanBucket(int scanBucket) {
-            this.scanBucket = scanBucket;
-            return this;
-        }
-
-        public Builder maxAttempts(int maxAttempts) {
-            this.maxAttempts = maxAttempts;
-            return this;
-        }
-
-        public Builder firstExecuteAt(Instant firstExecuteAt) {
-            this.firstExecuteAt = firstExecuteAt;
-            return this;
-        }
-
-        public ReliableTaskSubmission build() {
-            return new ReliableTaskSubmission(this);
-        }
+        public Builder taskId(String taskId) { this.taskId = taskId; return this; }
+        public Builder storeName(String storeName) { this.storeName = storeName; return this; }
+        public Builder namespace(String namespace) { this.namespace = namespace; return this; }
+        public Builder businessKey(String businessKey) { this.businessKey = businessKey; return this; }
+        public Builder routeKey(String routeKey) { this.routeKey = routeKey; return this; }
+        public Builder scanBucket(int scanBucket) { this.scanBucket = scanBucket; return this; }
+        public Builder maxAttempts(int maxAttempts) { this.maxAttempts = maxAttempts; return this; }
+        public Builder firstExecuteAt(Instant firstExecuteAt) { this.firstExecuteAt = firstExecuteAt; return this; }
+        public ReliableTaskSubmission build() { return new ReliableTaskSubmission(this); }
     }
 
     private static String defaultText(String value, String defaultValue) {

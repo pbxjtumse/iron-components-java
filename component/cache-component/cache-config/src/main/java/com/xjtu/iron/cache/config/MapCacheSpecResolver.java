@@ -18,8 +18,7 @@ public class MapCacheSpecResolver implements CacheSpecResolver {
     private final Map<String, CacheSpec> specMap = new ConcurrentHashMap<>();
 
     /** 创建空的策略解析器。 */
-    public MapCacheSpecResolver() {
-    }
+    public MapCacheSpecResolver() { }
 
     /** 使用指定策略集合创建解析器。 */
     public MapCacheSpecResolver(Map<String, CacheSpec> specs) {

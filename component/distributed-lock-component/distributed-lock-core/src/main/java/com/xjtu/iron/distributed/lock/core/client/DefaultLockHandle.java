@@ -47,12 +47,12 @@ public final class DefaultLockHandle implements WatchdogLockHandle {
 
     /** 兼容老测试或手工构造场景；生产默认通过 {@link LockHandleFactory} 注入 watchdog。 */
     public DefaultLockHandle(LockProvider provider, LockLease lease, LockRuntimeState runtimeState, LockEventPublisher eventPublisher,
-        LockEventFactory eventFactory, LockMetricsFacade metricsFacade) {
+            LockEventFactory eventFactory, LockMetricsFacade metricsFacade) {
         this(provider, lease, runtimeState, eventPublisher, eventFactory, metricsFacade, null);
     }
 
     public DefaultLockHandle(LockProvider provider, LockLease lease, LockRuntimeState runtimeState, LockEventPublisher eventPublisher,
-        LockEventFactory eventFactory, LockMetricsFacade metricsFacade, LockWatchdog watchdog) {
+            LockEventFactory eventFactory, LockMetricsFacade metricsFacade, LockWatchdog watchdog) {
         this.provider = Objects.requireNonNull(provider, "provider must not be null");
         this.lease = Objects.requireNonNull(lease, "lease must not be null");
         this.runtimeState = Objects.requireNonNull(runtimeState, "runtimeState must not be null");
@@ -62,72 +62,25 @@ public final class DefaultLockHandle implements WatchdogLockHandle {
         this.watchdog = watchdog;
     }
 
-    public LockLease lease() {
-        return lease;
-    }
-
-    public LockRuntimeState runtimeState() {
-        return runtimeState;
-    }
-
-    @Override
-    public String lockName() {
-        return lease.getLockName();
-    }
-
-    @Override
-    public String lockKey() {
-        return lease.getLockKey();
-    }
-
-    @Override
-    public String ownerToken() {
-        return lease.getOwnerToken();
-    }
-
-    @Override
-    public OptionalLong fencingToken() {
-        return lease.fencingToken();
-    }
-
-    @Override
-    public Optional<String> fencingTokenProviderName() {
-        return lease.fencingTokenProviderName();
-    }
-
-    @Override
-    public Instant acquiredAt() {
-        return lease.getAcquiredAt();
-    }
-
-    @Override
-    public Duration leaseTime() {
-        return lease.getLeaseTime();
-    }
-
-    @Override
-    public Instant expireAt() {
-        return lease.getExpireAt();
-    }
-
-    @Override
-    public boolean isLost() {
-        return runtimeState.isLost();
-    }
-
-    @Override
-    public boolean isReleaseAttempted() {
-        return runtimeState.isReleaseAttempted();
-    }
+    public LockLease lease() { return lease; }
+    public LockRuntimeState runtimeState() { return runtimeState; }
+    @Override public String lockName() { return lease.getLockName(); }
+    @Override public String lockKey() { return lease.getLockKey(); }
+    @Override public String ownerToken() { return lease.getOwnerToken(); }
+    @Override public OptionalLong fencingToken() { return lease.fencingToken(); }
+    @Override public Optional<String> fencingTokenProviderName() { return lease.fencingTokenProviderName(); }
+    @Override public Instant acquiredAt() { return lease.getAcquiredAt(); }
+    @Override public Duration leaseTime() { return lease.getLeaseTime(); }
+    @Override public Instant expireAt() { return lease.getExpireAt(); }
+    @Override public boolean isLost() { return runtimeState.isLost(); }
+    @Override public boolean isReleaseAttempted() { return runtimeState.isReleaseAttempted(); }
 
     /**
      * 轻量检查当前 ownerToken 是否仍持有锁。NOT_FOUND/NOT_OWNER 都会把本地 Handle 标记为 lost；Provider error 只发布错误，不把它误判为确定失锁。
      */
     @Override
     public boolean checkHeld() {
-        if (runtimeState.isReleaseAttempted() || runtimeState.isLost()) {
-            return false;
-        }
+        if (runtimeState.isReleaseAttempted() || runtimeState.isLost()) { return false; }
         LockCheckResponse response = provider.check(LockCheckRequest.fromLease(lease));
         switch (response.getStatus()) {
             case HELD:
@@ -148,9 +101,7 @@ public final class DefaultLockHandle implements WatchdogLockHandle {
      */
     @Override
     public boolean renew() {
-        if (runtimeState.isReleaseAttempted() || runtimeState.isLost()) {
-            return false;
-        }
+        if (runtimeState.isReleaseAttempted() || runtimeState.isLost()) { return false; }
         LockRenewResponse response = provider.renew(LockRenewRequest.fromLease(lease));
         switch (response.getStatus()) {
             case RENEWED:
@@ -212,9 +163,7 @@ public final class DefaultLockHandle implements WatchdogLockHandle {
 
     @Override
     public void assertHeld() {
-        if (!checkHeld()) {
-            throw new LockLostException("lock lost: " + lease.getLockName());
-        }
+        if (!checkHeld()) { throw new LockLostException("lock lost: " + lease.getLockName()); }
     }
 
     @Override

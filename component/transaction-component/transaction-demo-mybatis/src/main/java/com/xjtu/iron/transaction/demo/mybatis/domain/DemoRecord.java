@@ -13,11 +13,6 @@ public final class DemoRecord {
         this.name = name;
     }
 
-    public long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
+    public long getId() { return id; }
+    public String getName() { return name; }
 }

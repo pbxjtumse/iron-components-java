@@ -10,8 +10,11 @@ import com.xjtu.iron.message.core.consume.ConsumeInvocation;
 public final class NoopIdempotencyStrategy implements IdempotencyStrategy {
 
     @Override
-    public ConsumeDecision execute(ConsumerDefinition<?> definition, MessageEnvelope<?> message, ConsumeContext context,
-        ConsumeInvocation invocation) {
+    public ConsumeDecision execute(
+            ConsumerDefinition<?> definition,
+            MessageEnvelope<?> message,
+            ConsumeContext context,
+            ConsumeInvocation invocation) {
         return invocation.invoke();
     }
 }

@@ -26,7 +26,8 @@ import org.springframework.context.annotation.Bean;
  *
  * <p>它读取 {@code xjtu.iron.message.kafka.*} 配置，创建 Kafka Provider 所需的配置对象和 Provider Bean，
  * 再交给 message-starter 的 Provider 注册表统一管理。</p>
- */ public class KafkaMessageAutoConfiguration {
+ */
+public class KafkaMessageAutoConfiguration {
 
     /**
      * 创建 Kafka Provider 配置快照。
@@ -37,8 +38,13 @@ import org.springframework.context.annotation.Bean;
     @Bean
     @ConditionalOnMissingBean
     public KafkaMessageProviderConfig kafkaMessageProviderConfig(KafkaMessageProperties properties) {
-        return new KafkaMessageProviderConfig(properties.getBootstrapServers(), properties.getClientId(), properties.getPollTimeout(),
-            properties.getConsumerRetryBackoff(), properties.getProducerProperties(), properties.getConsumerProperties());
+        return new KafkaMessageProviderConfig(
+                properties.getBootstrapServers(),
+                properties.getClientId(),
+                properties.getPollTimeout(),
+                properties.getConsumerRetryBackoff(),
+                properties.getProducerProperties(),
+                properties.getConsumerProperties());
     }
 
     /**

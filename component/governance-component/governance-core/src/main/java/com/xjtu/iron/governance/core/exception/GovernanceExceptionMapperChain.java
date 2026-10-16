@@ -44,8 +44,9 @@ public class GovernanceExceptionMapperChain {
     private Throwable unwrap(Throwable throwable) {
         Throwable current = throwable;
 
-        while (current.getCause() != null &&
-            (current instanceof RuntimeException || current instanceof java.util.concurrent.ExecutionException)) {
+        while (current.getCause() != null
+                && (current instanceof RuntimeException
+                || current instanceof java.util.concurrent.ExecutionException)) {
             current = current.getCause();
         }
 

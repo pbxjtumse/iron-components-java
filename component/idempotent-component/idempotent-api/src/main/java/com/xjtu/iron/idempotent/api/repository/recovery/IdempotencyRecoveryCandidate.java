@@ -47,7 +47,7 @@ public final class IdempotencyRecoveryCandidate {
     private final String failureCode;
 
     public IdempotencyRecoveryCandidate(String storeName, int scanBucket, String namespace, String key, String routeKey, String requestHash,
-        IdempotencyStatus status, String ownerToken, long version, Instant processingExpireAt, String failureCode) {
+                                        IdempotencyStatus status, String ownerToken, long version, Instant processingExpireAt, String failureCode) {
         this.storeName = storeName;
         this.scanBucket = scanBucket;
         this.namespace = namespace;
@@ -61,49 +61,17 @@ public final class IdempotencyRecoveryCandidate {
         this.failureCode = failureCode;
     }
 
-    public String getStoreName() {
-        return storeName;
-    }
-
-    public int getScanBucket() {
-        return scanBucket;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public String getRouteKey() {
-        return routeKey;
-    }
-
-    public String getRequestHash() {
-        return requestHash;
-    }
-
-    public IdempotencyStatus getStatus() {
-        return status;
-    }
-
-    public String getOwnerToken() {
-        return ownerToken;
-    }
-
-    public long getVersion() {
-        return version;
-    }
-
-    public Instant getProcessingExpireAt() {
-        return processingExpireAt;
-    }
-
-    public String getFailureCode() {
-        return failureCode;
-    }
+    public String getStoreName() { return storeName; }
+    public int getScanBucket() { return scanBucket; }
+    public String getNamespace() { return namespace; }
+    public String getKey() { return key; }
+    public String getRouteKey() { return routeKey; }
+    public String getRequestHash() { return requestHash; }
+    public IdempotencyStatus getStatus() { return status; }
+    public String getOwnerToken() { return ownerToken; }
+    public long getVersion() { return version; }
+    public Instant getProcessingExpireAt() { return processingExpireAt; }
+    public String getFailureCode() { return failureCode; }
 
     public IdempotencyStorageContext storageContext() {
         return IdempotencyStorageContext.of(storeName, scanBucket);

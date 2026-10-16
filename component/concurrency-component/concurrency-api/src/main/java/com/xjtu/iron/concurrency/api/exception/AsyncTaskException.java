@@ -28,8 +28,16 @@ public class AsyncTaskException extends ConcurrencyException {
      */
     private final String taskId;
 
-    public AsyncTaskException(String executorName, String taskName, String taskId, AsyncError error, Throwable cause) {
-        super("Async task execution failed: executor=" + executorName + ", task=" + taskName, error, cause);
+    public AsyncTaskException(
+            String executorName,
+            String taskName,
+            String taskId,
+            AsyncError error,
+            Throwable cause
+    ) {
+        super("Async task execution failed: executor=" + executorName + ", task=" + taskName,
+                error,
+                cause);
         this.executorName = executorName;
         this.taskName = taskName;
         this.taskId = taskId;

@@ -25,13 +25,8 @@ public enum RedisLockScriptDescriptor {
         this.resultType = resultType;
     }
 
-    public String getLocation() {
-        return location;
-    }
-
-    public Class<?> getResultType() {
-        return resultType;
-    }
+    public String getLocation() { return location; }
+    public Class<?> getResultType() { return resultType; }
 
     public static RedisLockScriptDescriptor fromLocation(String location) {
         for (RedisLockScriptDescriptor descriptor : values()) {

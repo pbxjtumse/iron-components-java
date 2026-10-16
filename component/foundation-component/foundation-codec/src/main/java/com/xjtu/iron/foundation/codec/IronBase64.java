@@ -8,8 +8,7 @@ import java.util.Base64;
  */
 public final class IronBase64 {
 
-    private IronBase64() {
-    }
+    private IronBase64() {}
 
     public static String encodeToString(byte[] bytes) {
         return bytes == null ? null : Base64.getEncoder().encodeToString(bytes);

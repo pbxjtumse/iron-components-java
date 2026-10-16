@@ -104,7 +104,9 @@ public class TaskExecutionSnapshot {
     }
 
     public void setExecutionMode(TaskExecutionMode executionMode) {
-        this.executionMode = executionMode == null ? TaskExecutionMode.UNASSIGNED : executionMode;
+        this.executionMode = executionMode == null
+                ? TaskExecutionMode.UNASSIGNED
+                : executionMode;
     }
 
     public TaskTimingSnapshot getTiming() {

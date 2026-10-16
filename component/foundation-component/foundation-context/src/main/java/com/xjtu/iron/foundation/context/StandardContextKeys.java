@@ -10,6 +10,5 @@ public final class StandardContextKeys {
     public static final ContextKey<String> TENANT_ID = ContextKey.of("tenantId", String.class);
     public static final ContextKey<String> OPERATOR_ID = ContextKey.of("operatorId", String.class);
 
-    private StandardContextKeys() {
-    }
+    private StandardContextKeys() {}
 }

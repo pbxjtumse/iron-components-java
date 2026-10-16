@@ -13,27 +13,25 @@ class DefaultLockAcquireOutcomeHandlerRegistryTest {
 
     @Test
     void shouldRejectMissingStatusHandler() {
-        assertThatThrownBy(() -> new DefaultLockAcquireOutcomeHandlerRegistry(
-            List.of(handler(LockAcquireStatus.ACQUIRED), handler(LockAcquireStatus.NOT_ACQUIRED)))).isInstanceOf(
-            IllegalArgumentException.class).hasMessageContaining("PROVIDER_ERROR");
+        assertThatThrownBy(() -> new DefaultLockAcquireOutcomeHandlerRegistry(List.of(
+                handler(LockAcquireStatus.ACQUIRED), handler(LockAcquireStatus.NOT_ACQUIRED))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("PROVIDER_ERROR");
     }
 
     @Test
     void shouldRejectDuplicateStatusHandler() {
-        assertThatThrownBy(() -> new DefaultLockAcquireOutcomeHandlerRegistry(
-            List.of(handler(LockAcquireStatus.ACQUIRED), handler(LockAcquireStatus.ACQUIRED), handler(LockAcquireStatus.NOT_ACQUIRED),
-                handler(LockAcquireStatus.PROVIDER_ERROR)))).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("duplicate");
+        assertThatThrownBy(() -> new DefaultLockAcquireOutcomeHandlerRegistry(List.of(
+                handler(LockAcquireStatus.ACQUIRED), handler(LockAcquireStatus.ACQUIRED),
+                handler(LockAcquireStatus.NOT_ACQUIRED), handler(LockAcquireStatus.PROVIDER_ERROR))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("duplicate");
     }
 
     private LockAcquireOutcomeHandler handler(LockAcquireStatus status) {
         return new LockAcquireOutcomeHandler() {
-            @Override
-            public LockAcquireStatus status() {
-                return status;
-            }
-
-            @Override
-            public LockResult<LockHandle> handle(LockAcquireOutcomeContext context) {
+            @Override public LockAcquireStatus status() { return status; }
+            @Override public LockResult<LockHandle> handle(LockAcquireOutcomeContext context) {
                 throw new UnsupportedOperationException();
             }
         };

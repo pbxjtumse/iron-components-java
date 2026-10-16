@@ -12,7 +12,8 @@ import java.util.Optional;
  */
 public final class ThreadLocalMessageContextAccessor implements MessageContextAccessor {
 
-    private final ThreadLocal<Deque<CurrentMessage>> contexts = ThreadLocal.withInitial(ArrayDeque::new);
+    private final ThreadLocal<Deque<CurrentMessage>> contexts =
+            ThreadLocal.withInitial(ArrayDeque::new);
 
     @Override
     public Optional<CurrentMessage> current() {

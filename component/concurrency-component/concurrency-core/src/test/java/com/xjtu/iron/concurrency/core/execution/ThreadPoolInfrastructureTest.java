@@ -63,10 +63,20 @@ class ThreadPoolInfrastructureTest {
     @Test
     void registryRejectsDuplicateNameAndReturnsSnapshotCopy() {
         DefaultThreadPoolRegistry registry = new DefaultThreadPoolRegistry();
-        executor =
-            new ThreadPoolExecutor(1, 1, 60L, java.util.concurrent.TimeUnit.SECONDS, new java.util.concurrent.ArrayBlockingQueue<>(1));
-        ThreadPoolExecutor other =
-            new ThreadPoolExecutor(1, 1, 60L, java.util.concurrent.TimeUnit.SECONDS, new java.util.concurrent.ArrayBlockingQueue<>(1));
+        executor = new ThreadPoolExecutor(
+                1,
+                1,
+                60L,
+                java.util.concurrent.TimeUnit.SECONDS,
+                new java.util.concurrent.ArrayBlockingQueue<>(1)
+        );
+        ThreadPoolExecutor other = new ThreadPoolExecutor(
+                1,
+                1,
+                60L,
+                java.util.concurrent.TimeUnit.SECONDS,
+                new java.util.concurrent.ArrayBlockingQueue<>(1)
+        );
 
         try {
             registry.register("pool", executor);

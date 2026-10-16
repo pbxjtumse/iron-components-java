@@ -18,7 +18,11 @@ public final class MessageConsumeTransactionOptions {
     /** 可选事务名称，用于日志、指标和事务模板诊断。 */
     private final String transactionName;
 
-    public MessageConsumeTransactionOptions(boolean enabled, boolean required, Duration timeout, String transactionName) {
+    public MessageConsumeTransactionOptions(
+            boolean enabled,
+            boolean required,
+            Duration timeout,
+            String transactionName) {
         this.enabled = enabled;
         this.required = required;
         this.timeout = timeout == null ? Duration.ofSeconds(30) : timeout;

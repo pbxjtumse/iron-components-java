@@ -23,8 +23,10 @@ import java.util.List;
  *
  * <p>一期只接受单一候选 PlatformTransactionManager；多 TransactionManager 选择和路由放到二期。</p>
  */
-@AutoConfiguration(afterName = {"org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration",
-    "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"})
+@AutoConfiguration(afterName = {
+        "org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration",
+        "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
+})
 @ConditionalOnClass(PlatformTransactionManager.class)
 @ConditionalOnProperty(prefix = "iron.transaction", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnSingleCandidate(PlatformTransactionManager.class)
@@ -46,8 +48,10 @@ public class TransactionAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(TransactionExecutor.class)
-    public TransactionExecutor transactionExecutor(TransactionProvider provider, TransactionExecutionIdGenerator executionIdGenerator,
-        ObjectProvider<TransactionEventListener> listeners) {
+    public TransactionExecutor transactionExecutor(
+            TransactionProvider provider,
+            TransactionExecutionIdGenerator executionIdGenerator,
+            ObjectProvider<TransactionEventListener> listeners) {
         // 监听器按 Spring Order 收集，统一创建显式 TransactionExecutor 门面。
         List<TransactionEventListener> orderedListeners = listeners.orderedStream().toList();
         return new DefaultTransactionExecutor(provider, executionIdGenerator, orderedListeners);

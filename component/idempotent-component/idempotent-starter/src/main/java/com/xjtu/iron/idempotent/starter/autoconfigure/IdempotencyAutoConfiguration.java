@@ -174,8 +174,10 @@ public class IdempotencyAutoConfiguration {
     @ConditionalOnBean(MyBatisAccessResolver.class)
     @ConditionalOnProperty(prefix = "xjtu.iron.idempotent.mybatis", name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(name = "mybatisIdempotencyRepository")
-    public IdempotencyRepository mybatisIdempotencyRepository(IdempotencyPhysicalRouteResolver routeResolver,
-        MyBatisAccessResolver accessResolver) {
+    public IdempotencyRepository mybatisIdempotencyRepository(
+            IdempotencyPhysicalRouteResolver routeResolver,
+            MyBatisAccessResolver accessResolver
+    ) {
         return new RoutedMyBatisIdempotencyRepository(routeResolver, accessResolver);
     }
 
@@ -183,10 +185,13 @@ public class IdempotencyAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public IdempotencyRepositoryRegistry idempotencyRepositoryRegistry(List<IdempotencyRepository> repositories,
-        IdempotencyProperties properties) {
-        return new DefaultIdempotencyRepositoryRegistry(repositories, properties.getDefaultWindowedRepository(),
-            properties.getDefaultDurableRepository());
+    public IdempotencyRepositoryRegistry idempotencyRepositoryRegistry(
+            List<IdempotencyRepository> repositories,
+            IdempotencyProperties properties) {
+        return new DefaultIdempotencyRepositoryRegistry(
+                repositories,
+                properties.getDefaultWindowedRepository(),
+                properties.getDefaultDurableRepository());
     }
 
     /**
@@ -203,22 +208,37 @@ public class IdempotencyAutoConfiguration {
         // 内建默认策略可以被同名 application.yml 策略显式覆盖，
         // 避免“用户想调整默认策略却因为重复 name 启动失败”。
         if (!properties.getPolicies().containsKey("windowed-default")) {
-            policies.add(IdempotencyPolicy.builder().name("windowed-default").mode(IdempotencyMode.WINDOWED)
-                .repositoryName(properties.getDefaultWindowedRepository()).processingTimeout(properties.getProcessingTimeout())
-                .idempotencyWindow(windowed.getIdempotencyWindow()).windowPolicy(windowed.getWindowPolicy())
-                .recordRetentionTtl(windowed.getRecordRetentionTtl()).recoveryPolicy(
-                    IdempotencyRecoveryPolicy.builder().mode(windowed.getRecoveryMode())
-                        .recoverProcessingTimeout(windowed.isRecoverProcessingTimeout()).recoverRetryableFailure(windowed.isRecoverFailed())
-                        .build()).lockOptions(globalLock).build());
+            policies.add(IdempotencyPolicy.builder()
+                    .name("windowed-default")
+                    .mode(IdempotencyMode.WINDOWED)
+                    .repositoryName(properties.getDefaultWindowedRepository())
+                    .processingTimeout(properties.getProcessingTimeout())
+                    .idempotencyWindow(windowed.getIdempotencyWindow())
+                    .windowPolicy(windowed.getWindowPolicy())
+                    .recordRetentionTtl(windowed.getRecordRetentionTtl())
+                    .recoveryPolicy(IdempotencyRecoveryPolicy.builder()
+                            .mode(windowed.getRecoveryMode())
+                            .recoverProcessingTimeout(windowed.isRecoverProcessingTimeout())
+                            .recoverRetryableFailure(windowed.isRecoverFailed())
+                            .build())
+                    .lockOptions(globalLock)
+                    .build());
         }
 
         IdempotencyProperties.Durable durable = properties.getDurable();
         if (!properties.getPolicies().containsKey("durable-default")) {
-            policies.add(IdempotencyPolicy.builder().name("durable-default").mode(IdempotencyMode.DURABLE)
-                .repositoryName(properties.getDefaultDurableRepository()).processingTimeout(properties.getProcessingTimeout())
-                .recoveryPolicy(IdempotencyRecoveryPolicy.builder().mode(durable.getRecoveryMode())
-                    .recoverProcessingTimeout(durable.isRecoverProcessingTimeout()).recoverRetryableFailure(durable.isRecoverFailed())
-                    .build()).lockOptions(globalLock).build());
+            policies.add(IdempotencyPolicy.builder()
+                    .name("durable-default")
+                    .mode(IdempotencyMode.DURABLE)
+                    .repositoryName(properties.getDefaultDurableRepository())
+                    .processingTimeout(properties.getProcessingTimeout())
+                    .recoveryPolicy(IdempotencyRecoveryPolicy.builder()
+                            .mode(durable.getRecoveryMode())
+                            .recoverProcessingTimeout(durable.isRecoverProcessingTimeout())
+                            .recoverRetryableFailure(durable.isRecoverFailed())
+                            .build())
+                    .lockOptions(globalLock)
+                    .build());
         }
 
         for (Map.Entry<String, IdempotencyProperties.Policy> entry : properties.getPolicies().entrySet()) {
@@ -235,26 +255,44 @@ public class IdempotencyAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(IdempotencyExecutor.class)
-    public IdempotencyExecutor idempotencyExecutor(IdempotencyRepositoryRegistry repositoryRegistry,
-        IdempotencyPolicyRegistry policyRegistry, IdempotencyOwnerTokenGenerator ownerGenerator,
-        IdempotencyFailureClassifier failureClassifier, ObjectProvider<DistributedLockClient> lockClient,
-        ObjectProvider<IdempotencyTransactionCoordinator> transactionCoordinator, IdempotencyStateMachine stateMachine,
-        ObjectProvider<IdempotencyEventPublisher> eventPublisher, ObjectProvider<IdempotencyMetrics> metrics, Clock clock) {
+    public IdempotencyExecutor idempotencyExecutor(
+            IdempotencyRepositoryRegistry repositoryRegistry,
+            IdempotencyPolicyRegistry policyRegistry,
+            IdempotencyOwnerTokenGenerator ownerGenerator,
+            IdempotencyFailureClassifier failureClassifier,
+            ObjectProvider<DistributedLockClient> lockClient,
+            ObjectProvider<IdempotencyTransactionCoordinator> transactionCoordinator,
+            IdempotencyStateMachine stateMachine,
+            ObjectProvider<IdempotencyEventPublisher> eventPublisher,
+            ObjectProvider<IdempotencyMetrics> metrics,
+            Clock clock) {
 
-        return new DefaultIdempotencyExecutor(repositoryRegistry, policyRegistry, ownerGenerator, failureClassifier,
-            lockClient.getIfAvailable(), transactionCoordinator.getIfAvailable(), stateMachine,
-            eventPublisher.getIfAvailable(IdempotencyEventPublisher::noop), metrics.getIfAvailable(IdempotencyMetrics::noop), clock);
+        return new DefaultIdempotencyExecutor(
+                repositoryRegistry,
+                policyRegistry,
+                ownerGenerator,
+                failureClassifier,
+                lockClient.getIfAvailable(),
+                transactionCoordinator.getIfAvailable(),
+                stateMachine,
+                eventPublisher.getIfAvailable(IdempotencyEventPublisher::noop),
+                metrics.getIfAvailable(IdempotencyMetrics::noop),
+                clock);
     }
 
     @Bean
     @ConditionalOnMissingBean(IdempotencyRecoveryQueryService.class)
-    public IdempotencyRecoveryQueryService idempotencyRecoveryQueryService(IdempotencyRepositoryRegistry registry,
-        IdempotencyPolicyRegistry policyRegistry) {
+    public IdempotencyRecoveryQueryService idempotencyRecoveryQueryService(
+            IdempotencyRepositoryRegistry registry,
+            IdempotencyPolicyRegistry policyRegistry) {
         return new DefaultIdempotencyRecoveryQueryService(registry, policyRegistry);
     }
 
-    private IdempotencyPolicy buildNamedPolicy(String name, IdempotencyProperties.Policy source, IdempotencyProperties root,
-        IdempotencyLockOptions globalLock) {
+    private IdempotencyPolicy buildNamedPolicy(
+            String name,
+            IdempotencyProperties.Policy source,
+            IdempotencyProperties root,
+            IdempotencyLockOptions globalLock) {
 
         IdempotencyMode mode;
         if (source.getMode() != null) {
@@ -267,34 +305,51 @@ public class IdempotencyAutoConfiguration {
         }
         boolean windowed = mode.isWindowed();
 
-        Duration processingTimeout = source.getProcessingTimeout() == null ? root.getProcessingTimeout() : source.getProcessingTimeout();
+        Duration processingTimeout = source.getProcessingTimeout() == null
+                ? root.getProcessingTimeout() : source.getProcessingTimeout();
 
         IdempotencyRecoveryMode recoveryMode = source.getRecoveryMode();
         if (recoveryMode == null) {
-            recoveryMode = windowed ? root.getWindowed().getRecoveryMode() : root.getDurable().getRecoveryMode();
+            recoveryMode = windowed
+                    ? root.getWindowed().getRecoveryMode()
+                    : root.getDurable().getRecoveryMode();
         }
 
-        boolean recoverProcessing = source.getRecoverProcessingTimeout() != null ? source.getRecoverProcessingTimeout() :
-            (windowed ? root.getWindowed().isRecoverProcessingTimeout() : root.getDurable().isRecoverProcessingTimeout());
+        boolean recoverProcessing = source.getRecoverProcessingTimeout() != null
+                ? source.getRecoverProcessingTimeout()
+                : (windowed ? root.getWindowed().isRecoverProcessingTimeout() : root.getDurable().isRecoverProcessingTimeout());
 
-        boolean recoverFailed = source.getRecoverFailed() != null ? source.getRecoverFailed() :
-            (windowed ? root.getWindowed().isRecoverFailed() : root.getDurable().isRecoverFailed());
+        boolean recoverFailed = source.getRecoverFailed() != null
+                ? source.getRecoverFailed()
+                : (windowed ? root.getWindowed().isRecoverFailed() : root.getDurable().isRecoverFailed());
 
         // 命名 Policy 的 null 字段统一在这里继承全局默认值，Core 层拿到的是已闭合的稳定策略。
-        IdempotencyPolicy.Builder builder = IdempotencyPolicy.builder().name(name).mode(mode).namespace(source.getNamespace())
-            .repositoryName(
-                source.getRepositoryName() == null ? (windowed ? root.getDefaultWindowedRepository() : root.getDefaultDurableRepository()) :
-                    source.getRepositoryName()).processingTimeout(processingTimeout).recoveryPolicy(
-                IdempotencyRecoveryPolicy.builder().mode(recoveryMode).recoverProcessingTimeout(recoverProcessing)
-                    .recoverRetryableFailure(recoverFailed).build()).lockOptions(mergeLock(source, globalLock));
+        IdempotencyPolicy.Builder builder = IdempotencyPolicy.builder()
+                .name(name)
+                .mode(mode)
+                .namespace(source.getNamespace())
+                .repositoryName(source.getRepositoryName() == null
+                        ? (windowed ? root.getDefaultWindowedRepository() : root.getDefaultDurableRepository())
+                        : source.getRepositoryName())
+                .processingTimeout(processingTimeout)
+                .recoveryPolicy(IdempotencyRecoveryPolicy.builder()
+                        .mode(recoveryMode)
+                        .recoverProcessingTimeout(recoverProcessing)
+                        .recoverRetryableFailure(recoverFailed)
+                        .build())
+                .lockOptions(mergeLock(source, globalLock));
 
         if (windowed) {
             // DURABLE 不设置 idempotencyWindow；WINDOWED 才需要窗口与保留时间。
             builder.idempotencyWindow(
-                    source.getIdempotencyWindow() == null ? root.getWindowed().getIdempotencyWindow() : source.getIdempotencyWindow())
-                .windowPolicy(source.getWindowPolicy() == null ? root.getWindowed().getWindowPolicy() : source.getWindowPolicy())
-                .recordRetentionTtl(
-                    source.getRecordRetentionTtl() == null ? root.getWindowed().getRecordRetentionTtl() : source.getRecordRetentionTtl());
+                            source.getIdempotencyWindow() == null
+                                    ? root.getWindowed().getIdempotencyWindow()
+                                    : source.getIdempotencyWindow())
+                    .windowPolicy(source.getWindowPolicy() == null ? root.getWindowed().getWindowPolicy() : source.getWindowPolicy())
+                    .recordRetentionTtl(
+                            source.getRecordRetentionTtl() == null
+                                    ? root.getWindowed().getRecordRetentionTtl()
+                                    : source.getRecordRetentionTtl());
         }
 
         return builder.build();
@@ -303,18 +358,28 @@ public class IdempotencyAutoConfiguration {
     private IdempotencyLockOptions mergeLock(IdempotencyProperties.Policy policy, IdempotencyLockOptions global) {
 
         // lockEnabled=null 表示继承全局短锁开关；false 是显式关闭当前 Policy 短锁。
-        boolean enabled = policy.getLockEnabled() == null ? global.isEnabled() : policy.getLockEnabled();
+        boolean enabled = policy.getLockEnabled() == null
+                ? global.isEnabled() : policy.getLockEnabled();
 
-        return IdempotencyLockOptions.builder().enabled(enabled)
-            .providerName(policy.getLockProviderName() == null ? global.getProviderName() : policy.getLockProviderName())
-            .waitTime(policy.getLockWaitTime() == null ? global.getWaitTime() : policy.getLockWaitTime())
-            .leaseTime(policy.getLockLeaseTime() == null ? global.getLeaseTime() : policy.getLockLeaseTime()).fallbackToStateOnFailure(
-                policy.getLockFallbackToStateOnFailure() == null ? global.isFallbackToStateOnFailure() :
-                    policy.getLockFallbackToStateOnFailure()).build();
+        return IdempotencyLockOptions.builder()
+                .enabled(enabled)
+                .providerName(policy.getLockProviderName() == null ? global.getProviderName() : policy.getLockProviderName())
+                .waitTime(policy.getLockWaitTime() == null ? global.getWaitTime() : policy.getLockWaitTime())
+                .leaseTime(policy.getLockLeaseTime() == null ? global.getLeaseTime() : policy.getLockLeaseTime())
+                .fallbackToStateOnFailure(
+                        policy.getLockFallbackToStateOnFailure() == null
+                                ? global.isFallbackToStateOnFailure()
+                                : policy.getLockFallbackToStateOnFailure())
+                .build();
     }
 
     private IdempotencyLockOptions lockOptions(IdempotencyProperties.Lock lock) {
-        return IdempotencyLockOptions.builder().enabled(lock.isEnabled()).providerName(lock.getProviderName()).waitTime(lock.getWaitTime())
-            .leaseTime(lock.getLeaseTime()).fallbackToStateOnFailure(lock.isFallbackToStateOnFailure()).build();
+        return IdempotencyLockOptions.builder()
+                .enabled(lock.isEnabled())
+                .providerName(lock.getProviderName())
+                .waitTime(lock.getWaitTime())
+                .leaseTime(lock.getLeaseTime())
+                .fallbackToStateOnFailure(lock.isFallbackToStateOnFailure())
+                .build();
     }
 }

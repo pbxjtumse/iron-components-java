@@ -21,7 +21,11 @@ public class RedisCacheEventPublisher implements CacheEventPublisher {
 
     private final String channel;
 
-    public RedisCacheEventPublisher(StringRedisTemplate stringRedisTemplate, RedisCacheEventSerializer serializer, String channel) {
+    public RedisCacheEventPublisher(
+            StringRedisTemplate stringRedisTemplate,
+            RedisCacheEventSerializer serializer,
+            String channel
+    ) {
         this.stringRedisTemplate = stringRedisTemplate;
         this.serializer = serializer;
         this.channel = channel;
@@ -31,8 +35,13 @@ public class RedisCacheEventPublisher implements CacheEventPublisher {
     public void publish(CacheEvent event) {
         String message = serializer.serialize(event);
         log.info("[CACHE-EVENT-PUBLISH] channel={}, eventVersion={}, eventType={}, fullKey={}, sourceInstanceId={}, traceId={}, spanId={}",
-            channel, event.getEventVersion(), event.getEventType(), event.getFullKey(), event.getSourceInstanceId(), event.getTraceId(),
-            event.getSpanId());
+                channel,
+                event.getEventVersion(),
+                event.getEventType(),
+                event.getFullKey(),
+                event.getSourceInstanceId(),
+                event.getTraceId(),
+                event.getSpanId());
         stringRedisTemplate.convertAndSend(channel, message);
     }
 }

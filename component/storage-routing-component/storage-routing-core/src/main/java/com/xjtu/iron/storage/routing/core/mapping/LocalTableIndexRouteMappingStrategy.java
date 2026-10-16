@@ -4,7 +4,6 @@ import com.xjtu.iron.storage.routing.api.exception.StorageRoutingException;
 import com.xjtu.iron.storage.routing.api.mapping.RouteMappingStrategy;
 import com.xjtu.iron.storage.routing.api.route.PhysicalStorageLocation;
 import com.xjtu.iron.storage.routing.api.route.ShardRouteInfo;
-
 import java.util.Locale;
 import java.util.Objects;
 
@@ -24,11 +23,20 @@ public final class LocalTableIndexRouteMappingStrategy implements RouteMappingSt
     private final int dataSourceIndexWidth;
     private final int tableIndexWidth;
 
-    public LocalTableIndexRouteMappingStrategy(String dataSourcePrefix, String tablePrefix, int tableIndexWidth) {
+    public LocalTableIndexRouteMappingStrategy(
+            String dataSourcePrefix,
+            String tablePrefix,
+            int tableIndexWidth
+    ) {
         this(dataSourcePrefix, tablePrefix, tableIndexWidth, tableIndexWidth);
     }
 
-    public LocalTableIndexRouteMappingStrategy(String dataSourcePrefix, String tablePrefix, int dataSourceIndexWidth, int tableIndexWidth) {
+    public LocalTableIndexRouteMappingStrategy(
+            String dataSourcePrefix,
+            String tablePrefix,
+            int dataSourceIndexWidth,
+            int tableIndexWidth
+    ) {
         if (dataSourcePrefix == null || dataSourcePrefix.isBlank() || tablePrefix == null || tablePrefix.isBlank()) {
             throw new StorageRoutingException("dataSourcePrefix and tablePrefix must not be blank");
         }
@@ -47,8 +55,10 @@ public final class LocalTableIndexRouteMappingStrategy implements RouteMappingSt
     @Override
     public PhysicalStorageLocation map(ShardRouteInfo shardRouteInfo) {
         Objects.requireNonNull(shardRouteInfo, "shardRouteInfo must not be null");
-        return PhysicalStorageLocation.of(dataSourcePrefix + format(shardRouteInfo.databaseIndex(), dataSourceIndexWidth),
-            tablePrefix + "_" + format(shardRouteInfo.localTableIndex(), tableIndexWidth));
+        return PhysicalStorageLocation.of(
+                dataSourcePrefix + format(shardRouteInfo.databaseIndex(), dataSourceIndexWidth),
+                tablePrefix + "_" + format(shardRouteInfo.localTableIndex(), tableIndexWidth)
+        );
     }
 
     private String format(int value, int width) {

@@ -72,8 +72,9 @@ final class RejectedTaskSupport {
      * @return 已完成拒绝通知的异常对象
      */
     static RejectedExecutionException reject(Runnable runnable, String message, Throwable cause) {
-        RejectedExecutionException exception =
-            cause == null ? new RejectedExecutionException(message) : new RejectedExecutionException(message, cause);
+        RejectedExecutionException exception = cause == null
+                ? new RejectedExecutionException(message)
+                : new RejectedExecutionException(message, cause);
 
         if (runnable instanceof RejectedTaskAware rejectedTaskAware) {
             try {

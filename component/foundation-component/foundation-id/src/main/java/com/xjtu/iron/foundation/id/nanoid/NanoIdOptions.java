@@ -7,7 +7,8 @@ import java.util.Set;
 /** Nano ID 字符表与输出长度配置。 */
 public final class NanoIdOptions {
 
-    public static final String DEFAULT_ALPHABET = "_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    public static final String DEFAULT_ALPHABET =
+            "_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     public static final int DEFAULT_SIZE = 21;
 
     /** 允许出现在输出中的唯一字符集合。 */
@@ -41,15 +42,22 @@ public final class NanoIdOptions {
     }
 
     private static String validateAlphabet(String alphabet) {
-        String actualAlphabet = Objects.requireNonNull(alphabet, "alphabet must not be null");
+        String actualAlphabet = Objects.requireNonNull(
+                alphabet,
+                "alphabet must not be null"
+        );
         if (actualAlphabet.isEmpty() || actualAlphabet.length() > 256) {
-            throw new IllegalArgumentException("alphabet length must be between 1 and 256");
+            throw new IllegalArgumentException(
+                    "alphabet length must be between 1 and 256"
+            );
         }
 
         Set<Character> distinct = new HashSet<>();
         for (int index = 0; index < actualAlphabet.length(); index++) {
             if (!distinct.add(actualAlphabet.charAt(index))) {
-                throw new IllegalArgumentException("alphabet must not contain duplicate characters");
+                throw new IllegalArgumentException(
+                        "alphabet must not contain duplicate characters"
+                );
             }
         }
         return actualAlphabet;

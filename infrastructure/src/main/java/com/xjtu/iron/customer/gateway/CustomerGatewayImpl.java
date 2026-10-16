@@ -12,9 +12,9 @@ public class CustomerGatewayImpl implements CustomerGateway {
     @Autowired
     private CustomerMapper customerMapper;
 
-    public Customer getByById(String customerId) {
-        CustomerDO customerDO = customerMapper.getById(customerId);
-        //Convert to Customer
-        return null;
+    public Customer getByById(String customerId){
+      CustomerDO customerDO = customerMapper.getById(customerId);
+      //Convert to Customer
+      return null;
     }
 }

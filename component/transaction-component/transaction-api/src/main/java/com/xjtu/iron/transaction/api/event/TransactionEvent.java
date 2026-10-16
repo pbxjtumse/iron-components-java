@@ -24,8 +24,14 @@ public final class TransactionEvent {
     private final Duration elapsed;
     private final Throwable failure;
 
-    public TransactionEvent(TransactionEventType type, String executionId, String transactionName, TransactionStage stage,
-        TransactionOutcome outcome, Duration elapsed, Throwable failure) {
+    public TransactionEvent(
+            TransactionEventType type,
+            String executionId,
+            String transactionName,
+            TransactionStage stage,
+            TransactionOutcome outcome,
+            Duration elapsed,
+            Throwable failure) {
         this.type = type;
         this.executionId = executionId;
         this.transactionName = transactionName;
@@ -35,31 +41,11 @@ public final class TransactionEvent {
         this.failure = failure;
     }
 
-    public TransactionEventType type() {
-        return type;
-    }
-
-    public String executionId() {
-        return executionId;
-    }
-
-    public String transactionName() {
-        return transactionName;
-    }
-
-    public TransactionStage stage() {
-        return stage;
-    }
-
-    public TransactionOutcome outcome() {
-        return outcome;
-    }
-
-    public Duration elapsed() {
-        return elapsed;
-    }
-
-    public Throwable failure() {
-        return failure;
-    }
+    public TransactionEventType type() { return type; }
+    public String executionId() { return executionId; }
+    public String transactionName() { return transactionName; }
+    public TransactionStage stage() { return stage; }
+    public TransactionOutcome outcome() { return outcome; }
+    public Duration elapsed() { return elapsed; }
+    public Throwable failure() { return failure; }
 }

@@ -9,8 +9,7 @@ import java.util.Optional;
  */
 public final class IronAnnotations {
 
-    private IronAnnotations() {
-    }
+    private IronAnnotations() {}
 
     public static <A extends Annotation> Optional<A> findAnnotation(AnnotatedElement element, Class<A> annotationType) {
         if (element == null || annotationType == null) {

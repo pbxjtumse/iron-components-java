@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public final class RecordingAsyncErrorClassifier implements AsyncErrorClassifier {
+public final class RecordingAsyncErrorClassifier
+        implements AsyncErrorClassifier {
 
-    private final List<AsyncErrorClassificationContext> contexts = new CopyOnWriteArrayList<>();
+    private final List<AsyncErrorClassificationContext> contexts =
+            new CopyOnWriteArrayList<>();
 
     private volatile RuntimeException throwableOnClassify;
 
@@ -23,8 +25,13 @@ public final class RecordingAsyncErrorClassifier implements AsyncErrorClassifier
         }
 
         return AsyncError.builder()
-            .classification(AsyncErrorClassification.of(AsyncErrorCategory.UNKNOWN, AsyncErrorReason.UNKNOWN, context.getStage()))
-            .exception(ExceptionInfo.from(context.getThrowable())).build();
+                .classification(AsyncErrorClassification.of(
+                        AsyncErrorCategory.UNKNOWN,
+                        AsyncErrorReason.UNKNOWN,
+                        context.getStage()
+                ))
+                .exception(ExceptionInfo.from(context.getThrowable()))
+                .build();
     }
 
     public List<AsyncErrorClassificationContext> contexts() {

@@ -1,5 +1,4 @@
 package com.xjtu.iron.message.api.model;
-
 import java.util.Objects;
 
 /**
@@ -29,7 +28,11 @@ public final class MessageContext {
     /**
      * 统一标准化可选上下文字段。
      */
-    public MessageContext(String source, String correlationId, String causationId, String tenantId) {
+    public MessageContext(
+        String source,
+        String correlationId,
+        String causationId,
+        String tenantId) {
         // source 允许为空，但不保留无意义首尾空白。
         source = normalize(source);
         // correlationId 允许发送前为空，由 core 在发送前补齐。
@@ -38,7 +41,7 @@ public final class MessageContext {
         causationId = normalize(causationId);
         // 非多租户系统 tenantId 可以为空。
         tenantId = normalize(tenantId);
-
+    
         // 保存完成校验和标准化后的 source。
         this.source = source;
         // 保存完成校验和标准化后的 correlationId。
@@ -89,7 +92,11 @@ public final class MessageContext {
      */
     public Builder toBuilder() {
         // 将当前不可变值复制到可变 Builder，便于只调整单个字段。
-        return new Builder().source(source).correlationId(correlationId).causationId(causationId).tenantId(tenantId);
+        return new Builder()
+                .source(source)
+                .correlationId(correlationId)
+                .causationId(causationId)
+                .tenantId(tenantId);
     }
 
     /**
@@ -171,7 +178,6 @@ public final class MessageContext {
             return new MessageContext(source, correlationId, causationId, tenantId);
         }
     }
-
     /**
      * 返回生产消息的应用或服务标识；允许为空，由 core 根据组件配置补齐。
      *
@@ -230,8 +236,10 @@ public final class MessageContext {
         }
         // 转换为当前类型后逐字段比较。
         MessageContext other = (MessageContext) object;
-        return Objects.equals(source, other.source) && Objects.equals(correlationId, other.correlationId) &&
-            Objects.equals(causationId, other.causationId) && Objects.equals(tenantId, other.tenantId);
+        return Objects.equals(source, other.source)
+                && Objects.equals(correlationId, other.correlationId)
+                && Objects.equals(causationId, other.causationId)
+                && Objects.equals(tenantId, other.tenantId);
     }
 
     /**
@@ -253,8 +261,12 @@ public final class MessageContext {
     @Override
     public String toString() {
         // 拼接全部字段，保持值对象可诊断。
-        return "MessageContext{" + "source=" + source + ", correlationId=" + correlationId + ", causationId=" + causationId +
-            ", tenantId=" + tenantId + '}';
+        return "MessageContext{" +
+                "source=" + source +
+                ", correlationId=" + correlationId +
+                ", causationId=" + causationId +
+                ", tenantId=" + tenantId +
+                '}';
     }
 
 }

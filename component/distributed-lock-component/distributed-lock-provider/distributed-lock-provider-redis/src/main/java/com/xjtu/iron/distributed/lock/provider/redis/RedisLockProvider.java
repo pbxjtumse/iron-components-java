@@ -41,9 +41,7 @@ public final class RedisLockProvider implements LockProvider {
     }
 
     @Override
-    public String providerName() {
-        return RedisLockConstants.PROVIDER_NAME;
-    }
+    public String providerName() { return RedisLockConstants.PROVIDER_NAME; }
 
     @Override
     public LockAcquireResponse acquire(LockAcquireRequest request) {
@@ -52,18 +50,23 @@ public final class RedisLockProvider implements LockProvider {
         String fencingKey = keyBuilder.buildFencingKey(request.getNamespace(), request.getLockName());
         List<String> keys = Arrays.asList(lockKey, fencingKey);
         List<String> args = Arrays.asList(request.getOwnerToken(), String.valueOf(request.getOptions().getLeaseTime().toMillis()),
-            request.isNativeFencingRequired() ? "1" : "0");
+                request.isNativeFencingRequired() ? "1" : "0");
         try {
-            RedisScriptResultParser.AcquireResult result =
-                resultParser.parseAcquire(scriptExecutor.execute(RedisLockScripts.ACQUIRE, keys, args));
+            RedisScriptResultParser.AcquireResult result = resultParser.parseAcquire(scriptExecutor.execute(RedisLockScripts.ACQUIRE, keys, args));
             if (result.getFlag() == 1L) {
                 Instant acquiredAt = Instant.now();
-                LockLease lease =
-                    LockLease.builder().providerName(providerName()).namespace(request.getNamespace()).lockName(request.getLockName())
-                        .lockKey(lockKey).ownerToken(request.getOwnerToken()).fencingToken(result.getFencingToken())
+                LockLease lease = LockLease.builder()
+                        .providerName(providerName())
+                        .namespace(request.getNamespace())
+                        .lockName(request.getLockName())
+                        .lockKey(lockKey)
+                        .ownerToken(request.getOwnerToken())
+                        .fencingToken(result.getFencingToken())
                         .fencingTokenProviderName(result.getFencingToken() == null ? null : providerName())
-                        .leaseTime(request.getOptions().getLeaseTime()).acquiredAt(acquiredAt)
-                        .expireAt(acquiredAt.plus(request.getOptions().getLeaseTime())).build();
+                        .leaseTime(request.getOptions().getLeaseTime())
+                        .acquiredAt(acquiredAt)
+                        .expireAt(acquiredAt.plus(request.getOptions().getLeaseTime()))
+                        .build();
                 return LockAcquireResponse.acquired(lease);
             }
             Duration ttl = Duration.ofMillis(Math.max(0L, result.getRemainingTtlMillis()));
@@ -77,14 +80,10 @@ public final class RedisLockProvider implements LockProvider {
     public LockReleaseResponse release(LockReleaseRequest request) {
         Objects.requireNonNull(request, "request must not be null");
         try {
-            long result = resultParser.parseLong(scriptExecutor.execute(RedisLockScripts.RELEASE, Arrays.asList(request.getLockKey()),
-                Arrays.asList(request.getOwnerToken())));
-            if (result == 1L) {
-                return LockReleaseResponse.released();
-            }
-            if (result == -1L) {
-                return LockReleaseResponse.notFound();
-            }
+            long result = resultParser.parseLong(scriptExecutor.execute(RedisLockScripts.RELEASE,
+                    Arrays.asList(request.getLockKey()), Arrays.asList(request.getOwnerToken())));
+            if (result == 1L) { return LockReleaseResponse.released(); }
+            if (result == -1L) { return LockReleaseResponse.notFound(); }
             return LockReleaseResponse.notOwner();
         } catch (Throwable e) {
             return LockReleaseResponse.failed(e);
@@ -95,14 +94,11 @@ public final class RedisLockProvider implements LockProvider {
     public LockRenewResponse renew(LockRenewRequest request) {
         Objects.requireNonNull(request, "request must not be null");
         try {
-            long result = resultParser.parseLong(scriptExecutor.execute(RedisLockScripts.RENEW, Arrays.asList(request.getLockKey()),
-                Arrays.asList(request.getOwnerToken(), String.valueOf(request.getLeaseTime().toMillis()))));
-            if (result == 1L) {
-                return LockRenewResponse.renewed(Instant.now().plus(request.getLeaseTime()));
-            }
-            if (result == -1L) {
-                return LockRenewResponse.notFound();
-            }
+            long result = resultParser.parseLong(scriptExecutor.execute(RedisLockScripts.RENEW,
+                    Arrays.asList(request.getLockKey()),
+                    Arrays.asList(request.getOwnerToken(), String.valueOf(request.getLeaseTime().toMillis()))));
+            if (result == 1L) { return LockRenewResponse.renewed(Instant.now().plus(request.getLeaseTime())); }
+            if (result == -1L) { return LockRenewResponse.notFound(); }
             return LockRenewResponse.notOwner();
         } catch (Throwable e) {
             return LockRenewResponse.failed(e);
@@ -113,14 +109,10 @@ public final class RedisLockProvider implements LockProvider {
     public LockCheckResponse check(LockCheckRequest request) {
         Objects.requireNonNull(request, "request must not be null");
         try {
-            long result = resultParser.parseLong(scriptExecutor.execute(RedisLockScripts.CHECK, Arrays.asList(request.getLockKey()),
-                Arrays.asList(request.getOwnerToken())));
-            if (result == 1L) {
-                return LockCheckResponse.held();
-            }
-            if (result == -1L) {
-                return LockCheckResponse.notFound();
-            }
+            long result = resultParser.parseLong(scriptExecutor.execute(RedisLockScripts.CHECK,
+                    Arrays.asList(request.getLockKey()), Arrays.asList(request.getOwnerToken())));
+            if (result == 1L) { return LockCheckResponse.held(); }
+            if (result == -1L) { return LockCheckResponse.notFound(); }
             return LockCheckResponse.notOwner();
         } catch (Throwable e) {
             return LockCheckResponse.failed(e);
@@ -129,7 +121,13 @@ public final class RedisLockProvider implements LockProvider {
 
     @Override
     public LockProviderCapabilities capabilities() {
-        return LockProviderCapabilities.builder().autoRenewMode(LockAutoRenewMode.CORE_MANAGED).manualRenewSupported(true)
-            .fencingTokenSupported(true).nativeWaitSupported(false).fairLockSupported(false).reentrantSupported(false).build();
+        return LockProviderCapabilities.builder()
+                .autoRenewMode(LockAutoRenewMode.CORE_MANAGED)
+                .manualRenewSupported(true)
+                .fencingTokenSupported(true)
+                .nativeWaitSupported(false)
+                .fairLockSupported(false)
+                .reentrantSupported(false)
+                .build();
     }
 }

@@ -43,9 +43,17 @@ public final class MessageIdempotencyOptions {
     /** 幂等存储路由提示，不是表名；真实表由 idempotent-storage 决定。 */
     private final String storeName;
 
-    public MessageIdempotencyOptions(boolean enabled, MessageIdempotencyMode mode, String namespace, String scene, String keyResolverBean,
-        Duration processingTimeout, Duration recordRetention, int maxAttempts, MessageIdempotencyFailurePolicy failurePolicy,
-        String storeName) {
+    public MessageIdempotencyOptions(
+            boolean enabled,
+            MessageIdempotencyMode mode,
+            String namespace,
+            String scene,
+            String keyResolverBean,
+            Duration processingTimeout,
+            Duration recordRetention,
+            int maxAttempts,
+            MessageIdempotencyFailurePolicy failurePolicy,
+            String storeName) {
         this.enabled = enabled;
         this.mode = mode == null ? MessageIdempotencyMode.MESSAGE_ID : mode;
         this.namespace = textOrDefault(namespace, "message-consume");
@@ -59,13 +67,31 @@ public final class MessageIdempotencyOptions {
     }
 
     public static MessageIdempotencyOptions disabled() {
-        return new MessageIdempotencyOptions(false, MessageIdempotencyMode.NONE, "message-consume", null, null, DEFAULT_PROCESSING_TIMEOUT,
-            DEFAULT_RECORD_RETENTION, 3, MessageIdempotencyFailurePolicy.RETRY, "default");
+        return new MessageIdempotencyOptions(
+                false,
+                MessageIdempotencyMode.NONE,
+                "message-consume",
+                null,
+                null,
+                DEFAULT_PROCESSING_TIMEOUT,
+                DEFAULT_RECORD_RETENTION,
+                3,
+                MessageIdempotencyFailurePolicy.RETRY,
+                "default");
     }
 
     public static MessageIdempotencyOptions messageId() {
-        return new MessageIdempotencyOptions(true, MessageIdempotencyMode.MESSAGE_ID, "message-consume", null, null,
-            DEFAULT_PROCESSING_TIMEOUT, DEFAULT_RECORD_RETENTION, 3, MessageIdempotencyFailurePolicy.RETRY, "default");
+        return new MessageIdempotencyOptions(
+                true,
+                MessageIdempotencyMode.MESSAGE_ID,
+                "message-consume",
+                null,
+                null,
+                DEFAULT_PROCESSING_TIMEOUT,
+                DEFAULT_RECORD_RETENTION,
+                3,
+                MessageIdempotencyFailurePolicy.RETRY,
+                "default");
     }
 
     public boolean enabled() {

@@ -21,7 +21,10 @@ public final class MessageHandlerInvoker {
         this.classifier = Objects.requireNonNull(classifier);
     }
 
-    public <T> ConsumeDecision invoke(MessageEnvelope<T> message, ConsumeContext context, MessageHandler<T> handler) {
+    public <T> ConsumeDecision invoke(
+            MessageEnvelope<T> message,
+            ConsumeContext context,
+            MessageHandler<T> handler) {
         try {
             ConsumeDecision decision = handler.handle(message, context);
             return decision == null ? ConsumeDecision.RETRY : decision;

@@ -56,47 +56,18 @@ class DefaultDistributedLockClientTest {
         private final boolean acquire;
         private final LockReleaseResponse releaseResponse;
         private int releaseCount;
-
-        private FakeProvider(boolean acquire, LockReleaseResponse releaseResponse) {
-            this.acquire = acquire;
-            this.releaseResponse = releaseResponse;
-        }
-
-        @Override
-        public String providerName() {
-            return "redis";
-        }
-
-        @Override
-        public LockAcquireResponse acquire(LockAcquireRequest request) {
-            if (!acquire) {
-                return LockAcquireResponse.notAcquired(Duration.ofSeconds(1));
-            }
-            LockLease lease =
-                LockLease.builder().providerName("redis").namespace(request.getNamespace()).lockName(request.getLockName()).lockKey("key")
-                    .ownerToken(request.getOwnerToken()).leaseTime(request.getOptions().getLeaseTime()).acquiredAt(Instant.now()).build();
+        private FakeProvider(boolean acquire, LockReleaseResponse releaseResponse) { this.acquire = acquire; this.releaseResponse = releaseResponse; }
+        @Override public String providerName() { return "redis"; }
+        @Override public LockAcquireResponse acquire(LockAcquireRequest request) {
+            if (!acquire) { return LockAcquireResponse.notAcquired(Duration.ofSeconds(1)); }
+            LockLease lease = LockLease.builder().providerName("redis").namespace(request.getNamespace())
+                    .lockName(request.getLockName()).lockKey("key").ownerToken(request.getOwnerToken())
+                    .leaseTime(request.getOptions().getLeaseTime()).acquiredAt(Instant.now()).build();
             return LockAcquireResponse.acquired(lease);
         }
-
-        @Override
-        public LockReleaseResponse release(LockReleaseRequest request) {
-            releaseCount++;
-            return releaseResponse;
-        }
-
-        @Override
-        public LockRenewResponse renew(LockRenewRequest request) {
-            return LockRenewResponse.renewed(Instant.now());
-        }
-
-        @Override
-        public LockCheckResponse check(LockCheckRequest request) {
-            return LockCheckResponse.held();
-        }
-
-        @Override
-        public LockProviderCapabilities capabilities() {
-            return LockProviderCapabilities.builder().autoRenewSupported(true).build();
-        }
+        @Override public LockReleaseResponse release(LockReleaseRequest request) { releaseCount++; return releaseResponse; }
+        @Override public LockRenewResponse renew(LockRenewRequest request) { return LockRenewResponse.renewed(Instant.now()); }
+        @Override public LockCheckResponse check(LockCheckRequest request) { return LockCheckResponse.held(); }
+        @Override public LockProviderCapabilities capabilities() { return LockProviderCapabilities.builder().autoRenewSupported(true).build(); }
     }
 }

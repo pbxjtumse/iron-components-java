@@ -1,5 +1,4 @@
 package com.xjtu.iron.idempotent.integration.transaction;
-
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionCoordinator;
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionException;
 import com.xjtu.iron.idempotent.core.transaction.IdempotencyTransactionOutcome;
@@ -23,6 +22,7 @@ import java.util.Objects;
  * </pre>
  * <p>与调用方真实业务事务处于同一个本地事务边界。外层已有事务时加入外层；没有事务时才创建事务。
  * 如果这里强制 REQUIRES_NEW，可能出现幂等 SUCCESS 已提交，但调用方外层业务随后 rollback 的错误结果。</p>
+
  * <p><b>流程阅读编号：I6.1.1：适配本地事务组件。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
  * <ul>
  *     <li>1. 用 REQUIRED 执行 Core 提供的 work；外层已有兼容事务时参与，未建立时创建。</li>
@@ -48,8 +48,10 @@ public final class TransactionTemplateIdempotencyTransactionCoordinator implemen
     public <T> T executeRequired(String transactionName, String routeKey, IdempotencyTransactionalWork<T> work) throws Exception {
         Objects.requireNonNull(work, "work must not be null");
 
-        TransactionOptions options =
-            TransactionOptions.builder().name(normalizeName(transactionName)).propagation(TransactionPropagation.REQUIRED).build();
+        TransactionOptions options = TransactionOptions.builder()
+                .name(normalizeName(transactionName))
+                .propagation(TransactionPropagation.REQUIRED)
+                .build();
 
         try {
             return transactionExecutor.execute(options, context -> {
@@ -68,8 +70,9 @@ public final class TransactionTemplateIdempotencyTransactionCoordinator implemen
             throw checked.original;
         } catch (TransactionExecutionException infrastructureFailure) {
             // BEGIN / COMMIT / ROLLBACK 等事务基础设施异常必须与业务异常分开表达。
-            throw new IdempotencyTransactionException("idempotency business transaction failed at stage " + infrastructureFailure.stage(),
-                infrastructureFailure.stage().name(), mapOutcome(infrastructureFailure.outcome()), infrastructureFailure);
+            throw new IdempotencyTransactionException(
+                    "idempotency business transaction failed at stage " + infrastructureFailure.stage(),
+                    infrastructureFailure.stage().name(), mapOutcome(infrastructureFailure.outcome()), infrastructureFailure);
         }
     }
 

@@ -28,8 +28,11 @@ import javax.sql.DataSource;
  * REQUIRES_NEW 能力。</p>
  */
 @AutoConfiguration(after = RelationalDirectAutoConfiguration.class,
-    afterName = {"org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration",
-    "com.xjtu.iron.transaction.starter.autoconfigure.TransactionAutoConfiguration"})
+    afterName = {
+                "org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration",
+                "com.xjtu.iron.transaction.starter.autoconfigure.TransactionAutoConfiguration"
+        }
+)
 @ConditionalOnClass({SqlSessionTemplate.class, MyBatisAccess.class})
 public class RelationalAccessAutoConfiguration {
 
@@ -43,17 +46,27 @@ public class RelationalAccessAutoConfiguration {
     @ConditionalOnMissingBean(TransactionExecutor.class)
     @ConditionalOnSingleCandidate(DataSource.class)
     public TransactionExecutor myBatisTransactionExecutor(DataSource dataSource) {
-        return new DefaultTransactionExecutor(new SpringTransactionProvider(new DataSourceTransactionManager(dataSource)));
+        return new DefaultTransactionExecutor(
+                new SpringTransactionProvider(new DataSourceTransactionManager(dataSource))
+        );
     }
 
     @Bean
     @ConditionalOnMissingBean(MyBatisAccess.class)
     @ConditionalOnBean(SqlSessionTemplate.class)
     @ConditionalOnSingleCandidate(DataSource.class)
-    public MyBatisAccess myBatisAccess(DataSource dataSource, SqlSessionTemplate sqlSessionTemplate,
-        ObjectProvider<TransactionExecutor> transactionExecutorProvider, ObjectProvider<MyBatisAccessListener> listenerProvider) {
-        return new SpringMyBatisAccess(dataSource, sqlSessionTemplate, transactionExecutorProvider.getIfAvailable(),
-            MyBatisAccessListener.composite(listenerProvider.orderedStream().toList()));
+    public MyBatisAccess myBatisAccess(
+            DataSource dataSource,
+            SqlSessionTemplate sqlSessionTemplate,
+            ObjectProvider<TransactionExecutor> transactionExecutorProvider,
+            ObjectProvider<MyBatisAccessListener> listenerProvider
+    ) {
+        return new SpringMyBatisAccess(
+                dataSource,
+                sqlSessionTemplate,
+                transactionExecutorProvider.getIfAvailable(),
+            MyBatisAccessListener.composite(listenerProvider.orderedStream().toList())
+        );
     }
 
     @Bean

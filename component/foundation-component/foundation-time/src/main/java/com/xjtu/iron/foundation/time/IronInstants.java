@@ -8,8 +8,7 @@ import java.time.temporal.ChronoUnit;
  */
 public final class IronInstants {
 
-    private IronInstants() {
-    }
+    private IronInstants() {}
 
     public static Instant truncateToMillis(Instant instant) {
         return instant == null ? null : instant.truncatedTo(ChronoUnit.MILLIS);

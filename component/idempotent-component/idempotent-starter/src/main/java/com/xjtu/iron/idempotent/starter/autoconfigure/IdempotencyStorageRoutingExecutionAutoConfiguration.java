@@ -16,16 +16,28 @@ import org.springframework.context.annotation.Primary;
 /** 在核心 IdempotencyExecutor 外层绑定一次执行级 StorageRoute。 */
 @AutoConfiguration(after = IdempotencyAutoConfiguration.class)
 @ConditionalOnClass(StorageRouteAwareIdempotencyExecutor.class)
-@ConditionalOnBean({IdempotencyExecutor.class, IdempotencyRouteContextFactory.class, StorageRouteResolver.class, StorageRouteContext.class})
+@ConditionalOnBean({
+        IdempotencyExecutor.class,
+        IdempotencyRouteContextFactory.class,
+        StorageRouteResolver.class,
+        StorageRouteContext.class
+})
 public class IdempotencyStorageRoutingExecutionAutoConfiguration {
 
     @Bean
     @Primary
     @ConditionalOnBean(name = "idempotencyExecutor")
     @ConditionalOnMissingBean(name = "storageRouteAwareIdempotencyExecutor")
-    public IdempotencyExecutor storageRouteAwareIdempotencyExecutor(@Qualifier("idempotencyExecutor") IdempotencyExecutor delegate,
-        IdempotencyRouteContextFactory routeContextFactory, StorageRouteResolver storageRouteResolver,
-        StorageRouteContext storageRouteContext) {
-        return new StorageRouteAwareIdempotencyExecutor(delegate, routeContextFactory, storageRouteResolver, storageRouteContext);
+    public IdempotencyExecutor storageRouteAwareIdempotencyExecutor(
+            @Qualifier("idempotencyExecutor") IdempotencyExecutor delegate,
+            IdempotencyRouteContextFactory routeContextFactory,
+            StorageRouteResolver storageRouteResolver,
+            StorageRouteContext storageRouteContext
+    ) {
+        return new StorageRouteAwareIdempotencyExecutor(
+                delegate,
+                routeContextFactory,
+                storageRouteResolver,
+                storageRouteContext);
     }
 }

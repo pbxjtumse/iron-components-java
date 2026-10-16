@@ -41,37 +41,15 @@ public final class IdempotencyCompletionCommand {
         this.policy = builder.policy;
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
+    public static Builder builder() { return new Builder(); }
 
-    public String getKey() {
-        return key;
-    }
-
-    public IdempotencyStorageContext getStorageContext() {
-        return storageContext;
-    }
-
-    public String getOwnerToken() {
-        return ownerToken;
-    }
-
-    public long getVersion() {
-        return version;
-    }
-
-    public String getResultPayload() {
-        return resultPayload;
-    }
-
-    public String getPolicyName() {
-        return policyName;
-    }
-
-    public IdempotencyPolicy getPolicy() {
-        return policy;
-    }
+    public String getKey() { return key; }
+    public IdempotencyStorageContext getStorageContext() { return storageContext; }
+    public String getOwnerToken() { return ownerToken; }
+    public long getVersion() { return version; }
+    public String getResultPayload() { return resultPayload; }
+    public String getPolicyName() { return policyName; }
+    public IdempotencyPolicy getPolicy() { return policy; }
 
     public static final class Builder {
         /** 逻辑幂等 Key。 */
@@ -95,43 +73,13 @@ public final class IdempotencyCompletionCommand {
         /** 内联 Policy。 */
         private IdempotencyPolicy policy;
 
-        public Builder key(String value) {
-            this.key = value;
-            return this;
-        }
-
-        public Builder storageContext(IdempotencyStorageContext value) {
-            this.storageContext = value;
-            return this;
-        }
-
-        public Builder ownerToken(String value) {
-            this.ownerToken = value;
-            return this;
-        }
-
-        public Builder version(long value) {
-            this.version = value;
-            return this;
-        }
-
-        public Builder resultPayload(String value) {
-            this.resultPayload = value;
-            return this;
-        }
-
-        public Builder policyName(String value) {
-            this.policyName = value;
-            return this;
-        }
-
-        public Builder policy(IdempotencyPolicy value) {
-            this.policy = value;
-            return this;
-        }
-
-        public IdempotencyCompletionCommand build() {
-            return new IdempotencyCompletionCommand(this);
-        }
+        public Builder key(String value) { this.key = value; return this; }
+        public Builder storageContext(IdempotencyStorageContext value) { this.storageContext = value; return this; }
+        public Builder ownerToken(String value) { this.ownerToken = value; return this; }
+        public Builder version(long value) { this.version = value; return this; }
+        public Builder resultPayload(String value) { this.resultPayload = value; return this; }
+        public Builder policyName(String value) { this.policyName = value; return this; }
+        public Builder policy(IdempotencyPolicy value) { this.policy = value; return this; }
+        public IdempotencyCompletionCommand build() { return new IdempotencyCompletionCommand(this); }
     }
 }

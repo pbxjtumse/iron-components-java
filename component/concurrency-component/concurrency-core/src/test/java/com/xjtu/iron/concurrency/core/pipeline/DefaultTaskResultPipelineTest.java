@@ -51,7 +51,8 @@ class DefaultTaskResultPipelineTest {
     @Test
     void failureTriggersFallbackSuccess() {
         fallbackExecutor = newFallbackExecutor(1, 1);
-        AsyncTask<String> task = AsyncTask.<String>of("pool", "fallback-success", () -> "unused").fallback(error -> "fallback-value");
+        AsyncTask<String> task = AsyncTask.<String>of("pool", "fallback-success", () -> "unused")
+                .fallback(error -> "fallback-value");
         Fixture<String> fixture = newFixture(task);
         CompletableFuture<String> finalFuture = fixture.pipeline.apply(fixture.context, fixture.command);
 
@@ -65,9 +66,8 @@ class DefaultTaskResultPipelineTest {
     @Test
     void failureTriggersFallbackFailure() {
         fallbackExecutor = newFallbackExecutor(1, 1);
-        AsyncTask<String> task = AsyncTask.<String>of("pool", "fallback-failure", () -> "unused").fallback(error -> {
-            throw new IllegalArgumentException("fallback failed");
-        });
+        AsyncTask<String> task = AsyncTask.<String>of("pool", "fallback-failure", () -> "unused")
+                .fallback(error -> { throw new IllegalArgumentException("fallback failed"); });
         Fixture<String> fixture = newFixture(task);
         CompletableFuture<String> finalFuture = fixture.pipeline.apply(fixture.context, fixture.command);
 
@@ -80,10 +80,17 @@ class DefaultTaskResultPipelineTest {
 
     @Test
     void fallbackExecutorRejectionCompletesFinalFutureExceptionally() {
-        fallbackExecutor =
-            new ThreadPoolExecutor(1, 1, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1), new ThreadPoolExecutor.AbortPolicy());
+        fallbackExecutor = new ThreadPoolExecutor(
+                1,
+                1,
+                60L,
+                TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(1),
+                new ThreadPoolExecutor.AbortPolicy()
+        );
         fallbackExecutor.shutdownNow();
-        AsyncTask<String> task = AsyncTask.<String>of("pool", "fallback-rejected", () -> "unused").fallback(error -> "fallback");
+        AsyncTask<String> task = AsyncTask.<String>of("pool", "fallback-rejected", () -> "unused")
+                .fallback(error -> "fallback");
         Fixture<String> fixture = newFixture(task);
         CompletableFuture<String> finalFuture = fixture.pipeline.apply(fixture.context, fixture.command);
 
@@ -97,8 +104,9 @@ class DefaultTaskResultPipelineTest {
     @Test
     void timeoutCompletesBaseFutureAndCanFallback() throws Exception {
         fallbackExecutor = newFallbackExecutor(1, 1);
-        AsyncTask<String> task =
-            AsyncTask.<String>of("pool", "timeout", () -> "unused").timeout(Duration.ofMillis(20)).fallback(error -> "timeout-fallback");
+        AsyncTask<String> task = AsyncTask.<String>of("pool", "timeout", () -> "unused")
+                .timeout(Duration.ofMillis(20))
+                .fallback(error -> "timeout-fallback");
         Fixture<String> fixture = newFixture(task);
         CompletableFuture<String> finalFuture = fixture.pipeline.apply(fixture.context, fixture.command);
 
@@ -110,7 +118,8 @@ class DefaultTaskResultPipelineTest {
     @Test
     void cancellationDoesNotTriggerFallback() {
         fallbackExecutor = newFallbackExecutor(1, 1);
-        AsyncTask<String> task = AsyncTask.<String>of("pool", "cancel", () -> "unused").fallback(error -> "fallback");
+        AsyncTask<String> task = AsyncTask.<String>of("pool", "cancel", () -> "unused")
+                .fallback(error -> "fallback");
         Fixture<String> fixture = newFixture(task);
         CompletableFuture<String> finalFuture = fixture.pipeline.apply(fixture.context, fixture.command);
 
@@ -136,7 +145,8 @@ class DefaultTaskResultPipelineTest {
         });
         assertTrue(blockerStarted.await(1, TimeUnit.SECONDS));
 
-        AsyncTask<String> task = AsyncTask.<String>of("pool", "fallback-shutdown", () -> "unused").fallback(error -> "fallback");
+        AsyncTask<String> task = AsyncTask.<String>of("pool", "fallback-shutdown", () -> "unused")
+                .fallback(error -> "fallback");
         Fixture<String> fixture = newFixture(task);
         CompletableFuture<String> finalFuture = fixture.pipeline.apply(fixture.context, fixture.command);
 
@@ -159,7 +169,13 @@ class DefaultTaskResultPipelineTest {
     }
 
     private ThreadPoolExecutor newFallbackExecutor(int poolSize, int queueCapacity) {
-        return new ThreadPoolExecutor(poolSize, poolSize, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(queueCapacity));
+        return new ThreadPoolExecutor(
+                poolSize,
+                poolSize,
+                60L,
+                TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(queueCapacity)
+        );
     }
 
     private <T> Fixture<T> newFixture(AsyncTask<T> task) {
@@ -167,18 +183,37 @@ class DefaultTaskResultPipelineTest {
         TaskDefinition<T> definition = TaskDefinition.from(task);
         CompletableFuture<T> baseFuture = new CompletableFuture<>();
         TaskExecutionRuntime runtime = new TaskExecutionRuntime(TaskResultMode.RESULT_AWARE);
-        TaskExecutionContext<T> context = new TaskExecutionContext<>(definition, definition.getOperation(), baseFuture, runtime);
+        TaskExecutionContext<T> context = new TaskExecutionContext<>(
+                definition,
+                definition.getOperation(),
+                baseFuture,
+                runtime
+        );
         RecordingPublisher publisher = new RecordingPublisher();
         AsyncErrorClassifier classifier = new DefaultAsyncErrorClassifier();
-        TaskCommand<T> command = new TaskCommand<>(context, publisher, classifier, (event, throwable) -> {
-        });
-        DefaultTaskResultPipeline pipeline = new DefaultTaskResultPipeline(classifier, publisher, timeoutScheduler, fallbackExecutor);
+        TaskCommand<T> command = new TaskCommand<>(
+                context,
+                publisher,
+                classifier,
+                (event, throwable) -> { }
+        );
+        DefaultTaskResultPipeline pipeline = new DefaultTaskResultPipeline(
+                classifier,
+                publisher,
+                timeoutScheduler,
+                fallbackExecutor
+        );
         command.submitted();
         return new Fixture<>(context, command, pipeline, baseFuture, publisher.events);
     }
 
-    private record Fixture<T>(TaskExecutionContext<T> context, TaskCommand<T> command, DefaultTaskResultPipeline pipeline,
-                              CompletableFuture<T> baseFuture, List<AsyncTaskStatus> events) {
+    private record Fixture<T>(
+            TaskExecutionContext<T> context,
+            TaskCommand<T> command,
+            DefaultTaskResultPipeline pipeline,
+            CompletableFuture<T> baseFuture,
+            List<AsyncTaskStatus> events
+    ) {
     }
 
     private static final class RecordingPublisher implements TaskLifecyclePublisher {

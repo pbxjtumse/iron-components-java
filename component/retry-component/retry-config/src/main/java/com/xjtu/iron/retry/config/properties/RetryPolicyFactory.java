@@ -13,24 +13,40 @@ final class RetryPolicyFactory {
 
     /** 根据命名和解析配置创建不可变策略。 */
     RetryPolicy create(String policyName, ResolvedRetryPolicyProperties properties) {
-        ResolvedRetryPolicyProperties actualProperties = Objects.requireNonNull(properties, "properties must not be null");
-        RetryPolicy.Builder builder =
-            RetryPolicy.builder(policyName).maxAttempts(actualProperties.maxAttempts).maxDuration(actualProperties.maxDuration)
-                .operationSafety(actualProperties.operationSafety).safetyMode(actualProperties.safetyMode)
-                .traverseCauses(actualProperties.traverseCauses).maxCauseDepth(actualProperties.maxCauseDepth)
+        ResolvedRetryPolicyProperties actualProperties = Objects.requireNonNull(
+                properties,
+                "properties must not be null"
+        );
+        RetryPolicy.Builder builder = RetryPolicy.builder(policyName)
+                .maxAttempts(actualProperties.maxAttempts)
+                .maxDuration(actualProperties.maxDuration)
+                .operationSafety(actualProperties.operationSafety)
+                .safetyMode(actualProperties.safetyMode)
+                .traverseCauses(actualProperties.traverseCauses)
+                .maxCauseDepth(actualProperties.maxCauseDepth)
                 .backoffStrategy(createBackoff(actualProperties));
 
-        List<Class<? extends Throwable>> retryOn = loadThrowableTypes(actualProperties.retryOn);
+        List<Class<? extends Throwable>> retryOn = loadThrowableTypes(
+                actualProperties.retryOn
+        );
         if (!retryOn.isEmpty()) {
-            builder.retryOn(actualProperties.retryFailureCategory, actualProperties.retryFailureCode, toThrowableArray(retryOn));
+            builder.retryOn(
+                    actualProperties.retryFailureCategory,
+                    actualProperties.retryFailureCode,
+                    toThrowableArray(retryOn)
+            );
         }
 
-        List<Class<? extends Throwable>> stopOn = loadThrowableTypes(actualProperties.stopOn);
+        List<Class<? extends Throwable>> stopOn = loadThrowableTypes(
+                actualProperties.stopOn
+        );
         if (!stopOn.isEmpty()) {
             builder.stopOn(toThrowableArray(stopOn));
         }
 
-        List<Class<? extends Throwable>> abortOn = loadThrowableTypes(actualProperties.abortOn);
+        List<Class<? extends Throwable>> abortOn = loadThrowableTypes(
+                actualProperties.abortOn
+        );
         if (!abortOn.isEmpty()) {
             builder.abortOn(toThrowableArray(abortOn));
         }
@@ -43,16 +59,26 @@ final class RetryPolicyFactory {
         return switch (properties.backoffType) {
             case NONE -> BackoffStrategies.none();
             case FIXED -> BackoffStrategies.fixed(properties.delay);
-            case EXPONENTIAL -> BackoffStrategies.exponential(properties.initialDelay, properties.maxDelay, properties.multiplier);
+            case EXPONENTIAL -> BackoffStrategies.exponential(
+                    properties.initialDelay,
+                    properties.maxDelay,
+                    properties.multiplier
+            );
             case EXPONENTIAL_FULL_JITTER ->
-                BackoffStrategies.exponentialWithFullJitter(properties.initialDelay, properties.maxDelay, properties.multiplier);
+                    BackoffStrategies.exponentialWithFullJitter(
+                            properties.initialDelay,
+                            properties.maxDelay,
+                            properties.multiplier
+                    );
         };
     }
 
     /** 将异常类型列表转换为构建器需要的泛型数组。 */
     @SuppressWarnings("unchecked")
-    private Class<? extends Throwable>[] toThrowableArray(List<Class<? extends Throwable>> throwableTypes) {
-        Class<? extends Throwable>[] target = (Class<? extends Throwable>[]) new Class<?>[throwableTypes.size()];
+    private Class<? extends Throwable>[] toThrowableArray(
+            List<Class<? extends Throwable>> throwableTypes) {
+        Class<? extends Throwable>[] target =
+                (Class<? extends Throwable>[]) new Class<?>[throwableTypes.size()];
         return throwableTypes.toArray(target);
     }
 
@@ -61,17 +87,28 @@ final class RetryPolicyFactory {
     private List<Class<? extends Throwable>> loadThrowableTypes(List<String> classNames) {
         List<Class<? extends Throwable>> result = new ArrayList<>();
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        ClassLoader actualClassLoader = classLoader == null ? RetryPolicyFactory.class.getClassLoader() : classLoader;
+        ClassLoader actualClassLoader = classLoader == null
+                ? RetryPolicyFactory.class.getClassLoader()
+                : classLoader;
         for (String className : classNames) {
             String actualClassName = requireText(className, "exception class name");
             try {
-                Class<?> candidate = Class.forName(actualClassName, false, actualClassLoader);
+                Class<?> candidate = Class.forName(
+                        actualClassName,
+                        false,
+                        actualClassLoader
+                );
                 if (!Throwable.class.isAssignableFrom(candidate)) {
-                    throw new IllegalArgumentException(actualClassName + " is not a Throwable type");
+                    throw new IllegalArgumentException(
+                            actualClassName + " is not a Throwable type"
+                    );
                 }
                 result.add((Class<? extends Throwable>) candidate);
             } catch (ClassNotFoundException exception) {
-                throw new IllegalArgumentException("Retry exception class does not exist: " + actualClassName, exception);
+                throw new IllegalArgumentException(
+                        "Retry exception class does not exist: " + actualClassName,
+                        exception
+                );
             }
         }
         return result;

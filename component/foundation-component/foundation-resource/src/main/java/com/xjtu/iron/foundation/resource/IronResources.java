@@ -10,14 +10,14 @@ import java.nio.charset.StandardCharsets;
  */
 public final class IronResources {
 
-    private IronResources() {
-    }
+    private IronResources() {}
 
     public static byte[] readBytes(Resource resource, int maxBytes) {
         if (maxBytes <= 0) {
             throw new IllegalArgumentException("maxBytes must be positive");
         }
-        try (InputStream input = resource.openStream(); java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream()) {
+        try (InputStream input = resource.openStream();
+             java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream()) {
             byte[] buffer = new byte[8192];
             int total = 0;
             int read;

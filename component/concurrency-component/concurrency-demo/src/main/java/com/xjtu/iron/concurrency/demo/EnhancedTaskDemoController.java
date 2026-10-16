@@ -48,7 +48,10 @@ public class EnhancedTaskDemoController {
      * @param asyncExecutor 异步执行器
      * @param eventRecorder 任务事件记录器
      */
-    public EnhancedTaskDemoController(AsyncExecutor asyncExecutor, InMemoryTaskEventRecorder eventRecorder) {
+    public EnhancedTaskDemoController(
+            AsyncExecutor asyncExecutor,
+            InMemoryTaskEventRecorder eventRecorder
+    ) {
         this.asyncExecutor = asyncExecutor;
         this.eventRecorder = eventRecorder;
     }
@@ -62,11 +65,21 @@ public class EnhancedTaskDemoController {
     public Map<String, Object> metadata() {
         String userId = "10001";
         CompletableFuture<String> future = asyncExecutor.submit(
-            AsyncTask.of(BIZ_QUERY_EXECUTOR, "queryUserProfile", () -> "profile:" + userId).taskId("task-" + UUID.randomUUID())
-                .bizKey("userId=" + userId).description("查询用户画像信息").tag("scene", "user-profile").tag("source", "demo")
-                .timeout(Duration.ofSeconds(2)).contextPropagation(true));
+                AsyncTask.of(BIZ_QUERY_EXECUTOR, "queryUserProfile", () -> "profile:" + userId)
+                        .taskId("task-" + UUID.randomUUID())
+                        .bizKey("userId=" + userId)
+                        .description("查询用户画像信息")
+                        .tag("scene", "user-profile")
+                        .tag("source", "demo")
+                        .timeout(Duration.ofSeconds(2))
+                        .contextPropagation(true)
+        );
 
-        return response("api", "AsyncTask metadata", "value", future.join(), "events", eventRecorder.recentEvents());
+        return response(
+                "api", "AsyncTask metadata",
+                "value", future.join(),
+                "events", eventRecorder.recentEvents()
+        );
     }
 
     /**
@@ -82,12 +95,20 @@ public class EnhancedTaskDemoController {
 
         asyncExecutor.run(TINY_EXECUTOR, "occupyTinyPool", () -> sleep(300));
 
-        CompletableFuture<String> future = asyncExecutor.submit(AsyncTask.of(TINY_EXECUTOR, "queuedTask", () -> {
-            sleep(50);
-            return "queued-task-finished";
-        }).bizKey("demo=queue-cost").tag("scene", "queue-cost"));
+        CompletableFuture<String> future = asyncExecutor.submit(
+                AsyncTask.of(TINY_EXECUTOR, "queuedTask", () -> {
+                            sleep(50);
+                            return "queued-task-finished";
+                        })
+                        .bizKey("demo=queue-cost")
+                        .tag("scene", "queue-cost")
+        );
 
-        return response("api", "queueCost/runCost", "value", future.join(), "events", eventRecorder.recentEvents());
+        return response(
+                "api", "queueCost/runCost",
+                "value", future.join(),
+                "events", eventRecorder.recentEvents()
+        );
     }
 
     /**
@@ -102,10 +123,18 @@ public class EnhancedTaskDemoController {
         asyncExecutor.run(TINY_EXECUTOR, "occupyTinyPoolForTimeout", () -> sleep(300));
 
         CompletableFuture<String> future = asyncExecutor.submit(
-            AsyncTask.of(TINY_EXECUTOR, "queueTimeoutTask", () -> "should-not-run").queueTimeout(Duration.ofMillis(50))
-                .bizKey("demo=queue-timeout").tag("scene", "queue-timeout").fallback(ex -> "fallback-after-queue-timeout"));
+                AsyncTask.of(TINY_EXECUTOR, "queueTimeoutTask", () -> "should-not-run")
+                        .queueTimeout(Duration.ofMillis(50))
+                        .bizKey("demo=queue-timeout")
+                        .tag("scene", "queue-timeout")
+                        .fallback(ex -> "fallback-after-queue-timeout")
+        );
 
-        return response("api", "AsyncTask.queueTimeout", "value", future.join(), "events", eventRecorder.recentEvents());
+        return response(
+                "api", "AsyncTask.queueTimeout",
+                "value", future.join(),
+                "events", eventRecorder.recentEvents()
+        );
     }
 
     /**
@@ -123,8 +152,12 @@ public class EnhancedTaskDemoController {
 
         sleep(100);
 
-        return response("api", "AsyncUncaughtExceptionHandler", "meaning", "execute 不返回 Future，异常会进入 AsyncUncaughtExceptionHandler",
-            "uncaughtExceptions", eventRecorder.recentUncaughtExceptions(), "events", eventRecorder.recentEvents());
+        return response(
+                "api", "AsyncUncaughtExceptionHandler",
+                "meaning", "execute 不返回 Future，异常会进入 AsyncUncaughtExceptionHandler",
+                "uncaughtExceptions", eventRecorder.recentUncaughtExceptions(),
+                "events", eventRecorder.recentEvents()
+        );
     }
 
     /**
@@ -136,16 +169,31 @@ public class EnhancedTaskDemoController {
     public Map<String, Object> timeoutCancel() {
         eventRecorder.clear();
 
-        CompletableFuture<String> future = asyncExecutor.submit(AsyncTask.of(BIZ_QUERY_EXECUTOR, "timeoutCancelTask", () -> {
-                sleep(1000);
-                return "slow-value";
-            }).timeout(Duration.ofMillis(100)).cancelOnTimeout(true).interruptOnCancel(true).fallback(ex -> "fallback-after-timeout")
-            .bizKey("demo=timeout-cancel").tag("scene", "timeout-cancel"));
+        CompletableFuture<String> future = asyncExecutor.submit(
+                AsyncTask.of(BIZ_QUERY_EXECUTOR, "timeoutCancelTask", () -> {
+                            sleep(1000);
+                            return "slow-value";
+                        })
+                        .timeout(Duration.ofMillis(100))
+                        .cancelOnTimeout(true)
+                        .interruptOnCancel(true)
+                        .fallback(ex -> "fallback-after-timeout")
+                        .bizKey("demo=timeout-cancel")
+                        .tag("scene", "timeout-cancel")
+        );
 
         try {
-            return response("api", "timeout + cancelOnTimeout + fallback", "value", future.join(), "events", eventRecorder.recentEvents());
+            return response(
+                    "api", "timeout + cancelOnTimeout + fallback",
+                    "value", future.join(),
+                    "events", eventRecorder.recentEvents()
+            );
         } catch (CompletionException ex) {
-            return response("api", "timeout + cancelOnTimeout", "error", ex.getMessage(), "events", eventRecorder.recentEvents());
+            return response(
+                    "api", "timeout + cancelOnTimeout",
+                    "error", ex.getMessage(),
+                    "events", eventRecorder.recentEvents()
+            );
         }
     }
 
@@ -156,7 +204,10 @@ public class EnhancedTaskDemoController {
      */
     @GetMapping("/events")
     public Map<String, Object> events() {
-        return response("events", eventRecorder.recentEvents(), "uncaughtExceptions", eventRecorder.recentUncaughtExceptions());
+        return response(
+                "events", eventRecorder.recentEvents(),
+                "uncaughtExceptions", eventRecorder.recentUncaughtExceptions()
+        );
     }
 
     private Map<String, Object> response(Object... keyValues) {

@@ -35,7 +35,10 @@ public final class TaskStatusCoverageController {
      */
     private final TaskExecutionRegistry taskExecutionRegistry;
 
-    public TaskStatusCoverageController(AsyncExecutor asyncExecutor, TaskExecutionRegistry taskExecutionRegistry) {
+    public TaskStatusCoverageController(
+            AsyncExecutor asyncExecutor,
+            TaskExecutionRegistry taskExecutionRegistry
+    ) {
         this.asyncExecutor = asyncExecutor;
         this.taskExecutionRegistry = taskExecutionRegistry;
     }
@@ -46,7 +49,10 @@ public final class TaskStatusCoverageController {
     @GetMapping("/success")
     public Map<String, Object> success() {
         String taskId = taskId("success");
-        String value = asyncExecutor.submit(AsyncTask.of("default", "statusSuccess", () -> "success-value").taskId(taskId)).join();
+        String value = asyncExecutor.submit(
+                AsyncTask.of("default", "statusSuccess", () -> "success-value")
+                        .taskId(taskId)
+        ).join();
         return result(taskId, value);
     }
 
@@ -57,9 +63,12 @@ public final class TaskStatusCoverageController {
     public Map<String, Object> failed() {
         String taskId = taskId("failed");
         try {
-            asyncExecutor.submit(AsyncTask.<String>of("default", "statusFailed", () -> {
-                throw new IllegalStateException("mock task failure");
-            }).taskId(taskId)).join();
+            asyncExecutor.submit(
+                    AsyncTask.<String>of("default", "statusFailed", () -> {
+                                throw new IllegalStateException("mock task failure");
+                            })
+                            .taskId(taskId)
+            ).join();
         } catch (CompletionException ignored) {
             // 通过任务快照观察 FAILED 和结构化 AsyncError。
         }
@@ -73,10 +82,16 @@ public final class TaskStatusCoverageController {
     public Map<String, Object> timeout() {
         String taskId = taskId("timeout");
         try {
-            asyncExecutor.submit(AsyncTask.of("default", "statusTimeout", () -> {
-                sleep(500L);
-                return "late-value";
-            }).taskId(taskId).timeout(Duration.ofMillis(50L)).cancelOnTimeout(true).interruptOnCancel(true)).join();
+            asyncExecutor.submit(
+                    AsyncTask.of("default", "statusTimeout", () -> {
+                                sleep(500L);
+                                return "late-value";
+                            })
+                            .taskId(taskId)
+                            .timeout(Duration.ofMillis(50L))
+                            .cancelOnTimeout(true)
+                            .interruptOnCancel(true)
+            ).join();
         } catch (CompletionException ignored) {
             // 通过任务快照观察 TIMEOUT。
         }
@@ -89,9 +104,13 @@ public final class TaskStatusCoverageController {
     @GetMapping("/fallback-success")
     public Map<String, Object> fallbackSuccess() {
         String taskId = taskId("fallback-success");
-        String value = asyncExecutor.submit(AsyncTask.<String>of("default", "statusFallbackSuccess", () -> {
-            throw new IllegalStateException("origin failure");
-        }).taskId(taskId).fallback(throwable -> "fallback-value")).join();
+        String value = asyncExecutor.submit(
+                AsyncTask.<String>of("default", "statusFallbackSuccess", () -> {
+                            throw new IllegalStateException("origin failure");
+                        })
+                        .taskId(taskId)
+                        .fallback(throwable -> "fallback-value")
+        ).join();
         return result(taskId, value);
     }
 
@@ -102,11 +121,15 @@ public final class TaskStatusCoverageController {
     public Map<String, Object> fallbackFailed() {
         String taskId = taskId("fallback-failed");
         try {
-            asyncExecutor.submit(AsyncTask.<String>of("default", "statusFallbackFailed", () -> {
-                throw new IllegalStateException("origin failure");
-            }).taskId(taskId).fallback(throwable -> {
-                throw new IllegalArgumentException("fallback failure");
-            })).join();
+            asyncExecutor.submit(
+                    AsyncTask.<String>of("default", "statusFallbackFailed", () -> {
+                                throw new IllegalStateException("origin failure");
+                            })
+                            .taskId(taskId)
+                            .fallback(throwable -> {
+                                throw new IllegalArgumentException("fallback failure");
+                            })
+            ).join();
         } catch (CompletionException ignored) {
             // 通过任务快照观察 FALLBACK_FAILED。
         }
@@ -134,7 +157,10 @@ public final class TaskStatusCoverageController {
         });
 
         try {
-            asyncExecutor.submit(AsyncTask.of("tiny-pool", "statusRejected", () -> "never-run").taskId(targetTaskId)).join();
+            asyncExecutor.submit(
+                    AsyncTask.of("tiny-pool", "statusRejected", () -> "never-run")
+                            .taskId(targetTaskId)
+            ).join();
         } catch (CompletionException ignored) {
             // 通过任务快照观察 REJECTED。
         }

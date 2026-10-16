@@ -3,7 +3,6 @@ package com.xjtu.iron.message.core.send;
 import com.xjtu.iron.message.api.publish.SendResult;
 
 import java.util.concurrent.CompletionStage;
-
 /**
  * message-core 内部的发送执行器抽象。
  *

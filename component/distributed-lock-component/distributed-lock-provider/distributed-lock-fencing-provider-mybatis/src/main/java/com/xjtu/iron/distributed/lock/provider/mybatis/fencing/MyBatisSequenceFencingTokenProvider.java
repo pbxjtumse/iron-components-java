@@ -22,12 +22,23 @@ public final class MyBatisSequenceFencingTokenProvider implements FencingTokenPr
     private final int maxRetries;
 
     public MyBatisSequenceFencingTokenProvider(MyBatisAccess access) {
-        this(access, MyBatisFencingTokenConstants.DEFAULT_TABLE_NAME, MyBatisFencingTokenConstants.DEFAULT_MAX_RETRIES);
+        this(
+                access,
+                MyBatisFencingTokenConstants.DEFAULT_TABLE_NAME,
+                MyBatisFencingTokenConstants.DEFAULT_MAX_RETRIES
+        );
     }
 
-    public MyBatisSequenceFencingTokenProvider(MyBatisAccess access, String tableName, int maxRetries) {
+    public MyBatisSequenceFencingTokenProvider(
+            MyBatisAccess access,
+            String tableName,
+            int maxRetries
+    ) {
         this.access = Objects.requireNonNull(access, "access must not be null");
-        this.tableName = MyBatisTableNameValidator.requireValid(tableName, MyBatisFencingTokenConstants.DEFAULT_TABLE_NAME);
+        this.tableName = MyBatisTableNameValidator.requireValid(
+                tableName,
+                MyBatisFencingTokenConstants.DEFAULT_TABLE_NAME
+        );
         if (maxRetries <= 0) {
             throw new IllegalArgumentException("maxRetries must be positive");
         }
@@ -41,8 +52,9 @@ public final class MyBatisSequenceFencingTokenProvider implements FencingTokenPr
 
     @Override
     public boolean supports(FencingTokenRequest request) {
-        return request != null && request.getNamespace().length() <= MyBatisFencingTokenConstants.MAX_NAMESPACE_LENGTH &&
-            request.getLockName().length() <= MyBatisFencingTokenConstants.MAX_LOCK_NAME_LENGTH;
+        return request != null
+                && request.getNamespace().length() <= MyBatisFencingTokenConstants.MAX_NAMESPACE_LENGTH
+                && request.getLockName().length() <= MyBatisFencingTokenConstants.MAX_LOCK_NAME_LENGTH;
     }
 
     @Override
@@ -51,27 +63,45 @@ public final class MyBatisSequenceFencingTokenProvider implements FencingTokenPr
         Throwable lastDuplicate = null;
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                long token = access.executeInNewTransaction("distributed-lock.next-fencing-token", FencingTokenMapper.class,
-                    mapper -> nextToken(mapper, request));
+                long token = access.executeInNewTransaction(
+                        "distributed-lock.next-fencing-token",
+                        FencingTokenMapper.class,
+                        mapper -> nextToken(mapper, request)
+                );
                 return FencingTokenResponse.issued(token);
             } catch (Exception failure) {
-                if (MyBatisConstraintViolationDetector.isConstraintViolation(failure) && attempt < maxRetries) {
+                if (MyBatisConstraintViolationDetector.isConstraintViolation(failure)
+                        && attempt < maxRetries) {
                     lastDuplicate = failure;
                     continue;
                 }
-                return FencingTokenResponse.failed(failure,
-                    "failed to issue MyBatis fencing token, provider=" + providerName() + ", table=" + tableName + ", attempt=" + attempt);
+                return FencingTokenResponse.failed(
+                        failure,
+                        "failed to issue MyBatis fencing token, provider=" + providerName()
+                                + ", table=" + tableName + ", attempt=" + attempt
+                );
             }
         }
-        return FencingTokenResponse.failed(lastDuplicate, "failed to issue MyBatis fencing token after retries: " + maxRetries);
+        return FencingTokenResponse.failed(
+                lastDuplicate,
+                "failed to issue MyBatis fencing token after retries: " + maxRetries
+        );
     }
 
     private long nextToken(FencingTokenMapper mapper, FencingTokenRequest request) {
-        int updated = mapper.increment(tableName, request.getNamespace(), request.getLockName());
+        int updated = mapper.increment(
+                tableName,
+                request.getNamespace(),
+                request.getLockName()
+        );
         if (updated == 0) {
             mapper.insertInitial(tableName, request.getNamespace(), request.getLockName());
         }
-        Long token = mapper.selectCurrent(tableName, request.getNamespace(), request.getLockName());
+        Long token = mapper.selectCurrent(
+                tableName,
+                request.getNamespace(),
+                request.getLockName()
+        );
         if (token == null || token <= 0L) {
             throw new IllegalStateException("generated fencing token must be positive: " + token);
         }

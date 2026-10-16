@@ -33,23 +33,9 @@ public final class IdempotencyRecoveryQuery {
         this.limit = limit;
     }
 
-    public String getStoreName() {
-        return storeName;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public int getScanBucket() {
-        return scanBucket;
-    }
-
-    public Instant getNow() {
-        return now;
-    }
-
-    public int getLimit() {
-        return limit;
-    }
+    public String getStoreName() { return storeName; }
+    public String getNamespace() { return namespace; }
+    public int getScanBucket() { return scanBucket; }
+    public Instant getNow() { return now; }
+    public int getLimit() { return limit; }
 }

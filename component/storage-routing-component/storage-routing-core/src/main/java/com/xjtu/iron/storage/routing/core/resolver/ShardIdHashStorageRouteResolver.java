@@ -6,7 +6,6 @@ import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
 import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
 import com.xjtu.iron.storage.routing.core.mapping.RouteMappingStrategyFactory;
-
 import java.util.Objects;
 
 /**
@@ -40,9 +39,13 @@ public final class ShardIdHashStorageRouteResolver implements StorageRouteResolv
         String dataSourcePrefix = requireText(builder.dataSourcePrefix, "dataSourcePrefix must not be blank");
         String tablePrefix = requireText(builder.tablePrefix, "tablePrefix must not be blank");
         TableIndexMode tableIndexMode = Objects.requireNonNull(builder.tableIndexMode, "tableIndexMode must not be null");
-        this.delegate = new DefaultStorageRouteResolver(new HashShardResolver(builder.databaseCount, builder.tablesPerDatabase),
-            new RouteMappingStrategyFactory(dataSourcePrefix, tablePrefix, builder.dataSourceIndexWidth, builder.tableIndexWidth).create(
-                tableIndexMode));
+        this.delegate = new DefaultStorageRouteResolver(
+                new HashShardResolver(builder.databaseCount, builder.tablesPerDatabase),
+                new RouteMappingStrategyFactory(
+                        dataSourcePrefix,
+                        tablePrefix,
+                        builder.dataSourceIndexWidth,
+                        builder.tableIndexWidth).create(tableIndexMode));
     }
 
     public static Builder builder() {

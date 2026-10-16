@@ -33,7 +33,7 @@ package com.xjtu.iron.observability.api.tracing;
  *     <li>close() 必须被调用</li>
  * </ul>
  */
-public interface ITraceSpan extends AutoCloseable {
+public interface ITraceSpan extends AutoCloseable{
     /**
      * 添加字符串标签。
      *

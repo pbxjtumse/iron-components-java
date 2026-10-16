@@ -9,7 +9,11 @@ import java.util.List;
 public interface IdempotencyPhysicalRouteResolver {
 
     /** 解析点查或条件写入的唯一物理目标。 */
-    IdempotencyPhysicalRoute resolvePoint(IdempotencyStorageContext storageContext, String namespace, String idempotencyKey);
+    IdempotencyPhysicalRoute resolvePoint(
+            IdempotencyStorageContext storageContext,
+            String namespace,
+            String idempotencyKey
+    );
 
     /** 解析当前恢复扫描允许访问的物理目标集合。 */
     List<IdempotencyPhysicalRoute> resolveRecoveryRoutes(IdempotencyRecoveryQuery query);

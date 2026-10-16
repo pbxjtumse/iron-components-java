@@ -35,9 +35,17 @@ public final class RetryContext {
     /** 协作式取消令牌。 */
     private final RetryCancellationToken cancellationToken;
 
-    public RetryContext(String retryId, String operationName, String policyName, int attemptNumber, Instant startTime, Duration elapsedTime,
-        Duration remainingDuration, RetryAttempt<?> previousAttempt, Map<String, Object> attributes,
-        RetryCancellationToken cancellationToken) {
+    public RetryContext(
+            String retryId,
+            String operationName,
+            String policyName,
+            int attemptNumber,
+            Instant startTime,
+            Duration elapsedTime,
+            Duration remainingDuration,
+            RetryAttempt<?> previousAttempt,
+            Map<String, Object> attributes,
+            RetryCancellationToken cancellationToken) {
         this.retryId = requireText(retryId, "retryId");
         this.operationName = requireText(operationName, "operationName");
         this.policyName = requireText(policyName, "policyName");
@@ -47,11 +55,17 @@ public final class RetryContext {
         this.attemptNumber = attemptNumber;
         this.startTime = Objects.requireNonNull(startTime, "startTime must not be null");
         this.elapsedTime = requireNonNegative(elapsedTime, "elapsedTime");
-        this.remainingDuration = requireNonNegative(remainingDuration, "remainingDuration");
+        this.remainingDuration = requireNonNegative(
+                remainingDuration,
+                "remainingDuration"
+        );
         validatePreviousAttempt(previousAttempt, attemptNumber, retryId, operationName, policyName);
         this.previousAttempt = previousAttempt;
         this.attributes = immutableAttributes(attributes);
-        this.cancellationToken = Objects.requireNonNull(cancellationToken, "cancellationToken must not be null");
+        this.cancellationToken = Objects.requireNonNull(
+                cancellationToken,
+                "cancellationToken must not be null"
+        );
     }
 
     public String getRetryId() {
@@ -111,20 +125,31 @@ public final class RetryContext {
     }
 
     /** 校验前一次尝试与当前上下文属于同一次逻辑执行。 */
-    private static void validatePreviousAttempt(RetryAttempt<?> previousAttempt, int attemptNumber, String retryId, String operationName,
-        String policyName) {
+    private static void validatePreviousAttempt(
+            RetryAttempt<?> previousAttempt,
+            int attemptNumber,
+            String retryId,
+            String operationName,
+            String policyName) {
         if (previousAttempt == null) {
             if (attemptNumber != 1) {
-                throw new IllegalArgumentException("previousAttempt is required when attemptNumber is greater than 1");
+                throw new IllegalArgumentException(
+                        "previousAttempt is required when attemptNumber is greater than 1"
+                );
             }
             return;
         }
         if (previousAttempt.getAttemptNumber() != attemptNumber - 1) {
-            throw new IllegalArgumentException("previousAttempt number must immediately precede attemptNumber");
+            throw new IllegalArgumentException(
+                    "previousAttempt number must immediately precede attemptNumber"
+            );
         }
-        if (!previousAttempt.getRetryId().equals(retryId) || !previousAttempt.getOperationName().equals(operationName) ||
-            !previousAttempt.getPolicyName().equals(policyName)) {
-            throw new IllegalArgumentException("previousAttempt must belong to the same retry execution");
+        if (!previousAttempt.getRetryId().equals(retryId)
+                || !previousAttempt.getOperationName().equals(operationName)
+                || !previousAttempt.getPolicyName().equals(policyName)) {
+            throw new IllegalArgumentException(
+                    "previousAttempt must belong to the same retry execution"
+            );
         }
     }
 

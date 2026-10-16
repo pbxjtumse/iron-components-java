@@ -16,5 +16,7 @@ public interface TransactionProvider {
      * <p>正常完成直接返回 callback 的业务结果；业务异常保持原类型向上传递；
      * BEGIN/COMMIT/ROLLBACK 等基础设施异常使用 ProviderTransactionException 表达。</p>
      */
-    <T> T execute(TransactionOptions options, TransactionProviderCallback<T> callback);
+    <T> T execute(
+            TransactionOptions options,
+            TransactionProviderCallback<T> callback);
 }

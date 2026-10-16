@@ -13,12 +13,14 @@ import java.util.*;
  * {@link LockAcquireStatus} 时，只需要增加对应 Handler Bean；
  * {@code DefaultDistributedLockClient} 不需要再修改状态分发代码。</p>
  */
-public final class DefaultLockAcquireOutcomeHandlerRegistry implements LockAcquireOutcomeHandlerRegistry {
+public final class DefaultLockAcquireOutcomeHandlerRegistry
+        implements LockAcquireOutcomeHandlerRegistry {
 
     private final Map<LockAcquireStatus, LockAcquireOutcomeHandler> handlers;
 
     public DefaultLockAcquireOutcomeHandlerRegistry(Collection<? extends LockAcquireOutcomeHandler> handlers) {
-        EnumMap<LockAcquireStatus, LockAcquireOutcomeHandler> mapped = new EnumMap<>(LockAcquireStatus.class);
+        EnumMap<LockAcquireStatus, LockAcquireOutcomeHandler> mapped =
+                new EnumMap<>(LockAcquireStatus.class);
         if (handlers != null) {
             for (LockAcquireOutcomeHandler handler : handlers) {
                 Objects.requireNonNull(handler, "lock acquire outcome handler must not be null");
@@ -48,7 +50,8 @@ public final class DefaultLockAcquireOutcomeHandlerRegistry implements LockAcqui
 
     @Override
     public LockAcquireOutcomeHandler getRequired(LockAcquireStatus status) {
-        return findHandler(status).orElseThrow(() -> new IllegalArgumentException("lock acquire outcome handler not found: " + status));
+        return findHandler(status).orElseThrow(() -> new IllegalArgumentException(
+                "lock acquire outcome handler not found: " + status));
     }
 
     @Override

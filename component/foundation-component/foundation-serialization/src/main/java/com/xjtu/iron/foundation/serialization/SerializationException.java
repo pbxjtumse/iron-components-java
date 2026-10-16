@@ -12,7 +12,5 @@ public final class SerializationException extends RuntimeException {
         this.operation = operation;
     }
 
-    public SerializationOperation getOperation() {
-        return operation;
-    }
+    public SerializationOperation getOperation() { return operation; }
 }

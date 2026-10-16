@@ -30,8 +30,14 @@ public final class ReliableTaskAdminTransitionCommand {
     /** 执行人工状态迁移时的当前时间。 */
     private final Instant now;
 
-    public ReliableTaskAdminTransitionCommand(ReliableTaskKey key, ReliableTaskStatus expectedStatus, long expectedVersion,
-        ReliableTaskStatus targetStatus, Instant nextExecuteAt, boolean resetAttempts, Instant now) {
+    public ReliableTaskAdminTransitionCommand(
+            ReliableTaskKey key,
+            ReliableTaskStatus expectedStatus,
+            long expectedVersion,
+            ReliableTaskStatus targetStatus,
+            Instant nextExecuteAt,
+            boolean resetAttempts,
+            Instant now) {
         if (key == null || expectedStatus == null || targetStatus == null || now == null) {
             throw new IllegalArgumentException("admin transition fields must not be null");
         }
@@ -89,20 +95,38 @@ public final class ReliableTaskAdminTransitionCommand {
         if (!(object instanceof ReliableTaskAdminTransitionCommand that)) {
             return false;
         }
-        return expectedVersion == that.expectedVersion && resetAttempts == that.resetAttempts && key.equals(that.key) &&
-            expectedStatus == that.expectedStatus && targetStatus == that.targetStatus &&
-            Objects.equals(nextExecuteAt, that.nextExecuteAt) && now.equals(that.now);
+        return expectedVersion == that.expectedVersion
+                && resetAttempts == that.resetAttempts
+                && key.equals(that.key)
+                && expectedStatus == that.expectedStatus
+                && targetStatus == that.targetStatus
+                && Objects.equals(nextExecuteAt, that.nextExecuteAt)
+                && now.equals(that.now);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, expectedStatus, expectedVersion, targetStatus, nextExecuteAt, resetAttempts, now);
+        return Objects.hash(
+                key,
+                expectedStatus,
+                expectedVersion,
+                targetStatus,
+                nextExecuteAt,
+                resetAttempts,
+                now
+        );
     }
 
     @Override
     public String toString() {
-        return "ReliableTaskAdminTransitionCommand{" + "key=" + key + ", expectedStatus=" + expectedStatus + ", expectedVersion=" +
-            expectedVersion + ", targetStatus=" + targetStatus + ", nextExecuteAt=" + nextExecuteAt + ", resetAttempts=" + resetAttempts +
-            ", now=" + now + '}';
+        return "ReliableTaskAdminTransitionCommand{" +
+                "key=" + key +
+                ", expectedStatus=" + expectedStatus +
+                ", expectedVersion=" + expectedVersion +
+                ", targetStatus=" + targetStatus +
+                ", nextExecuteAt=" + nextExecuteAt +
+                ", resetAttempts=" + resetAttempts +
+                ", now=" + now +
+                '}';
     }
 }

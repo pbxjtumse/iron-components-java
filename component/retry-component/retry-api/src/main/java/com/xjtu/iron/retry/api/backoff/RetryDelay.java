@@ -10,7 +10,8 @@ import java.util.Objects;
  */
 public final class RetryDelay {
 
-    private static final RetryDelay NONE = new RetryDelay(Duration.ZERO, RetryDelaySource.NONE, "no delay");
+    private static final RetryDelay NONE =
+            new RetryDelay(Duration.ZERO, RetryDelaySource.NONE, "no delay");
 
     /** 实际等待时长。 */
     private final Duration duration;

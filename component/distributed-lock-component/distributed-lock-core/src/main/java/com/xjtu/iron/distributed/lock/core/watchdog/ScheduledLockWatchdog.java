@@ -60,9 +60,7 @@ public final class ScheduledLockWatchdog implements LockWatchdog, AutoCloseable 
         stop(handle);
         Duration interval = options.getRenewInterval();
         Instant maxRenewDeadline = handle.acquiredAt().plus(options.getMaxRenewTime());
-        ScheduledFuture<?> future =
-            scheduler.scheduleWithFixedDelay(() -> tick(handle, maxRenewDeadline), interval.toMillis(), interval.toMillis(),
-                TimeUnit.MILLISECONDS);
+        ScheduledFuture<?> future = scheduler.scheduleWithFixedDelay(() -> tick(handle, maxRenewDeadline), interval.toMillis(), interval.toMillis(), TimeUnit.MILLISECONDS);
         tasks.put(handle.watchdogId(), future);
     }
 
@@ -119,7 +117,6 @@ public final class ScheduledLockWatchdog implements LockWatchdog, AutoCloseable 
 
     private static final class WatchdogThreadFactory implements ThreadFactory {
         private final AtomicInteger index = new AtomicInteger();
-
         @Override
         public Thread newThread(Runnable runnable) {
             Thread thread = new Thread(runnable, "iron-lock-watchdog-" + index.incrementAndGet());

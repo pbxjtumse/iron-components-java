@@ -41,8 +41,11 @@ public final class SpringTransactionProvider implements TransactionProvider {
             // 2. 将组件自己的 TransactionOptions 映射为 Spring TransactionDefinition。
             springDefinition = SpringTransactionDefinitionMapper.map(options);
         } catch (RuntimeException mappingFailure) {
-            throw new ProviderTransactionException("Failed to resolve Spring transaction definition " + options.name(),
-                TransactionStage.RESOLVE, TransactionOutcome.FAILED, mappingFailure);
+            throw new ProviderTransactionException(
+                    "Failed to resolve Spring transaction definition " + options.name(),
+                    TransactionStage.RESOLVE,
+                    TransactionOutcome.FAILED,
+                    mappingFailure);
         }
 
         final TransactionStatus status;
@@ -53,8 +56,11 @@ public final class SpringTransactionProvider implements TransactionProvider {
             // MANDATORY：必须已有事务，否则这里直接失败。
             status = transactionManager.getTransaction(springDefinition);
         } catch (org.springframework.transaction.TransactionException beginFailure) {
-            throw new ProviderTransactionException("Failed to begin or join transaction " + options.name(), TransactionStage.BEGIN,
-                TransactionOutcome.FAILED, beginFailure);
+            throw new ProviderTransactionException(
+                    "Failed to begin or join transaction " + options.name(),
+                    TransactionStage.BEGIN,
+                    TransactionOutcome.FAILED,
+                    beginFailure);
         }
 
         final T value;
@@ -79,20 +85,29 @@ public final class SpringTransactionProvider implements TransactionProvider {
             transactionManager.commit(status);
         } catch (UnexpectedRollbackException unexpectedRollback) {
             // 8. Spring 明确告诉调用方事务最终回滚，因此这个异常结果可以确定为 ROLLED_BACK。
-            throw new ProviderTransactionException("Transaction rolled back unexpectedly during commit: " + options.name(),
-                TransactionStage.COMMIT, TransactionOutcome.ROLLED_BACK, unexpectedRollback);
+            throw new ProviderTransactionException(
+                    "Transaction rolled back unexpectedly during commit: " + options.name(),
+                    TransactionStage.COMMIT,
+                    TransactionOutcome.ROLLED_BACK,
+                    unexpectedRollback);
         } catch (org.springframework.transaction.TransactionException commitFailure) {
             // 9. 一般 commit 基础设施异常可能处在“数据库已提交，但客户端没有收到确认”的窗口。
             // 对可靠性组件来说，这种情况不能直接当成“肯定未提交”，必须保留 COMMIT_UNKNOWN。
-            throw new ProviderTransactionException("Transaction commit result is unknown: " + options.name(), TransactionStage.COMMIT,
-                TransactionOutcome.COMMIT_UNKNOWN, commitFailure);
+            throw new ProviderTransactionException(
+                    "Transaction commit result is unknown: " + options.name(),
+                    TransactionStage.COMMIT,
+                    TransactionOutcome.COMMIT_UNKNOWN,
+                    commitFailure);
         }
 
         // 10. 正常完成只返回业务值，不再暴露 CREATED/JOINED、OWNER/PARTICIPANT 等内部传播事实。
         return value;
     }
 
-    private void rollbackAfterBusinessFailure(TransactionStatus status, Throwable businessFailure, String transactionName) {
+    private void rollbackAfterBusinessFailure(
+            TransactionStatus status,
+            Throwable businessFailure,
+            String transactionName) {
         try {
             // 把 TransactionStatus 原样交给 Spring。
             // 新事务会被实际回滚；参与已有事务时，具体标记/传播规则由 TransactionManager 负责。
@@ -100,8 +115,11 @@ public final class SpringTransactionProvider implements TransactionProvider {
         } catch (org.springframework.transaction.TransactionException rollbackFailure) {
             // rollback 失败是“第二故障”，不能把最初的业务异常覆盖掉。
             ProviderTransactionException rollbackInfrastructureFailure =
-                new ProviderTransactionException("Rollback failed after business failure: " + transactionName, TransactionStage.ROLLBACK,
-                    TransactionOutcome.FAILED, rollbackFailure);
+                    new ProviderTransactionException(
+                            "Rollback failed after business failure: " + transactionName,
+                            TransactionStage.ROLLBACK,
+                            TransactionOutcome.FAILED,
+                            rollbackFailure);
 
             // 通过 suppressed exception 同时保留业务根因和 rollback 基础设施故障。
             businessFailure.addSuppressed(rollbackInfrastructureFailure);

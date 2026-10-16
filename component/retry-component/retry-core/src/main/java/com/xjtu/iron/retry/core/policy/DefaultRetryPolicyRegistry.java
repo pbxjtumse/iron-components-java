@@ -17,9 +17,14 @@ public final class DefaultRetryPolicyRegistry implements RetryPolicyRegistry {
     @Override
     public void register(RetryPolicy retryPolicy) {
         RetryPolicy actualPolicy = requirePolicy(retryPolicy);
-        RetryPolicy previous = policies.putIfAbsent(actualPolicy.getPolicyName(), actualPolicy);
+        RetryPolicy previous = policies.putIfAbsent(
+                actualPolicy.getPolicyName(),
+                actualPolicy
+        );
         if (previous != null) {
-            throw new IllegalArgumentException("Retry policy already exists: " + actualPolicy.getPolicyName());
+            throw new IllegalArgumentException(
+                    "Retry policy already exists: " + actualPolicy.getPolicyName()
+            );
         }
     }
 

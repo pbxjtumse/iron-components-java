@@ -24,8 +24,10 @@ public class DefaultGovernanceExecutor implements GovernanceExecutor {
 
     private final GovernanceEventBus eventBus;
 
-    public DefaultGovernanceExecutor(EffectiveGovernancePolicyResolver policyResolver, GovernanceEngine governanceEngine,
-        GovernanceExceptionMapperChain exceptionMapperChain, GovernanceEventBus eventBus) {
+    public DefaultGovernanceExecutor(EffectiveGovernancePolicyResolver policyResolver,
+                                     GovernanceEngine governanceEngine,
+                                     GovernanceExceptionMapperChain exceptionMapperChain,
+                                     GovernanceEventBus eventBus) {
         this.policyResolver = policyResolver;
         this.governanceEngine = governanceEngine;
         this.exceptionMapperChain = exceptionMapperChain;
@@ -33,28 +35,40 @@ public class DefaultGovernanceExecutor implements GovernanceExecutor {
     }
 
     @Override
-    public <T> T execute(GovernanceContext context, GovernanceInvocation<T> invocation) {
+    public <T> T execute(GovernanceContext context,
+                         GovernanceInvocation<T> invocation) {
         return execute(context, invocation, null);
     }
 
     @Override
-    public <T> T execute(GovernanceContext context, GovernanceInvocation<T> invocation, FallbackHandler<T> fallbackHandler) {
+    public <T> T execute(GovernanceContext context,
+                         GovernanceInvocation<T> invocation,
+                         FallbackHandler<T> fallbackHandler) {
         GovernanceContextHolder.set(context);
 
         GovernancePolicy policy = policyResolver.resolve(context);
 
-        eventBus.publish(GovernanceEvent.of(GovernanceEventType.CALL_STARTED, context.getResourceName()));
+        eventBus.publish(GovernanceEvent.of(
+                GovernanceEventType.CALL_STARTED,
+                context.getResourceName()
+        ));
 
         try {
             T result = governanceEngine.execute(context, policy, invocation);
 
-            eventBus.publish(GovernanceEvent.of(GovernanceEventType.CALL_SUCCEEDED, context.getResourceName()));
+            eventBus.publish(GovernanceEvent.of(
+                    GovernanceEventType.CALL_SUCCEEDED,
+                    context.getResourceName()
+            ));
 
             return result;
         } catch (Throwable throwable) {
             RuntimeException mapped = exceptionMapperChain.map(context, throwable);
 
-            eventBus.publish(GovernanceEvent.of(GovernanceEventType.CALL_FAILED, context.getResourceName()));
+            eventBus.publish(GovernanceEvent.of(
+                    GovernanceEventType.CALL_FAILED,
+                    context.getResourceName()
+            ));
 
             if (fallbackHandler != null) {
                 return executeFallback(context, fallbackHandler, mapped);
@@ -66,13 +80,21 @@ public class DefaultGovernanceExecutor implements GovernanceExecutor {
         }
     }
 
-    private <T> T executeFallback(GovernanceContext context, FallbackHandler<T> fallbackHandler, RuntimeException mapped) {
-        eventBus.publish(GovernanceEvent.of(GovernanceEventType.FALLBACK_TRIGGERED, context.getResourceName()));
+    private <T> T executeFallback(GovernanceContext context,
+                                  FallbackHandler<T> fallbackHandler,
+                                  RuntimeException mapped) {
+        eventBus.publish(GovernanceEvent.of(
+                GovernanceEventType.FALLBACK_TRIGGERED,
+                context.getResourceName()
+        ));
 
         try {
             return fallbackHandler.fallback(context, mapped);
         } catch (Throwable fallbackEx) {
-            eventBus.publish(GovernanceEvent.of(GovernanceEventType.FALLBACK_FAILED, context.getResourceName()));
+            eventBus.publish(GovernanceEvent.of(
+                    GovernanceEventType.FALLBACK_FAILED,
+                    context.getResourceName()
+            ));
             throw new FallbackFailedException(context.getResourceName(), fallbackEx);
         }
     }

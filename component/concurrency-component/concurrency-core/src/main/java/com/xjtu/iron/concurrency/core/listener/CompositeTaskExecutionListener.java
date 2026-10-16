@@ -68,8 +68,13 @@ public final class CompositeTaskExecutionListener implements TaskExecutionListen
      *
      * @param listenerSupplier 真实监听器列表提供器
      */
-    public CompositeTaskExecutionListener(Supplier<List<TaskExecutionListener>> listenerSupplier) {
-        this.listenerSupplier = Objects.requireNonNull(listenerSupplier, "listenerSupplier must not be null");
+    public CompositeTaskExecutionListener(
+            Supplier<List<TaskExecutionListener>> listenerSupplier
+    ) {
+        this.listenerSupplier = Objects.requireNonNull(
+                listenerSupplier,
+                "listenerSupplier must not be null"
+        );
     }
 
     @Override
@@ -176,13 +181,19 @@ public final class CompositeTaskExecutionListener implements TaskExecutionListen
      * @param self 当前 Composite 实例；固定列表构造时可以为空
      * @return 不可变真实监听器列表
      */
-    private static List<TaskExecutionListener> sanitize(List<TaskExecutionListener> listeners, CompositeTaskExecutionListener self) {
+    private static List<TaskExecutionListener> sanitize(
+            List<TaskExecutionListener> listeners,
+            CompositeTaskExecutionListener self
+    ) {
         if (listeners == null || listeners.isEmpty()) {
             return Collections.emptyList();
         }
 
-        return listeners.stream().filter(Objects::nonNull).filter(listener -> listener != self)
-            .filter(listener -> !(listener instanceof CompositeTaskExecutionListener)).toList();
+        return listeners.stream()
+                .filter(Objects::nonNull)
+                .filter(listener -> listener != self)
+                .filter(listener -> !(listener instanceof CompositeTaskExecutionListener))
+                .toList();
     }
 
     /**

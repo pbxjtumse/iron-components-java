@@ -7,8 +7,7 @@ import java.util.zip.CRC32;
  */
 public final class IronChecksums {
 
-    private IronChecksums() {
-    }
+    private IronChecksums() {}
 
     public static long crc32(byte[] bytes) {
         CRC32 crc32 = new CRC32();

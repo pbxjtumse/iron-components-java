@@ -21,15 +21,7 @@ public final class LockWaitContext {
         this.clock = clock == null ? Clock.systemUTC() : clock;
     }
 
-    public LockAcquireRequest getRequest() {
-        return request;
-    }
-
-    public LockProvider getProvider() {
-        return provider;
-    }
-
-    public Clock getClock() {
-        return clock;
-    }
+    public LockAcquireRequest getRequest() { return request; }
+    public LockProvider getProvider() { return provider; }
+    public Clock getClock() { return clock; }
 }

@@ -6,7 +6,5 @@ package com.xjtu.iron.cache.api.exception;
 public class CacheLoadException extends CacheException {
 
     /** 创建带原始异常原因的加载异常。 */
-    public CacheLoadException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    public CacheLoadException(String message, Throwable cause) { super(message, cause); }
 }

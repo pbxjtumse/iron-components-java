@@ -25,15 +25,20 @@ public final class MessageConsumerAdapter {
     private final MessageConsumeExecutor consumeExecutor;
     private final MessageContextAccessor contextAccessor;
 
-    public MessageConsumerAdapter(MessageWireCodec wireCodec, MessageConsumeExecutor consumeExecutor,
-        MessageContextAccessor contextAccessor) {
+    public MessageConsumerAdapter(
+            MessageWireCodec wireCodec,
+            MessageConsumeExecutor consumeExecutor,
+            MessageContextAccessor contextAccessor) {
         this.wireCodec = Objects.requireNonNull(wireCodec, "wireCodec must not be null");
         this.consumeExecutor = Objects.requireNonNull(consumeExecutor, "consumeExecutor must not be null");
         this.contextAccessor = Objects.requireNonNull(contextAccessor, "contextAccessor must not be null");
     }
 
-    public <T> ProviderConsumeResult consume(ConsumerDefinition<T> definition, MessageHandler<T> handler, ProviderDestination destination,
-        ProviderInboundMessage inbound) {
+    public <T> ProviderConsumeResult consume(
+            ConsumerDefinition<T> definition,
+            MessageHandler<T> handler,
+            ProviderDestination destination,
+            ProviderInboundMessage inbound) {
         Objects.requireNonNull(definition, "definition must not be null");
         Objects.requireNonNull(handler, "handler must not be null");
         Objects.requireNonNull(destination, "destination must not be null");
@@ -47,8 +52,12 @@ public final class MessageConsumerAdapter {
         }
 
         try (MessageContextAccessor.Scope ignored = contextAccessor.open(
-            new CurrentMessage(decoded.envelope(), decoded.consumeContext()))) {
-            ConsumeDecision decision = consumeExecutor.execute(definition, decoded.envelope(), decoded.consumeContext(), handler);
+                new CurrentMessage(decoded.envelope(), decoded.consumeContext()))) {
+            ConsumeDecision decision = consumeExecutor.execute(
+                    definition,
+                    decoded.envelope(),
+                    decoded.consumeContext(),
+                    handler);
             return ProviderConsumeResult.of(decision);
         } catch (RuntimeException exception) {
             return ProviderConsumeResult.retry(ConsumeFailureType.HANDLER_ERROR, exception.getMessage());

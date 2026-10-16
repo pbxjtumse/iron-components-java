@@ -16,11 +16,15 @@ public final class MessageIdempotencyDecisionHandler {
 
     private final MessageIdempotencyStateManager stateManager;
 
-    public MessageIdempotencyDecisionHandler(MessageIdempotencyStateManager stateManager) {
+    public MessageIdempotencyDecisionHandler(
+            MessageIdempotencyStateManager stateManager) {
         this.stateManager = Objects.requireNonNull(stateManager, "stateManager must not be null");
     }
 
-    public ConsumeDecision handle(IdempotentAcquireResult result, MessageIdempotencyContext context, ConsumeInvocation invocation) {
+    public ConsumeDecision handle(
+            IdempotentAcquireResult result,
+            MessageIdempotencyContext context,
+            ConsumeInvocation invocation) {
         Objects.requireNonNull(result, "result must not be null");
         Objects.requireNonNull(context, "context must not be null");
         Objects.requireNonNull(invocation, "invocation must not be null");
@@ -32,7 +36,9 @@ public final class MessageIdempotencyDecisionHandler {
         };
     }
 
-    private ConsumeDecision executeAcquired(MessageIdempotencyContext context, ConsumeInvocation invocation) {
+    private ConsumeDecision executeAcquired(
+            MessageIdempotencyContext context,
+            ConsumeInvocation invocation) {
         try {
             ConsumeDecision decision = invocation.invoke();
             if (decision == ConsumeDecision.ACK) {
@@ -44,14 +50,18 @@ public final class MessageIdempotencyDecisionHandler {
                 return ConsumeDecision.DISCARD;
             }
             markFailedBestEffort(context, null);
-            return decision == ConsumeDecision.DEAD_LETTER ? ConsumeDecision.DEAD_LETTER : ConsumeDecision.RETRY;
+            return decision == ConsumeDecision.DEAD_LETTER
+                    ? ConsumeDecision.DEAD_LETTER
+                    : ConsumeDecision.RETRY;
         } catch (RuntimeException exception) {
             markFailedBestEffort(context, exception);
             return ConsumeDecision.RETRY;
         }
     }
 
-    private void markFailedBestEffort(MessageIdempotencyContext context, RuntimeException exception) {
+    private void markFailedBestEffort(
+            MessageIdempotencyContext context,
+            RuntimeException exception) {
         try {
             stateManager.markFailed(context, exception);
         } catch (RuntimeException ignored) {
@@ -60,7 +70,10 @@ public final class MessageIdempotencyDecisionHandler {
     }
 
     private ConsumeDecision rejected(MessageIdempotencyFailurePolicy policy) {
-        return policy == MessageIdempotencyFailurePolicy.DISCARD ? ConsumeDecision.DISCARD :
-            policy == MessageIdempotencyFailurePolicy.DEAD_LETTER ? ConsumeDecision.DEAD_LETTER : ConsumeDecision.RETRY;
+        return policy == MessageIdempotencyFailurePolicy.DISCARD
+                ? ConsumeDecision.DISCARD
+                : policy == MessageIdempotencyFailurePolicy.DEAD_LETTER
+                ? ConsumeDecision.DEAD_LETTER
+                : ConsumeDecision.RETRY;
     }
 }

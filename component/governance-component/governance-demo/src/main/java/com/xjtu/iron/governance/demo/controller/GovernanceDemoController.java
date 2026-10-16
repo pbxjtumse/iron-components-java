@@ -16,7 +16,8 @@ public class GovernanceDemoController {
 
     private final GovernanceTemplate governanceTemplate;
 
-    public GovernanceDemoController(CouponService couponService, GovernanceTemplate governanceTemplate) {
+    public GovernanceDemoController(CouponService couponService,
+                                    GovernanceTemplate governanceTemplate) {
         this.couponService = couponService;
         this.governanceTemplate = governanceTemplate;
     }
@@ -33,7 +34,10 @@ public class GovernanceDemoController {
 
     @GetMapping("/template")
     public String template(@RequestParam Long userId) {
-        return governanceTemplate.execute("internal.coupon.queryUserCoupon", () -> "template-result-" + userId,
-            throwable -> "template-fallback, reason=" + throwable.getClass().getSimpleName());
+        return governanceTemplate.execute(
+                "internal.coupon.queryUserCoupon",
+                () -> "template-result-" + userId,
+                throwable -> "template-fallback, reason=" + throwable.getClass().getSimpleName()
+        );
     }
 }

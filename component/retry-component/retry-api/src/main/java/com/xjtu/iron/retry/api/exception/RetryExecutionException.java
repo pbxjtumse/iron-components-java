@@ -29,7 +29,10 @@ public final class RetryExecutionException extends RuntimeException {
 
     /** 生成不包含业务请求体和敏感异常消息的稳定异常文本。 */
     private static String buildMessage(RetryResult<?> result) {
-        return "Retry execution did not succeed: operation=" + result.getOperationName() + ", policy=" + result.getPolicyName() +
-            ", status=" + result.getStatus() + ", attempts=" + result.getAttempts() + ", failureCode=" + result.getFailureCode();
+        return "Retry execution did not succeed: operation=" + result.getOperationName()
+                + ", policy=" + result.getPolicyName()
+                + ", status=" + result.getStatus()
+                + ", attempts=" + result.getAttempts()
+                + ", failureCode=" + result.getFailureCode();
     }
 }

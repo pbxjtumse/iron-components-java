@@ -27,14 +27,37 @@ public class ProviderInboundMessage {
     private final ProviderMessagePosition position;
     private final Map<String, String> providerMetadata;
 
-    public ProviderInboundMessage(String providerMessageId, String messageKey, Map<String, String> headers, byte[] body, Instant receivedAt,
-        Map<String, String> providerMetadata) {
-        this(null, null, providerMessageId, messageKey, headers, body, receivedAt, 1, null, providerMetadata);
+    public ProviderInboundMessage(
+            String providerMessageId,
+            String messageKey,
+            Map<String, String> headers,
+            byte[] body,
+            Instant receivedAt,
+            Map<String, String> providerMetadata) {
+        this(
+                null,
+                null,
+                providerMessageId,
+                messageKey,
+                headers,
+                body,
+                receivedAt,
+                1,
+                null,
+                providerMetadata);
     }
 
-    public ProviderInboundMessage(String providerName, String physicalDestination, String providerMessageId, String messageKey,
-        Map<String, String> headers, byte[] body, Instant receivedAt, int deliveryAttempt, ProviderMessagePosition position,
-        Map<String, String> providerMetadata) {
+    public ProviderInboundMessage(
+            String providerName,
+            String physicalDestination,
+            String providerMessageId,
+            String messageKey,
+            Map<String, String> headers,
+            byte[] body,
+            Instant receivedAt,
+            int deliveryAttempt,
+            ProviderMessagePosition position,
+            Map<String, String> providerMetadata) {
         this.providerName = normalize(providerName);
         this.physicalDestination = normalize(physicalDestination);
         this.providerMessageId = normalize(providerMessageId);
@@ -52,45 +75,16 @@ public class ProviderInboundMessage {
         this.providerMetadata = Collections.unmodifiableMap(metadata);
     }
 
-    public String providerName() {
-        return providerName;
-    }
-
-    public String physicalDestination() {
-        return physicalDestination;
-    }
-
-    public String providerMessageId() {
-        return providerMessageId;
-    }
-
-    public String messageKey() {
-        return messageKey;
-    }
-
-    public Map<String, String> headers() {
-        return headers;
-    }
-
-    public byte[] body() {
-        return body.clone();
-    }
-
-    public Instant receivedAt() {
-        return receivedAt;
-    }
-
-    public int deliveryAttempt() {
-        return deliveryAttempt;
-    }
-
-    public ProviderMessagePosition position() {
-        return position;
-    }
-
-    public Map<String, String> providerMetadata() {
-        return providerMetadata;
-    }
+    public String providerName() { return providerName; }
+    public String physicalDestination() { return physicalDestination; }
+    public String providerMessageId() { return providerMessageId; }
+    public String messageKey() { return messageKey; }
+    public Map<String, String> headers() { return headers; }
+    public byte[] body() { return body.clone(); }
+    public Instant receivedAt() { return receivedAt; }
+    public int deliveryAttempt() { return deliveryAttempt; }
+    public ProviderMessagePosition position() { return position; }
+    public Map<String, String> providerMetadata() { return providerMetadata; }
 
     private static Map<String, String> immutable(Map<String, String> source) {
         if (source == null || source.isEmpty()) {

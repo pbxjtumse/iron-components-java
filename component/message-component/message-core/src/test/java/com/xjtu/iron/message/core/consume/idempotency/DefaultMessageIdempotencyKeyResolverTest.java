@@ -15,10 +15,18 @@ class DefaultMessageIdempotencyKeyResolverTest {
 
     @Test
     void shouldResolveMessageIdKey() {
-        MessageEnvelope<String> message =
-            MessageEnvelope.builder("OrderPaid", "payload").messageId("msg-001").messageKey("order-10001").build();
-        ConsumeContext context =
-            new ConsumeContext("kafka", "order-topic", "order-paid-consumer-group", "order-topic-0@6", 1, Instant.now(), Map.of());
+        MessageEnvelope<String> message = MessageEnvelope.builder("OrderPaid", "payload")
+                .messageId("msg-001")
+                .messageKey("order-10001")
+                .build();
+        ConsumeContext context = new ConsumeContext(
+                "kafka",
+                "order-topic",
+                "order-paid-consumer-group",
+                "order-topic-0@6",
+                1,
+                Instant.now(),
+                Map.of());
         String key = resolver.resolve(message, context, MessageIdempotencyOptions.messageId());
         assertEquals("kafka:order-topic:order-paid-consumer-group:msg-001", key);
     }

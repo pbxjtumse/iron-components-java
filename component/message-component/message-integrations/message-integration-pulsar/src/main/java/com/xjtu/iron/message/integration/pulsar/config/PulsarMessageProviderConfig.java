@@ -32,8 +32,12 @@ public final class PulsarMessageProviderConfig {
     /**
      * 校验并标准化 Pulsar 配置。
      */
-    public PulsarMessageProviderConfig(String serviceUrl, Duration operationTimeout, Duration negativeAckRedeliveryDelay,
-        int receiverQueueSize, String authenticationToken) {
+    public PulsarMessageProviderConfig(
+        String serviceUrl,
+        Duration operationTimeout,
+        Duration negativeAckRedeliveryDelay,
+        int receiverQueueSize,
+        String authenticationToken) {
         // serviceUrl 必须存在。
         if (serviceUrl == null || serviceUrl.isBlank()) {
             // 没有服务地址无法创建客户端。
@@ -42,14 +46,18 @@ public final class PulsarMessageProviderConfig {
         // 去除地址首尾空白。
         serviceUrl = serviceUrl.trim();
         // operationTimeout 必须为正数。
-        if (operationTimeout == null || operationTimeout.isZero() || operationTimeout.isNegative()) {
+        if (operationTimeout == null
+                || operationTimeout.isZero()
+                || operationTimeout.isNegative()) {
             // 非正超时无意义。
             throw new IllegalArgumentException("operationTimeout must be positive");
         }
         // Negative ACK 延迟允许为零但不能为负数。
-        if (negativeAckRedeliveryDelay == null || negativeAckRedeliveryDelay.isNegative()) {
+        if (negativeAckRedeliveryDelay == null
+                || negativeAckRedeliveryDelay.isNegative()) {
             // null 或负数都属于非法配置。
-            throw new IllegalArgumentException("negativeAckRedeliveryDelay must not be negative");
+            throw new IllegalArgumentException(
+                    "negativeAckRedeliveryDelay must not be negative");
         }
         // 接收队列不能为负数，零表示禁用预取。
         if (receiverQueueSize < 0) {
@@ -57,8 +65,11 @@ public final class PulsarMessageProviderConfig {
             throw new IllegalArgumentException("receiverQueueSize must not be negative");
         }
         // 空白 Token 统一转换为 null。
-        authenticationToken = authenticationToken == null || authenticationToken.isBlank() ? null : authenticationToken.trim();
-
+        authenticationToken = authenticationToken == null
+                || authenticationToken.isBlank()
+                ? null
+                : authenticationToken.trim();
+    
         // 保存完成校验和标准化后的 serviceUrl。
         this.serviceUrl = serviceUrl;
         // 保存完成校验和标准化后的 operationTimeout。
@@ -79,7 +90,12 @@ public final class PulsarMessageProviderConfig {
      */
     public static PulsarMessageProviderConfig defaults(String serviceUrl) {
         // 默认三秒操作超时、一秒负确认重投延迟和 1000 条接收队列。
-        return new PulsarMessageProviderConfig(serviceUrl, Duration.ofSeconds(3), Duration.ofSeconds(1), 1000, null);
+        return new PulsarMessageProviderConfig(
+                serviceUrl,
+                Duration.ofSeconds(3),
+                Duration.ofSeconds(1),
+                1000,
+                null);
     }
 
     /**
@@ -95,11 +111,17 @@ public final class PulsarMessageProviderConfig {
      * @param authenticationToken 可选 Token；未开启认证时传 null
      * @return 公网调试配置
      */
-    public static PulsarMessageProviderConfig externalDebug(String serviceUrl, String authenticationToken) {
+    public static PulsarMessageProviderConfig externalDebug(
+            String serviceUrl,
+            String authenticationToken) {
         // 公网调试使用十五秒操作超时、两秒负确认重投延迟和 1000 条接收队列。
-        return new PulsarMessageProviderConfig(serviceUrl, Duration.ofSeconds(15), Duration.ofSeconds(2), 1000, authenticationToken);
+        return new PulsarMessageProviderConfig(
+                serviceUrl,
+                Duration.ofSeconds(15),
+                Duration.ofSeconds(2),
+                1000,
+                authenticationToken);
     }
-
     /**
      * 返回Pulsar 服务地址。
      *
@@ -168,9 +190,11 @@ public final class PulsarMessageProviderConfig {
         }
         // 转换为当前类型后逐字段比较。
         PulsarMessageProviderConfig other = (PulsarMessageProviderConfig) object;
-        return Objects.equals(serviceUrl, other.serviceUrl) && Objects.equals(operationTimeout, other.operationTimeout) &&
-            Objects.equals(negativeAckRedeliveryDelay, other.negativeAckRedeliveryDelay) && receiverQueueSize == other.receiverQueueSize &&
-            Objects.equals(authenticationToken, other.authenticationToken);
+        return Objects.equals(serviceUrl, other.serviceUrl)
+                && Objects.equals(operationTimeout, other.operationTimeout)
+                && Objects.equals(negativeAckRedeliveryDelay, other.negativeAckRedeliveryDelay)
+                && receiverQueueSize == other.receiverQueueSize
+                && Objects.equals(authenticationToken, other.authenticationToken);
     }
 
     /**
@@ -192,9 +216,13 @@ public final class PulsarMessageProviderConfig {
     @Override
     public String toString() {
         // Token 只输出是否配置，禁止把认证值写入日志。
-        return "PulsarMessageProviderConfig{" + "serviceUrl=" + serviceUrl + ", operationTimeout=" + operationTimeout +
-            ", negativeAckRedeliveryDelay=" + negativeAckRedeliveryDelay + ", receiverQueueSize=" + receiverQueueSize +
-            ", authenticationConfigured=" + (authenticationToken != null) + '}';
+        return "PulsarMessageProviderConfig{" +
+                "serviceUrl=" + serviceUrl +
+                ", operationTimeout=" + operationTimeout +
+                ", negativeAckRedeliveryDelay=" + negativeAckRedeliveryDelay +
+                ", receiverQueueSize=" + receiverQueueSize +
+                ", authenticationConfigured=" + (authenticationToken != null) +
+                '}';
     }
 
 }

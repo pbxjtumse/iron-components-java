@@ -6,7 +6,6 @@ import com.xjtu.iron.message.spi.ProviderDestination;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
 /**
  * 默认逻辑目的地解析器，把 API 层的 {@code MessageDestination} 转换为 SPI 层的 {@code ProviderDestination}。
  *
@@ -35,10 +34,14 @@ public final class DefaultDestinationResolver implements DestinationResolver {
      * @param defaultProviderName 默认 Provider
      * @param routingMode 未配置精确路由时的处理策略
      */
-    public DefaultDestinationResolver(DestinationRouteRegistry routeRegistry, String defaultProviderName,
-        DestinationRoutingMode routingMode) {
+    public DefaultDestinationResolver(
+            DestinationRouteRegistry routeRegistry,
+            String defaultProviderName,
+            DestinationRoutingMode routingMode) {
         // 路由注册表不能为空。
-        this.routeRegistry = Objects.requireNonNull(routeRegistry, "routeRegistry must not be null");
+        this.routeRegistry = Objects.requireNonNull(
+                routeRegistry,
+                "routeRegistry must not be null");
         // 默认 Provider 必须存在。
         if (defaultProviderName == null || defaultProviderName.isBlank()) {
             // 启动阶段拒绝非法配置。
@@ -61,10 +64,10 @@ public final class DefaultDestinationResolver implements DestinationResolver {
         if (destination.providerHint() != null) {
             // 先查找该 Provider 的显式路由。
             return routeRegistry.find(destination, destination.providerHint())
-                // 存在显式路由时直接使用。
-                .map(DestinationRoute::toProviderDestination)
-                // 严格模式禁止 providerHint 绕过路由表。
-                .orElseGet(() -> unresolved(destination, destination.providerHint()));
+                    // 存在显式路由时直接使用。
+                    .map(DestinationRoute::toProviderDestination)
+                    // 严格模式禁止 providerHint 绕过路由表。
+                    .orElseGet(() -> unresolved(destination, destination.providerHint()));
         }
         // 优先查找默认 Provider 的显式路由。
         var defaultRoute = routeRegistry.find(destination, defaultProviderName);
@@ -84,8 +87,8 @@ public final class DefaultDestinationResolver implements DestinationResolver {
         if (allRoutes.size() > 1) {
             // 要求调用方修正默认 Provider 或显式 providerHint。
             throw new IllegalStateException(
-                "ambiguous destination routes for " + destination.qualifiedName() + "; default provider route not found: " +
-                    defaultProviderName);
+                    "ambiguous destination routes for " + destination.qualifiedName()
+                            + "; default provider route not found: " + defaultProviderName);
         }
         // 完全没有路由时根据路由模式决定失败或隐式生成。
         return unresolved(destination, defaultProviderName);
@@ -94,14 +97,21 @@ public final class DefaultDestinationResolver implements DestinationResolver {
     /**
      * 处理未配置精确路由的逻辑目的地。
      */
-    private ProviderDestination unresolved(MessageDestination destination, String providerName) {
+    private ProviderDestination unresolved(
+            MessageDestination destination,
+            String providerName) {
         // 严格模式要求所有生产目的地显式配置，防止拼写错误创建或误投 Topic。
         if (routingMode == DestinationRoutingMode.STRICT) {
             // 输出完整逻辑名称和目标 Provider，便于修正配置。
-            throw new IllegalStateException("destination route not found: " + destination.qualifiedName() + ", provider=" + providerName);
+            throw new IllegalStateException(
+                    "destination route not found: " + destination.qualifiedName()
+                            + ", provider=" + providerName);
         }
         // 隐式模式使用标准化物理名称，主要供本地开发和快速验证。
-        return new ProviderDestination(providerName, defaultPhysicalName(destination), java.util.Map.of());
+        return new ProviderDestination(
+                providerName,
+                defaultPhysicalName(destination),
+                java.util.Map.of());
     }
 
     /**

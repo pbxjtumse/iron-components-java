@@ -41,22 +41,31 @@ public final class IdGenerators {
     }
 
     public static LongIdGenerator snowflake(long workerId) {
-        return new SnowflakeLongIdGenerator(SnowflakeOptions.builder(workerId).build());
+        return new SnowflakeLongIdGenerator(
+                SnowflakeOptions.builder(workerId).build()
+        );
     }
 
     public static LongIdGenerator snowflake(SnowflakeOptions options) {
         return new SnowflakeLongIdGenerator(options);
     }
 
-    public static StringIdGenerator prefixed(String prefix, StringIdGenerator delegate) {
+    public static StringIdGenerator prefixed(
+            String prefix,
+            StringIdGenerator delegate) {
         return new PrefixedStringIdGenerator(prefix, delegate);
     }
 
-    public static StringIdGenerator prefixed(String prefix, String separator, StringIdGenerator delegate) {
+    public static StringIdGenerator prefixed(
+            String prefix,
+            String separator,
+            StringIdGenerator delegate) {
         return new PrefixedStringIdGenerator(prefix, separator, delegate);
     }
 
-    public static StringIdGenerator composite(List<? extends StringIdGenerator> delegates, String delimiter) {
+    public static StringIdGenerator composite(
+            List<? extends StringIdGenerator> delegates,
+            String delimiter) {
         return new CompositeStringIdGenerator(delegates, delimiter);
     }
 }

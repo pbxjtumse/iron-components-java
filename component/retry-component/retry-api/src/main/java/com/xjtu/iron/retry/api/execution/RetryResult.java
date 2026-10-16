@@ -35,8 +35,17 @@ public final class RetryResult<T> {
     /** 最后一次分类决策。 */
     private final RetryDecision lastDecision;
 
-    private RetryResult(String retryId, String operationName, String policyName, RetryStatus status, T value, Throwable failure,
-        int attempts, Duration elapsedTime, RetryAttempt<T> lastAttempt, RetryDecision lastDecision) {
+    private RetryResult(
+            String retryId,
+            String operationName,
+            String policyName,
+            RetryStatus status,
+            T value,
+            Throwable failure,
+            int attempts,
+            Duration elapsedTime,
+            RetryAttempt<T> lastAttempt,
+            RetryDecision lastDecision) {
         this.retryId = requireText(retryId, "retryId");
         this.operationName = requireText(operationName, "operationName");
         this.policyName = requireText(policyName, "policyName");
@@ -55,10 +64,29 @@ public final class RetryResult<T> {
     }
 
     /** 创建一个统一结果。 */
-    public static <T> RetryResult<T> of(String retryId, String operationName, String policyName, RetryStatus status, T value,
-        Throwable failure, int attempts, Duration elapsedTime, RetryAttempt<T> lastAttempt, RetryDecision lastDecision) {
-        return new RetryResult<>(retryId, operationName, policyName, status, value, failure, attempts, elapsedTime, lastAttempt,
-            lastDecision);
+    public static <T> RetryResult<T> of(
+            String retryId,
+            String operationName,
+            String policyName,
+            RetryStatus status,
+            T value,
+            Throwable failure,
+            int attempts,
+            Duration elapsedTime,
+            RetryAttempt<T> lastAttempt,
+            RetryDecision lastDecision) {
+        return new RetryResult<>(
+                retryId,
+                operationName,
+                policyName,
+                status,
+                value,
+                failure,
+                attempts,
+                elapsedTime,
+                lastAttempt,
+                lastDecision
+        );
     }
 
     public String getRetryId() {
@@ -102,7 +130,9 @@ public final class RetryResult<T> {
     }
 
     public RetryFailureCategory getFailureCategory() {
-        return lastDecision == null ? RetryFailureCategory.UNKNOWN : lastDecision.getFailureCategory();
+        return lastDecision == null
+                ? RetryFailureCategory.UNKNOWN
+                : lastDecision.getFailureCategory();
     }
 
     public String getFailureCode() {
@@ -125,8 +155,12 @@ public final class RetryResult<T> {
     }
 
     /** 校验尝试次数和最后尝试快照保持一致。 */
-    private static void validateAttemptConsistency(int attempts, RetryAttempt<?> lastAttempt, String retryId, String operationName,
-        String policyName) {
+    private static void validateAttemptConsistency(
+            int attempts,
+            RetryAttempt<?> lastAttempt,
+            String retryId,
+            String operationName,
+            String policyName) {
         if (attempts == 0) {
             if (lastAttempt != null) {
                 throw new IllegalArgumentException("lastAttempt must be null when attempts is zero");
@@ -139,26 +173,35 @@ public final class RetryResult<T> {
         if (lastAttempt.getAttemptNumber() != attempts) {
             throw new IllegalArgumentException("lastAttempt number must equal attempts");
         }
-        if (!lastAttempt.getRetryId().equals(retryId) || !lastAttempt.getOperationName().equals(operationName) ||
-            !lastAttempt.getPolicyName().equals(policyName)) {
+        if (!lastAttempt.getRetryId().equals(retryId)
+                || !lastAttempt.getOperationName().equals(operationName)
+                || !lastAttempt.getPolicyName().equals(policyName)) {
             throw new IllegalArgumentException("lastAttempt must belong to the same execution");
         }
     }
 
     /** 校验状态、失败和决策之间没有明显矛盾。 */
-    private static void validateStatusConsistency(RetryStatus status, Throwable failure, RetryAttempt<?> lastAttempt,
-        RetryDecision lastDecision) {
+    private static void validateStatusConsistency(
+            RetryStatus status,
+            Throwable failure,
+            RetryAttempt<?> lastAttempt,
+            RetryDecision lastDecision) {
         if (status == RetryStatus.SUCCESS && failure != null) {
             throw new IllegalArgumentException("SUCCESS result must not contain failure");
         }
-        if (status == RetryStatus.SUCCESS && (lastDecision == null || !lastDecision.isSuccess())) {
+        if (status == RetryStatus.SUCCESS
+                && (lastDecision == null || !lastDecision.isSuccess())) {
             throw new IllegalArgumentException("SUCCESS result requires SUCCESS decision");
         }
         if (status == RetryStatus.INTERRUPTED && !(failure instanceof InterruptedException)) {
-            throw new IllegalArgumentException("INTERRUPTED result requires InterruptedException failure");
+            throw new IllegalArgumentException(
+                    "INTERRUPTED result requires InterruptedException failure"
+            );
         }
         if (lastAttempt != null && failure == null && lastAttempt.hasFailure()) {
-            throw new IllegalArgumentException("terminal failure must retain the last attempt failure");
+            throw new IllegalArgumentException(
+                    "terminal failure must retain the last attempt failure"
+            );
         }
     }
 

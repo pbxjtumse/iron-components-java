@@ -32,14 +32,23 @@ public final class RetryExecution<T> {
     private RetryExecution(Builder<T> builder) {
         this.operationName = requireText(builder.operationName, "operationName");
         this.operation = Objects.requireNonNull(builder.operation, "operation must not be null");
-        this.retryPolicy = Objects.requireNonNull(builder.retryPolicy, "retryPolicy must not be null");
+        this.retryPolicy = Objects.requireNonNull(
+                builder.retryPolicy,
+                "retryPolicy must not be null"
+        );
         this.attributes = immutableAttributes(builder.attributes);
-        this.cancellationToken = Objects.requireNonNull(builder.cancellationToken, "cancellationToken must not be null");
+        this.cancellationToken = Objects.requireNonNull(
+                builder.cancellationToken,
+                "cancellationToken must not be null"
+        );
         this.retryId = normalizeOptionalText(builder.retryId, "retryId");
     }
 
     /** 创建一个执行请求构建器。 */
-    public static <T> Builder<T> builder(String operationName, RetryOperation<T> operation, RetryPolicy retryPolicy) {
+    public static <T> Builder<T> builder(
+            String operationName,
+            RetryOperation<T> operation,
+            RetryPolicy retryPolicy) {
         return new Builder<>(operationName, operation, retryPolicy);
     }
 
@@ -83,7 +92,10 @@ public final class RetryExecution<T> {
         /** 可选调用方指定标识。 */
         private String retryId;
 
-        private Builder(String operationName, RetryOperation<T> operation, RetryPolicy retryPolicy) {
+        private Builder(
+                String operationName,
+                RetryOperation<T> operation,
+                RetryPolicy retryPolicy) {
             this.operationName = operationName;
             this.operation = operation;
             this.retryPolicy = retryPolicy;

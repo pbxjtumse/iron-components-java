@@ -33,14 +33,13 @@ public final class IdempotencyExecutionPreparer {
         return prepare(request.getPolicyName(), request.getPolicy(), resultPolicy);
     }
 
-    public <T> IdempotencyExecutionDefinition<T> prepareRecovery(IdempotencyRecoveryRequest request,
-        IdempotencyResultPolicy<T> resultPolicy) {
+    public <T> IdempotencyExecutionDefinition<T> prepareRecovery(IdempotencyRecoveryRequest request, IdempotencyResultPolicy<T> resultPolicy) {
         validateRecoveryRequest(request);
         return prepare(request.getPolicyName(), request.getPolicy(), resultPolicy);
     }
 
     private <T> IdempotencyExecutionDefinition<T> prepare(String policyName, IdempotencyPolicy inlinePolicy,
-        IdempotencyResultPolicy<T> resultPolicy) {
+                                                           IdempotencyResultPolicy<T> resultPolicy) {
         IdempotencyPolicy policy = policyRegistry.resolve(policyName, inlinePolicy);
         policy.validate();
         IdempotencyRepository repository = repositoryRegistry.resolve(policy.getMode(), policy.getRepositoryName());

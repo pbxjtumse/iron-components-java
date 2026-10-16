@@ -9,7 +9,10 @@ final class RetryResultRule {
     private final RetryFailureCategory category;
     private final String failureCode;
 
-    RetryResultRule(Predicate<Object> predicate, RetryFailureCategory category, String failureCode) {
+    RetryResultRule(
+            Predicate<Object> predicate,
+            RetryFailureCategory category,
+            String failureCode) {
         this.predicate = predicate;
         this.category = category;
         this.failureCode = failureCode;

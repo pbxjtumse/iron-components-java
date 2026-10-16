@@ -16,7 +16,8 @@ import java.time.Duration;
  *
  * <p>该类只描述 Pulsar 客户端参数，不包含消息组件的通用路由和可靠发送配置。
  * 通用配置仍然放在 {@code MessageProperties} 中。</p>
- */ public class PulsarMessageProperties {
+ */
+public class PulsarMessageProperties {
 
     /**
      * 是否启用 Pulsar Provider 自动配置。

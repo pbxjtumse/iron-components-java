@@ -7,7 +7,10 @@ final class RetryPolicyPropertiesResolver {
 
     /** 解析全部命名策略并保持配置声明顺序。 */
     Map<String, ResolvedRetryPolicyProperties> resolve(RetryProperties properties) {
-        RetryProperties actualProperties = Objects.requireNonNull(properties, "properties must not be null");
+        RetryProperties actualProperties = Objects.requireNonNull(
+                properties,
+                "properties must not be null"
+        );
         Map<String, ResolvedRetryPolicyProperties> resolved = new LinkedHashMap<>();
         for (String policyName : actualProperties.getPolicies().keySet()) {
             resolveOne(policyName, actualProperties, resolved, new ArrayDeque<>());
@@ -16,25 +19,39 @@ final class RetryPolicyPropertiesResolver {
     }
 
     /** 使用深度优先方式解析一个策略及其父策略。 */
-    private ResolvedRetryPolicyProperties resolveOne(String policyName, RetryProperties properties,
-        Map<String, ResolvedRetryPolicyProperties> resolved, Deque<String> inheritancePath) {
+    private ResolvedRetryPolicyProperties resolveOne(
+            String policyName,
+            RetryProperties properties,
+            Map<String, ResolvedRetryPolicyProperties> resolved,
+            Deque<String> inheritancePath) {
         String actualPolicyName = requireText(policyName, "policyName");
         ResolvedRetryPolicyProperties cached = resolved.get(actualPolicyName);
         if (cached != null) {
             return cached;
         }
-        RetryProperties.PolicyProperties source = properties.getPolicies().get(actualPolicyName);
+        RetryProperties.PolicyProperties source = properties
+                .getPolicies()
+                .get(actualPolicyName);
         if (source == null) {
-            throw new IllegalArgumentException("Retry policy does not exist: " + actualPolicyName);
+            throw new IllegalArgumentException(
+                    "Retry policy does not exist: " + actualPolicyName
+            );
         }
         if (inheritancePath.contains(actualPolicyName)) {
             ArrayList<String> cycle = new ArrayList<>(inheritancePath);
             cycle.add(actualPolicyName);
-            throw new IllegalArgumentException("Circular retry policy inheritance detected: " + cycle);
+            throw new IllegalArgumentException(
+                    "Circular retry policy inheritance detected: " + cycle
+            );
         }
         inheritancePath.addLast(actualPolicyName);
         try {
-            ResolvedRetryPolicyProperties target = createInheritedTarget(source, properties, resolved, inheritancePath);
+            ResolvedRetryPolicyProperties target = createInheritedTarget(
+                    source,
+                    properties,
+                    resolved,
+                    inheritancePath
+            );
             merge(target, source);
             resolved.put(actualPolicyName, target);
             return target;
@@ -44,8 +61,11 @@ final class RetryPolicyPropertiesResolver {
     }
 
     /** 创建默认配置或父策略深复制。 */
-    private ResolvedRetryPolicyProperties createInheritedTarget(RetryProperties.PolicyProperties source, RetryProperties properties,
-        Map<String, ResolvedRetryPolicyProperties> resolved, Deque<String> inheritancePath) {
+    private ResolvedRetryPolicyProperties createInheritedTarget(
+            RetryProperties.PolicyProperties source,
+            RetryProperties properties,
+            Map<String, ResolvedRetryPolicyProperties> resolved,
+            Deque<String> inheritancePath) {
         String basePolicy = source.getBasePolicy();
         if (basePolicy == null || basePolicy.isBlank()) {
             return new ResolvedRetryPolicyProperties();
@@ -54,7 +74,9 @@ final class RetryPolicyPropertiesResolver {
     }
 
     /** 将子策略显式字段覆盖到继承结果。 */
-    private void merge(ResolvedRetryPolicyProperties target, RetryProperties.PolicyProperties source) {
+    private void merge(
+            ResolvedRetryPolicyProperties target,
+            RetryProperties.PolicyProperties source) {
         if (source.getMaxAttempts() != null) {
             target.maxAttempts = source.getMaxAttempts();
         }
@@ -77,7 +99,10 @@ final class RetryPolicyPropertiesResolver {
             target.retryFailureCategory = source.getRetryFailureCategory();
         }
         if (source.getRetryFailureCode() != null) {
-            target.retryFailureCode = requireText(source.getRetryFailureCode(), "retryFailureCode");
+            target.retryFailureCode = requireText(
+                    source.getRetryFailureCode(),
+                    "retryFailureCode"
+            );
         }
         if (source.getRetryOn() != null) {
             target.retryOn = new ArrayList<>(source.getRetryOn());
@@ -92,7 +117,9 @@ final class RetryPolicyPropertiesResolver {
     }
 
     /** 将可选退避字段覆盖到继承结果。 */
-    private void mergeBackoff(ResolvedRetryPolicyProperties target, RetryProperties.BackoffProperties backoff) {
+    private void mergeBackoff(
+            ResolvedRetryPolicyProperties target,
+            RetryProperties.BackoffProperties backoff) {
         if (backoff == null) {
             return;
         }

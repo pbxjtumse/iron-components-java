@@ -14,31 +14,12 @@ public final class StateOperationOutcome<R> {
         this.error = error;
     }
 
-    static <R> StateOperationOutcome<R> direct(R result) {
-        return new StateOperationOutcome<>(result, false, false, null);
-    }
+    static <R> StateOperationOutcome<R> direct(R result) { return new StateOperationOutcome<>(result, false, false, null); }
+    static <R> StateOperationOutcome<R> fallback(R result) { return new StateOperationOutcome<>(result, true, false, null); }
+    static <R> StateOperationOutcome<R> lockRejected(Throwable error) { return new StateOperationOutcome<>(null, false, true, error); }
 
-    static <R> StateOperationOutcome<R> fallback(R result) {
-        return new StateOperationOutcome<>(result, true, false, null);
-    }
-
-    static <R> StateOperationOutcome<R> lockRejected(Throwable error) {
-        return new StateOperationOutcome<>(null, false, true, error);
-    }
-
-    public R result() {
-        return result;
-    }
-
-    public boolean lockFallback() {
-        return lockFallback;
-    }
-
-    public boolean lockRejected() {
-        return lockRejected;
-    }
-
-    public Throwable error() {
-        return error;
-    }
+    public R result() { return result; }
+    public boolean lockFallback() { return lockFallback; }
+    public boolean lockRejected() { return lockRejected; }
+    public Throwable error() { return error; }
 }

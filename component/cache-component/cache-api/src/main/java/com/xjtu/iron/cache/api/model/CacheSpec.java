@@ -52,102 +52,62 @@ public class CacheSpec {
     }
 
     /** 返回缓存名称。 */
-    public String getCacheName() {
-        return cacheName;
-    }
+    public String getCacheName() { return cacheName; }
 
     /** 设置缓存名称。 */
-    public void setCacheName(String cacheName) {
-        this.cacheName = cacheName;
-    }
+    public void setCacheName(String cacheName) { this.cacheName = cacheName; }
 
     /** 返回是否启用 L1。 */
-    public boolean isEnableL1() {
-        return enableL1;
-    }
+    public boolean isEnableL1() { return enableL1; }
 
     /** 设置是否启用 L1。 */
-    public void setEnableL1(boolean enableL1) {
-        this.enableL1 = enableL1;
-    }
+    public void setEnableL1(boolean enableL1) { this.enableL1 = enableL1; }
 
     /** 返回是否启用 L2。 */
-    public boolean isEnableL2() {
-        return enableL2;
-    }
+    public boolean isEnableL2() { return enableL2; }
 
     /** 设置是否启用 L2。 */
-    public void setEnableL2(boolean enableL2) {
-        this.enableL2 = enableL2;
-    }
+    public void setEnableL2(boolean enableL2) { this.enableL2 = enableL2; }
 
     /** 返回正常值 TTL。 */
-    public Duration getTtl() {
-        return ttl;
-    }
+    public Duration getTtl() { return ttl; }
 
     /** 设置正常值 TTL。 */
-    public void setTtl(Duration ttl) {
-        this.ttl = ttl;
-    }
+    public void setTtl(Duration ttl) { this.ttl = ttl; }
 
     /** 返回空值 TTL。 */
-    public Duration getNullValueTtl() {
-        return nullValueTtl;
-    }
+    public Duration getNullValueTtl() { return nullValueTtl; }
 
     /** 设置空值 TTL。 */
-    public void setNullValueTtl(Duration nullValueTtl) {
-        this.nullValueTtl = nullValueTtl;
-    }
+    public void setNullValueTtl(Duration nullValueTtl) { this.nullValueTtl = nullValueTtl; }
 
     /** 返回 TTL 抖动范围。 */
-    public Duration getTtlJitter() {
-        return ttlJitter;
-    }
+    public Duration getTtlJitter() { return ttlJitter; }
 
     /** 设置 TTL 抖动范围。 */
-    public void setTtlJitter(Duration ttlJitter) {
-        this.ttlJitter = ttlJitter;
-    }
+    public void setTtlJitter(Duration ttlJitter) { this.ttlJitter = ttlJitter; }
 
     /** 返回是否开启互斥加载。 */
-    public boolean isMutexLoad() {
-        return mutexLoad;
-    }
+    public boolean isMutexLoad() { return mutexLoad; }
 
     /** 设置是否开启互斥加载。 */
-    public void setMutexLoad(boolean mutexLoad) {
-        this.mutexLoad = mutexLoad;
-    }
+    public void setMutexLoad(boolean mutexLoad) { this.mutexLoad = mutexLoad; }
 
     /** 返回空值缓存策略。 */
-    public CacheNullPolicy getNullPolicy() {
-        return nullPolicy;
-    }
+    public CacheNullPolicy getNullPolicy() { return nullPolicy; }
 
     /** 设置空值缓存策略。 */
-    public void setNullPolicy(CacheNullPolicy nullPolicy) {
-        this.nullPolicy = nullPolicy;
-    }
+    public void setNullPolicy(CacheNullPolicy nullPolicy) { this.nullPolicy = nullPolicy; }
 
     /** 返回一致性策略。 */
-    public CacheConsistencyPolicy getConsistencyPolicy() {
-        return consistencyPolicy;
-    }
+    public CacheConsistencyPolicy getConsistencyPolicy() { return consistencyPolicy; }
 
     /** 设置一致性策略。 */
-    public void setConsistencyPolicy(CacheConsistencyPolicy consistencyPolicy) {
-        this.consistencyPolicy = consistencyPolicy;
-    }
+    public void setConsistencyPolicy(CacheConsistencyPolicy consistencyPolicy) { this.consistencyPolicy = consistencyPolicy; }
 
     /** 返回缓存异常降级策略。 */
-    public CacheDegradePolicy getDegradePolicy() {
-        return degradePolicy;
-    }
+    public CacheDegradePolicy getDegradePolicy() { return degradePolicy; }
 
     /** 设置缓存异常降级策略。 */
-    public void setDegradePolicy(CacheDegradePolicy degradePolicy) {
-        this.degradePolicy = degradePolicy;
-    }
+    public void setDegradePolicy(CacheDegradePolicy degradePolicy) { this.degradePolicy = degradePolicy; }
 }

@@ -54,8 +54,9 @@ public final class IdempotencyRecoveryAcquireRequest {
     private final Instant now;
 
     public IdempotencyRecoveryAcquireRequest(IdempotencyStorageContext storageContext, String namespace, String key, String requestHash,
-        String routeKey, String newOwnerToken, String expectedOwnerToken, Long expectedVersion, IdempotencyMode mode,
-        Duration processingTimeout, boolean recoverProcessingTimeout, boolean recoverFailed, Instant now) {
+                                             String routeKey, String newOwnerToken, String expectedOwnerToken, Long expectedVersion,
+                                             IdempotencyMode mode, Duration processingTimeout, boolean recoverProcessingTimeout,
+                                             boolean recoverFailed, Instant now) {
         this.storageContext = storageContext;
         this.namespace = namespace;
         this.key = key;
@@ -71,55 +72,17 @@ public final class IdempotencyRecoveryAcquireRequest {
         this.now = now;
     }
 
-    public IdempotencyStorageContext getStorageContext() {
-        return storageContext;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public String getRequestHash() {
-        return requestHash;
-    }
-
-    public String getRouteKey() {
-        return routeKey;
-    }
-
-    public String getNewOwnerToken() {
-        return newOwnerToken;
-    }
-
-    public String getExpectedOwnerToken() {
-        return expectedOwnerToken;
-    }
-
-    public Long getExpectedVersion() {
-        return expectedVersion;
-    }
-
-    public IdempotencyMode getMode() {
-        return mode;
-    }
-
-    public Duration getProcessingTimeout() {
-        return processingTimeout;
-    }
-
-    public boolean isRecoverProcessingTimeout() {
-        return recoverProcessingTimeout;
-    }
-
-    public boolean isRecoverFailed() {
-        return recoverFailed;
-    }
-
-    public Instant getNow() {
-        return now;
-    }
+    public IdempotencyStorageContext getStorageContext() { return storageContext; }
+    public String getNamespace() { return namespace; }
+    public String getKey() { return key; }
+    public String getRequestHash() { return requestHash; }
+    public String getRouteKey() { return routeKey; }
+    public String getNewOwnerToken() { return newOwnerToken; }
+    public String getExpectedOwnerToken() { return expectedOwnerToken; }
+    public Long getExpectedVersion() { return expectedVersion; }
+    public IdempotencyMode getMode() { return mode; }
+    public Duration getProcessingTimeout() { return processingTimeout; }
+    public boolean isRecoverProcessingTimeout() { return recoverProcessingTimeout; }
+    public boolean isRecoverFailed() { return recoverFailed; }
+    public Instant getNow() { return now; }
 }

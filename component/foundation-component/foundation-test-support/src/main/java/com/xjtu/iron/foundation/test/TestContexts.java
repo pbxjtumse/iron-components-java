@@ -8,8 +8,7 @@ import com.xjtu.iron.foundation.context.StandardContextKeys;
  */
 public final class TestContexts {
 
-    private TestContexts() {
-    }
+    private TestContexts() {}
 
     public static ExecutionContext simple(String requestId) {
         return ExecutionContext.builder().put(StandardContextKeys.REQUEST_ID, requestId).build();

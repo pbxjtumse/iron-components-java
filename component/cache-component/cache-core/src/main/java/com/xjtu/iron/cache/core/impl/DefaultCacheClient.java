@@ -112,9 +112,18 @@ public class DefaultCacheClient implements CacheClient {
      */
 
     /** 创建默认缓存客户端。 */
-    public DefaultCacheClient(CacheProvider cacheProvider, CacheSpecResolver specResolver, CacheTtlResolver ttlResolver,
-        CacheLoadGuard loadGuard, CacheMetricsRecorder metricsRecorder, CacheEventPublisher cacheEventPublisher, String applicationName,
-        String instanceId, CacheEventPublishFailurePolicy eventPublishFailurePolicy, CacheTraceContext traceContext) {
+    public DefaultCacheClient(
+            CacheProvider cacheProvider,
+            CacheSpecResolver specResolver,
+            CacheTtlResolver ttlResolver,
+            CacheLoadGuard loadGuard,
+            CacheMetricsRecorder metricsRecorder,
+            CacheEventPublisher cacheEventPublisher,
+            String applicationName,
+            String instanceId,
+            CacheEventPublishFailurePolicy eventPublishFailurePolicy,
+            CacheTraceContext traceContext
+    ) {
         this.cacheProvider = cacheProvider;
         this.specResolver = specResolver;
         this.ttlResolver = ttlResolver;
@@ -170,8 +179,13 @@ public class DefaultCacheClient implements CacheClient {
         }
     }
 
-    private <T> CacheResult<T> loadWithMutex(CacheKey key, Class<T> valueType, CacheSpec spec, CacheLoader<T> loader, long start) throws
-        Exception {
+    private <T> CacheResult<T> loadWithMutex(
+            CacheKey key,
+            Class<T> valueType,
+            CacheSpec spec,
+            CacheLoader<T> loader,
+            long start
+    ) throws Exception {
         return loadGuard.execute(key.fullKey(), () -> {
             CacheValue<T> recheckValue = cacheProvider.get(key, valueType, spec);
 
@@ -185,7 +199,12 @@ public class DefaultCacheClient implements CacheClient {
         });
     }
 
-    private <T> CacheResult<T> loadAndWrite(CacheKey key, CacheSpec spec, CacheLoader<T> loader, long start) {
+    private <T> CacheResult<T> loadAndWrite(
+            CacheKey key,
+            CacheSpec spec,
+            CacheLoader<T> loader,
+            long start
+    ) {
         T loadedValue;
 
         try {
@@ -215,7 +234,13 @@ public class DefaultCacheClient implements CacheClient {
         return CacheResult.loaded(loadedValue, cost);
     }
 
-    private <T> CacheResult<T> handleCacheReadException(CacheKey key, CacheSpec spec, CacheLoader<T> loader, long start, Exception ex) {
+    private <T> CacheResult<T> handleCacheReadException(
+            CacheKey key,
+            CacheSpec spec,
+            CacheLoader<T> loader,
+            long start,
+            Exception ex
+    ) {
         CacheDegradePolicy degradePolicy = spec.getDegradePolicy();
 
         if (degradePolicy == CacheDegradePolicy.RETURN_NULL) {
@@ -227,7 +252,10 @@ public class DefaultCacheClient implements CacheClient {
                 T value = loader.load();
                 return CacheResult.degraded(value, System.currentTimeMillis() - start);
             } catch (Exception loadEx) {
-                throw new CacheLoadException("Cache degraded load source failed, key=" + key.fullKey(), loadEx);
+                throw new CacheLoadException(
+                        "Cache degraded load source failed, key=" + key.fullKey(),
+                        loadEx
+                );
             }
         }
 
@@ -250,7 +278,9 @@ public class DefaultCacheClient implements CacheClient {
     public void put(CacheKey key, Object value) {
         CacheSpec spec = specResolver.resolve(key);
 
-        Duration ttl = value == null ? ttlResolver.resolveNullValueTtl(key, spec) : ttlResolver.resolveNormalTtl(key, spec);
+        Duration ttl = value == null
+                ? ttlResolver.resolveNullValueTtl(key, spec)
+                : ttlResolver.resolveNormalTtl(key, spec);
 
         putInternal(key, value, ttl, spec);
     }
@@ -263,7 +293,9 @@ public class DefaultCacheClient implements CacheClient {
 
     @Override
     public void put(CacheKey key, Object value, CacheSpec spec) {
-        Duration ttl = value == null ? ttlResolver.resolveNullValueTtl(key, spec) : ttlResolver.resolveNormalTtl(key, spec);
+        Duration ttl = value == null
+                ? ttlResolver.resolveNullValueTtl(key, spec)
+                : ttlResolver.resolveNormalTtl(key, spec);
 
         putInternal(key, value, ttl, spec);
     }
@@ -351,8 +383,14 @@ public class DefaultCacheClient implements CacheClient {
      */
     private void publishEvictEventSafely(CacheKey key) {
         try {
-            CacheEvent event = CacheEvent.evictKey(key, applicationName, instanceId, "manual_evict", traceContext.currentTraceId(),
-                traceContext.currentSpanId());
+            CacheEvent event = CacheEvent.evictKey(
+                    key,
+                    applicationName,
+                    instanceId,
+                    "manual_evict",
+                    traceContext.currentTraceId(),
+                    traceContext.currentSpanId()
+            );
 
             cacheEventPublisher.publish(event);
 
@@ -369,6 +407,7 @@ public class DefaultCacheClient implements CacheClient {
              */
         }
     }
+
 
 
 }

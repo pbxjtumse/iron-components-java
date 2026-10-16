@@ -13,5 +13,8 @@ import com.xjtu.iron.message.core.consume.ConsumeInvocation;
  */
 public interface TransactionStrategy {
 
-    ConsumeDecision execute(ConsumerDefinition<?> definition, ConsumeContext context, ConsumeInvocation invocation);
+    ConsumeDecision execute(
+            ConsumerDefinition<?> definition,
+            ConsumeContext context,
+            ConsumeInvocation invocation);
 }

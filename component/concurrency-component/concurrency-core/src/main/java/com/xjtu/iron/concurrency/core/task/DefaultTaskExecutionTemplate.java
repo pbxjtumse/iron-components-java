@@ -68,10 +68,16 @@ public final class DefaultTaskExecutionTemplate implements TaskExecutionTemplate
     /** 当前节点任务取消管理器。 */
     private final TaskCancellationManager cancellationManager;
 
-    public DefaultTaskExecutionTemplate(ThreadPoolRegistry threadPoolRegistry, ContextAwareTaskDecorator taskDecorator,
-        TaskLifecyclePublisher lifecyclePublisher, TaskResultPipeline resultPipeline, AsyncErrorClassifier errorClassifier,
-        AsyncUncaughtExceptionHandler uncaughtExceptionHandler, TaskControlRegistry taskControlRegistry,
-        TaskCancellationManager cancellationManager) {
+    public DefaultTaskExecutionTemplate(
+            ThreadPoolRegistry threadPoolRegistry,
+            ContextAwareTaskDecorator taskDecorator,
+            TaskLifecyclePublisher lifecyclePublisher,
+            TaskResultPipeline resultPipeline,
+            AsyncErrorClassifier errorClassifier,
+            AsyncUncaughtExceptionHandler uncaughtExceptionHandler,
+            TaskControlRegistry taskControlRegistry,
+            TaskCancellationManager cancellationManager
+    ) {
         this.threadPoolRegistry = Objects.requireNonNull(threadPoolRegistry, "threadPoolRegistry must not be null");
         this.taskDecorator = Objects.requireNonNull(taskDecorator, "taskDecorator must not be null");
         this.lifecyclePublisher = Objects.requireNonNull(lifecyclePublisher, "lifecyclePublisher must not be null");
@@ -159,13 +165,16 @@ public final class DefaultTaskExecutionTemplate implements TaskExecutionTemplate
         //7.设置提交状态
         command.submitted();
         //6. 执行增强 time fallback 逻辑
-        CompletableFuture<T> finalFuture = resultMode == TaskResultMode.RESULT_AWARE ? resultPipeline.apply(context, command) : baseFuture;
+        CompletableFuture<T> finalFuture = resultMode == TaskResultMode.RESULT_AWARE
+                ? resultPipeline.apply(context, command)
+                : baseFuture;
         //7.初始化
         TaskControl<T> control = new TaskControl<>(executor, command, finalFuture);
         TaskHandle<T> handle = new DefaultTaskHandle<>(definition.getTaskId(), finalFuture, cancellationManager);
         //9 注册 TaskControl 这一步让外部可以通过 taskId 找到任务控制对象
         taskControlRegistry.register(definition.getTaskId(), control);
-        finalFuture.whenComplete((value, throwable) -> taskControlRegistry.remove(definition.getTaskId(), control));
+        finalFuture.whenComplete((value, throwable) ->
+                taskControlRegistry.remove(definition.getTaskId(), control));
         try {
             /*
              * executor.execute 内部可能触发 ThreadPoolExecutor 的拒绝流程。
@@ -187,7 +196,12 @@ public final class DefaultTaskExecutionTemplate implements TaskExecutionTemplate
             }
             if (resultMode == TaskResultMode.FIRE_AND_FORGET) {
                 AsyncError error = errorClassifier.classify(definition.getMetadata(), rejected, AsyncErrorStage.SUBMIT);
-                throw new ConcurrencyRejectedException(definition.getExecutorName(), definition.getTaskName(), error, rejected);
+                throw new ConcurrencyRejectedException(
+                        definition.getExecutorName(),
+                        definition.getTaskName(),
+                        error,
+                        rejected
+                );
             }
         }
 
@@ -195,8 +209,9 @@ public final class DefaultTaskExecutionTemplate implements TaskExecutionTemplate
     }
 
     private <T> Supplier<T> getExecutable(TaskDefinition<T> definition) {
-        Supplier<T> executable =
-            definition.isContextPropagation() ? taskDecorator.decorate(definition.getOperation()) : definition.getOperation();
+        Supplier<T> executable = definition.isContextPropagation()
+                ? taskDecorator.decorate(definition.getOperation())
+                : definition.getOperation();
         return executable;
     }
 

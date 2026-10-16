@@ -18,7 +18,9 @@ public final class IronEnums {
         if (name == null) {
             return Optional.empty();
         }
-        return Arrays.stream(enumType.getEnumConstants()).filter(value -> value.name().equals(name)).findFirst();
+        return Arrays.stream(enumType.getEnumConstants())
+                .filter(value -> value.name().equals(name))
+                .findFirst();
     }
 
     public static <E extends Enum<E>> Optional<E> byNameIgnoreCase(Class<E> enumType, String name) {
@@ -27,8 +29,9 @@ public final class IronEnums {
             return Optional.empty();
         }
         String normalized = name.trim().toUpperCase(Locale.ROOT);
-        return Arrays.stream(enumType.getEnumConstants()).filter(value -> value.name().toUpperCase(Locale.ROOT).equals(normalized))
-            .findFirst();
+        return Arrays.stream(enumType.getEnumConstants())
+                .filter(value -> value.name().toUpperCase(Locale.ROOT).equals(normalized))
+                .findFirst();
     }
 
     public static <C, E extends Enum<E> & CodeEnum<C>> Optional<E> byCode(Class<E> enumType, C code) {
@@ -36,10 +39,13 @@ public final class IronEnums {
         if (code == null) {
             return Optional.empty();
         }
-        return Arrays.stream(enumType.getEnumConstants()).filter(value -> Objects.equals(value.getCode(), code)).findFirst();
+        return Arrays.stream(enumType.getEnumConstants())
+                .filter(value -> Objects.equals(value.getCode(), code))
+                .findFirst();
     }
 
     public static <E extends Enum<E>> E requireByName(Class<E> enumType, String name, String fieldName) {
-        return byName(enumType, name).orElseThrow(() -> new IllegalArgumentException(fieldName + " is not a valid enum name: " + name));
+        return byName(enumType, name)
+                .orElseThrow(() -> new IllegalArgumentException(fieldName + " is not a valid enum name: " + name));
     }
 }

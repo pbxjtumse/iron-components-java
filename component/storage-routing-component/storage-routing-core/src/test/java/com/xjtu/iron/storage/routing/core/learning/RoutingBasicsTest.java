@@ -29,8 +29,7 @@ class RoutingBasicsTest {
         assertThat(route.shardInfo().localTableIndex()).isEqualTo(route.shardInfo().shardId() % 10);
 
         // 3. 幂等表复用同一个分片结果，只换表族，不再 hash 幂等 key。
-        var idempotencyMapping =
-            new RouteMappingStrategyFactory("db_", "iron_idempotency_record", 2, 2).create(TableIndexMode.LOCAL_TABLE_INDEX);
+        var idempotencyMapping = new RouteMappingStrategyFactory("db_", "iron_idempotency_record", 2, 2).create(TableIndexMode.LOCAL_TABLE_INDEX);
         var idempotencyLocation = idempotencyMapping.map(route.shardInfo());
         assertThat(idempotencyLocation.dataSourceKey()).isEqualTo(route.dataSourceKey());
         assertThat(idempotencyLocation.tableName()).isNotEqualTo(route.tableName());

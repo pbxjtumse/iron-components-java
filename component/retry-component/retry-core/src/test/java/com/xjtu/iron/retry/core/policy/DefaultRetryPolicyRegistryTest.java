@@ -17,8 +17,14 @@ class DefaultRetryPolicyRegistryTest {
         registry.register(second);
         registry.register(first);
         assertSame(first, registry.getRequired("a-policy"));
-        assertEquals(java.util.List.of("a-policy", "z-policy"), registry.policyNames());
-        assertEquals(java.util.List.of("a-policy", "z-policy"), registry.snapshot().keySet().stream().toList());
+        assertEquals(
+                java.util.List.of("a-policy", "z-policy"),
+                registry.policyNames()
+        );
+        assertEquals(
+                java.util.List.of("a-policy", "z-policy"),
+                registry.snapshot().keySet().stream().toList()
+        );
     }
 
     /** 验证 register 不再静默覆盖同名策略。 */
@@ -26,7 +32,12 @@ class DefaultRetryPolicyRegistryTest {
     void shouldRejectDuplicateRegistration() {
         DefaultRetryPolicyRegistry registry = new DefaultRetryPolicyRegistry();
         registry.register(RetryPolicy.builder("duplicate").maxAttempts(2).build());
-        assertThrows(IllegalArgumentException.class, () -> registry.register(RetryPolicy.builder("duplicate").maxAttempts(4).build()));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> registry.register(
+                        RetryPolicy.builder("duplicate").maxAttempts(4).build()
+                )
+        );
     }
 
     /** 验证 replace 明确允许替换同名策略。 */
@@ -34,7 +45,9 @@ class DefaultRetryPolicyRegistryTest {
     void shouldReplacePolicyExplicitly() {
         DefaultRetryPolicyRegistry registry = new DefaultRetryPolicyRegistry();
         registry.register(RetryPolicy.builder("replaceable").maxAttempts(2).build());
-        RetryPolicy replacement = RetryPolicy.builder("replaceable").maxAttempts(5).build();
+        RetryPolicy replacement = RetryPolicy.builder("replaceable")
+                .maxAttempts(5)
+                .build();
         registry.replace(replacement);
         assertSame(replacement, registry.getRequired("replaceable"));
     }
@@ -43,6 +56,9 @@ class DefaultRetryPolicyRegistryTest {
     @Test
     void shouldFailWhenRequiredPolicyDoesNotExist() {
         DefaultRetryPolicyRegistry registry = new DefaultRetryPolicyRegistry();
-        assertThrows(IllegalArgumentException.class, () -> registry.getRequired("missing"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> registry.getRequired("missing")
+        );
     }
 }

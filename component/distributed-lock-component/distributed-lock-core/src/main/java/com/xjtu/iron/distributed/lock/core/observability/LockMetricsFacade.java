@@ -25,8 +25,7 @@ public final class LockMetricsFacade {
     }
 
     public void recordHold(LockLease lease, LockStatus status, Duration duration) {
-        recorder.recordHold(lease.getProviderName(), lease.getNamespace(), patternResolver.resolvePattern(lease.getLockName()), status,
-            duration);
+        recorder.recordHold(lease.getProviderName(), lease.getNamespace(), patternResolver.resolvePattern(lease.getLockName()), status, duration);
     }
 
     public void recordRenew(LockLease lease, boolean success) {

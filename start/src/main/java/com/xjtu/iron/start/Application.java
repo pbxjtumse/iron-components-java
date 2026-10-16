@@ -14,8 +14,13 @@ import org.springframework.context.annotation.FilterType;
  * </p>
  */
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.xjtu.iron", "com.alibaba.cola"},
-    excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.xjtu\\.iron\\..*\\.starter\\..*"))
+@ComponentScan(
+        basePackages = {"com.xjtu.iron", "com.alibaba.cola"},
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.REGEX,
+                pattern = "com\\.xjtu\\.iron\\..*\\.starter\\..*"
+        )
+)
 public class Application {
 
     public static void main(String[] args) {

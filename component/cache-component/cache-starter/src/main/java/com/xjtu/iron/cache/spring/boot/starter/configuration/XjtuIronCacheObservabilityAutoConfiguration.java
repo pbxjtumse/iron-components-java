@@ -20,7 +20,12 @@ import org.springframework.context.annotation.Bean;
  * {@link NoopCacheMetricsRecorder}，保证缓存组件不依赖指标系统也能启动。</p>
  */
 @AutoConfiguration
-@ConditionalOnProperty(prefix = "xjtu.iron.cache", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+        prefix = "xjtu.iron.cache",
+        name = "enabled",
+        havingValue = "true",
+        matchIfMissing = true
+)
 public class XjtuIronCacheObservabilityAutoConfiguration {
 
     /**

@@ -32,13 +32,20 @@ public final class DestinationRoute {
 
 
     /** 校验并防御性复制。 */
-    public DestinationRoute(String namespace, String name, String providerName, String physicalName, Map<String, String> attributes) {
+    public DestinationRoute(
+        String namespace,
+        String name,
+        String providerName,
+        String physicalName,
+        Map<String, String> attributes) {
         namespace = requireText(namespace, "namespace");
         name = requireText(name, "name");
         providerName = requireText(providerName, "providerName").toLowerCase(Locale.ROOT);
         physicalName = requireText(physicalName, "physicalName");
-        attributes = attributes == null || attributes.isEmpty() ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(attributes));
-
+        attributes = attributes == null || attributes.isEmpty()
+                ? Map.of()
+                : Collections.unmodifiableMap(new LinkedHashMap<>(attributes));
+    
         // 保存完成校验和标准化后的 namespace。
         this.namespace = namespace;
         // 保存完成校验和标准化后的 name。
@@ -51,14 +58,25 @@ public final class DestinationRoute {
         this.attributes = attributes;
     }
 
-    public static DestinationRoute of(MessageDestination destination, String providerName, String physicalName) {
+    public static DestinationRoute of(
+            MessageDestination destination,
+            String providerName,
+            String physicalName) {
         return of(destination, providerName, physicalName, Map.of());
     }
 
-    public static DestinationRoute of(MessageDestination destination, String providerName, String physicalName,
-        Map<String, String> attributes) {
+    public static DestinationRoute of(
+            MessageDestination destination,
+            String providerName,
+            String physicalName,
+            Map<String, String> attributes) {
         Objects.requireNonNull(destination, "destination must not be null");
-        return new DestinationRoute(destination.namespace(), destination.name(), providerName, physicalName, attributes);
+        return new DestinationRoute(
+                destination.namespace(),
+                destination.name(),
+                providerName,
+                physicalName,
+                attributes);
     }
 
     public boolean matches(MessageDestination destination) {
@@ -75,7 +93,6 @@ public final class DestinationRoute {
         }
         return value.trim();
     }
-
     /**
      * 返回逻辑命名空间。
      *
@@ -144,9 +161,11 @@ public final class DestinationRoute {
         }
         // 转换为当前类型后逐字段比较。
         DestinationRoute other = (DestinationRoute) object;
-        return Objects.equals(namespace, other.namespace) && Objects.equals(name, other.name) &&
-            Objects.equals(providerName, other.providerName) && Objects.equals(physicalName, other.physicalName) &&
-            Objects.equals(attributes, other.attributes);
+        return Objects.equals(namespace, other.namespace)
+                && Objects.equals(name, other.name)
+                && Objects.equals(providerName, other.providerName)
+                && Objects.equals(physicalName, other.physicalName)
+                && Objects.equals(attributes, other.attributes);
     }
 
     /**
@@ -168,8 +187,13 @@ public final class DestinationRoute {
     @Override
     public String toString() {
         // 拼接全部字段，保持值对象可诊断。
-        return "DestinationRoute{" + "namespace=" + namespace + ", name=" + name + ", providerName=" + providerName + ", physicalName=" +
-            physicalName + ", attributes=" + attributes + '}';
+        return "DestinationRoute{" +
+                "namespace=" + namespace +
+                ", name=" + name +
+                ", providerName=" + providerName +
+                ", physicalName=" + physicalName +
+                ", attributes=" + attributes +
+                '}';
     }
 
 }

@@ -42,15 +42,19 @@ class DirectStorageRoutingIT {
     private static final Map<String, DataSource> DATA_SOURCES = new LinkedHashMap<>();
 
     /** 逻辑幂等存储上下文。 */
-    private static final IdempotencyStorageContext STORAGE = IdempotencyStorageContext.of("order", 0);
+    private static final IdempotencyStorageContext STORAGE =
+            IdempotencyStorageContext.of("order", 0);
 
     @BeforeAll
     static void createPhysicalDatabases() throws Exception {
         MysqlDataSource admin = dataSource(MYSQL.getDatabaseName());
         JdbcTemplate adminJdbc = new JdbcTemplate(admin);
-        String schema = new String(
-            Objects.requireNonNull(DirectStorageRoutingIT.class.getResourceAsStream("/META-INF/iron-idempotency/mybatis/schema-mysql.sql"),
-                "MySQL idempotency schema must exist").readAllBytes(), StandardCharsets.UTF_8);
+        String schema = new String(Objects.requireNonNull(
+                DirectStorageRoutingIT.class.getResourceAsStream(
+                        "/META-INF/iron-idempotency/mybatis/schema-mysql.sql"
+                ),
+                "MySQL idempotency schema must exist"
+        ).readAllBytes(), StandardCharsets.UTF_8);
 
         for (String key : List.of("db_00", "db_01")) {
             adminJdbc.execute("CREATE DATABASE " + key);
@@ -62,12 +66,18 @@ class DirectStorageRoutingIT {
 
     @Test
     void shouldAcquireInSelectedDatabaseWithoutWritingTheOtherDatabase() {
-        DirectMyBatisResourceRegistry resources = DirectMyBatisResourceRegistry.fromDataSources(DATA_SOURCES);
+        DirectMyBatisResourceRegistry resources =
+                DirectMyBatisResourceRegistry.fromDataSources(DATA_SOURCES);
         RoutedMyBatisIdempotencyRepository repository =
-            new RoutedMyBatisIdempotencyRepository(new KeySuffixPhysicalRouteResolver(), resources.getMyBatisAccessResolver());
+                new RoutedMyBatisIdempotencyRepository(
+                        new KeySuffixPhysicalRouteResolver(),
+                        resources.getMyBatisAccessResolver()
+                );
 
-        assertThat(repository.tryAcquire(acquire("payment-a", "owner-a")).getStatus()).isEqualTo(IdempotencyAcquireStatus.ACQUIRED);
-        assertThat(repository.tryAcquire(acquire("payment-b", "owner-b")).getStatus()).isEqualTo(IdempotencyAcquireStatus.ACQUIRED);
+        assertThat(repository.tryAcquire(acquire("payment-a", "owner-a")).getStatus())
+                .isEqualTo(IdempotencyAcquireStatus.ACQUIRED);
+        assertThat(repository.tryAcquire(acquire("payment-b", "owner-b")).getStatus())
+                .isEqualTo(IdempotencyAcquireStatus.ACQUIRED);
 
         assertThat(count("db_00", "payment-a")).isOne();
         assertThat(count("db_00", "payment-b")).isZero();
@@ -76,19 +86,33 @@ class DirectStorageRoutingIT {
     }
 
     private static IdempotencyAcquireRequest acquire(String key, String ownerToken) {
-        return IdempotencyAcquireRequest.builder().storageContext(STORAGE).namespace("payment").key(key).requestHash("hash-" + key)
-            .routeKey("merchant-1").ownerToken(ownerToken).mode(IdempotencyMode.DURABLE).processingTimeout(Duration.ofSeconds(30))
-            .windowPolicy(IdempotencyWindowPolicy.FIXED_FROM_FIRST_ACQUIRE).recordRetentionTtl(Duration.ZERO)
-            .recoveryMode(IdempotencyRecoveryMode.EXTERNAL_TASK).now(Instant.now()).build();
+        return IdempotencyAcquireRequest.builder()
+                .storageContext(STORAGE)
+                .namespace("payment")
+                .key(key)
+                .requestHash("hash-" + key)
+                .routeKey("merchant-1")
+                .ownerToken(ownerToken)
+                .mode(IdempotencyMode.DURABLE)
+                .processingTimeout(Duration.ofSeconds(30))
+                .windowPolicy(IdempotencyWindowPolicy.FIXED_FROM_FIRST_ACQUIRE)
+                .recordRetentionTtl(Duration.ZERO)
+                .recoveryMode(IdempotencyRecoveryMode.EXTERNAL_TASK)
+                .now(Instant.now())
+                .build();
     }
 
     private static int count(String dataSourceKey, String key) {
         return new JdbcTemplate(DATA_SOURCES.get(dataSourceKey)).queryForObject(
-            "SELECT COUNT(*) FROM iron_idempotency_record WHERE idempotency_key = ?", Integer.class, key);
+                "SELECT COUNT(*) FROM iron_idempotency_record WHERE idempotency_key = ?",
+                Integer.class,
+                key
+        );
     }
 
     private static void executeScript(DataSource dataSource, String script) throws Exception {
-        try (var connection = dataSource.getConnection(); var statement = connection.createStatement()) {
+        try (var connection = dataSource.getConnection();
+             var statement = connection.createStatement()) {
             for (String sql : script.split(";")) {
                 if (!sql.isBlank()) {
                     statement.execute(sql);
@@ -99,26 +123,39 @@ class DirectStorageRoutingIT {
 
     private static MysqlDataSource dataSource(String database) {
         MysqlDataSource source = new MysqlDataSource();
-        source.setURL("jdbc:mysql://" + MYSQL.getHost() + ":" + MYSQL.getMappedPort(3306) + "/" + database +
-            "?useSSL=false&allowPublicKeyRetrieval=true");
+        source.setURL("jdbc:mysql://" + MYSQL.getHost() + ":"
+                + MYSQL.getMappedPort(3306) + "/" + database
+                + "?useSSL=false&allowPublicKeyRetrieval=true");
         source.setUser("root");
         source.setPassword(MYSQL.getPassword());
         return source;
     }
 
     /** 测试路由：后缀 a 进入 db_00，其余 key 进入 db_01。 */
-    private static final class KeySuffixPhysicalRouteResolver implements IdempotencyPhysicalRouteResolver {
+    private static final class KeySuffixPhysicalRouteResolver
+            implements IdempotencyPhysicalRouteResolver {
 
         @Override
-        public IdempotencyPhysicalRoute resolvePoint(IdempotencyStorageContext storageContext, String namespace, String idempotencyKey) {
+        public IdempotencyPhysicalRoute resolvePoint(
+                IdempotencyStorageContext storageContext,
+                String namespace,
+                String idempotencyKey
+        ) {
             String dataSourceKey = idempotencyKey.endsWith("-a") ? "db_00" : "db_01";
-            return IdempotencyPhysicalRoute.of(dataSourceKey, "iron_idempotency_record");
+            return IdempotencyPhysicalRoute.of(
+                    dataSourceKey,
+                    "iron_idempotency_record"
+            );
         }
 
         @Override
-        public List<IdempotencyPhysicalRoute> resolveRecoveryRoutes(IdempotencyRecoveryQuery query) {
-            return List.of(IdempotencyPhysicalRoute.of("db_00", "iron_idempotency_record"),
-                IdempotencyPhysicalRoute.of("db_01", "iron_idempotency_record"));
+        public List<IdempotencyPhysicalRoute> resolveRecoveryRoutes(
+                IdempotencyRecoveryQuery query
+        ) {
+            return List.of(
+                    IdempotencyPhysicalRoute.of("db_00", "iron_idempotency_record"),
+                    IdempotencyPhysicalRoute.of("db_01", "iron_idempotency_record")
+            );
         }
     }
 }

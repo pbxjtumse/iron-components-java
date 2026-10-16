@@ -55,7 +55,9 @@ public final class DirectMyBatisResourceRegistry {
     }
 
     /** 从 Spring DataSource Bean Map 创建注册表，不创建也不关闭连接池。 */
-    public static DirectMyBatisResourceRegistry fromDataSources(Map<String, ? extends DataSource> dataSources) {
+    public static DirectMyBatisResourceRegistry fromDataSources(
+            Map<String, ? extends DataSource> dataSources
+    ) {
         return fromDataSources(dataSources, MyBatisAccessListener.noop(), (key, factory) -> { });
     }
 
@@ -64,8 +66,10 @@ public final class DirectMyBatisResourceRegistry {
         MyBatisAccessListener listener, DirectMyBatisSqlSessionFactoryCustomizer customizer) {
         Objects.requireNonNull(dataSources, "dataSources must not be null");
         return new DirectMyBatisResourceRegistry(
-            dataSources.entrySet().stream()
-                .map(entry -> new DirectMyBatisResource(entry.getKey(), entry.getValue(), listener, customizer)).toList());
+                dataSources.entrySet().stream()
+                        .map(entry -> new DirectMyBatisResource(entry.getKey(), entry.getValue(), listener, customizer))
+                        .toList()
+        );
     }
 
     /** 要求注册表中存在指定物理数据源。 */

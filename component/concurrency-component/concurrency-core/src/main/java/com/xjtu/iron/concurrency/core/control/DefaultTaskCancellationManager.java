@@ -8,20 +8,28 @@ import java.util.Objects;
 /**
  * 默认本地任务取消管理器。
  */
-public final class DefaultTaskCancellationManager implements TaskCancellationManager {
+public final class DefaultTaskCancellationManager
+        implements TaskCancellationManager {
 
     /**
      * 当前节点运行任务控制注册表。
      */
     private final TaskControlRegistry controlRegistry;
 
-    public DefaultTaskCancellationManager(TaskControlRegistry controlRegistry) {
-        this.controlRegistry = Objects.requireNonNull(controlRegistry, "controlRegistry must not be null");
+    public DefaultTaskCancellationManager(
+            TaskControlRegistry controlRegistry
+    ) {
+        this.controlRegistry = Objects.requireNonNull(
+                controlRegistry,
+                "controlRegistry must not be null"
+        );
     }
 
     @Override
     public TaskCancelResult cancel(String taskId, boolean mayInterruptIfRunning) {
-        return controlRegistry.get(taskId).map(task -> task.cancel(mayInterruptIfRunning)).orElse(TaskCancelResult.NOT_FOUND);
+        return controlRegistry.get(taskId)
+                .map(task -> task.cancel(mayInterruptIfRunning))
+                .orElse(TaskCancelResult.NOT_FOUND);
     }
 
     @Override

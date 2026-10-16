@@ -29,7 +29,10 @@ public final class DefaultTransactionStrategy implements TransactionStrategy {
     }
 
     @Override
-    public ConsumeDecision execute(ConsumerDefinition<?> definition, ConsumeContext context, ConsumeInvocation invocation) {
+    public ConsumeDecision execute(
+            ConsumerDefinition<?> definition,
+            ConsumeContext context,
+            ConsumeInvocation invocation) {
         Objects.requireNonNull(definition, "definition must not be null");
         Objects.requireNonNull(context, "context must not be null");
         Objects.requireNonNull(invocation, "invocation must not be null");
@@ -39,7 +42,8 @@ public final class DefaultTransactionStrategy implements TransactionStrategy {
             return invocation.invoke();
         }
 
-        MessageConsumeTransactionContext transactionContext = new MessageConsumeTransactionContext(definition, context, options);
+        MessageConsumeTransactionContext transactionContext =
+                new MessageConsumeTransactionContext(definition, context, options);
         try {
             return transactionExecutor.execute(transactionContext, () -> {
                 ConsumeDecision decision = invocation.invoke();
@@ -54,7 +58,9 @@ public final class DefaultTransactionStrategy implements TransactionStrategy {
     }
 
     private static boolean shouldRollback(ConsumeDecision decision) {
-        return decision == null || decision == ConsumeDecision.RETRY || decision == ConsumeDecision.DEAD_LETTER;
+        return decision == null
+                || decision == ConsumeDecision.RETRY
+                || decision == ConsumeDecision.DEAD_LETTER;
     }
 
     @SuppressWarnings("serial")

@@ -200,8 +200,10 @@ public final class IronStrings {
             return Collections.emptyList();
         }
         Objects.requireNonNull(delimiter, "delimiter must not be null");
-        return Arrays.stream(value.split(Pattern.quote(delimiter))).map(IronStrings::trimToNull).filter(Objects::nonNull)
-            .collect(Collectors.toUnmodifiableList());
+        return Arrays.stream(value.split(Pattern.quote(delimiter)))
+                .map(IronStrings::trimToNull)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     /** 使用分隔符拼接字符串，自动跳过 null 元素。 */

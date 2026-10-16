@@ -11,8 +11,13 @@ class SnowflakeLongIdGeneratorTest {
 
     @Test
     void shouldGenerateIncreasingIdsAndEncodeWorkerId() {
-        MutableClock clock = new MutableClock(SnowflakeOptions.DEFAULT_EPOCH_MILLIS + 1_000L);
-        SnowflakeLongIdGenerator generator = new SnowflakeLongIdGenerator(SnowflakeOptions.builder(7L).build(), clock);
+        MutableClock clock = new MutableClock(
+                SnowflakeOptions.DEFAULT_EPOCH_MILLIS + 1_000L
+        );
+        SnowflakeLongIdGenerator generator = new SnowflakeLongIdGenerator(
+                SnowflakeOptions.builder(7L).build(),
+                clock
+        );
 
         long first = generator.nextLongId();
         long second = generator.nextLongId();
@@ -23,8 +28,13 @@ class SnowflakeLongIdGeneratorTest {
 
     @Test
     void shouldFailFastWhenClockMovesBackwards() {
-        MutableClock clock = new MutableClock(SnowflakeOptions.DEFAULT_EPOCH_MILLIS + 1_000L);
-        SnowflakeLongIdGenerator generator = new SnowflakeLongIdGenerator(SnowflakeOptions.builder(1L).build(), clock);
+        MutableClock clock = new MutableClock(
+                SnowflakeOptions.DEFAULT_EPOCH_MILLIS + 1_000L
+        );
+        SnowflakeLongIdGenerator generator = new SnowflakeLongIdGenerator(
+                SnowflakeOptions.builder(1L).build(),
+                clock
+        );
         generator.nextLongId();
         clock.setMillis(SnowflakeOptions.DEFAULT_EPOCH_MILLIS + 999L);
 
@@ -33,9 +43,13 @@ class SnowflakeLongIdGeneratorTest {
 
     @Test
     void shouldUseLogicalTimeWithinConfiguredRollbackThreshold() {
-        MutableClock clock = new MutableClock(SnowflakeOptions.DEFAULT_EPOCH_MILLIS + 1_000L);
-        SnowflakeOptions options =
-            SnowflakeOptions.builder(1L).clockRollbackStrategy(ClockRollbackStrategy.USE_LOGICAL_TIME).maxBackwardMillis(5L).build();
+        MutableClock clock = new MutableClock(
+                SnowflakeOptions.DEFAULT_EPOCH_MILLIS + 1_000L
+        );
+        SnowflakeOptions options = SnowflakeOptions.builder(1L)
+                .clockRollbackStrategy(ClockRollbackStrategy.USE_LOGICAL_TIME)
+                .maxBackwardMillis(5L)
+                .build();
         SnowflakeLongIdGenerator generator = new SnowflakeLongIdGenerator(options, clock);
         long first = generator.nextLongId();
         clock.setMillis(SnowflakeOptions.DEFAULT_EPOCH_MILLIS + 998L);
@@ -46,9 +60,15 @@ class SnowflakeLongIdGeneratorTest {
 
     @Test
     void shouldFailInsteadOfSpinningForeverWhenSequenceIsExhausted() {
-        Clock fixedClock = Clock.fixed(Instant.ofEpochMilli(SnowflakeOptions.DEFAULT_EPOCH_MILLIS + 1_000L), ZoneOffset.UTC);
-        SnowflakeOptions options = SnowflakeOptions.builder(1L).sequenceWaitTimeout(Duration.ZERO).build();
-        SnowflakeLongIdGenerator generator = new SnowflakeLongIdGenerator(options, fixedClock);
+        Clock fixedClock = Clock.fixed(
+                Instant.ofEpochMilli(SnowflakeOptions.DEFAULT_EPOCH_MILLIS + 1_000L),
+                ZoneOffset.UTC
+        );
+        SnowflakeOptions options = SnowflakeOptions.builder(1L)
+                .sequenceWaitTimeout(Duration.ZERO)
+                .build();
+        SnowflakeLongIdGenerator generator =
+                new SnowflakeLongIdGenerator(options, fixedClock);
 
         for (int index = 0; index < 4_096; index++) {
             generator.nextLongId();

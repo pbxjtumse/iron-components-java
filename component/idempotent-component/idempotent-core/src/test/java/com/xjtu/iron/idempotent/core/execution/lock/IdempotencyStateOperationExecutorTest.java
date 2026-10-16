@@ -6,22 +6,18 @@ import com.xjtu.iron.idempotent.api.repository.IdempotencyRepository;
 import com.xjtu.iron.idempotent.api.storage.IdempotencyStorageContext;
 import com.xjtu.iron.idempotent.core.observation.IdempotencyEvent;
 import org.junit.jupiter.api.Test;
-
 import java.lang.reflect.Proxy;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 class IdempotencyStateOperationExecutorTest {
     private final List<IdempotencyEvent> events = new ArrayList<>();
-    private final IdempotencyStateOperationExecutor operations =
-        new IdempotencyStateOperationExecutor(null, events::add, Clock.systemUTC());
-    private final IdempotencyRepository repository =
-        (IdempotencyRepository) Proxy.newProxyInstance(IdempotencyRepository.class.getClassLoader(),
-            new Class<?>[]{IdempotencyRepository.class}, (proxy, method, args) -> {
+    private final IdempotencyStateOperationExecutor operations = new IdempotencyStateOperationExecutor(null, events::add, Clock.systemUTC());
+    private final IdempotencyRepository repository = (IdempotencyRepository) Proxy.newProxyInstance(
+            IdempotencyRepository.class.getClassLoader(), new Class<?>[]{IdempotencyRepository.class}, (proxy, method, args) -> {
                 if (method.getName().equals("providerName")) return "test";
                 throw new AssertionError("unexpected Repository call: " + method.getName());
             });

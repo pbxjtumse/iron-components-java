@@ -14,8 +14,13 @@ final class RuleBasedRetryClassifier implements RetryClassifier {
     private final boolean traverseCauses;
     private final int maxCauseDepth;
 
-    RuleBasedRetryClassifier(List<RetryExceptionRule> retryRules, List<RetryExceptionRule> stopRules, List<RetryExceptionRule> abortRules,
-        List<RetryResultRule> resultRules, boolean traverseCauses, int maxCauseDepth) {
+    RuleBasedRetryClassifier(
+            List<RetryExceptionRule> retryRules,
+            List<RetryExceptionRule> stopRules,
+            List<RetryExceptionRule> abortRules,
+            List<RetryResultRule> resultRules,
+            boolean traverseCauses,
+            int maxCauseDepth) {
         this.retryRules = immutableCopy(retryRules);
         this.stopRules = immutableCopy(stopRules);
         this.abortRules = immutableCopy(abortRules);
@@ -27,7 +32,10 @@ final class RuleBasedRetryClassifier implements RetryClassifier {
     /** 按 ABORT、STOP、RETRY 的安全优先级解释一次物理尝试。 */
     @Override
     public RetryDecision classify(RetryAttempt<?> attempt) {
-        RetryAttempt<?> actualAttempt = Objects.requireNonNull(attempt, "attempt must not be null");
+        RetryAttempt<?> actualAttempt = Objects.requireNonNull(
+                attempt,
+                "attempt must not be null"
+        );
         Throwable failure = actualAttempt.getFailure();
         if (failure == null) {
             return classifyResult(actualAttempt.getResult());
@@ -37,31 +45,51 @@ final class RuleBasedRetryClassifier implements RetryClassifier {
         }
         RetryExceptionRule abortRule = findBestRule(abortRules, failure);
         if (abortRule != null) {
-            return RetryDecision.abort("failure matched abort rule", abortRule.failureCode());
+            return RetryDecision.abort(
+                    "failure matched abort rule",
+                    abortRule.failureCode()
+            );
         }
         RetryExceptionRule stopRule = findBestRule(stopRules, failure);
         if (stopRule != null) {
-            return RetryDecision.stop("failure matched stop rule", stopRule.failureCode(), stopRule.category());
+            return RetryDecision.stop(
+                    "failure matched stop rule",
+                    stopRule.failureCode(),
+                    stopRule.category()
+            );
         }
         RetryExceptionRule retryRule = findBestRule(retryRules, failure);
         if (retryRule != null) {
-            return RetryDecision.retry("failure matched retry rule", retryRule.failureCode(), retryRule.category());
+            return RetryDecision.retry(
+                    "failure matched retry rule",
+                    retryRule.failureCode(),
+                    retryRule.category()
+            );
         }
-        return RetryDecision.stop("failure did not match an explicit retry rule", "UNCLASSIFIED_FAILURE",
-            RetryFailureCategory.NON_RETRYABLE);
+        return RetryDecision.stop(
+                "failure did not match an explicit retry rule",
+                "UNCLASSIFIED_FAILURE",
+                RetryFailureCategory.NON_RETRYABLE
+        );
     }
 
     private RetryDecision classifyResult(Object result) {
         for (RetryResultRule rule : resultRules) {
             if (rule.predicate().test(result)) {
-                return RetryDecision.retry("result matched retry predicate", rule.failureCode(), rule.category());
+                return RetryDecision.retry(
+                        "result matched retry predicate",
+                        rule.failureCode(),
+                        rule.category()
+                );
             }
         }
         return RetryDecision.success("operation completed successfully");
     }
 
     /** 最近 cause 优先；同一 cause 上选择继承距离最短的规则。 */
-    private RetryExceptionRule findBestRule(List<RetryExceptionRule> rules, Throwable failure) {
+    private RetryExceptionRule findBestRule(
+            List<RetryExceptionRule> rules,
+            Throwable failure) {
         Throwable current = failure;
         Map<Throwable, Boolean> visited = new IdentityHashMap<>();
         int causeDepth = 0;
@@ -82,7 +110,9 @@ final class RuleBasedRetryClassifier implements RetryClassifier {
         return null;
     }
 
-    private static RetryExceptionRule mostSpecificRule(List<RetryExceptionRule> rules, Class<?> actualType) {
+    private static RetryExceptionRule mostSpecificRule(
+            List<RetryExceptionRule> rules,
+            Class<?> actualType) {
         RetryExceptionRule bestRule = null;
         int bestDistance = Integer.MAX_VALUE;
         for (RetryExceptionRule rule : rules) {
@@ -108,7 +138,8 @@ final class RuleBasedRetryClassifier implements RetryClassifier {
         return -1;
     }
 
-    private static List<RetryExceptionRule> immutableCopy(List<RetryExceptionRule> source) {
+    private static List<RetryExceptionRule> immutableCopy(
+            List<RetryExceptionRule> source) {
         return Collections.unmodifiableList(new ArrayList<>(source));
     }
 }

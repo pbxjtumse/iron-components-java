@@ -7,7 +7,10 @@ import com.xjtu.iron.governance.spi.invocation.GovernanceInvocation;
 
 public interface GovernanceExecutor {
 
-    <T> T execute(GovernanceContext context, GovernanceInvocation<T> invocation);
+    <T> T execute(GovernanceContext context,
+                  GovernanceInvocation<T> invocation);
 
-    <T> T execute(GovernanceContext context, GovernanceInvocation<T> invocation, FallbackHandler<T> fallbackHandler);
+    <T> T execute(GovernanceContext context,
+                  GovernanceInvocation<T> invocation,
+                  FallbackHandler<T> fallbackHandler);
 }

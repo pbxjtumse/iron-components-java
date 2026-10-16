@@ -35,25 +35,13 @@ public final class IdempotencyRepositoryCapabilities {
         return mode.isWindowed() ? windowedSupported : durableSupported;
     }
 
-    public boolean isWindowedSupported() {
-        return windowedSupported;
-    }
-
-    public boolean isDurableSupported() {
-        return durableSupported;
-    }
-
-    public boolean isResultPayloadSupported() {
-        return resultPayloadSupported;
-    }
-
+    public boolean isWindowedSupported() { return windowedSupported; }
+    public boolean isDurableSupported() { return durableSupported; }
+    public boolean isResultPayloadSupported() { return resultPayloadSupported; }
     public boolean isBusinessTransactionParticipationSupported() {
         return businessTransactionParticipationSupported;
     }
-
-    public boolean isRecoveryQuerySupported() {
-        return recoveryQuerySupported;
-    }
+    public boolean isRecoveryQuerySupported() { return recoveryQuerySupported; }
 
     public static final class Builder {
         private boolean windowedSupported;

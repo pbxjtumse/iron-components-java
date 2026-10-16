@@ -25,7 +25,10 @@ public final class ProviderDestination {
     /**
      * 校验并复制物理目的地配置。
      */
-    public ProviderDestination(String providerName, String physicalName, Map<String, String> attributes) {
+    public ProviderDestination(
+        String providerName,
+        String physicalName,
+        Map<String, String> attributes) {
         // Provider 名称必须存在。
         if (providerName == null || providerName.isBlank()) {
             // 没有 Provider 就无法完成发送或订阅。
@@ -41,8 +44,10 @@ public final class ProviderDestination {
         // 去除物理名称首尾空白。
         physicalName = physicalName.trim();
         // 扩展属性执行防御性复制。
-        attributes = attributes == null || attributes.isEmpty() ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(attributes));
-
+        attributes = attributes == null || attributes.isEmpty()
+                ? Map.of()
+                : Collections.unmodifiableMap(new LinkedHashMap<>(attributes));
+    
         // 保存完成校验和标准化后的 providerName。
         this.providerName = providerName;
         // 保存完成校验和标准化后的 physicalName。
@@ -50,7 +55,6 @@ public final class ProviderDestination {
         // 保存完成校验和标准化后的 attributes。
         this.attributes = attributes;
     }
-
     /**
      * 返回Provider 稳定名称。
      *
@@ -99,8 +103,9 @@ public final class ProviderDestination {
         }
         // 转换为当前类型后逐字段比较。
         ProviderDestination other = (ProviderDestination) object;
-        return Objects.equals(providerName, other.providerName) && Objects.equals(physicalName, other.physicalName) &&
-            Objects.equals(attributes, other.attributes);
+        return Objects.equals(providerName, other.providerName)
+                && Objects.equals(physicalName, other.physicalName)
+                && Objects.equals(attributes, other.attributes);
     }
 
     /**
@@ -122,8 +127,11 @@ public final class ProviderDestination {
     @Override
     public String toString() {
         // 拼接全部字段，保持值对象可诊断。
-        return "ProviderDestination{" + "providerName=" + providerName + ", physicalName=" + physicalName + ", attributes=" + attributes +
-            '}';
+        return "ProviderDestination{" +
+                "providerName=" + providerName +
+                ", physicalName=" + physicalName +
+                ", attributes=" + attributes +
+                '}';
     }
 
 }

@@ -20,7 +20,11 @@ public final class ReliableTaskClaimCommand {
     /** 抢占成功后写入的 Lease 到期时间。 */
     private final Instant leaseUntil;
 
-    public ReliableTaskClaimCommand(ReliableTask candidate, String ownerId, Instant now, Instant leaseUntil) {
+    public ReliableTaskClaimCommand(
+            ReliableTask candidate,
+            String ownerId,
+            Instant now,
+            Instant leaseUntil) {
         if (candidate == null) {
             throw new IllegalArgumentException("candidate must not be null");
         }
@@ -60,8 +64,10 @@ public final class ReliableTaskClaimCommand {
         if (!(object instanceof ReliableTaskClaimCommand that)) {
             return false;
         }
-        return candidate.equals(that.candidate) && ownerId.equals(that.ownerId) && now.equals(that.now) &&
-            leaseUntil.equals(that.leaseUntil);
+        return candidate.equals(that.candidate)
+                && ownerId.equals(that.ownerId)
+                && now.equals(that.now)
+                && leaseUntil.equals(that.leaseUntil);
     }
 
     @Override
@@ -71,7 +77,11 @@ public final class ReliableTaskClaimCommand {
 
     @Override
     public String toString() {
-        return "ReliableTaskClaimCommand{" + "candidate=" + candidate + ", ownerId='" + ownerId + '\'' + ", now=" + now + ", leaseUntil=" +
-            leaseUntil + '}';
+        return "ReliableTaskClaimCommand{" +
+                "candidate=" + candidate +
+                ", ownerId='" + ownerId + '\'' +
+                ", now=" + now +
+                ", leaseUntil=" + leaseUntil +
+                '}';
     }
 }

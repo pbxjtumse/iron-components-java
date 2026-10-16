@@ -10,7 +10,10 @@ public final class DemoRpcException extends RuntimeException {
      */
     private final String remoteService;
 
-    public DemoRpcException(String remoteService, String message) {
+    public DemoRpcException(
+            String remoteService,
+            String message
+    ) {
         super(message);
         this.remoteService = remoteService;
     }

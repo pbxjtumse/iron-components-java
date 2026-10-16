@@ -13,7 +13,6 @@ import com.xjtu.iron.storage.routing.api.context.StorageRouteScope;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
 import com.xjtu.iron.storage.routing.api.route.RouteContext;
 import com.xjtu.iron.storage.routing.api.route.storage.StorageRoute;
-
 import java.util.Objects;
 
 /**
@@ -42,6 +41,7 @@ import java.util.Objects;
  *
  * <p>因此一次 execute/recover 最多只调用一次全局
  * StorageRouteResolver。</p>
+
  * <p><b>流程阅读编号：I1：执行级路由入口。</b>编号按 I（幂等）、R（路由）、D（数据访问）分组，不表示所有分支均依次执行。</p>
  * <ul>
  *     <li>1. 先检查当前 StorageRouteContext；已有业务路由时直接复用，作用域仍由业务调用方关闭。</li>
@@ -76,7 +76,7 @@ public final class StorageRouteAwareIdempotencyExecutor implements IdempotencyEx
     private final StorageRouteContext storageRouteContext;
 
     public StorageRouteAwareIdempotencyExecutor(IdempotencyExecutor delegate, IdempotencyRouteContextFactory routeContextFactory,
-        StorageRouteResolver storageRouteResolver, StorageRouteContext storageRouteContext) {
+                                                StorageRouteResolver storageRouteResolver, StorageRouteContext storageRouteContext) {
         this.delegate = Objects.requireNonNull(delegate, "delegate must not be null");
         this.routeContextFactory = Objects.requireNonNull(routeContextFactory, "routeContextFactory must not be null");
         this.storageRouteResolver = Objects.requireNonNull(storageRouteResolver, "storageRouteResolver must not be null");
@@ -84,8 +84,7 @@ public final class StorageRouteAwareIdempotencyExecutor implements IdempotencyEx
     }
 
     @Override
-    public <T> IdempotencyResult<T> execute(IdempotencyRequest request, IdempotencyResultPolicy<T> resultPolicy,
-        IdempotencyCallback<T> callback) {
+    public <T> IdempotencyResult<T> execute(IdempotencyRequest request, IdempotencyResultPolicy<T> resultPolicy, IdempotencyCallback<T> callback) {
         /*
          * 非法请求仍然交给核心 Executor 统一校验。
          *
@@ -97,22 +96,21 @@ public final class StorageRouteAwareIdempotencyExecutor implements IdempotencyEx
         }
 
         return executeWithinRoute(() -> routeContextFactory.create(request), IdempotencyStage.ACQUIRE_STATE,
-            () -> delegate.execute(request, resultPolicy, callback));
+                () -> delegate.execute(request, resultPolicy, callback));
     }
 
     @Override
-    public <T> IdempotencyResult<T> recover(IdempotencyRecoveryRequest request, IdempotencyResultPolicy<T> resultPolicy,
-        IdempotencyCallback<T> callback) {
+    public <T> IdempotencyResult<T> recover(IdempotencyRecoveryRequest request, IdempotencyResultPolicy<T> resultPolicy, IdempotencyCallback<T> callback) {
         if (request == null || request.getKey() == null || request.getKey().isBlank()) {
             return delegate.recover(request, resultPolicy, callback);
         }
 
         return executeWithinRoute(() -> routeContextFactory.create(request), IdempotencyStage.RECOVER_STATE,
-            () -> delegate.recover(request, resultPolicy, callback));
+                () -> delegate.recover(request, resultPolicy, callback));
     }
 
     private <T> IdempotencyResult<T> executeWithinRoute(RouteContextSupplier defaultRouteContextSupplier,
-        IdempotencyStage routeFailureStage, RoutedInvocation<T> invocation) {
+                                                        IdempotencyStage routeFailureStage, RoutedInvocation<T> invocation) {
         /*
          * 路由分支一：
          *
@@ -140,8 +138,7 @@ public final class StorageRouteAwareIdempotencyExecutor implements IdempotencyEx
         StorageRouteScope routeScope;
 
         try {
-            RouteContext defaultRouteContext =
-                Objects.requireNonNull(defaultRouteContextSupplier.create(), "routeContextFactory returned null");
+            RouteContext defaultRouteContext = Objects.requireNonNull(defaultRouteContextSupplier.create(), "routeContextFactory returned null");
             resolvedRoute = Objects.requireNonNull(storageRouteResolver.resolve(defaultRouteContext), "storageRouteResolver returned null");
             routeScope = storageRouteContext.open(resolvedRoute);
         } catch (RuntimeException routeError) {

@@ -31,7 +31,8 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class RefreshableCacheSpecResolver implements CacheSpecResolver {
 
-    private final AtomicReference<Map<String, CacheSpec>> specsRef = new AtomicReference<>(Collections.emptyMap());
+    private final AtomicReference<Map<String, CacheSpec>> specsRef =
+            new AtomicReference<>(Collections.emptyMap());
 
     public RefreshableCacheSpecResolver() {
     }

@@ -16,7 +16,6 @@ import java.util.Map;
 public class BulkheadProperties {
 
     private List<Item> items = new ArrayList<>();
-
     @Getter
     @Setter
     public static class Item {

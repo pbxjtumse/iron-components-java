@@ -8,8 +8,7 @@ import java.util.Locale;
  */
 public final class IronDurations {
 
-    private IronDurations() {
-    }
+    private IronDurations() {}
 
     public static Duration parseSimple(String value) {
         if (value == null || value.isBlank()) {

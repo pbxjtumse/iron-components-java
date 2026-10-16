@@ -21,15 +21,17 @@ public final class JacksonSha256IdempotencyRequestHasher implements IdempotencyR
 
     public JacksonSha256IdempotencyRequestHasher(ObjectMapper mapper) {
         Objects.requireNonNull(mapper, "mapper must not be null");
-        this.mapper = mapper.copy().configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
-            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+        this.mapper = mapper.copy()
+                .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
+                .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
     }
 
     @Override
     public String hash(Object businessFingerprint) {
         Objects.requireNonNull(businessFingerprint, "businessFingerprint must not be null");
         try {
-            byte[] canonicalJson = mapper.writeValueAsString(businessFingerprint).getBytes(StandardCharsets.UTF_8);
+            byte[] canonicalJson = mapper.writeValueAsString(businessFingerprint)
+                    .getBytes(StandardCharsets.UTF_8);
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(digest.digest(canonicalJson));
         } catch (Exception error) {

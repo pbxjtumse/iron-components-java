@@ -57,7 +57,8 @@ public class DefaultCacheTtlResolver implements CacheTtlResolver {
          *
          * 最终 TTL 可能是 4m10s，也可能是 5m40s。
          */
-        long offsetMillis = ThreadLocalRandom.current().nextLong(-jitterMillis, jitterMillis + 1);
+        long offsetMillis = ThreadLocalRandom.current()
+                .nextLong(-jitterMillis, jitterMillis + 1);
 
         long finalMillis = Math.max(MIN_TTL.toMillis(), baseMillis + offsetMillis);
 

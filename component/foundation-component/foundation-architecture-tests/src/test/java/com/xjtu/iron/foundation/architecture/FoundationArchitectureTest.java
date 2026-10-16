@@ -15,15 +15,22 @@ class FoundationArchitectureTest {
 
     @Test
     void foundationShouldNotDependOnUpperComponents() {
-        noClasses().that().resideInAPackage("com.xjtu.iron.foundation..").should().dependOnClassesThat()
-            .resideInAnyPackage("com.xjtu.iron.cache..", "com.xjtu.iron.message..", "com.xjtu.iron.retry..", "com.xjtu.iron.lock..")
-            .check(classes);
+        noClasses()
+                .that().resideInAPackage("com.xjtu.iron.foundation..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "com.xjtu.iron.cache..",
+                        "com.xjtu.iron.message..",
+                        "com.xjtu.iron.retry..",
+                        "com.xjtu.iron.lock..")
+                .check(classes);
     }
 
     @Test
     void serializationApiShouldNotDependOnJackson() {
-        noClasses().that().resideInAPackage("com.xjtu.iron.foundation.serialization..").and()
-            .resideOutsideOfPackage("com.xjtu.iron.foundation.serialization.jackson..").should().dependOnClassesThat()
-            .resideInAnyPackage("com.fasterxml.jackson..").check(classes);
+        noClasses()
+                .that().resideInAPackage("com.xjtu.iron.foundation.serialization..")
+                .and().resideOutsideOfPackage("com.xjtu.iron.foundation.serialization.jackson..")
+                .should().dependOnClassesThat().resideInAnyPackage("com.fasterxml.jackson..")
+                .check(classes);
     }
 }

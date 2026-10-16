@@ -12,5 +12,8 @@ import com.xjtu.iron.message.api.model.MessageEnvelope;
  */
 public interface MessageIdempotencyContextFactory {
 
-    MessageIdempotencyContext create(MessageEnvelope<?> message, ConsumeContext context, MessageIdempotencyOptions options);
+    MessageIdempotencyContext create(
+            MessageEnvelope<?> message,
+            ConsumeContext context,
+            MessageIdempotencyOptions options);
 }

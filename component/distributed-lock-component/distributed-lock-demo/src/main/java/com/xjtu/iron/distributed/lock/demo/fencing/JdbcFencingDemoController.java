@@ -62,12 +62,17 @@ public class JdbcFencingDemoController {
     }
 
     private LockResult<String> executeWrite(String bizKey, String payload) {
-        LockOptions options =
-            LockOptions.builder().namespace("demo").leaseTime(Duration.ofSeconds(30)).waitTime(Duration.ofSeconds(2)).fencingRequired(true)
-                .fencingTokenProviderName("mybatis-sequence").build();
+        LockOptions options = LockOptions.builder()
+                .namespace("demo")
+                .leaseTime(Duration.ofSeconds(30))
+                .waitTime(Duration.ofSeconds(2))
+                .fencingRequired(true)
+                .fencingTokenProviderName("mybatis-sequence")
+                .build();
 
         return lockClient.execute("demo:jdbc-fencing:" + bizKey, options, handle -> {
-            FencingTokenGuard.requireAccepted(handle, token -> repository.updateIfNewer(bizKey, payload, token));
+            FencingTokenGuard.requireAccepted(handle,
+                    token -> repository.updateIfNewer(bizKey, payload, token));
             return payload;
         });
     }

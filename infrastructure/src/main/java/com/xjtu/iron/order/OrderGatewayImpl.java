@@ -1,5 +1,5 @@
 package com.xjtu.iron.order;
 
-public class OrderGatewayImpl {
+public class OrderGatewayImpl{
 
 }

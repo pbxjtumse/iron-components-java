@@ -49,8 +49,14 @@ public final class TaskTimingSnapshot {
      */
     private final long totalCostMillis;
 
-    public TaskTimingSnapshot(long submitTimeMillis, long startTimeMillis, long endTimeMillis, long queueCostMillis, long runCostMillis,
-        long totalCostMillis) {
+    public TaskTimingSnapshot(
+            long submitTimeMillis,
+            long startTimeMillis,
+            long endTimeMillis,
+            long queueCostMillis,
+            long runCostMillis,
+            long totalCostMillis
+    ) {
         this.submitTimeMillis = submitTimeMillis;
         this.startTimeMillis = startTimeMillis;
         this.endTimeMillis = endTimeMillis;

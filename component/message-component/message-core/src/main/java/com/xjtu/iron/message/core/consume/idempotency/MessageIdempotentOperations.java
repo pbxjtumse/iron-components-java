@@ -7,10 +7,7 @@ package com.xjtu.iron.message.core.consume.idempotency;
  */
 public interface MessageIdempotentOperations {
     IdempotentAcquireResult acquire(MessageIdempotencyContext context);
-
     void markSuccess(MessageIdempotencyContext context, String resultCode, String resultSnapshot);
-
     void markFailed(MessageIdempotencyContext context, String errorCode, String errorMessage, String errorType);
-
     void markDiscarded(MessageIdempotencyContext context, String resultCode, String resultSnapshot);
 }

@@ -9,6 +9,5 @@ public final class RedissonLockConstants {
     /** 与自研 Redis Lua Provider 分开命名，便于同时启用、灰度和排查。 */
     public static final String DEFAULT_KEY_PREFIX = "iron:lock:redisson";
 
-    private RedissonLockConstants() {
-    }
+    private RedissonLockConstants() {}
 }

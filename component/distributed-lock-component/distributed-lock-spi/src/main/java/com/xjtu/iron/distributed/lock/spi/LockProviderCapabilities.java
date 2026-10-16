@@ -78,20 +78,23 @@ public final class LockProviderCapabilities {
         private boolean fairLockSupported;
         private boolean reentrantSupported;
 
-        private Builder() {
-        }
+        private Builder() {}
 
         /**
          * 兼容原有测试/Provider 的便捷写法。
          * true 默认解释为 CORE_MANAGED；新 Provider 推荐直接使用 autoRenewMode(...)。
          */
         public Builder autoRenewSupported(boolean supported) {
-            this.autoRenewMode = supported ? LockAutoRenewMode.CORE_MANAGED : LockAutoRenewMode.UNSUPPORTED;
+            this.autoRenewMode = supported
+                    ? LockAutoRenewMode.CORE_MANAGED
+                    : LockAutoRenewMode.UNSUPPORTED;
             return this;
         }
 
         public Builder autoRenewMode(LockAutoRenewMode autoRenewMode) {
-            this.autoRenewMode = autoRenewMode == null ? LockAutoRenewMode.UNSUPPORTED : autoRenewMode;
+            this.autoRenewMode = autoRenewMode == null
+                    ? LockAutoRenewMode.UNSUPPORTED
+                    : autoRenewMode;
             return this;
         }
 

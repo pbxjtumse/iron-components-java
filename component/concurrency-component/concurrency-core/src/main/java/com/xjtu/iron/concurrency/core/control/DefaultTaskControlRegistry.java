@@ -7,7 +7,8 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * 基于内存的当前节点运行任务控制注册表。
  */
-public final class DefaultTaskControlRegistry implements TaskControlRegistry {
+public final class DefaultTaskControlRegistry
+        implements TaskControlRegistry {
 
     /**
      * taskId 到运行控制对象的映射。

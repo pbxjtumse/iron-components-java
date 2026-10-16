@@ -19,7 +19,11 @@ public final class DemoDomainException extends RuntimeException {
      */
     private final String sceneCode;
 
-    public DemoDomainException(String errorCode, String sceneCode, String message) {
+    public DemoDomainException(
+            String errorCode,
+            String sceneCode,
+            String message
+    ) {
         super(message);
         this.errorCode = errorCode;
         this.sceneCode = sceneCode;
