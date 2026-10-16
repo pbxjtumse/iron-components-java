@@ -28,7 +28,20 @@ end
 
 Caller -> C : evict(key)
 C -> CP : evict L1 + L2
-C -> EP : publish EVICT_KEY
-EP -> ES : Redis Pub/Sub
-ES -> LI : invalidate local L1
+alt deletion failed
+  C --> Caller : CacheException, no event
+else deletion succeeded
+  C -> EP : publish one EVICT_KEY (traceId, spanId)
+  alt published
+    EP -> ES : Redis Pub/Sub
+    ES -> LI : invalidate local L1
+  else publish failed
+    C -> C : record PUBLISH_EVENT error
+    alt IGNORE
+      C --> Caller : success
+    else THROW
+      C --> Caller : CacheException (publish cause)
+    end
+  end
+end
 @enduml

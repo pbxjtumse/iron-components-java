@@ -5,12 +5,17 @@ import com.xjtu.iron.relational.mybatis.observation.MyBatisAccessListener;
 import com.xjtu.iron.transaction.api.definition.TransactionOptions;
 import com.xjtu.iron.transaction.api.definition.TransactionPropagation;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutor;
+import org.apache.ibatis.mapping.Environment;
 import org.mybatis.spring.SqlSessionTemplate;
+import org.mybatis.spring.transaction.SpringManagedTransactionFactory;
 import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.time.Duration;
+import java.util.List;
 import java.util.Objects;
 
 /** 基于 SqlSessionTemplate 和 transaction-component 的 MyBatis Access。
@@ -40,14 +45,25 @@ public final class SpringMyBatisAccess implements MyBatisAccess {
 
     public SpringMyBatisAccess(DataSource dataSource, SqlSessionTemplate sqlSessionTemplate, TransactionExecutor transactionExecutor,
         MyBatisAccessListener listener) {
-        this.dataSource = Objects.requireNonNull(dataSource, "dataSource must not be null");
+        this.dataSource = transactionResource(Objects.requireNonNull(dataSource, "dataSource must not be null"));
         this.sqlSessionTemplate = Objects.requireNonNull(sqlSessionTemplate, "sqlSessionTemplate must not be null");
+        Environment environment = sqlSessionTemplate.getSqlSessionFactory().getConfiguration().getEnvironment();
+        if (environment == null || environment.getDataSource() == null ||
+            transactionResource(environment.getDataSource()) != this.dataSource) {
+            throw new IllegalArgumentException("SqlSessionTemplate must use the same DataSource as MyBatisAccess");
+        }
+        if (!(environment.getTransactionFactory() instanceof SpringManagedTransactionFactory)) {
+            throw new IllegalArgumentException("MyBatisAccess requires SpringManagedTransactionFactory");
+        }
         this.transactionExecutor = transactionExecutor;
-        this.listener = listener == null ? MyBatisAccessListener.noop() : listener;
+        this.listener = MyBatisAccessListener.composite(listener == null ? List.of() : List.of(listener));
     }
 
     @Override
     public <M, T> T execute(String operationName, Class<M> mapperType, MyBatisMapperWork<M, T> work) throws Exception {
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            requireCompatibleCurrentTransaction();
+        }
         return invoke(operationName, mapperType, work);
     }
 
@@ -115,7 +131,7 @@ public final class SpringMyBatisAccess implements MyBatisAccess {
         }
     }
 
-    private void requireCompatibleCurrentTransaction() {
+    private void requireCompatibleCurrentTransaction() throws SQLException {
         if (!TransactionSynchronizationManager.isActualTransactionActive()) {
             throw new IllegalStateException("MyBatis operation requires an active local transaction");
         }
@@ -127,6 +143,9 @@ public final class SpringMyBatisAccess implements MyBatisAccess {
             if (!DataSourceUtils.isConnectionTransactional(connection, dataSource)) {
                 throw new IllegalStateException("current transaction does not own the MyBatis DataSource connection");
             }
+            if (connection.getAutoCommit()) {
+                throw new IllegalStateException("MyBatis DataSource connection is in auto-commit mode, not an active local transaction");
+            }
         } finally {
             DataSourceUtils.releaseConnection(connection, dataSource);
         }
@@ -134,6 +153,15 @@ public final class SpringMyBatisAccess implements MyBatisAccess {
 
     private Duration elapsed(long startedNanos) {
         return Duration.ofNanos(Math.max(0L, System.nanoTime() - startedNanos));
+    }
+
+    /** Spring 事务按代理的目标数据源绑定；其他代理必须保留其资源身份。 */
+    private static DataSource transactionResource(DataSource dataSource) {
+        DataSource current = dataSource;
+        while (current instanceof TransactionAwareDataSourceProxy proxy) {
+            current = Objects.requireNonNull(proxy.getTargetDataSource(), "transaction-aware proxy must have a target DataSource");
+        }
+        return current;
     }
 
     /** 只用于跨过 TransactionExecutor callback 的 checked exception 边界。 */

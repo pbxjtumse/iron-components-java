@@ -7,6 +7,8 @@ import com.xjtu.iron.relational.mybatis.resource.DirectMyBatisResourceRegistry;
 import com.xjtu.iron.relational.mybatis.routing.MyBatisAccessResolver;
 import com.xjtu.iron.idempotent.starter.autoconfigure.*;
 import com.xjtu.iron.relational.spring.boot.autoconfigure.RelationalAccessAutoConfiguration;
+import com.xjtu.iron.relational.spring.boot.autoconfigure.RelationalDirectAutoConfiguration;
+import com.xjtu.iron.transaction.api.execution.TransactionExecutorResolver;
 import com.xjtu.iron.storage.routing.starter.autoconfigure.StorageRoutingAutoConfiguration;
 import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
 import org.junit.jupiter.api.Test;
@@ -74,6 +76,20 @@ class DirectStorageAutoConfigurationTest {
                 assertThat(context).hasFailed();
                 assertThat(context.getStartupFailure()).hasStackTraceContaining(
                     "enable xjtu.iron.storage-routing.resolver or define one custom StorageRouteResolver bean");
+            });
+    }
+
+    @Test
+    void publicAndLegacyDirectSwitchesShouldShareOneResourceRegistry() {
+        runner.withConfiguration(AutoConfigurations.of(MybatisAutoConfiguration.class, RelationalDirectAutoConfiguration.class,
+                RelationalAccessAutoConfiguration.class))
+            .withPropertyValues("xjtu.iron.relational.direct.enabled=true")
+            .withBean("db_01", DriverManagerDataSource.class, DriverManagerDataSource::new).run(context -> {
+                assertThat(context).hasNotFailed().hasSingleBean(DirectMyBatisResourceRegistry.class);
+                var resources = context.getBean(DirectMyBatisResourceRegistry.class);
+                assertThat(context.getBean(MyBatisAccessResolver.class)).isSameAs(resources.getMyBatisAccessResolver());
+                assertThat(context.getBean(TransactionExecutorResolver.class)).isSameAs(resources.getTransactionExecutorResolver());
+                assertThat(context.getBean(IdempotencyExecutor.class)).isNotNull();
             });
     }
 

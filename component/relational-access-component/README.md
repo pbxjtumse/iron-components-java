@@ -17,7 +17,7 @@ Relational Access V1 是所有关系型技术表的 MyBatis 公共接入层。�
 | 模块 | 职责 |
 | --- | --- |
 | `relational-mybatis` | `MyBatisAccess`、Access Resolver、Direct 多数据源资源目录、事务校验、表名/唯一键公共工具 |
-| `relational-starter` | 单 DataSource 下自动复用 MyBatis/Spring 资源，并为缺失的 `TransactionExecutor` 创建本地事务适配 |
+| `relational-starter` | 单库默认 Access、本地事务适配，以及显式启用的 Direct 公共资源装配 |
 
 `relational-mybatis` 按职责分包，避免公共入口继续平铺：
 
@@ -46,6 +46,21 @@ Component Repository
 
 ## Direct 多库
 
+应用可独立启用公共资源装配，DataSource Bean 名作为 `dataSourceKey`：
+
+```yaml
+xjtu:
+  iron:
+    relational:
+      direct:
+        enabled: true
+```
+
+`RelationalDirectAutoConfiguration` 导入公共资源配置，并在缺少自定义解析器时提供
+`MyBatisAccessResolver` 与 `TransactionExecutorResolver`。旧的
+`xjtu.iron.idempotent.mybatis.direct.enabled=true` 继续通过同一公共配置创建目录，
+幂等的路由校验与事务协调仍归幂等集成负责。
+
 `DirectMyBatisResourceRegistry` 对每个 DataSource 同时创建：
 
 - 一个 `SqlSessionTemplate`；
@@ -57,6 +72,24 @@ Component Repository
 Direct 运行时扫描 `classpath*:com/xjtu/iron/**/mybatis/**/*.xml`，因此组件 Mapper XML
 必须位于 `com/xjtu/iron` 命名空间下包含 `mybatis` 的目录。该规则同时覆盖普通
 `mapper` 子目录和 fencing 等领域子目录。
+
+注册 `DirectMyBatisSqlSessionFactoryCustomizer` Bean 可以按 `dataSourceKey` 设置插件、
+TypeHandler、Configuration 或 Mapper 资源；多个定制器按 Spring 顺序执行。该扩展点在默认
+DataSource/XML 设置后、工厂初始化前调用，不自动复制应用的全部 MyBatis 配置。修改 Mapper
+资源时应保留组件需要的 XML；修改数据源或事务工厂导致资源不兼容时，初始化失败。
+
+公共装配会把有序 `MyBatisAccessListener` 注入各个 Direct Access。单库、Direct 和手工创建的
+`SpringMyBatisAccess` 都隔离监听器的 RuntimeException，保持原始数据库结果与异常。
+
+## 事务资源检查
+
+创建 Access 时校验 SqlSessionFactory Environment 与传入 DataSource 使用同一资源，并要求
+`SpringManagedTransactionFactory`。`TransactionAwareDataSourceProxy` 按目标资源匹配，其他
+连接池与路由代理按对象身份匹配，相同 JDBC URL 不能代替资源一致性。
+
+`execute` 无事务时普通执行，存在实际事务时也会检查资源绑定，防止可靠任务等组件在业务库 A
+事务中静默写入库 B；仅有同步绑定但仍自动提交的连接也会被拒绝。`executeInCurrentTransaction` 额外要求事务已经存在；独立提交使用
+`executeInNewTransaction`。验收场景与兼容性见 [第一轮优化设计](docs/hardening-round1.md)。
 
 ## ShardingSphere-JDBC / Proxy
 

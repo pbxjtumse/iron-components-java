@@ -2,12 +2,18 @@
 title Relational Access V1 - L2 Direct Multi-DataSource
 autonumber
 
+participant "RelationalDirectResourceConfiguration" as Config
+participant "DirectMyBatisResourceRegistry" as Registry
 participant "Component Repository" as Repo
 participant "StorageRouteResolver" as Route
 participant "RoutingMyBatisAccessResolver" as Resolver
 participant "SpringMyBatisAccess(db-01)" as Access
 participant "SqlSessionTemplate(db-01)" as Session
 database "Physical DB db-01" as DB
+
+Config -> Registry : fromDataSources(DataSource beans, listener, customizers)
+Registry -> Registry : create per-key MyBatis + transaction resources
+Registry -> Access : validate DataSource / Environment / transaction factory
 
 Repo -> Route : resolve(shardKey)
 Route --> Repo : db-01 + physical_table_03
@@ -22,5 +28,6 @@ DB --> Repo : result
 note over Access,DB
 DirectMyBatisResourceRegistry creates the Access,
 SqlSessionTemplate and TransactionExecutor from the same DataSource.
+The public starter supplies listeners and per-key factory customizers.
 end note
 @enduml

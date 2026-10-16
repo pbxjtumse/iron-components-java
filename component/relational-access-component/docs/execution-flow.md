@@ -18,6 +18,9 @@ Component Core
 
 Access 只负责从 `SqlSessionTemplate` 获取 Mapper 并校验事务资源；表名、参数、CAS 条件仍由组件 Provider 决定。
 
+Access 构造阶段校验 DataSource 与 SqlSessionFactory Environment 的一致性，并要求 Spring 事务工厂。
+运行时 `execute` 在实际事务存在时也检查资源绑定；监听器 RuntimeException 不改变 Mapper 结果。
+
 ## 2. 普通单库单表
 
 Starter 看到唯一的 `DataSource` 和 `SqlSessionTemplate` 后创建：
@@ -39,6 +42,10 @@ MyBatisAccessResolver resolver = FixedMyBatisAccessResolver.defaultDataSource(ac
 Direct 表示应用直接持有多个物理连接池。`DirectMyBatisResourceRegistry` 按 Spring Bean 名把每个
 `DataSource` 注册为一个物理资源：
 
+Spring 应用启用 `xjtu.iron.relational.direct.enabled=true` 后，由 `RelationalDirectAutoConfiguration`
+导入 `RelationalDirectResourceConfiguration` 自动创建目录及解析器。旧幂等 Direct 配置复用该资源
+配置，并继续负责幂等路由与事务协调。下面展示对应的手工装配：
+
 ```java
 Map<String, DataSource> dataSources = Map.of(
         "order-db-00", orderDb00,
@@ -54,6 +61,9 @@ DirectMyBatisResourceRegistry registry =
 - 基于该 DataSource 的 `SqlSessionTemplate`；
 - 基于该 DataSource 的 `TransactionExecutor`；
 - `SpringMyBatisAccess`。
+
+公共配置按顺序执行 `DirectMyBatisSqlSessionFactoryCustomizer`，为每个库配置工厂扩展，
+并向 Access 注入组合 Listener；两参数手工构造函数仍保留默认 XML 扫描和 noop Listener。
 
 一次访问的流程是：
 

@@ -119,7 +119,7 @@ relational-starter
 
 | API | 语义 |
 | --- | --- |
-| `execute` | 使用 `SqlSessionTemplate` 执行，不强制调用方已有事务 |
+| `execute` | 无事务时普通执行；有实际事务时校验当前 DataSource 资源绑定 |
 | `executeInCurrentTransaction` | 必须已有本地事务，且该事务绑定的是当前 Access 的 DataSource |
 | `executeInNewTransaction` | 使用同一 DataSource 的 `TransactionExecutor` 开启 `REQUIRES_NEW` |
 
@@ -130,6 +130,11 @@ ShardingSphere-JDBC，如果一次事务跨越多个实际数据库，是否原�
 
 ## 7. 当前实现边界与待办
 
+- Access 构造时校验 DataSource/Environment 配对和 Spring 事务工厂，仅解包 TransactionAware 代理。
+- Direct 公共装配由 `relational-starter` 提供，使用 `xjtu.iron.relational.direct.enabled=true` 显式启用；
+  旧幂等 Direct 配置导入同一资源配置，保留组件特有的事务与路由校验。
+- `DirectMyBatisSqlSessionFactoryCustomizer` 提供每库工厂定制；公共装配注入访问 Listener，
+  Access 隔离监听器 RuntimeException。它不自动复制业务应用的全部 MyBatis 配置。
 - ShardingSphere Adapter 当前只标记模式、保留逻辑表和分片键，不创建 DataSource、不复制规则。
 - Repository SQL 必须显式包含 ShardingSphere 配置使用的分片列；`StorageRouteContext` 不会自动改写 SQL。
 - 当前没有把 `StorageRoute` 自动转换成 ShardingSphere `HintManager` 的公共实现。

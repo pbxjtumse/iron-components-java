@@ -8,7 +8,7 @@ package com.xjtu.iron.relational.mybatis.access;
  */
 public interface MyBatisAccess {
 
-    /** 在当前调用上下文中执行一次 Mapper 操作。 */
+    /** 执行一次 Mapper 操作；存在实际本地事务时，必须绑定本 Access 的 DataSource。 */
     <M, T> T execute(String operationName, Class<M> mapperType, MyBatisMapperWork<M, T> work) throws Exception;
 
     /** 在当前已经存在的本地事务中执行，并校验该事务绑定了本 Access 的 DataSource。 */

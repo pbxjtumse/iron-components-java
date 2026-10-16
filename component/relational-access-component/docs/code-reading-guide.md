@@ -15,6 +15,8 @@
 接着读 `SpringMyBatisAccess`：
 
 - `invoke`：通过 `SqlSessionTemplate.getMapper` 获取组件 Mapper，并发送观测回调；
+- 构造函数：校验 DataSource/Environment 与 Spring 事务工厂，仅解包 TransactionAware 代理；
+- `execute`：无事务时普通执行；实际事务存在时也检查资源一致性；
 - `executeInCurrentTransaction`：校验已有事务是否绑定当前 DataSource；
 - `executeInNewTransaction`：通过 transaction-component 开启 `REQUIRES_NEW`；
 - `supportsCurrentTransactionParticipation`：声明 `SqlSessionTemplate` 可加入 Spring 当前事务。
@@ -30,7 +32,9 @@
 2. `DirectMyBatisResourceRegistry`
 3. `RoutingMyBatisAccessResolver`
 4. `RoutingTransactionExecutorResolver`（transaction-component）
-5. `IdempotencyDirectStorageAutoConfiguration`
+5. `RelationalDirectAutoConfiguration` / `RelationalDirectResourceConfiguration`
+6. `DirectMyBatisSqlSessionFactoryCustomizer`
+7. `IdempotencyDirectStorageAutoConfiguration`（兼容开关、幂等路由校验与事务协调）
 
 重点观察：同一个 `DirectMyBatisResource` 从同一 DataSource 创建 `SqlSessionTemplate`、Access 与事务执行器；
 Registry 再用同一组 key 同时生成 Access Resolver 和 Transaction Resolver。

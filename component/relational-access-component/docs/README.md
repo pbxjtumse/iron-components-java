@@ -14,6 +14,8 @@
 7. [L3 Idempotent 集成](diagrams/sequence/L3-idempotent-route.puml)：理解 `StorageRoutingIdempotencyPhysicalRouteResolver`。
 8. [L4 事务与分片边界](diagrams/sequence/L4-transaction-boundary.puml)：理解同库事务成立的条件和当前限制。
 
+资源配对、公共 Direct 装配与兼容性见 [第一轮优化设计](hardening-round1.md)。
+
 组件概览、模块清单与接入约束见 [组件 README](../README.md)。Storage Routing 的路由模型与作用域见
 [Storage Routing 文档](../../storage-routing-component/docs/README.md)。
 
@@ -55,7 +57,7 @@ JDBC 或 JPA Provider 时，应新增 Provider 实现，而不是改变 Core 或
 并行的公共 SQL 模板。
 
 
-可以。先把核心结论说死：
+## 运行时职责详解
 
 > Relational Access 不是 Repository、不是分片组件、也不是 ORM。
 > 它是“技术组件使用 MyBatis 访问关系型数据库时，共用的运行时执行层”。
@@ -122,7 +124,7 @@ Access 不应该知道：
 
 对应图：
 
-L0-system-context.puml[L0 系统上下文图](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/docs/diagrams/component/L0-system-context.puml)
+L0-system-context.puml[L0 系统上下文图](diagrams/component/L0-system-context.puml)
 
 整体关系是：
 
@@ -192,7 +194,7 @@ Access 统一的是：
 
 源码：
 
-:chatgpt-content-reference{index="1"}[MyBatisAccess.java](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/access/MyBatisAccess.java)
+[MyBatisAccess.java](../relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/access/MyBatisAccess.java)
 
 核心接口只有四个方法：
 
@@ -225,7 +227,7 @@ public interface MyBatisAccess {
 
 表示：
 
-> 直接执行 Mapper，不强制要求当前已经存在事务。
+> 无事务时普通执行 Mapper；已有实际事务时校验当前数据源资源绑定及非自动提交状态。
 
 例如普通查询：
 
@@ -350,7 +352,7 @@ Mapper 是本次调用时，由选中的 `SqlSessionTemplate` 动态取得。
 
 源码：
 
-:chatgpt-content-reference{index="2"}[SpringMyBatisAccess.java](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/access/SpringMyBatisAccess.java)
+[SpringMyBatisAccess.java](../relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/access/SpringMyBatisAccess.java)
 
 它的对象关系非常重要：
 
@@ -486,7 +488,7 @@ private final SqlSessionTemplate sqlSessionTemplate;
 
 对应图：
 
-L1-access-selection.puml[L1 Access 选择图](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/docs/diagrams/sequence/L1-access-selection.puml)
+L1-access-selection.puml[L1 Access 选择图](diagrams/sequence/L1-access-selection.puml)
 
 流程是：
 
@@ -680,7 +682,7 @@ resolver.resolve("db-01");
 
 对应图：
 
-L2-direct-execution.puml[L2 Direct 执行图](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/docs/diagrams/sequence/L2-direct-execution.puml)
+L2-direct-execution.puml[L2 Direct 执行图](diagrams/sequence/L2-direct-execution.puml)
 
 Direct 模式表示：
 
@@ -708,7 +710,7 @@ order-db-02 -> Access C + TransactionExecutor C
 
 源码：
 
-:chatgpt-content-reference{index="5"}[DirectMyBatisResource.java](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/resource/DirectMyBatisResource.java)
+[DirectMyBatisResource.java](../relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/resource/DirectMyBatisResource.java)
 
 一个 `DirectMyBatisResource` 表示：
 
@@ -875,7 +877,7 @@ try (StorageRouteScope scope = routeContext.open(routeDb01)) {
 
 对应图：
 
-L2-shardingsphere-jdbc.puml[L2 ShardingSphere-JDBC](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/docs/diagrams/sequence/L2-shardingsphere-jdbc.puml)
+L2-shardingsphere-jdbc.puml[L2 ShardingSphere-JDBC](diagrams/sequence/L2-shardingsphere-jdbc.puml)
 
 结构是：
 
@@ -997,7 +999,7 @@ WHERE scan_bucket = ?
 
 对应图：
 
-L2-shardingsphere-proxy.puml[L2 ShardingSphere-Proxy](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/docs/diagrams/sequence/L2-shardingsphere-proxy.puml)
+L2-shardingsphere-proxy.puml[L2 ShardingSphere-Proxy](diagrams/sequence/L2-shardingsphere-proxy.puml)
 
 结构是：
 
@@ -1039,7 +1041,7 @@ Proxy 选择后端物理库表
 
 对应图：
 
-L3-idempotent-route.puml[L3 Idempotent 路由图](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/docs/diagrams/sequence/L3-idempotent-route.puml)
+L3-idempotent-route.puml[L3 Idempotent 路由图](diagrams/sequence/L3-idempotent-route.puml)
 
 核心入口：
 
@@ -1228,7 +1230,7 @@ PROXY
 
 对应图：
 
-L4-transaction-boundary.puml[L4 事务边界](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/docs/diagrams/sequence/L4-transaction-boundary.puml)
+L4-transaction-boundary.puml[L4 事务边界](diagrams/sequence/L4-transaction-boundary.puml)
 
 这是 Access 最关键的价值。
 
@@ -1261,7 +1263,7 @@ COMMIT
 
 就能通过 `DataSourceUtils` 复用线程上绑定的 Connection。
 
-## `requireCompatibleCurrentTransaction()` 三层检查
+## `requireCompatibleCurrentTransaction()` 资源检查
 
 ### 第一层：是否真的存在事务
 
@@ -1293,7 +1295,16 @@ DataSourceUtils.isConnectionTransactional(
 );
 ```
 
-最后确认取得的 Connection 是事务管理器绑定的 Connection。
+确认取得的 Connection 对应当前数据源绑定的连接。
+
+### 第四层：连接不能仍处于自动提交状态
+
+```java
+connection.getAutoCommit()
+```
+
+如果连接仅因事务同步而绑定，实际仍使用自动提交，Access 会拒绝该访问，避免把异源事务下
+附带创建的连接误认为本地事务参与。
 
 `releaseConnection()` 在事务环境下不会真的关闭连接，只是交还给 Spring 管理。
 
@@ -1538,72 +1549,34 @@ IdempotencyRepository
 
 ---
 
-# 十八、当前设计仍然存在的真实问题
+# 十八、公共装配与后续扩展边界
 
 整体方向正确，但 V1 还不能说完全收口。
 
-## 1. Direct 自动配置目前放在 Idempotent Starter
+## 1. Direct 公共自动配置
 
-公共类已经在 Access：
+`RelationalDirectAutoConfiguration` 位于 Relational Starter，使用
+`xjtu.iron.relational.direct.enabled=true` 独立启用。它导入
+`RelationalDirectResourceConfiguration`，创建资源目录，并在缺少自定义解析器时提供
+Access Resolver 和 Transaction Resolver。
 
-```text
-DirectMyBatisResource
-DirectMyBatisResourceRegistry
-```
+旧幂等 Direct 配置通过导入同一公共资源配置保持兼容，继续负责幂等路由校验和事务协调。
+其他组件可以使用公共目录，无需依赖幂等 Starter；各组件的路由适配仍需按自身契约实现。
 
-但自动创建注册表的代码目前在：
+## 2. Direct 工厂配置与定制
 
-```text
-IdempotencyDirectStorageAutoConfiguration
-```
+`DirectMyBatisResource` 默认设置 DataSource 和 Iron Mapper XML 扫描路径，随后调用
+`DirectMyBatisSqlSessionFactoryCustomizer`，再初始化工厂。应用注册该接口的 Bean，
+即可按 dataSourceKey 设置插件、TypeHandler、Configuration 和 Mapper 资源；定制器按 Spring 顺序执行。
 
-这意味着第一消费者仍然是 Idempotent。
+Direct 不自动复制应用的全部 MyBatis 配置。替换 Mapper 资源时应保留组件需要的 XML；
+最终 DataSource/Environment 与 Spring 事务工厂仍必须通过 Access 校验。
 
-以后 Reliable Task、Outbox 都使用 Direct 多库后，更合理的做法是：
+## 3. Direct 访问观测
 
-```text
-relational-direct-starter
-或者
-relational-starter 中独立 Direct 自动配置
-```
-
-避免其他组件依赖 Idempotent Starter 才能获得 Direct 资源。
-
-## 2. Direct 自建 SqlSessionFactory 没有继承应用完整 MyBatis 配置
-
-当前代码：
-
-```java
-SqlSessionFactoryBean factoryBean =
-        new SqlSessionFactoryBean();
-
-factoryBean.setDataSource(dataSource);
-factoryBean.setMapperLocations(...);
-```
-
-它主要加载 Iron Mapper XML，但没有自动复制应用的：
-
-- MyBatis plugins；
-- interceptors；
-- type handlers；
-- configuration customizers；
-- naming 配置。
-
-当前技术表类型简单，暂时能工作。
-
-但后续应提供公共定制入口，而不是无限在构造函数里增加参数。
-
-## 3. Direct 模式观测目前使用 noop
-
-Direct 资源中现在是：
-
-```java
-MyBatisAccessListener.noop()
-```
-
-所以普通单库 Starter 的组合 Listener 并没有自动进入 Direct Access。
-
-如果我们准备完善观测，这里需要改为注入 Listener。
+公共资源配置将有序 `MyBatisAccessListener` 注入 Direct Access。
+手工使用两参数资源构造函数时，仍使用 noop；需要观测和定制时使用对应重载。
+`SpringMyBatisAccess` 会隔离监听器 RuntimeException，不改变 Mapper 的结果和原始异常。
 
 ## 4. ShardingSphere 还缺真实 Hint/规则 E2E
 
@@ -1624,7 +1597,7 @@ Recovery 定向扫描
 跨物理库事务验证
 ```
 
-## 5. `supportsCurrentTransactionParticipation()` 比较乐观
+## 5. 事务能力声明与运行时资源检查
 
 `SpringMyBatisAccess` 目前直接返回：
 
@@ -1724,12 +1697,12 @@ db-01.iron_idempotency_record_03
 
 推荐你接下来按这个顺序看代码：
 
-1. :chatgpt-content-reference{index="10"}[MyBatisAccess](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/access/MyBatisAccess.java)
-2. :chatgpt-content-reference{index="11"}[SpringMyBatisAccess](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/access/SpringMyBatisAccess.java)
-3. :chatgpt-content-reference{index="12"}[DirectMyBatisResource](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/resource/DirectMyBatisResource.java)
-4. :chatgpt-content-reference{index="13"}[DirectMyBatisResourceRegistry](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/relational-access-component/relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/resource/DirectMyBatisResourceRegistry.java)
-5. :chatgpt-content-reference{index="14"}[RoutedMyBatisIdempotencyRepository](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/idempotent-component/idempotent-provider/idempotent-provider-mybatis/src/main/java/com/xjtu/iron/idempotent/provider/mybatis/repository/RoutedMyBatisIdempotencyRepository.java)
-6. :chatgpt-content-reference{index="15"}[MyBatisIdempotencyRepository](sandbox:/workspace/scratch/ef9f99730d07/iron-mybatis-fix/component/idempotent-component/idempotent-provider/idempotent-provider-mybatis/src/main/java/com/xjtu/iron/idempotent/provider/mybatis/repository/MyBatisIdempotencyRepository.java)
+1. [MyBatisAccess](../relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/access/MyBatisAccess.java)
+2. [SpringMyBatisAccess](../relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/access/SpringMyBatisAccess.java)
+3. [DirectMyBatisResource](../relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/resource/DirectMyBatisResource.java)
+4. [DirectMyBatisResourceRegistry](../relational-mybatis/src/main/java/com/xjtu/iron/relational/mybatis/resource/DirectMyBatisResourceRegistry.java)
+5. [RoutedMyBatisIdempotencyRepository](../../idempotent-component/idempotent-provider/idempotent-provider-mybatis/src/main/java/com/xjtu/iron/idempotent/provider/mybatis/repository/RoutedMyBatisIdempotencyRepository.java)
+6. [MyBatisIdempotencyRepository](../../idempotent-component/idempotent-provider/idempotent-provider-mybatis/src/main/java/com/xjtu/iron/idempotent/provider/mybatis/repository/MyBatisIdempotencyRepository.java)
 7. 最后看 `IdempotencyMapper.xml`
 
 如果只记住一句话：

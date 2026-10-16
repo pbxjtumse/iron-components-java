@@ -110,3 +110,14 @@ Watchdog 延长租约，但不能提供绝对安全。Fencing Token 必须随写
 ## AD-014：文档与代码同变更
 
 修改公共 API、核心类、状态枚举、Provider 边界或模块结构时，同步检查组件 README、L0-L4 图、State 图和文档索引。
+
+## AD-015：公共 Direct 装配与事务资源失败前置
+
+Relational Starter 提供显式启用的 Direct 资源目录及解析器；幂等的旧 Direct 开关复用公共资源配置，
+路由校验与幂等事务协调留在对应集成层，Relational Access 不反向依赖 Storage Routing 或幂等组件。
+
+Access 构造时校验 DataSource/SqlSessionFactory Environment 配对与 Spring 事务工厂；普通执行在实际
+事务存在时也检查资源绑定，错误配对和异源访问在 Mapper 执行前失败。代价是此前依赖隐式跨库
+自动提交的调用需要改为明确的独立事务边界。保留原构造函数与幂等 Direct 配置；每库工厂定制和
+监听器注入属于公共资源装配职责。详细契约与验收场景见
+[第一轮优化设计](../../component/relational-access-component/docs/hardening-round1.md)。

@@ -1,6 +1,6 @@
 # Iron Components Documentation Index
 
-> 本索引对应 `docs/component-docs-l0-l4-v1` 文档整理基线。所有图优先以当前代码中的模块、类、枚举和执行边界为依据。
+> 本索引列出组件文档及图示覆盖层级。所有图优先以当前代码中的模块、类、枚举和执行边界为依据。
 
 ## 统一规范
 
@@ -19,6 +19,7 @@
 | Foundation | [docs](foundation-component/docs/README.md) | ✅ | ✅ | ✅（仅有状态语义的基础对象） |
 | Concurrency | [docs](concurrency-component/docs/README.md) | ✅ | ✅ | ✅ AsyncTaskStatus |
 | Retry | [docs](retry-component/docs/README.md) | ✅ | ✅ | ✅ RetryStatus + DOC lifecycle |
+| Reliable Task | [design](reliable-task-component/docs/design-v1.md) | ✅ L0 | L1-L2（其余待补） | ✅ ReliableTaskStatus |
 | Transaction | [docs](transaction-component/docs/README.md) | ✅ | ✅ | ✅ TransactionStage / Outcome |
 | Idempotent | [docs](idempotent-component/docs/README.md) | ✅ | ✅ | ✅ 多层状态图 |
 | Distributed Lock | [docs](distributed-lock-component/docs/README.md) | ✅ L0-L3 | ✅ L0-L4 | ✅ 多张生命周期/映射图 |
@@ -26,7 +27,7 @@
 | Cache | [docs](cache-component/docs/README.md) | ✅ | ✅ | ✅ result/lifecycle |
 | Governance | [docs](governance-component/docs/README.md) | ✅ | ✅ | ✅ invocation lifecycle |
 | Observability | [docs](observability-component/docs/README.md) | ✅ | ✅ | ✅ span lifecycle |
-| Relational Access | [docs](relational-access-component/docs/README.md) | ✅ | ✅ | ✅ SQL + Connection |
+| Relational Access | [docs](relational-access-component/docs/README.md) | ✅ | ✅ | 无公共状态枚举 |
 | Storage Routing | [docs](storage-routing-component/docs/README.md) | ✅ | ✅ | ✅ route scope lifecycle |
 
 `component-bom` 是 build/version management artifact，没有运行时状态机，按规范豁免 Sequence/State Diagram。
@@ -62,6 +63,7 @@
 
 - “未来 Sharding Component”已经更新为当前真实的 `storage-routing-component`。
 - Relational Core 不计算 shard，也不 begin/commit/rollback。
+- 公共 Direct 装配、资源配对校验与 Listener 隔离见 [第一轮优化](relational-access-component/docs/hardening-round1.md)。
 
 ### Transaction
 

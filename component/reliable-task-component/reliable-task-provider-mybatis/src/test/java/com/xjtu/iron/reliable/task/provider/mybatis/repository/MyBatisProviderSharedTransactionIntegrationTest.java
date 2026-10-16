@@ -97,6 +97,18 @@ class MyBatisProviderSharedTransactionIntegrationTest {
         assertThat(businessOrderMapper.countById("order-duplicate")).isEqualTo(1L);
     }
 
+    @Test
+    void taskShouldRejectBusinessTransactionForAnotherDataSource() {
+        JdbcDataSource otherDataSource = new JdbcDataSource();
+        otherDataSource.setURL("jdbc:h2:mem:foreign_business_" + System.nanoTime());
+        TransactionTemplate otherTransaction = new TransactionTemplate(new DataSourceTransactionManager(otherDataSource));
+
+        assertThatThrownBy(() -> otherTransaction.executeWithoutResult(status -> repository.create(task("foreign-tx"))))
+            .isInstanceOf(IllegalStateException.class).hasMessageContaining("does not bind");
+
+        assertThat(repository.find(ReliableTaskKey.defaults("foreign-tx"))).isEmpty();
+    }
+
     private static ReliableTask task(String taskId) {
         Instant now = Instant.parse("2026-10-10T00:00:00Z");
         return new ReliableTask(ReliableTaskKey.defaults(taskId), "demo", "business-1", "{}", "order-1", 7, ReliableTaskStatus.READY, 0, 3,

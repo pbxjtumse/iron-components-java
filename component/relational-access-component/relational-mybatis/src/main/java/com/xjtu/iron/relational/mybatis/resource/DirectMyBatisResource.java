@@ -45,11 +45,18 @@ public final class DirectMyBatisResource {
     private final MyBatisAccess myBatisAccess;
 
     public DirectMyBatisResource(String dataSourceKey, DataSource dataSource) {
+        this(dataSourceKey, dataSource, MyBatisAccessListener.noop(), (key, factory) -> { });
+    }
+
+    /** 从同一数据源构造运行时，并在初始化前定制每库 MyBatis 工厂。 */
+    public DirectMyBatisResource(String dataSourceKey, DataSource dataSource, MyBatisAccessListener listener,
+        DirectMyBatisSqlSessionFactoryCustomizer factoryCustomizer) {
         if (dataSourceKey == null || dataSourceKey.isBlank()) {
             throw new IllegalArgumentException("dataSourceKey must not be blank");
         }
         this.dataSourceKey = dataSourceKey.trim();
         this.dataSource = Objects.requireNonNull(dataSource, "dataSource must not be null");
+        Objects.requireNonNull(factoryCustomizer, "factoryCustomizer must not be null");
         this.transactionManager = new DirectTransactionManager(dataSource);
         TransactionExecutor delegate = new DefaultTransactionExecutor(new SpringTransactionProvider(transactionManager));
         this.transactionExecutor = new TransactionExecutor() {
@@ -60,7 +67,8 @@ public final class DirectMyBatisResource {
             }
         };
         this.myBatisAccess =
-            new SpringMyBatisAccess(dataSource, createSqlSessionTemplate(dataSource), transactionExecutor, MyBatisAccessListener.noop());
+            new SpringMyBatisAccess(dataSource, createSqlSessionTemplate(this.dataSourceKey, dataSource, factoryCustomizer),
+                transactionExecutor, listener);
     }
 
     public String getDataSourceKey() {
@@ -87,16 +95,18 @@ public final class DirectMyBatisResource {
         }
     }
 
-    private static SqlSessionTemplate createSqlSessionTemplate(DataSource dataSource) {
+    private static SqlSessionTemplate createSqlSessionTemplate(String dataSourceKey, DataSource dataSource,
+        DirectMyBatisSqlSessionFactoryCustomizer customizer) {
         try {
             SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
             factoryBean.setDataSource(dataSource);
             factoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources(MAPPER_LOCATION_PATTERN));
+            customizer.customize(dataSourceKey, factoryBean);
             factoryBean.afterPropertiesSet();
             SqlSessionFactory factory = Objects.requireNonNull(factoryBean.getObject(), "SqlSessionFactoryBean returned null");
             return new SqlSessionTemplate(factory);
         } catch (Exception failure) {
-            throw new IllegalStateException("failed to create MyBatis runtime for a direct DataSource", failure);
+            throw new IllegalStateException("failed to create MyBatis runtime for direct dataSourceKey=" + dataSourceKey, failure);
         }
     }
 

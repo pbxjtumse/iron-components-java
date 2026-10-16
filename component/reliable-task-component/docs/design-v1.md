@@ -208,6 +208,10 @@ Tx1：业务数据 + Reliable Task INSERT
 
 MyBatis Provider 通过 `relational-starter` 共用应用的 `SqlSessionTemplate` 和 DataSource：
 
+公共 Access 构造时校验数据源与 MyBatis 运行时配对；普通 `execute` 在实际事务存在时也检查资源绑定。
+业务库 A 事务内调用库 B 的任务 Repository 会在 Mapper 执行前失败。同源业务写入与任务提交仍由
+Spring/MyBatis 参与同一本地事务；显式独立提交应通过独立事务边界完成。
+
 - 外层存在绑定同一 DataSource 的本地事务时，任务 INSERT 参与该事务。
 - 外层没有事务时，INSERT 按普通数据库调用提交。
 - Core 不主动开启业务事务；业务应用负责用 transaction-component 或 Spring Transaction 包裹

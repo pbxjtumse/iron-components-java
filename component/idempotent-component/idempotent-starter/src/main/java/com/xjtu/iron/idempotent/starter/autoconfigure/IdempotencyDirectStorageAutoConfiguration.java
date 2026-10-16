@@ -6,6 +6,7 @@ import com.xjtu.iron.idempotent.integration.storage.routing.StorageRoutingIdempo
 import com.xjtu.iron.idempotent.provider.mybatis.routing.IdempotencyPhysicalRouteResolver;
 import com.xjtu.iron.relational.mybatis.resource.DirectMyBatisResourceRegistry;
 import com.xjtu.iron.relational.mybatis.routing.MyBatisAccessResolver;
+import com.xjtu.iron.relational.spring.boot.autoconfigure.RelationalDirectResourceConfiguration;
 import com.xjtu.iron.idempotent.starter.properties.IdempotencyProperties;
 import com.xjtu.iron.storage.routing.api.context.StorageRouteContext;
 import com.xjtu.iron.storage.routing.api.resolver.StorageRouteResolver;
@@ -16,16 +17,14 @@ import com.xjtu.iron.storage.routing.starter.autoconfigure.StorageRoutingPropert
 import com.xjtu.iron.transaction.api.execution.TransactionExecutorResolver;
 
 import java.util.List;
-import java.util.Map;
-import javax.sql.DataSource;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 
 /** 显式 opt-in 的 Direct 本地事务装配；资源注册表同时驱动 Tx-A/B/C。 */
@@ -33,14 +32,8 @@ import org.springframework.context.annotation.Primary;
     afterName = "com.xjtu.iron.relational.spring.boot.autoconfigure.RelationalAccessAutoConfiguration",
     before = IdempotencyAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "xjtu.iron.idempotent.mybatis.direct", name = "enabled", havingValue = "true")
+@Import(RelationalDirectResourceConfiguration.class)
 public class IdempotencyDirectStorageAutoConfiguration {
-
-    @Bean
-    @ConditionalOnMissingBean(DirectMyBatisResourceRegistry.class)
-    public DirectMyBatisResourceRegistry directMyBatisResourceRegistry(Map<String, DataSource> dataSources) {
-        // Bean 名就是 dataSourceKey；多库没有 primary/default 回退。
-        return DirectMyBatisResourceRegistry.fromDataSources(dataSources);
-    }
 
     @Bean
     @Primary

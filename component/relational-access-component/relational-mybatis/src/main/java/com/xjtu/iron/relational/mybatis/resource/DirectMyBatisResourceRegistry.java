@@ -1,6 +1,7 @@
 package com.xjtu.iron.relational.mybatis.resource;
 
 import com.xjtu.iron.relational.mybatis.access.MyBatisAccess;
+import com.xjtu.iron.relational.mybatis.observation.MyBatisAccessListener;
 import com.xjtu.iron.relational.mybatis.routing.MyBatisAccessResolver;
 import com.xjtu.iron.relational.mybatis.routing.RoutingMyBatisAccessResolver;
 import com.xjtu.iron.transaction.api.execution.TransactionExecutor;
@@ -55,9 +56,16 @@ public final class DirectMyBatisResourceRegistry {
 
     /** 从 Spring DataSource Bean Map 创建注册表，不创建也不关闭连接池。 */
     public static DirectMyBatisResourceRegistry fromDataSources(Map<String, ? extends DataSource> dataSources) {
+        return fromDataSources(dataSources, MyBatisAccessListener.noop(), (key, factory) -> { });
+    }
+
+    /** 按物理库定制 MyBatis 工厂；所有 Access 共用同一组访问监听器。 */
+    public static DirectMyBatisResourceRegistry fromDataSources(Map<String, ? extends DataSource> dataSources,
+        MyBatisAccessListener listener, DirectMyBatisSqlSessionFactoryCustomizer customizer) {
         Objects.requireNonNull(dataSources, "dataSources must not be null");
         return new DirectMyBatisResourceRegistry(
-            dataSources.entrySet().stream().map(entry -> new DirectMyBatisResource(entry.getKey(), entry.getValue())).toList());
+            dataSources.entrySet().stream()
+                .map(entry -> new DirectMyBatisResource(entry.getKey(), entry.getValue(), listener, customizer)).toList());
     }
 
     /** 要求注册表中存在指定物理数据源。 */

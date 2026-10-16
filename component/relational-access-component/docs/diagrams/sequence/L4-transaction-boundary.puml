@@ -15,6 +15,11 @@ Tx -> Biz : business write
 Biz -> DB : SQL using shardKey
 Tx -> Access : executeInCurrentTransaction(markSuccess)
 Access -> Access : require bound DataSource
+note right of Access
+Constructor validates DataSource / Environment pairing.
+execute() also checks binding when an actual transaction exists.
+Listener RuntimeException cannot change the Mapper outcome.
+end note
 Access -> Idem : SUCCESS CAS(owner, version)
 Idem -> DB : same transaction resource
 

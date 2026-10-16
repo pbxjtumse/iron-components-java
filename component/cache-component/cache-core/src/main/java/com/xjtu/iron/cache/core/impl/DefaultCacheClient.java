@@ -295,13 +295,6 @@ public class DefaultCacheClient implements CacheClient {
              * 删除当前实例 L1 + Redis L2。
              */
             cacheProvider.evict(key);
-
-            /*
-             * 二期新增能力：
-             * 发布 EVICT_KEY 事件。 其他实例收到事件后，只删除自己的 L1。
-             */
-            cacheEventPublisher.publish(CacheEvent.evictKey(key, applicationName, instanceId, "manual_evict"));
-
         } catch (Exception ex) {
             metricsRecorder.recordError(key, CacheOperation.EVICT, ex);
             throw new CacheException("Cache evict failed, key=" + key.fullKey(), ex);

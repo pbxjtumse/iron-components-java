@@ -1,4 +1,4 @@
-name: MyBatis Persistence Unification
+name: Technical Component Contracts
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
       - feature/mybatis-persistence-unification-v1
   pull_request:
     paths:
+      - 'component/cache-component/**'
       - 'component/reliable-task-component/**'
       - 'component/idempotent-component/**'
       - 'component/distributed-lock-component/**'
@@ -31,8 +32,8 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-      - name: MyBatis access and technical-table contracts
-        run: mvn -B -ntp -pl :relational-mybatis,:relational-starter,:idempotent-provider-mybatis,:idempotent-integration-storage-routing,:idempotent-starter,:idempotent-storage-routing-e2e,:reliable-task-provider-mybatis,:reliable-task-spring-boot-starter,:distributed-lock-fencing-provider-mybatis,:distributed-lock-starter,:storage-routing-starter,:transaction-demo-mybatis -am test
+      - name: MyBatis access, technical-table and cache contracts
+        run: mvn -B -ntp -pl :relational-mybatis,:relational-starter,:idempotent-provider-mybatis,:idempotent-integration-storage-routing,:idempotent-starter,:idempotent-storage-routing-e2e,:reliable-task-provider-mybatis,:reliable-task-spring-boot-starter,:distributed-lock-fencing-provider-mybatis,:distributed-lock-starter,:storage-routing-starter,:transaction-demo-mybatis,:cache-core -am test
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v5

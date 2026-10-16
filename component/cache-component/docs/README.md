@@ -21,6 +21,10 @@ cache-demo
 
 当前代码已经包含 `CacheEventPublisher/Handler`、Redis Pub/Sub subscriber、动态 CacheSpec 抽象和 Micrometer 集成，不再把这些描述成“只有未来二期才存在”。
 
+`DefaultCacheClient.evict` 先删除缓存，再通过统一路径发布一次携带 Trace 的失效事件。
+删除失败时不发布；发布失败时按 `CacheEventPublishFailurePolicy.IGNORE/THROW` 处理，
+并记录为 `PUBLISH_EVENT`，避免误报为缓存删除失败。
+
 ## 图形阅读顺序
 
 1. [组件图](diagrams/component/00-component-overview.puml)
